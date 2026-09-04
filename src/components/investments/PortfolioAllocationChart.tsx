@@ -41,7 +41,7 @@ export const PortfolioAllocationChart: React.FC<PortfolioAllocationChartProps> =
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-slate-900/95 dark:bg-[#1A212D] p-3 rounded-xl shadow-xl border border-slate-700 dark:border-[#2D394C] text-xs font-numeric">
+        <div className="bg-slate-900/95 dark:bg-[#171E2A] p-3 rounded-xl shadow-xl border border-slate-700 dark:border-[#202836] text-xs font-numeric">
           <p className="font-bold text-white flex items-center gap-2 font-sans">
             <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: data.color }} />
             {data.name}
@@ -49,7 +49,7 @@ export const PortfolioAllocationChart: React.FC<PortfolioAllocationChartProps> =
           <p className="text-slate-300 font-semibold mt-1">
             Valuation: {formatINR(data.value)} ({data.percentage.toFixed(1)}%)
           </p>
-          <p className="text-slate-400 text-[11px] mt-0.5">
+          <p className="text-slate-400 text-xs mt-0.5">
             Invested: {formatINR(data.invested)}
           </p>
         </div>
@@ -86,6 +86,8 @@ export const PortfolioAllocationChart: React.FC<PortfolioAllocationChartProps> =
                   outerRadius={85}
                   paddingAngle={3}
                   stroke="none"
+                  animationDuration={500}
+                  animationEasing="ease-out"
                 >
                   {allocationData.map(entry => (
                     <Cell key={entry.name} fill={entry.color} />

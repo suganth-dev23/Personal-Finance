@@ -28,7 +28,7 @@ export const StatCard: React.FC<StatCardProps> = ({
   return (
     <div
       onClick={onClick}
-      className={`group relative overflow-hidden rounded-2xl bg-white dark:bg-[#131822] p-5 shadow-xs border border-slate-200/80 dark:border-[#202836] transition-all duration-200 hover:border-slate-300 dark:hover:border-[#2D394C] hover:shadow-sm ${
+      className={`group relative overflow-hidden rounded-2xl bg-white dark:bg-[#131822] p-5 shadow-xs border border-slate-200/80 dark:border-[#202836] transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 dark:hover:border-[#273243] hover:shadow-sm ${
         onClick ? 'cursor-pointer active:scale-[0.99]' : ''
       }`}
     >
@@ -52,7 +52,7 @@ export const StatCard: React.FC<StatCardProps> = ({
 
       <div className="mt-3">
         <div className="flex items-baseline gap-2">
-          <h2 className="font-numeric text-2xl sm:text-[1.75rem] font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+          <h2 className="font-numeric text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
             {formatINR(amount)}
           </h2>
           <span className="font-numeric text-xs text-slate-400 dark:text-slate-500">
@@ -61,7 +61,7 @@ export const StatCard: React.FC<StatCardProps> = ({
         </div>
 
         {(subtitle || trend) && (
-          <div className="mt-2.5 flex items-center justify-between text-xs pt-2 border-t border-slate-100 dark:border-[#1A212D]">
+          <div className="mt-2.5 flex items-center justify-between text-xs pt-2 border-t border-slate-100 dark:border-[#171E2A]">
             {subtitle && (
               <span className="text-slate-500 dark:text-slate-400 truncate pr-2">
                 {subtitle}
@@ -69,7 +69,7 @@ export const StatCard: React.FC<StatCardProps> = ({
             )}
             {trend && (
               <span
-                className={`font-numeric text-[11px] font-semibold px-2 py-0.5 rounded-md shrink-0 ${
+                className={`font-numeric text-xs font-semibold px-2 py-0.5 rounded-md shrink-0 ${
                   trend.isPositive
                     ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400'
                     : 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400'

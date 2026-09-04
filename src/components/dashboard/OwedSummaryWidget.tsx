@@ -114,7 +114,7 @@ export const OwedSummaryWidget: React.FC = () => {
       {/* Top People List */}
       {topDebts.length > 0 ? (
         <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-[#202836]">
-          <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
             Top open balances
           </span>
           <div className="space-y-1.5">
@@ -124,10 +124,10 @@ export const OwedSummaryWidget: React.FC = () => {
                 <div
                   key={contact.id}
                   onClick={() => setCurrentView('people')}
-                  className="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-[#171E2A]/70 hover:bg-slate-50 dark:hover:bg-[#1b2332] border border-slate-100 dark:border-[#202836] cursor-pointer transition-colors text-xs"
+                  className="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-[#171E2A]/70 hover:bg-slate-50 dark:hover:bg-[#1C2433] border border-slate-100 dark:border-[#202836] cursor-pointer transition-colors text-xs"
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-[#202836] text-slate-700 dark:text-slate-200 flex items-center justify-center font-semibold text-[11px]">
+                    <div className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-[#202836] text-slate-700 dark:text-slate-200 flex items-center justify-center font-semibold text-xs">
                       {contact.name.charAt(0).toUpperCase()}
                     </div>
                     <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">

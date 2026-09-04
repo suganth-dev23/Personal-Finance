@@ -93,7 +93,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAddTx }) => {
         {currentView !== 'ai' && (
           <button
             onClick={() => setCurrentView('ai')}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-[#925F18] dark:text-[#F5B742] bg-[#F5B742]/10 hover:bg-[#F5B742]/20 dark:bg-[#F5B742]/10 dark:hover:bg-[#F5B742]/20 border border-[#F5B742]/30 transition-colors"
+            className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-[#C28834] dark:text-[#F5B742] bg-[#F5B742]/10 hover:bg-[#F5B742]/20 dark:bg-[#F5B742]/10 dark:hover:bg-[#F5B742]/20 border border-[#F5B742]/30 transition-colors"
           >
             <Sparkles className="w-3.5 h-3.5 text-[#C28834] dark:text-[#F5B742]" />
             <span>AI Health</span>

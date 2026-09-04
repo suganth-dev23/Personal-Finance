@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   X,
   Tags,
@@ -8,9 +8,6 @@ import {
   Sparkles,
   Sun,
   Moon,
-  TrendingUp,
-  Target,
-  PieChart,
   Users,
 } from 'lucide-react';
 import { useFinance, AppView } from '../../context/FinanceContext';
@@ -22,8 +19,38 @@ interface MobileMoreDrawerProps {
 
 export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ isOpen, onClose }) => {
   const { currentView, setCurrentView, darkMode, setDarkMode } = useFinance();
+  const [shouldRender, setShouldRender] = useState(isOpen);
+  const [isAnimatingIn, setIsAnimatingIn] = useState(false);
+  const closeTimerRef = useRef<number | null>(null);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (isOpen) {
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+      setShouldRender(true);
+      document.body.style.overflow = 'hidden';
+
+      const frameId = requestAnimationFrame(() => {
+        setIsAnimatingIn(true);
+      });
+
+      return () => {
+        cancelAnimationFrame(frameId);
+        document.body.style.overflow = 'unset';
+      };
+    } else {
+      setIsAnimatingIn(false);
+      closeTimerRef.current = window.setTimeout(() => {
+        setShouldRender(false);
+      }, 200);
+
+      return () => {
+        if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+        document.body.style.overflow = 'unset';
+      };
+    }
+  }, [isOpen]);
+
+  if (!shouldRender) return null;
 
   const ALL_SECTIONS: { id: AppView; label: string; icon: React.ElementType }[] = [
     { id: 'people', label: 'People / Splits & IOUs', icon: Users },
@@ -43,19 +70,25 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ isOpen, onCl
     <div className="lg:hidden fixed inset-0 z-50 flex flex-col justify-end">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"
+        className={`fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity duration-200 ease-out ${
+          isAnimatingIn ? 'opacity-100' : 'opacity-0'
+        }`}
         onClick={onClose}
       />
 
-      {/* Drawer */}
-      <div className="relative bg-white dark:bg-[#131822] rounded-t-3xl p-6 border-t border-slate-200/90 dark:border-[#202836] shadow-2xl space-y-4 max-h-[80vh] overflow-y-auto">
+      {/* Drawer with slide-up transition */}
+      <div
+        className={`relative bg-white dark:bg-[#131822] rounded-t-3xl p-6 border-t border-slate-200/90 dark:border-[#202836] shadow-2xl space-y-4 max-h-[80vh] overflow-y-auto transition-transform duration-250 ease-out transform ${
+          isAnimatingIn ? 'translate-y-0' : 'translate-y-full'
+        }`}
+      >
         <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-[#202836]">
           <h3 className="font-bold text-slate-900 dark:text-white text-base">
             All DhanVeda Features
           </h3>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#171E2A] transition-colors"
           >
             <X className="w-5 h-5" />
           </button>

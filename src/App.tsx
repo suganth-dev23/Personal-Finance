@@ -6,6 +6,7 @@ import { MobileNav } from './components/layout/MobileNav';
 import { MobileMoreDrawer } from './components/layout/MobileMoreDrawer';
 import { TransactionModal } from './components/transactions/TransactionModal';
 import { ViewSkeleton } from './components/common/ViewSkeleton';
+import { ViewTransition } from './components/common/ViewTransition';
 import type { Transaction } from './types/finance';
 
 // Lazy-loaded route views
@@ -72,22 +73,24 @@ const MainContent: React.FC = () => {
         {/* Dynamic Lazy-Loaded View Router */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
           <Suspense fallback={<ViewSkeleton />}>
-            {currentView === 'dashboard' && <DashboardView onOpenAddTx={handleOpenAddTx} />}
-            {currentView === 'transactions' && (
-              <TransactionListView
-                onOpenAddModal={handleOpenAddTx}
-                onEditTransaction={handleEditTx}
-              />
-            )}
-            {currentView === 'people' && <PeopleView />}
-            {currentView === 'budgets' && <BudgetsView />}
-            {currentView === 'categories' && <CategoriesView />}
-            {currentView === 'emergency' && <EmergencyFundView />}
-            {currentView === 'investments' && <InvestmentsView />}
-            {currentView === 'dreams' && <DreamsView />}
-            {currentView === 'ai' && <AIHealthSummaryView />}
-            {currentView === 'import' && <StatementImportView />}
-            {currentView === 'settings' && <SettingsView />}
+            <ViewTransition viewKey={currentView}>
+              {currentView === 'dashboard' && <DashboardView onOpenAddTx={handleOpenAddTx} />}
+              {currentView === 'transactions' && (
+                <TransactionListView
+                  onOpenAddModal={handleOpenAddTx}
+                  onEditTransaction={handleEditTx}
+                />
+              )}
+              {currentView === 'people' && <PeopleView />}
+              {currentView === 'budgets' && <BudgetsView />}
+              {currentView === 'categories' && <CategoriesView />}
+              {currentView === 'emergency' && <EmergencyFundView />}
+              {currentView === 'investments' && <InvestmentsView />}
+              {currentView === 'dreams' && <DreamsView />}
+              {currentView === 'ai' && <AIHealthSummaryView />}
+              {currentView === 'import' && <StatementImportView />}
+              {currentView === 'settings' && <SettingsView />}
+            </ViewTransition>
           </Suspense>
         </main>
       </div>

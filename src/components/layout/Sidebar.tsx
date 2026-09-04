@@ -51,7 +51,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTx }) => {
       {/* Brand Header */}
       <div className="p-6 border-b border-slate-100 dark:border-[#202836]">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#F5B742] via-[#E5A732] to-[#B27824] flex items-center justify-center text-[#0B0E14] font-black text-xl shadow-md shadow-[#F5B742]/20 border border-[#F5B742]/30">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#F5B742] to-[#C28834] flex items-center justify-center text-[#0B0E14] font-black text-xl shadow-md shadow-[#F5B742]/20 border border-[#F5B742]/30">
             ₹
           </div>
           <div>
@@ -116,7 +116,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTx }) => {
                 <span>{item.label}</span>
               </div>
               {isAI && (
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#F5B742]/15 text-[#925F18] dark:text-[#F5B742]">
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#F5B742]/15 text-[#C28834] dark:text-[#F5B742]">
                   BYOK
                 </span>
               )}

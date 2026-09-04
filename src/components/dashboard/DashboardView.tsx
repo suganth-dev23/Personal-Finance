@@ -21,6 +21,7 @@ import { AIInsightsWidget } from './AIInsightsWidget';
 import { CashFlowRunwayCard, RecurringBillsCard } from './RecurringAndRunwayWidget';
 import { OwedSummaryWidget } from './OwedSummaryWidget';
 import { formatINR } from '../../utils/currency';
+import { useCountUp } from '../../hooks/useCountUp';
 
 interface DashboardViewProps {
   onOpenAddTx: () => void;
@@ -46,6 +47,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx }) => 
     setCurrentView,
     resetToDemoData,
   } = useFinance();
+
+  // Smooth number count-up animations for hero metrics
+  const animatedTotalBalance = useCountUp(totalBalance);
+  const animatedIncome = useCountUp(currentMonthIncome);
+  const animatedExpense = useCountUp(currentMonthExpense);
+  const animatedInvestment = useCountUp(totalInvestmentValue);
+  const animatedLiquid = useCountUp(emergencyFund.currentSaved);
 
   return (
     <div className="space-y-6">
@@ -119,8 +127,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx }) => 
                 Total net worth
               </span>
               <div className="flex flex-wrap items-baseline gap-3 mt-0.5">
-                <h2 className="font-numeric text-4xl sm:text-5xl lg:text-[3.25rem] font-extrabold tracking-tight text-slate-900 dark:text-slate-50">
-                  {formatINR(totalBalance)}
+                <h2 className="font-numeric text-4xl sm:text-5xl lg:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50">
+                  {formatINR(animatedTotalBalance)}
                 </h2>
                 <span
                   className={`font-numeric text-xs font-semibold px-2.5 py-1 rounded-md ${
@@ -165,7 +173,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx }) => 
 
             <button
               onClick={() => setCurrentView('people')}
-              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A212D] dark:hover:bg-[#232C3B] text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-[#273243] text-xs sm:text-sm font-medium transition-all active:scale-95"
+              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#171E2A] dark:hover:bg-[#1C2433] text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-[#202836] text-xs sm:text-sm font-medium transition-all active:scale-95"
             >
               <Users className="w-4 h-4 text-indigo-500" />
               <span>Split bill</span>
@@ -173,7 +181,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx }) => 
 
             <button
               onClick={() => setCurrentView('import')}
-              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A212D] dark:hover:bg-[#232C3B] text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-[#273243] text-xs sm:text-sm font-medium transition-all active:scale-95"
+              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#171E2A] dark:hover:bg-[#1C2433] text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-[#202836] text-xs sm:text-sm font-medium transition-all active:scale-95"
             >
               <UploadCloud className="w-4 h-4 text-slate-400" />
               <span>Import</span>
@@ -182,10 +190,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx }) => 
         </div>
 
         {/* Integrated Flow & Asset Shelves */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mt-7 pt-6 border-t border-slate-100 dark:border-[#1E2635]">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mt-7 pt-6 border-t border-slate-100 dark:border-[#202836]">
           <div
             onClick={() => setCurrentView('transactions')}
-            className="cursor-pointer p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#171E2A] hover:bg-slate-100 dark:hover:bg-[#1D2534] border border-slate-100 dark:border-[#232D3F] transition-all"
+            className="cursor-pointer p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#171E2A] hover:bg-slate-100 dark:hover:bg-[#1C2433] border border-slate-100 dark:border-[#202836] transition-all hover:-translate-y-0.5 hover:shadow-sm"
           >
             <div className="flex items-center justify-between">
               <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
@@ -194,16 +202,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx }) => 
               <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold">↑</span>
             </div>
             <p className="font-numeric text-lg sm:text-xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
-              +{formatINR(currentMonthIncome)}
+              +{formatINR(animatedIncome)}
             </p>
-            <span className="text-[11px] text-slate-400 mt-0.5 block truncate">
+            <span className="text-xs text-slate-400 mt-0.5 block truncate">
               Credits &amp; earnings
             </span>
           </div>
 
           <div
             onClick={() => setCurrentView('transactions')}
-            className="cursor-pointer p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#171E2A] hover:bg-slate-100 dark:hover:bg-[#1D2534] border border-slate-100 dark:border-[#232D3F] transition-all"
+            className="cursor-pointer p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#171E2A] hover:bg-slate-100 dark:hover:bg-[#1C2433] border border-slate-100 dark:border-[#202836] transition-all hover:-translate-y-0.5 hover:shadow-sm"
           >
             <div className="flex items-center justify-between">
               <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
@@ -212,50 +220,50 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx }) => 
               <span className="text-xs text-rose-600 dark:text-rose-400 font-bold">↓</span>
             </div>
             <p className="font-numeric text-lg sm:text-xl font-bold text-rose-600 dark:text-rose-400 mt-1">
-              -{formatINR(currentMonthExpense)}
+              -{formatINR(animatedExpense)}
             </p>
-            <span className="text-[11px] text-slate-400 mt-0.5 block truncate">
+            <span className="text-xs text-slate-400 mt-0.5 block truncate">
               Debits &amp; UPI spend
             </span>
           </div>
 
           <div
             onClick={() => setCurrentView('investments')}
-            className="cursor-pointer p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#171E2A] hover:bg-slate-100 dark:hover:bg-[#1D2534] border border-slate-100 dark:border-[#232D3F] transition-all"
+            className="cursor-pointer p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#171E2A] hover:bg-slate-100 dark:hover:bg-[#1C2433] border border-slate-100 dark:border-[#202836] transition-all hover:-translate-y-0.5 hover:shadow-sm"
           >
             <div className="flex items-center justify-between">
               <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                 Invested assets
               </span>
-              <span className="text-[11px] font-numeric font-bold text-[#C28834] dark:text-[#F5B742]">
+              <span className="text-xs font-numeric font-bold text-[#C28834] dark:text-[#F5B742]">
                 {totalInvestmentGainLoss >= 0 ? '+' : ''}{totalInvestmentGainLossPct.toFixed(1)}%
               </span>
             </div>
             <p className="font-numeric text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">
-              {formatINR(totalInvestmentValue)}
+              {formatINR(animatedInvestment)}
             </p>
-            <span className="text-[11px] text-slate-400 mt-0.5 block truncate">
+            <span className="text-xs text-slate-400 mt-0.5 block truncate">
               MF, Stocks, Gold, FDs
             </span>
           </div>
 
           <div
             onClick={() => setCurrentView('emergency')}
-            className="cursor-pointer p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#171E2A] hover:bg-slate-100 dark:hover:bg-[#1D2534] border border-slate-100 dark:border-[#232D3F] transition-all"
+            className="cursor-pointer p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#171E2A] hover:bg-slate-100 dark:hover:bg-[#1C2433] border border-slate-100 dark:border-[#202836] transition-all hover:-translate-y-0.5 hover:shadow-sm"
           >
             <div className="flex items-center justify-between">
               <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                 Liquid runway
               </span>
-              <span className="text-[11px] font-semibold text-slate-400">
+              <span className="text-xs font-semibold text-slate-400">
                 {emergencyFund.targetMonths}m goal
               </span>
             </div>
             <p className="font-numeric text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">
               {emergencyFundRunwayMonths.toFixed(1)} mos
             </p>
-            <span className="text-[11px] text-slate-400 mt-0.5 block truncate font-numeric">
-              {formatINR(emergencyFund.currentSaved)} liquid
+            <span className="text-xs text-slate-400 mt-0.5 block truncate font-numeric">
+              {formatINR(animatedLiquid)} liquid
             </span>
           </div>
         </div>

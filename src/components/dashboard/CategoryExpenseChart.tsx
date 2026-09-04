@@ -31,7 +31,7 @@ export const CategoryExpenseChart: React.FC = () => {
       const data = payload[0].payload;
       const pct = currentMonthExpense > 0 ? (data.spent / currentMonthExpense) * 100 : 0;
       return (
-        <div className="bg-slate-900/95 dark:bg-[#1A212D] p-3 rounded-xl shadow-xl border border-slate-700 dark:border-[#2D394C] text-xs">
+        <div className="bg-slate-900/95 dark:bg-[#171E2A] p-3 rounded-xl shadow-xl border border-slate-700 dark:border-[#202836] text-xs">
           <p className="font-bold text-white flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: data.color || '#F5B742' }} />
             {data.category}
@@ -40,7 +40,7 @@ export const CategoryExpenseChart: React.FC = () => {
             {formatINR(data.spent)} ({pct.toFixed(1)}%)
           </p>
           {data.budget > 0 && (
-            <p className="font-numeric text-slate-400 text-[11px] mt-0.5">
+            <p className="font-numeric text-slate-400 text-xs mt-0.5">
               Budget: {formatINR(data.budget)} ({data.percentUsed.toFixed(0)}% used)
             </p>
           )}
@@ -61,7 +61,7 @@ export const CategoryExpenseChart: React.FC = () => {
             This month's debits breakdown
           </p>
         </div>
-        <span className="font-numeric text-xs font-bold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-[#1A212D] px-2.5 py-1 rounded-lg">
+        <span className="font-numeric text-xs font-bold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-[#171E2A] px-2.5 py-1 rounded-lg border border-slate-200/60 dark:border-[#202836]">
           {formatINR(currentMonthExpense)}
         </span>
       </div>
@@ -86,6 +86,8 @@ export const CategoryExpenseChart: React.FC = () => {
                   outerRadius={80}
                   paddingAngle={3}
                   stroke="none"
+                  animationDuration={500}
+                  animationEasing="ease-out"
                 >
                   {expenseCategories.map((entry, index) => (
                     <Cell

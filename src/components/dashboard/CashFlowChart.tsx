@@ -80,7 +80,7 @@ export const CashFlowChart: React.FC = () => {
         </div>
 
         {/* View mode toggle */}
-        <div className="flex items-center p-1 bg-slate-100 dark:bg-[#171E2A] rounded-xl border border-slate-200/80 dark:border-[#232D3F]">
+        <div className="flex items-center p-1 bg-slate-100 dark:bg-[#171E2A] rounded-xl border border-slate-200/80 dark:border-[#202836]">
           <button
             type="button"
             onClick={() => setChartMode('wave')}
@@ -125,12 +125,12 @@ export const CashFlowChart: React.FC = () => {
                 dataKey="name"
                 axisLine={false}
                 tickLine={false}
-                tick={{ fontSize: 11, fill: '#8F9CAE' }}
+                tick={{ fontSize: 11, fill: '#94A3B8' }}
               />
               <YAxis
                 axisLine={false}
                 tickLine={false}
-                tick={{ fontSize: 11, fill: '#8F9CAE' }}
+                tick={{ fontSize: 11, fill: '#94A3B8' }}
                 tickFormatter={value => formatCompactINR(value)}
               />
               <Tooltip content={<CustomTooltip />} />
@@ -147,7 +147,9 @@ export const CashFlowChart: React.FC = () => {
                 fillOpacity={1}
                 fill="url(#emeraldCashFlow)"
                 dot={{ r: 3.5, fill: '#10b981', strokeWidth: 2, stroke: '#0B0E14' }}
-                activeDot={{ r: 5, fill: '#34d399' }}
+                activeDot={{ r: 5, fill: '#10B981' }}
+                animationDuration={600}
+                animationEasing="ease-out"
               />
               <Line
                 type="monotone"
@@ -157,6 +159,8 @@ export const CashFlowChart: React.FC = () => {
                 strokeWidth={1.5}
                 strokeDasharray="4 4"
                 dot={false}
+                animationDuration={600}
+                animationEasing="ease-out"
               />
               <Line
                 type="monotone"
@@ -166,6 +170,8 @@ export const CashFlowChart: React.FC = () => {
                 strokeWidth={1.5}
                 strokeDasharray="4 4"
                 dot={false}
+                animationDuration={600}
+                animationEasing="ease-out"
               />
             </AreaChart>
           ) : (
@@ -175,12 +181,12 @@ export const CashFlowChart: React.FC = () => {
                 dataKey="name"
                 axisLine={false}
                 tickLine={false}
-                tick={{ fontSize: 11, fill: '#8F9CAE' }}
+                tick={{ fontSize: 11, fill: '#94A3B8' }}
               />
               <YAxis
                 axisLine={false}
                 tickLine={false}
-                tick={{ fontSize: 11, fill: '#8F9CAE' }}
+                tick={{ fontSize: 11, fill: '#94A3B8' }}
                 tickFormatter={value => formatCompactINR(value)}
               />
               <Tooltip content={<CustomTooltip />} />
@@ -188,8 +194,8 @@ export const CashFlowChart: React.FC = () => {
                 wrapperStyle={{ fontSize: 11, paddingTop: 10 }}
                 formatter={value => <span className="text-slate-600 dark:text-slate-400 font-medium">{value}</span>}
               />
-              <Bar dataKey="Income" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={28} />
-              <Bar dataKey="Expenses" fill="#f43f5e" radius={[4, 4, 0, 0]} maxBarSize={28} />
+              <Bar dataKey="Income" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={28} animationDuration={600} animationEasing="ease-out" />
+              <Bar dataKey="Expenses" fill="#f43f5e" radius={[4, 4, 0, 0]} maxBarSize={28} animationDuration={600} animationEasing="ease-out" />
               <Line
                 type="monotone"
                 dataKey="NetSavings"
@@ -197,6 +203,8 @@ export const CashFlowChart: React.FC = () => {
                 stroke="#F5B742"
                 strokeWidth={2.5}
                 dot={{ r: 3, fill: '#F5B742' }}
+                animationDuration={600}
+                animationEasing="ease-out"
               />
             </ComposedChart>
           )}

@@ -1,5 +1,85 @@
 @import "tailwindcss";
 
+@theme {
+  /* ── Surface Elevation System ── */
+  --color-canvas: #F8F9FA;
+  --color-canvas-dark: #0B0E14;
+  --color-card: #FFFFFF;
+  --color-card-dark: #131822;
+  --color-inset: #F1F5F9;
+  --color-inset-dark: #171E2A;
+  --color-border: #E2E8F0;
+  --color-border-dark: #202836;
+
+  /* ── Interactive Surface States ── */
+  --color-hover: #F1F5F9;
+  --color-hover-dark: #1C2433;
+  --color-active: #E2E8F0;
+  --color-active-dark: #202836;
+
+  /* ── Brand Accents ── */
+  --color-gold: #F5B742;
+  --color-gold-muted: #C28834;
+  --color-emerald: #10B981;
+  --color-emerald-deep: #059669;
+  --color-crimson: #F43F5E;
+  --color-crimson-deep: #E11D48;
+
+  /* ── Keyframe Animations ── */
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes fade-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+  @keyframes scale-in {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  @keyframes scale-out {
+    from { opacity: 1; transform: scale(1); }
+    to { opacity: 0; transform: scale(0.95); }
+  }
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slide-down {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slide-up-drawer {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  @keyframes slide-down-drawer {
+    from { transform: translateY(0); }
+    to { transform: translateY(100%); }
+  }
+  @keyframes count-tick {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Animation Utilities ── */
+  --animate-shimmer: shimmer 1.8s infinite;
+  --animate-fade-in: fade-in 0.2s ease-out both;
+  --animate-fade-out: fade-out 0.15s ease-in both;
+  --animate-scale-in: scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-scale-out: scale-out 0.15s ease-in both;
+  --animate-slide-up: slide-up 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-slide-down: slide-down 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-slide-up-drawer: slide-up-drawer 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-slide-down-drawer: slide-down-drawer 0.2s ease-in both;
+  --animate-count-tick: count-tick 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
@@ -54,4 +134,3 @@
     display: none !important;
   }
 }
-
