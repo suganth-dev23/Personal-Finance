@@ -259,90 +259,67 @@ export const PeopleView: React.FC = () => {
         <SettlementHistoryView onBackToContacts={() => setActiveTab('contacts')} />
       ) : (
         <>
-          {/* 4 Summary Stat Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-            {/* You Are Owed */}
-            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                  You Are Owed
-                </span>
-                <div className="p-2.5 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                  <ArrowDownLeft className="w-5 h-5" />
+          {/* Modern Minimalist Splits Hero Card (from Mockup) */}
+          <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 text-white rounded-3xl p-6 sm:p-7 border border-slate-800 shadow-xl relative overflow-hidden">
+            <div className="absolute -top-16 -right-16 w-56 h-56 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 relative z-10 pb-5 border-b border-slate-800">
+              {/* You Are Owed */}
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                    You are Owed
+                  </span>
                 </div>
-              </div>
-              <div>
-                <p className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
+                <p className="text-3xl sm:text-4xl font-black text-emerald-400 tracking-tight">
                   {formatINR(totalOwedToMe)}
                 </p>
-                <p className="text-xs text-slate-400 mt-1">From friends & split bills</p>
+                <p className="text-xs text-slate-400">Repayments due from friends</p>
               </div>
-            </div>
 
-            {/* You Owe */}
-            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                  You Owe
-                </span>
-                <div className="p-2.5 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400">
-                  <ArrowUpRight className="w-5 h-5" />
+              {/* You Owe */}
+              <div className="space-y-1 sm:border-l sm:border-slate-800 sm:pl-6">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-rose-500" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                    You Owe
+                  </span>
                 </div>
-              </div>
-              <div>
-                <p className="text-2xl sm:text-3xl font-black text-rose-600 dark:text-rose-400 tracking-tight">
+                <p className="text-3xl sm:text-4xl font-black text-rose-400 tracking-tight">
                   {formatINR(totalIOwe)}
                 </p>
-                <p className="text-xs text-slate-400 mt-1">Pending payments to others</p>
+                <p className="text-xs text-slate-400">Pending payments to others</p>
               </div>
             </div>
 
-            {/* Net Balance */}
-            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                  Net Position
+            {/* Bottom Net Balance & Stats */}
+            <div className="flex flex-wrap items-center justify-between gap-4 pt-4 relative z-10">
+              <div className="flex items-baseline gap-2">
+                <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider">
+                  Net Balance:
                 </span>
-                <div className="p-2.5 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
-                  <Users className="w-5 h-5" />
-                </div>
-              </div>
-              <div>
-                <p
-                  className={`text-2xl sm:text-3xl font-black tracking-tight ${
+                <span
+                  className={`text-xl font-black tracking-tight ${
                     netOverall > 0
-                      ? 'text-emerald-600 dark:text-emerald-400'
+                      ? 'text-emerald-400'
                       : netOverall < 0
-                      ? 'text-rose-600 dark:text-rose-400'
-                      : 'text-slate-700 dark:text-slate-300'
+                      ? 'text-rose-400'
+                      : 'text-slate-300'
                   }`}
                 >
-                  {netOverall >= 0 ? '+' : ''}
-                  {formatINR(netOverall)}
-                </p>
-                <p className="text-xs text-slate-400 mt-1">
-                  {netOverall > 0 ? 'Overall positive balance' : netOverall < 0 ? 'Overall debt balance' : 'All square!'}
-                </p>
-              </div>
-            </div>
-
-            {/* Total People */}
-            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                  Active Splits
+                  {netOverall >= 0 ? '+' : ''}{formatINR(netOverall)}
                 </span>
-                <div className="p-2.5 rounded-2xl bg-teal-500/10 text-teal-600 dark:text-teal-400">
-                  <HandCoins className="w-5 h-5" />
-                </div>
+                <span className="text-xs text-slate-400">
+                  ({netOverall > 0 ? 'in your favor' : netOverall < 0 ? 'you owe overall' : 'settled'})
+                </span>
               </div>
-              <div>
-                <p className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                  {activeContacts.length} <span className="text-sm font-semibold text-slate-400">people</span>
-                </p>
-                <p className="text-xs text-slate-400 mt-1">
-                  {settledContacts.length} settled / square
-                </p>
+
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700">
+                  <Users className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>{activeContacts.length} active ({settledContacts.length} settled)</span>
+                </span>
               </div>
             </div>
           </div>
@@ -362,7 +339,7 @@ export const PeopleView: React.FC = () => {
             </div>
 
             {/* Filter Pills + Add Contact Button */}
-            <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end flex-wrap">
               <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl text-xs">
                 <button
                   onClick={() => setFilterType('all')}
@@ -372,7 +349,7 @@ export const PeopleView: React.FC = () => {
                       : 'text-slate-500 hover:text-slate-700'
                   }`}
                 >
-                  All
+                  All Friends
                 </button>
                 <button
                   onClick={() => setFilterType('they_owe_me')}
@@ -382,7 +359,7 @@ export const PeopleView: React.FC = () => {
                       : 'text-slate-500 hover:text-slate-700'
                   }`}
                 >
-                  Owes Me
+                  Owes You
                 </button>
                 <button
                   onClick={() => setFilterType('i_owe_them')}
@@ -392,7 +369,17 @@ export const PeopleView: React.FC = () => {
                       : 'text-slate-500 hover:text-slate-700'
                   }`}
                 >
-                  I Owe
+                  You Owe
+                </button>
+                <button
+                  onClick={() => setFilterType('settled')}
+                  className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
+                    filterType === 'settled'
+                      ? 'bg-indigo-600 text-white shadow-xs'
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  Settled
                 </button>
               </div>
 

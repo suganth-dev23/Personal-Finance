@@ -50,86 +50,175 @@ export const InvestmentsView: React.FC = () => {
     setIsModalOpen(true);
   };
 
+  // Category color mapping
+  const CATEGORY_COLORS: Record<string, string> = {
+    'Mutual Funds': '#10b981', // Emerald
+    'Stocks': '#06b6d4', // Cyan
+    'Gold / SGB': '#f59e0b', // Gold / Amber
+    'Fixed Deposit (FD)': '#8b5cf6', // Violet
+    'Recurring Deposit (RD)': '#a855f7',
+    'PPF / EPF': '#3b82f6',
+    'Crypto': '#ec4899',
+    'Other': '#64748b',
+  };
+
+  // Asset allocation segments
+  const assetSegments = useMemo(() => {
+    const map: Record<string, { value: number; invested: number; count: number }> = {};
+    investments.forEach(i => {
+      if (!map[i.type]) {
+        map[i.type] = { value: 0, invested: 0, count: 0 };
+      }
+      map[i.type].value += i.currentValue;
+      map[i.type].invested += i.investedAmount;
+      map[i.type].count += 1;
+    });
+
+    const total = totalInvestmentValue || 1;
+    return Object.entries(map).map(([type, data]) => {
+      const gain = data.value - data.invested;
+      const gainPct = data.invested > 0 ? (gain / data.invested) * 100 : 0;
+      return {
+        type,
+        value: data.value,
+        invested: data.invested,
+        gain,
+        gainPct,
+        count: data.count,
+        percentage: totalInvestmentValue > 0 ? (data.value / total) * 100 : 0,
+        color: CATEGORY_COLORS[type] || '#64748b',
+      };
+    }).sort((a, b) => b.value - a.value);
+  }, [investments, totalInvestmentValue]);
+
   return (
     <div className="space-y-6">
-      {/* Top Banner Overview */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Modern Minimalist Portfolio Hero Card (from Portfolio v2 Mockup) */}
+      <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 text-white rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-xl relative overflow-hidden">
+        {/* Glow orb */}
+        <div className="absolute -top-20 -right-20 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
           <div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-              Wealth & Investment Portfolio
-            </h2>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Comprehensive valuation across Mutual Funds, Equities, FDs, SGBs, EPF & Crypto
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              Portfolio Valuation
+            </span>
+            <div className="flex flex-wrap items-baseline gap-3 mt-1.5">
+              <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-white">
+                {formatINR(totalInvestmentValue)}
+              </h2>
+              <span
+                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold ${
+                  totalInvestmentGainLoss >= 0
+                    ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                    : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+                }`}
+              >
+                <span>
+                  {totalInvestmentGainLoss >= 0 ? '+' : ''}{formatINR(totalInvestmentGainLoss)} ({totalInvestmentGainLossPct >= 0 ? '+' : ''}{totalInvestmentGainLossPct.toFixed(1)}%)
+                </span>
+              </span>
+            </div>
+
+            <p className="text-xs text-slate-400 mt-2">
+              Invested: <span className="font-semibold text-slate-200">{formatINR(totalInvestedAmount)}</span> • Monthly SIPs: <span className="font-semibold text-indigo-400">{formatINR(totalMonthlySIP)}</span>
             </p>
           </div>
 
           <button
             onClick={handleOpenAdd}
-            className="flex items-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-bold shadow-sm shadow-emerald-600/30 transition-all active:scale-95 self-start sm:self-auto"
+            className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs sm:text-sm font-bold shadow-lg shadow-emerald-900/40 transition-all active:scale-95 self-start sm:self-auto"
           >
             <Plus className="w-4 h-4" />
-            <span>Add Investment</span>
+            <span>Add Holding</span>
           </button>
         </div>
 
-        {/* 4 Metrics Strip */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6 pt-6 border-t border-slate-100 dark:border-slate-800">
-          <div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-              Current Portfolio Value
-            </span>
-            <p className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white mt-0.5">
-              {formatINR(totalInvestmentValue)}
-            </p>
-            <span className="text-xs text-slate-400">({formatCompactINR(totalInvestmentValue)})</span>
-          </div>
+        {/* Horizontal Asset Allocation Bar (from Mockup) */}
+        {investments.length > 0 && (
+          <div className="mt-8 pt-6 border-t border-slate-800/80 relative z-10">
+            <div className="flex items-center justify-between text-xs text-slate-400 mb-2.5 font-medium">
+              <span>Asset Allocation Breakdown</span>
+              <span>{investments.length} Total Holdings</span>
+            </div>
 
-          <div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-              Total Invested Capital
-            </span>
-            <p className="text-xl sm:text-2xl font-extrabold text-slate-700 dark:text-slate-300 mt-0.5">
-              {formatINR(totalInvestedAmount)}
-            </p>
-            <span className="text-xs text-slate-400">Cost basis</span>
-          </div>
+            {/* Segmented bar */}
+            <div className="h-3 w-full rounded-full bg-slate-800/80 overflow-hidden flex gap-0.5 p-0.5">
+              {assetSegments.map(seg => (
+                <div
+                  key={seg.type}
+                  style={{ width: `${Math.max(seg.percentage, 2)}%`, backgroundColor: seg.color }}
+                  className="h-full rounded-full transition-all duration-500"
+                  title={`${seg.type}: ${seg.percentage.toFixed(1)}%`}
+                />
+              ))}
+            </div>
 
-          <div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-              Overall Return (P&L)
-            </span>
-            <p
-              className={`text-xl sm:text-2xl font-extrabold mt-0.5 flex items-center gap-1 ${
-                totalInvestmentGainLoss >= 0
-                  ? 'text-emerald-600 dark:text-emerald-400'
-                  : 'text-rose-600 dark:text-rose-400'
-              }`}
-            >
-              {totalInvestmentGainLoss >= 0 ? '+' : ''}{formatINR(totalInvestmentGainLoss)}
-            </p>
-            <span
-              className={`text-xs font-bold ${
-                totalInvestmentGainLoss >= 0 ? 'text-emerald-600' : 'text-rose-600'
-              }`}
-            >
-              {totalInvestmentGainLoss >= 0 ? '▲' : '▼'} {totalInvestmentGainLossPct.toFixed(2)}% ROI
-            </span>
+            {/* Chips legend */}
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-3.5 text-xs">
+              {assetSegments.map(seg => (
+                <button
+                  key={seg.type}
+                  onClick={() => setFilterType(filterType === seg.type ? 'all' : seg.type)}
+                  className={`flex items-center gap-1.5 transition-all hover:opacity-80 ${
+                    filterType === seg.type ? 'ring-1 ring-white/50 rounded-lg px-1.5 py-0.5' : ''
+                  }`}
+                >
+                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: seg.color }} />
+                  <span className="text-slate-300 font-semibold">{seg.type}</span>
+                  <span className="text-slate-400 font-medium">{seg.percentage.toFixed(0)}%</span>
+                </button>
+              ))}
+            </div>
           </div>
-
-          <div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-              Active Monthly SIPs
-            </span>
-            <p className="text-xl sm:text-2xl font-extrabold text-indigo-600 dark:text-indigo-400 mt-0.5">
-              {formatINR(totalMonthlySIP)}
-            </p>
-            <span className="text-xs text-slate-400">Automated monthly flow</span>
-          </div>
-        </div>
+        )}
       </div>
 
-      {/* Asset Allocation Donut Chart */}
+      {/* Asset Category Cards Grid */}
+      {assetSegments.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {assetSegments.map(seg => (
+            <div
+              key={seg.type}
+              onClick={() => setFilterType(filterType === seg.type ? 'all' : seg.type)}
+              className={`cursor-pointer bg-white dark:bg-slate-900 rounded-3xl p-5 border transition-all hover:shadow-md ${
+                filterType === seg.type
+                  ? 'border-emerald-500 shadow-md ring-1 ring-emerald-500'
+                  : 'border-slate-200 dark:border-slate-800 shadow-sm'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  {seg.type}
+                </span>
+                <span
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: seg.color }}
+                />
+              </div>
+
+              <p className="text-xl font-black text-slate-900 dark:text-white mt-2">
+                {formatINR(seg.value)}
+              </p>
+
+              <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-xs">
+                <span className="text-slate-400 font-medium">
+                  {seg.count} {seg.count === 1 ? 'holding' : 'holdings'}
+                </span>
+                <span
+                  className={`font-bold ${
+                    seg.gain >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+                  }`}
+                >
+                  {seg.gain >= 0 ? '+' : ''}{seg.gainPct.toFixed(1)}%
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Donut Chart View (Collapsible / Secondary) */}
       {investments.length > 0 && <PortfolioAllocationChart investments={investments} />}
 
       {/* Holdings List with Filters */}
