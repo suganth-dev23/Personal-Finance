@@ -10,12 +10,15 @@ import {
   AIHealthReport,
   Contact,
   SettlementRecord,
+  TombstoneRecord,
+  SyncableStoreName,
 } from '../types/finance';
 
 export interface UserPreferences {
   id: string; // 'general'
   darkMode: boolean;
   notRecurringTxIds: string[]; // Set of transaction IDs marked as not recurring
+  updatedAt?: string;
 }
 
 export interface DhanVedaDBSchema extends DBSchema {
@@ -72,10 +75,18 @@ export interface DhanVedaDBSchema extends DBSchema {
       'by-date': string;
     };
   };
+  tombstones: {
+    key: string;
+    value: TombstoneRecord;
+    indexes: {
+      'by-store': string;
+      'by-deletedAt': string;
+    };
+  };
 }
 
 const DB_NAME = 'dhanveda_db';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 let dbPromise: Promise<IDBPDatabase<DhanVedaDBSchema>> | null = null;
 
@@ -141,6 +152,13 @@ export function getDB(): Promise<IDBPDatabase<DhanVedaDBSchema>> {
           const setStore = db.createObjectStore('settlements', { keyPath: 'id' });
           setStore.createIndex('by-contactId', 'contactId');
           setStore.createIndex('by-date', 'date');
+        }
+
+        // Tombstones store (version 3)
+        if (!db.objectStoreNames.contains('tombstones')) {
+          const tombStore = db.createObjectStore('tombstones', { keyPath: 'id' });
+          tombStore.createIndex('by-store', 'store');
+          tombStore.createIndex('by-deletedAt', 'deletedAt');
         }
       },
     });
@@ -457,3 +475,90 @@ export async function clearAllStores(): Promise<void> {
     }),
   ]);
 }
+
+/**
+ * Record a tombstone when a record is deleted so the deletion propagates across devices during sync.
+ */
+export async function addTombstone(store: SyncableStoreName, id: string): Promise<void> {
+  try {
+    const db = await getDB();
+    const tombstone: TombstoneRecord = {
+      id,
+      store,
+      deletedAt: new Date().toISOString(),
+    };
+    await db.put('tombstones', tombstone);
+  } catch (err) {
+    console.error('[DB] Error recording tombstone:', err);
+  }
+}
+
+/**
+ * Get all active tombstones from IndexedDB.
+ */
+export async function getTombstones(): Promise<TombstoneRecord[]> {
+  try {
+    const db = await getDB();
+    return await db.getAll('tombstones');
+  } catch (err) {
+    console.error('[DB] Error getting tombstones:', err);
+    return [];
+  }
+}
+
+/**
+ * Save merged tombstones to IndexedDB.
+ */
+export async function saveTombstones(records: TombstoneRecord[]): Promise<void> {
+  try {
+    const db = await getDB();
+    const tx = db.transaction('tombstones', 'readwrite');
+    for (const record of records) {
+      if (record && record.id) {
+        await tx.store.put(record);
+      }
+    }
+    await tx.done;
+  } catch (err) {
+    console.error('[DB] Error saving tombstones:', err);
+  }
+}
+
+/**
+ * Purge tombstones older than the retention window (defaults to 90 days).
+ */
+export async function purgeOldTombstones(retentionDays = 90): Promise<void> {
+  try {
+    const db = await getDB();
+    const cutoffTime = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000).toISOString();
+    const allTombstones = await db.getAll('tombstones');
+    const tx = db.transaction('tombstones', 'readwrite');
+    for (const t of allTombstones) {
+      if (t.deletedAt < cutoffTime) {
+        await tx.store.delete(t.id);
+      }
+    }
+    await tx.done;
+  } catch (err) {
+    console.error('[DB] Error purging old tombstones:', err);
+  }
+}
+
+/**
+ * Generates and returns a persistent unique Device ID for this client installation.
+ * Used for deterministic tie-breaking in Last-Write-Wins merge.
+ */
+export function getDeviceId(): string {
+  const STORAGE_KEY = 'dhanveda_device_id';
+  let deviceId = localStorage.getItem(STORAGE_KEY);
+  if (!deviceId) {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+      deviceId = crypto.randomUUID();
+    } else {
+      deviceId = 'dev-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 9);
+    }
+    localStorage.setItem(STORAGE_KEY, deviceId);
+  }
+  return deviceId;
+}
+

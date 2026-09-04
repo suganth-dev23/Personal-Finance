@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, UploadCloud, Sparkles, Sun, Moon } from 'lucide-react';
+import { Plus, UploadCloud, Sparkles, Sun, Moon, RefreshCw } from 'lucide-react';
 import { useFinance, AppView } from '../../context/FinanceContext';
 import { formatINR } from '../../utils/currency';
 import { getCurrentMonthYear } from '../../utils/date';
@@ -23,7 +23,17 @@ const VIEW_TITLES: Record<AppView, { title: string; subtitle: string }> = {
 };
 
 export const Navbar: React.FC<NavbarProps> = ({ onOpenAddTx }) => {
-  const { currentView, setCurrentView, darkMode, setDarkMode, currentMonthIncome, currentMonthExpense } = useFinance();
+  const {
+    currentView,
+    setCurrentView,
+    darkMode,
+    setDarkMode,
+    currentMonthIncome,
+    currentMonthExpense,
+    syncStatus,
+    isDriveConnected,
+    triggerSync,
+  } = useFinance();
   const { monthName, year } = getCurrentMonthYear();
   const meta = VIEW_TITLES[currentView] || { title: 'DhanVeda', subtitle: '' };
 
@@ -46,6 +56,26 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAddTx }) => {
 
       {/* Quick Actions */}
       <div className="flex items-center gap-2.5">
+        {/* Google Drive Sync Status Button */}
+        {isDriveConnected ? (
+          <button
+            onClick={() => triggerSync(true)}
+            title={syncStatus === 'syncing' ? 'Syncing with Google Drive...' : 'Google Drive Synced. Click to sync now.'}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold transition-colors"
+          >
+            {syncStatus === 'syncing' ? (
+              <RefreshCw className="w-3.5 h-3.5 text-indigo-500 animate-spin" />
+            ) : syncStatus === 'error' ? (
+              <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+            ) : (
+              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+            )}
+            <span className="hidden md:inline text-slate-600 dark:text-slate-300">
+              {syncStatus === 'syncing' ? 'Syncing...' : 'Drive Synced'}
+            </span>
+          </button>
+        ) : null}
+
         {/* Month flow pill */}
         <div className="hidden xl:flex items-center gap-3 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs">
           <div>

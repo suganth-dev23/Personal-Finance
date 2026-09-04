@@ -22,6 +22,7 @@ export interface Contact {
   id: string;
   name: string;
   createdAt: string;
+  updatedAt?: string;
   notes?: string;
 }
 
@@ -32,6 +33,7 @@ export interface SettlementRecord {
   amount: number;
   note?: string;
   createdAt: string;
+  updatedAt?: string;
   // Set only when this settlement was auto-created by the one-tap "mark as settled"
   // tick on a transaction row, so the action can be cleanly undone.
   sourceTransactionId?: string;
@@ -70,6 +72,7 @@ export interface Transaction {
   tags?: string[];
   referenceId?: string; // UPI ref / Bank transaction ref
   createdAt: string;
+  updatedAt?: string;
   splitWith?: SplitEntry[]; // array of split entries, 0 or more
 }
 
@@ -81,12 +84,14 @@ export interface Category {
   type: 'expense' | 'income' | 'both';
   isCustom?: boolean;
   budgetMonthly?: number;
+  updatedAt?: string;
 }
 
 export interface Budget {
   id: string;
   category: string;
   monthlyLimit: number;
+  updatedAt?: string;
 }
 
 export interface EmergencyContribution {
@@ -96,6 +101,7 @@ export interface EmergencyContribution {
   type: 'deposit' | 'withdrawal';
   note?: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface EmergencyFund {
@@ -104,6 +110,7 @@ export interface EmergencyFund {
   manualTargetAmount?: number;
   currentSaved: number;
   contributions: EmergencyContribution[];
+  updatedAt?: string;
 }
 
 export type InvestmentType = 
@@ -138,6 +145,7 @@ export interface Investment {
   platform?: string; // e.g. Zerodha, Groww, INDmoney, Kuvera, SBI
   notes?: string;
   lastUpdated: string;
+  updatedAt?: string;
   logs?: InvestmentLog[];
 }
 
@@ -147,6 +155,7 @@ export interface DreamContribution {
   amount: number;
   note?: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface DreamGoal {
@@ -161,6 +170,7 @@ export interface DreamGoal {
   priority: 'low' | 'medium' | 'high';
   contributions: DreamContribution[];
   createdAt: string;
+  updatedAt?: string;
 }
 
 export type AIProvider = 'gemini' | 'openai' | 'anthropic';
@@ -170,11 +180,13 @@ export interface AISettings {
   apiKey: string;
   model: string;
   customPromptPrefix?: string;
+  updatedAt?: string;
 }
 
 export interface AIHealthReport {
   id: string;
   createdAt: string;
+  updatedAt?: string;
   provider: AIProvider;
   model: string;
   summaryText: string;
@@ -196,4 +208,64 @@ export interface StagedTransaction extends Omit<Transaction, 'id' | 'createdAt'>
   duplicateReason?: string;
   selected: boolean;
   originalRawRow?: any;
+}
+
+// --- Sync & Tombstone Data Structures ---
+
+export type SyncableStoreName =
+  | 'transactions'
+  | 'categories'
+  | 'budgets'
+  | 'investments'
+  | 'dreams'
+  | 'contacts'
+  | 'settlements'
+  | 'aiReports';
+
+export interface TombstoneRecord {
+  id: string;
+  store: SyncableStoreName;
+  deletedAt: string; // ISO 8601
+}
+
+export type SyncStatus =
+  | 'idle'
+  | 'syncing'
+  | 'synced'
+  | 'error'
+  | 'offline'
+  | 'unconfigured'
+  | 'disconnected';
+
+export interface SyncMetadata {
+  status: SyncStatus;
+  lastSyncedAt?: string;
+  errorMessage?: string;
+  userEmail?: string;
+  deviceId: string;
+}
+
+export interface SyncPayload {
+  version: number;
+  deviceId: string;
+  lastModified: string; // ISO 8601
+  stores: {
+    transactions: Transaction[];
+    categories: Category[];
+    budgets: Budget[];
+    emergencyFund: EmergencyFund & { id: string };
+    investments: Investment[];
+    dreams: DreamGoal[];
+    aiSettings: Omit<AISettings, 'apiKey'> & { id: string }; // Excludes apiKey for security
+    aiReports: AIHealthReport[];
+    userPreferences: {
+      id: string;
+      darkMode: boolean;
+      notRecurringTxIds: string[];
+      updatedAt?: string;
+    };
+    contacts: Contact[];
+    settlements: SettlementRecord[];
+  };
+  tombstones: TombstoneRecord[];
 }

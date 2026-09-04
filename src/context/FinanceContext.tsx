@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Transaction,
   Category,
@@ -11,6 +11,7 @@ import {
   Contact,
   SettlementRecord,
   ContactBalance,
+  SyncStatus,
 } from '../types/finance';
 import {
   DEFAULT_CATEGORIES,
@@ -29,8 +30,11 @@ import {
   getSingleRecord,
   saveSingleRecord,
   clearAllStores,
+  addTombstone,
   UserPreferences,
 } from '../utils/db';
+import { googleAuthService } from '../services/googleAuth';
+import { driveSyncService } from '../services/driveSync';
 
 export type AppView = 
   | 'dashboard'
@@ -65,6 +69,17 @@ interface FinanceContextType {
   aiReports: AIHealthReport[];
   notRecurringTxIds: Set<string>;
   toggleNotRecurring: (txId: string) => void;
+
+  // Google Drive Cross-Device Sync
+  syncStatus: SyncStatus;
+  lastSyncedAt: string | null;
+  syncError: string | null;
+  isDriveConnected: boolean;
+  driveUserEmail: string | null;
+  triggerSync: (showFeedback?: boolean) => Promise<boolean>;
+  connectDrive: () => Promise<boolean>;
+  disconnectDrive: () => Promise<void>;
+  reloadFromDB: () => Promise<void>;
 
   // Transactions CRUD
   addTransaction: (tx: Omit<Transaction, 'id' | 'createdAt'>) => Transaction;
@@ -191,85 +206,100 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const [aiReports, setAIReports] = useState<AIHealthReport[]>([]);
 
+  // Sync state
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>('disconnected');
+  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(driveSyncService.getLastSyncedAt());
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const [isDriveConnected, setIsDriveConnected] = useState<boolean>(false);
+  const [driveUserEmail, setDriveUserEmail] = useState<string | null>(null);
+
+  // Reload all records from IndexedDB into React state
+  const reloadFromDB = useCallback(async () => {
+    try {
+      const [
+        dbTx,
+        dbCat,
+        dbBudgets,
+        dbEm,
+        dbInv,
+        dbDreams,
+        dbContacts,
+        dbSettlements,
+        dbAiSet,
+        dbAiReports,
+        dbPrefs,
+      ] = await Promise.all([
+        getAllFromStore<Transaction>('transactions'),
+        getAllFromStore<Category>('categories'),
+        getAllFromStore<Budget>('budgets'),
+        getSingleRecord<EmergencyFund & { id: string }>('emergencyFund'),
+        getAllFromStore<Investment>('investments'),
+        getAllFromStore<DreamGoal>('dreams'),
+        getAllFromStore<Contact>('contacts'),
+        getAllFromStore<SettlementRecord>('settlements'),
+        getSingleRecord<AISettings & { id: string }>('aiSettings'),
+        getAllFromStore<AIHealthReport>('aiReports'),
+        getSingleRecord<UserPreferences>('userPreferences', 'general'),
+      ]);
+
+      if (dbTx && Array.isArray(dbTx)) {
+        const normalized = dbTx.map(t => {
+          if (t.splitWith && !Array.isArray(t.splitWith) && typeof t.splitWith === 'object') {
+            const single = t.splitWith as any;
+            return {
+              ...t,
+              splitWith: [{
+                id: single.id || `split-${t.id}-1`,
+                contactId: single.contactId,
+                label: single.label,
+                amount: single.amount,
+                direction: single.direction || 'they_owe_me',
+                settled: Boolean(single.settled),
+              }],
+            };
+          }
+          return t;
+        });
+        setTransactions(normalized);
+      }
+      if (dbCat && Array.isArray(dbCat) && dbCat.length > 0) setCategories(dbCat);
+      if (dbBudgets && Array.isArray(dbBudgets)) setBudgets(dbBudgets);
+      if (dbEm) {
+        const { id: _id, ...cleanEm } = dbEm;
+        setEmergencyFund(cleanEm);
+      }
+      if (dbInv && Array.isArray(dbInv)) setInvestments(dbInv);
+      if (dbDreams && Array.isArray(dbDreams)) setDreams(dbDreams);
+      if (dbContacts && Array.isArray(dbContacts)) setContacts(dbContacts);
+      if (dbSettlements && Array.isArray(dbSettlements)) setSettlements(dbSettlements);
+      if (dbAiSet) {
+        const { id: _id, ...cleanAi } = dbAiSet;
+        setAISettings({
+          provider: cleanAi.provider || 'gemini',
+          apiKey: cleanAi.apiKey || '',
+          model: cleanAi.model || DEFAULT_AI_MODELS[cleanAi.provider || 'gemini'],
+        });
+      }
+      if (dbAiReports && Array.isArray(dbAiReports)) setAIReports(dbAiReports);
+      if (dbPrefs) {
+        if (dbPrefs.darkMode !== undefined) setDarkMode(dbPrefs.darkMode);
+        if (dbPrefs.notRecurringTxIds && Array.isArray(dbPrefs.notRecurringTxIds)) {
+          setNotRecurringTxIds(new Set(dbPrefs.notRecurringTxIds));
+        }
+      }
+    } catch (err) {
+      console.error('[FinanceContext] Error reloading from IndexedDB:', err);
+    }
+  }, []);
+
   // Initial load from IndexedDB + migrate from localStorage if available
   useEffect(() => {
     let isMounted = true;
     async function init() {
       try {
         await migrateFromLocalStorage();
-
-        const [
-          dbTx,
-          dbCat,
-          dbBudgets,
-          dbEm,
-          dbInv,
-          dbDreams,
-          dbContacts,
-          dbSettlements,
-          dbAiSet,
-          dbAiReports,
-          dbPrefs,
-        ] = await Promise.all([
-          getAllFromStore<Transaction>('transactions'),
-          getAllFromStore<Category>('categories'),
-          getAllFromStore<Budget>('budgets'),
-          getSingleRecord<EmergencyFund & { id: string }>('emergencyFund'),
-          getAllFromStore<Investment>('investments'),
-          getAllFromStore<DreamGoal>('dreams'),
-          getAllFromStore<Contact>('contacts'),
-          getAllFromStore<SettlementRecord>('settlements'),
-          getSingleRecord<AISettings & { id: string }>('aiSettings'),
-          getAllFromStore<AIHealthReport>('aiReports'),
-          getSingleRecord<UserPreferences>('userPreferences', 'general'),
-        ]);
-
-        if (!isMounted) return;
-
-        if (dbTx && Array.isArray(dbTx)) {
-          const normalized = dbTx.map(t => {
-            if (t.splitWith && !Array.isArray(t.splitWith) && typeof t.splitWith === 'object') {
-              const single = t.splitWith as any;
-              return {
-                ...t,
-                splitWith: [{
-                  id: single.id || `split-${t.id}-1`,
-                  contactId: single.contactId,
-                  label: single.label,
-                  amount: single.amount,
-                  direction: single.direction || 'they_owe_me',
-                  settled: Boolean(single.settled),
-                }],
-              };
-            }
-            return t;
-          });
-          setTransactions(normalized);
-        }
-        if (dbCat && Array.isArray(dbCat) && dbCat.length > 0) setCategories(dbCat);
-        if (dbBudgets && Array.isArray(dbBudgets)) setBudgets(dbBudgets);
-        if (dbEm) {
-          const { id: _id, ...cleanEm } = dbEm;
-          setEmergencyFund(cleanEm);
-        }
-        if (dbInv && Array.isArray(dbInv)) setInvestments(dbInv);
-        if (dbDreams && Array.isArray(dbDreams)) setDreams(dbDreams);
-        if (dbContacts && Array.isArray(dbContacts)) setContacts(dbContacts);
-        if (dbSettlements && Array.isArray(dbSettlements)) setSettlements(dbSettlements);
-        if (dbAiSet) {
-          const { id: _id, ...cleanAi } = dbAiSet;
-          setAISettings({
-            provider: cleanAi.provider || 'gemini',
-            apiKey: cleanAi.apiKey || '',
-            model: cleanAi.model || DEFAULT_AI_MODELS[cleanAi.provider || 'gemini'],
-          });
-        }
-        if (dbAiReports && Array.isArray(dbAiReports)) setAIReports(dbAiReports);
-        if (dbPrefs) {
-          if (dbPrefs.darkMode !== undefined) setDarkMode(dbPrefs.darkMode);
-          if (dbPrefs.notRecurringTxIds && Array.isArray(dbPrefs.notRecurringTxIds)) {
-            setNotRecurringTxIds(new Set(dbPrefs.notRecurringTxIds));
-          }
+        if (isMounted) {
+          await reloadFromDB();
         }
       } catch (err) {
         console.error('[FinanceContext] Error initializing IndexedDB:', err);
@@ -282,7 +312,107 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return () => {
       isMounted = false;
     };
+  }, [reloadFromDB]);
+
+  // Sync methods
+  const triggerSync = useCallback(async (showFeedback = true): Promise<boolean> => {
+    try {
+      const ok = await driveSyncService.sync();
+      if (ok) {
+        await reloadFromDB();
+      }
+      return ok;
+    } catch (err: any) {
+      console.error('[FinanceContext] triggerSync error:', err);
+      return false;
+    }
+  }, [reloadFromDB]);
+
+  const connectDrive = useCallback(async (): Promise<boolean> => {
+    try {
+      setSyncStatus('syncing');
+      setSyncError(null);
+      const token = await googleAuthService.requestAccessToken(true);
+      if (token) {
+        const ok = await triggerSync(true);
+        return ok;
+      }
+      setSyncStatus('disconnected');
+      return false;
+    } catch (err: any) {
+      console.error('[FinanceContext] connectDrive error:', err);
+      setSyncError(err?.message || 'Failed to connect Google Drive');
+      setSyncStatus('error');
+      return false;
+    }
+  }, [triggerSync]);
+
+  const disconnectDrive = useCallback(async (): Promise<void> => {
+    await googleAuthService.disconnect();
+    setSyncStatus('disconnected');
+    setSyncError(null);
   }, []);
+
+  // Subscriptions to Google Auth & Drive Sync
+  useEffect(() => {
+    return googleAuthService.subscribe((connected, profile) => {
+      setIsDriveConnected(connected);
+      setDriveUserEmail(profile?.email || null);
+      if (!connected) {
+        setSyncStatus(googleAuthService.hasClientId() ? 'disconnected' : 'unconfigured');
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    return driveSyncService.subscribe((isSyncing, lastSync, error) => {
+      setLastSyncedAt(lastSync);
+      setSyncError(error);
+      if (isSyncing) {
+        setSyncStatus('syncing');
+      } else if (error) {
+        setSyncStatus('error');
+      } else if (lastSync) {
+        setSyncStatus('synced');
+      } else if (googleAuthService.isConnected()) {
+        setSyncStatus('idle');
+      }
+    });
+  }, []);
+
+  // Sync Triggers: on app start (if enabled)
+  useEffect(() => {
+    if (!isInitialized) return;
+    if (googleAuthService.isSyncEnabled()) {
+      triggerSync(false);
+    }
+  }, [isInitialized, triggerSync]);
+
+  // Sync Triggers: on network back online
+  useEffect(() => {
+    const handleOnline = () => {
+      if (googleAuthService.isSyncEnabled()) {
+        triggerSync(false);
+      }
+    };
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
+  }, [triggerSync]);
+
+  // Sync Triggers: every 3 minutes if tab is visible
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (
+        document.visibilityState === 'visible' &&
+        navigator.onLine &&
+        googleAuthService.isSyncEnabled() &&
+        !driveSyncService.isSyncing()
+      ) {
+        triggerSync(false);
+      }
+    }, 3 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [triggerSync]);
 
   // Sync to IndexedDB once initialized
   useEffect(() => {
@@ -364,10 +494,12 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Transaction operations
   const addTransaction = (txData: Omit<Transaction, 'id' | 'createdAt'>): Transaction => {
+    const now = new Date().toISOString();
     const newTx: Transaction = {
       ...txData,
       id: `tx-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-      createdAt: new Date().toISOString(),
+      createdAt: now,
+      updatedAt: now,
     };
     setTransactions(prev => [newTx, ...prev]);
     return newTx;
@@ -375,25 +507,31 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const addMultipleTransactions = (txsData: Omit<Transaction, 'id' | 'createdAt'>[]) => {
     const timestamp = Date.now();
+    const now = new Date().toISOString();
     const newTxs: Transaction[] = txsData.map((t, idx) => ({
       ...t,
       id: `tx-${timestamp}-${idx}-${Math.random().toString(36).substring(2, 5)}`,
-      createdAt: new Date().toISOString(),
+      createdAt: now,
+      updatedAt: now,
     }));
     setTransactions(prev => [...newTxs, ...prev]);
   };
 
   const updateTransaction = (id: string, updated: Partial<Transaction>) => {
-    setTransactions(prev => prev.map(t => (t.id === id ? { ...t, ...updated } : t)));
+    setTransactions(prev =>
+      prev.map(t => (t.id === id ? { ...t, ...updated, updatedAt: new Date().toISOString() } : t))
+    );
   };
 
   const deleteTransaction = (id: string) => {
+    addTombstone('transactions', id);
     setTransactions(prev => prev.filter(t => t.id !== id));
     // Clean up any auto-settlements tied to this transaction
     setSettlements(prev => prev.filter(s => s.sourceTransactionId !== id));
   };
 
   const deleteMultipleTransactions = (ids: string[]) => {
+    ids.forEach(id => addTombstone('transactions', id));
     const set = new Set(ids);
     setTransactions(prev => prev.filter(t => !set.has(t.id)));
     setSettlements(prev => prev.filter(s => !s.sourceTransactionId || !set.has(s.sourceTransactionId)));
@@ -401,20 +539,25 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Contact CRUD operations
   const addContact = (contactData: Omit<Contact, 'id' | 'createdAt'>): Contact => {
+    const now = new Date().toISOString();
     const newContact: Contact = {
       ...contactData,
       id: `contact-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-      createdAt: new Date().toISOString().split('T')[0],
+      createdAt: now.split('T')[0],
+      updatedAt: now,
     };
     setContacts(prev => [...prev, newContact]);
     return newContact;
   };
 
   const updateContact = (id: string, updated: Partial<Contact>) => {
-    setContacts(prev => prev.map(c => (c.id === id ? { ...c, ...updated } : c)));
+    setContacts(prev =>
+      prev.map(c => (c.id === id ? { ...c, ...updated, updatedAt: new Date().toISOString() } : c))
+    );
   };
 
   const deleteContact = (id: string) => {
+    addTombstone('contacts', id);
     setContacts(prev => prev.filter(c => c.id !== id));
     setSettlements(prev => prev.filter(s => s.contactId !== id));
     setTransactions(prev =>
@@ -423,7 +566,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         const updatedSplits = t.splitWith.map(s =>
           s.contactId === id ? { ...s, contactId: undefined, label: s.label || 'Former Contact' } : s
         );
-        return { ...t, splitWith: updatedSplits };
+        return { ...t, splitWith: updatedSplits, updatedAt: new Date().toISOString() };
       })
     );
   };
@@ -437,13 +580,15 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     sourceSplitEntryId?: string,
     linkedTransactionId?: string
   ): SettlementRecord => {
+    const now = new Date().toISOString();
     const newSettlement: SettlementRecord = {
       id: `set-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       contactId,
       amount,
-      date: date || new Date().toISOString().split('T')[0],
+      date: date || now.split('T')[0],
       note: note || 'Settlement payment',
-      createdAt: new Date().toISOString(),
+      createdAt: now,
+      updatedAt: now,
       sourceTransactionId,
       sourceSplitEntryId,
       linkedTransactionId,
@@ -453,12 +598,13 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const deleteSettlement = (id: string) => {
+    addTombstone('settlements', id);
     setSettlements(prev => prev.filter(s => s.id !== id));
   };
 
   const updateSettlement = (id: string, updated: Partial<SettlementRecord>) => {
     setSettlements(prev =>
-      prev.map(s => (s.id === id ? { ...s, ...updated } : s))
+      prev.map(s => (s.id === id ? { ...s, ...updated, updatedAt: new Date().toISOString() } : s))
     );
   };
 
@@ -466,7 +612,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setSettlements(prev =>
       prev.map(s =>
         s.id === settlementId
-          ? { ...s, linkedTransactionId: transactionId || undefined }
+          ? { ...s, linkedTransactionId: transactionId || undefined, updatedAt: new Date().toISOString() }
           : s
       )
     );
@@ -486,23 +632,25 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (!targetEntry) return undefined;
 
     const isCurrentlySettled = Boolean(targetEntry.settled);
+    const now = new Date().toISOString();
 
     if (!isCurrentlySettled) {
       // 1. Mark that specific splitEntry as settled
       const updatedSplits = tx.splitWith.map(e =>
         e.id === targetEntryId ? { ...e, settled: true } : e
       );
-      updateTransaction(transactionId, { splitWith: updatedSplits });
+      updateTransaction(transactionId, { splitWith: updatedSplits, updatedAt: now });
 
       // 2. If it is attached to a contact, record SettlementRecord
       if (targetEntry.contactId) {
         const newSettlement: SettlementRecord = {
           id: `set-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
           contactId: targetEntry.contactId,
-          date: new Date().toISOString().split('T')[0],
+          date: now.split('T')[0],
           amount: targetEntry.amount,
           note: `Quick settlement for "${tx.description}"`,
-          createdAt: new Date().toISOString(),
+          createdAt: now,
+          updatedAt: now,
           sourceTransactionId: transactionId,
           sourceSplitEntryId: targetEntryId,
         };
@@ -515,9 +663,17 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const updatedSplits = tx.splitWith.map(e =>
         e.id === targetEntryId ? { ...e, settled: false } : e
       );
-      updateTransaction(transactionId, { splitWith: updatedSplits });
+      updateTransaction(transactionId, { splitWith: updatedSplits, updatedAt: now });
 
       // 2. Remove the auto-created settlement record
+      const toDelete = settlements.find(
+        s =>
+          s.sourceTransactionId === transactionId &&
+          (s.sourceSplitEntryId === targetEntryId || !s.sourceSplitEntryId)
+      );
+      if (toDelete) {
+        addTombstone('settlements', toDelete.id);
+      }
       setSettlements(prev =>
         prev.filter(
           s =>
@@ -547,6 +703,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     const targetEntry = tx.splitWith.find(e => e.id === splitEntryId);
     if (!targetEntry) return undefined;
+    const now = new Date().toISOString();
 
     if (options.settled) {
       const finalSettledAmount =
@@ -563,7 +720,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
             }
           : e
       );
-      updateTransaction(transactionId, { splitWith: updatedSplits });
+      updateTransaction(transactionId, { splitWith: updatedSplits, updatedAt: now });
 
       if (targetEntry.contactId) {
         // Check if a settlement record already exists for this split
@@ -580,6 +737,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
             date: options.date || existingSettlement.date,
             note: options.note || existingSettlement.note,
             linkedTransactionId: options.linkedTransactionId || undefined,
+            updatedAt: now,
           };
           updateSettlement(existingSettlement.id, updatedRecord);
           return updatedRecord;
@@ -587,10 +745,11 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
           const newSettlement: SettlementRecord = {
             id: `set-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
             contactId: targetEntry.contactId,
-            date: options.date || new Date().toISOString().split('T')[0],
+            date: options.date || now.split('T')[0],
             amount: finalSettledAmount,
             note: options.note || `Settlement for "${tx.description}"`,
-            createdAt: new Date().toISOString(),
+            createdAt: now,
+            updatedAt: now,
             sourceTransactionId: transactionId,
             sourceSplitEntryId: splitEntryId,
             linkedTransactionId: options.linkedTransactionId || undefined,
@@ -612,9 +771,17 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
             }
           : e
       );
-      updateTransaction(transactionId, { splitWith: updatedSplits });
+      updateTransaction(transactionId, { splitWith: updatedSplits, updatedAt: now });
 
       // Remove auto-created settlement record
+      const toDelete = settlements.find(
+        s =>
+          s.sourceTransactionId === transactionId &&
+          (s.sourceSplitEntryId === splitEntryId || !s.sourceSplitEntryId)
+      );
+      if (toDelete) {
+        addTombstone('settlements', toDelete.id);
+      }
       setSettlements(prev =>
         prev.filter(
           s =>
@@ -630,38 +797,45 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Category operations
   const addCategory = (catData: Omit<Category, 'id'>): Category => {
+    const now = new Date().toISOString();
     const newCat: Category = {
       ...catData,
       id: `cat-${Date.now()}`,
       isCustom: true,
+      updatedAt: now,
     };
     setCategories(prev => [...prev, newCat]);
     return newCat;
   };
 
   const updateCategory = (id: string, updated: Partial<Category>) => {
-    setCategories(prev => prev.map(c => (c.id === id ? { ...c, ...updated } : c)));
+    setCategories(prev =>
+      prev.map(c => (c.id === id ? { ...c, ...updated, updatedAt: new Date().toISOString() } : c))
+    );
   };
 
   const deleteCategory = (id: string) => {
+    addTombstone('categories', id);
     setCategories(prev => prev.filter(c => c.id !== id));
   };
 
   // Budget operations
   const setBudgetForCategory = (category: string, monthlyLimit: number) => {
+    const now = new Date().toISOString();
     setBudgets(prev => {
       const existingIdx = prev.findIndex(b => b.category.toLowerCase() === category.toLowerCase());
       if (existingIdx >= 0) {
         const next = [...prev];
-        next[existingIdx] = { ...next[existingIdx], monthlyLimit };
+        next[existingIdx] = { ...next[existingIdx], monthlyLimit, updatedAt: now };
         return next;
       } else {
-        return [...prev, { id: `b-${Date.now()}`, category, monthlyLimit }];
+        return [...prev, { id: `b-${Date.now()}`, category, monthlyLimit, updatedAt: now }];
       }
     });
   };
 
   const deleteBudget = (id: string) => {
+    addTombstone('budgets', id);
     setBudgets(prev => prev.filter(b => b.id !== id));
   };
 
@@ -671,6 +845,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       ...prev,
       targetMonths,
       manualTargetAmount,
+      updatedAt: new Date().toISOString(),
     }));
   };
 
@@ -680,14 +855,16 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     note?: string,
     date?: string
   ) => {
-    const today = date || new Date().toISOString().split('T')[0];
+    const now = new Date().toISOString();
+    const today = date || now.split('T')[0];
     const newContribution = {
       id: `em-${Date.now()}`,
       date: today,
       amount,
       type,
       note: note || (type === 'deposit' ? 'Emergency Fund Deposit' : 'Emergency Fund Withdrawal'),
-      createdAt: new Date().toISOString(),
+      createdAt: now,
+      updatedAt: now,
     };
 
     setEmergencyFund(prev => {
@@ -696,20 +873,23 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         ...prev,
         currentSaved: newSaved,
         contributions: [newContribution, ...prev.contributions],
+        updatedAt: now,
       };
     });
   };
 
   // Investments operations
   const addInvestment = (invData: Omit<Investment, 'id' | 'lastUpdated'>): Investment => {
+    const now = new Date().toISOString();
     const newInv: Investment = {
       ...invData,
       id: `inv-${Date.now()}`,
-      lastUpdated: new Date().toISOString().split('T')[0],
+      lastUpdated: now.split('T')[0],
+      updatedAt: now,
       logs: [
         {
           id: `log-${Date.now()}`,
-          date: new Date().toISOString().split('T')[0],
+          date: now.split('T')[0],
           investedDelta: invData.investedAmount,
           valueDelta: invData.currentValue,
           note: 'Initial holding created',
@@ -721,13 +901,15 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const updateInvestment = (id: string, updated: Partial<Investment>) => {
+    const now = new Date().toISOString();
     setInvestments(prev =>
       prev.map(i =>
         i.id === id
           ? {
               ...i,
               ...updated,
-              lastUpdated: new Date().toISOString().split('T')[0],
+              lastUpdated: now.split('T')[0],
+              updatedAt: now,
             }
           : i
       )
@@ -735,6 +917,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const deleteInvestment = (id: string) => {
+    addTombstone('investments', id);
     setInvestments(prev => prev.filter(i => i.id !== id));
   };
 
@@ -744,8 +927,9 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       initialSaved?: number;
     }
   ): DreamGoal => {
+    const now = new Date().toISOString();
     const initialSaved = dreamData.initialSaved || 0;
-    const today = new Date().toISOString().split('T')[0];
+    const today = now.split('T')[0];
     const newDream: DreamGoal = {
       id: `dream-${Date.now()}`,
       name: dreamData.name,
@@ -757,13 +941,14 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       color: dreamData.color || '#3b82f6',
       priority: dreamData.priority || 'medium',
       createdAt: today,
+      updatedAt: now,
       contributions: initialSaved > 0 ? [
         {
           id: `dc-${Date.now()}`,
           date: today,
           amount: initialSaved,
           note: 'Initial contribution',
-          createdAt: new Date().toISOString(),
+          createdAt: now,
         }
       ] : [],
     };
@@ -772,21 +957,26 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const updateDream = (id: string, updated: Partial<DreamGoal>) => {
-    setDreams(prev => prev.map(d => (d.id === id ? { ...d, ...updated } : d)));
+    setDreams(prev =>
+      prev.map(d => (d.id === id ? { ...d, ...updated, updatedAt: new Date().toISOString() } : d))
+    );
   };
 
   const deleteDream = (id: string) => {
+    addTombstone('dreams', id);
     setDreams(prev => prev.filter(d => d.id !== id));
   };
 
   const addDreamContribution = (dreamId: string, amount: number, note?: string, date?: string) => {
-    const today = date || new Date().toISOString().split('T')[0];
+    const now = new Date().toISOString();
+    const today = date || now.split('T')[0];
     const newContribution = {
       id: `dc-${Date.now()}`,
       date: today,
       amount,
       note: note || 'Goal Contribution',
-      createdAt: new Date().toISOString(),
+      createdAt: now,
+      updatedAt: now,
     };
 
     setDreams(prev =>
@@ -796,6 +986,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
             ...d,
             currentSaved: d.currentSaved + amount,
             contributions: [newContribution, ...(d.contributions || [])],
+            updatedAt: now,
           };
         }
         return d;
@@ -813,20 +1004,24 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         ...settings,
         provider,
         model: resolvedModel,
+        updatedAt: new Date().toISOString(),
       };
     });
   };
 
   const saveAIReport = (reportData: Omit<AIHealthReport, 'id' | 'createdAt'>) => {
+    const now = new Date().toISOString();
     const newReport: AIHealthReport = {
       ...reportData,
       id: `rep-${Date.now()}`,
-      createdAt: new Date().toISOString(),
+      createdAt: now,
+      updatedAt: now,
     };
     setAIReports(prev => [newReport, ...prev]);
   };
 
   const deleteAIReport = (id: string) => {
+    addTombstone('aiReports', id);
     setAIReports(prev => prev.filter(r => r.id !== id));
   };
 
@@ -1186,6 +1381,15 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         aiReports,
         notRecurringTxIds,
         toggleNotRecurring,
+        syncStatus,
+        lastSyncedAt,
+        syncError,
+        isDriveConnected,
+        driveUserEmail,
+        triggerSync,
+        connectDrive,
+        disconnectDrive,
+        reloadFromDB,
         addTransaction,
         addMultipleTransactions,
         updateTransaction,
