@@ -111,7 +111,7 @@ export const DreamModal: React.FC<DreamModalProps> = ({
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="e.g. Leh Ladakh Trip, MacBook Pro, House Registry"
-              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+              className="w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-white dark:bg-[#171E2A] px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
             />
           </div>
 
@@ -126,7 +126,7 @@ export const DreamModal: React.FC<DreamModalProps> = ({
               value={targetAmount}
               onChange={e => setTargetAmount(e.target.value)}
               placeholder="0.00"
-              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2.5 text-sm font-bold text-slate-900 dark:text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+              className="w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-white dark:bg-[#171E2A] px-3.5 py-2.5 text-sm font-bold text-slate-900 dark:text-white font-numeric focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
             />
           </div>
         </div>
@@ -146,7 +146,7 @@ export const DreamModal: React.FC<DreamModalProps> = ({
               type="date"
               value={targetDate}
               onChange={e => setTargetDate(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+              className="w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-white dark:bg-[#171E2A] px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
             />
           </div>
 
@@ -160,7 +160,7 @@ export const DreamModal: React.FC<DreamModalProps> = ({
                 value={initialSaved}
                 onChange={e => setInitialSaved(e.target.value)}
                 placeholder="0.00"
-                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+                className="w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-white dark:bg-[#171E2A] px-3.5 py-2.5 text-sm text-slate-900 dark:text-white font-numeric focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
               />
             </div>
           )}
@@ -172,7 +172,7 @@ export const DreamModal: React.FC<DreamModalProps> = ({
             <select
               value={priority}
               onChange={e => setPriority(e.target.value as any)}
-              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+              className="w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-white dark:bg-[#171E2A] px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
             >
               <option value="low">Low Priority</option>
               <option value="medium">Medium Priority</option>
@@ -206,7 +206,7 @@ export const DreamModal: React.FC<DreamModalProps> = ({
           <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
             Select Goal Icon
           </label>
-          <div className="grid grid-cols-6 sm:grid-cols-10 gap-2 max-h-36 overflow-y-auto p-2 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
+          <div className="grid grid-cols-6 sm:grid-cols-10 gap-2 max-h-36 overflow-y-auto p-2 bg-slate-50 dark:bg-[#171E2A] rounded-xl border border-slate-200/90 dark:border-[#202836]">
             {AVAILABLE_CATEGORY_ICONS.map(iconName => (
               <button
                 key={iconName}
@@ -214,7 +214,7 @@ export const DreamModal: React.FC<DreamModalProps> = ({
                 onClick={() => setIcon(iconName)}
                 className={`p-2 rounded-lg flex items-center justify-center transition-all ${
                   icon === iconName
-                    ? 'bg-white dark:bg-slate-700 text-emerald-600 shadow-sm ring-2 ring-emerald-500'
+                    ? 'bg-white dark:bg-[#202836] text-emerald-600 shadow-sm ring-2 ring-emerald-500'
                     : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
@@ -225,11 +225,11 @@ export const DreamModal: React.FC<DreamModalProps> = ({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-[#202836]">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#171E2A] transition-colors"
           >
             Cancel
           </button>

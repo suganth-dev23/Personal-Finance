@@ -48,39 +48,36 @@ export const DreamsView: React.FC = () => {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Hero Overview: Modern Obsidian Milestone Tracker */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 text-white p-6 sm:p-8 border border-slate-800 shadow-xl shadow-slate-950/40">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
-        <div className="absolute bottom-0 left-1/4 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-
+      {/* Hero Overview: Modern Minimalist Milestone Tracker */}
+      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] text-slate-900 dark:text-white p-6 sm:p-8 border border-slate-200/90 dark:border-[#202836] shadow-sm">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
-                <Sparkles className="w-3 h-3 text-indigo-400" /> Milestone Goals & Dreams
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                <Sparkles className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> Milestone Goals & Dreams
               </span>
-              <span className="text-xs text-slate-400 font-medium">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                 {completedGoalsCount} of {dreams.length} Completed
               </span>
             </div>
 
             <div className="flex items-baseline gap-3">
-              <span className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white">
+              <span className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white font-numeric">
                 {formatINR(totalGoalsSaved)}
               </span>
-              <span className="text-sm font-bold text-emerald-400">
+              <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
                 saved so far
               </span>
             </div>
-            <p className="text-xs sm:text-sm text-slate-400 mt-1">
-              Target across all goals: {formatINR(totalGoalsTarget)} ({overallPercent}% reached)
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+              Target across all goals: <span className="font-numeric">{formatINR(totalGoalsTarget)}</span> ({overallPercent}% reached)
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={handleOpenAdd}
-              className="flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-2xl text-xs sm:text-sm shadow-lg shadow-emerald-500/25 transition-all duration-200 active:scale-95"
+              className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl text-xs sm:text-sm shadow-md shadow-emerald-600/25 transition-all duration-200 active:scale-95"
             >
               <Plus className="w-4 h-4" />
               <span>Create New Goal</span>
@@ -89,14 +86,14 @@ export const DreamsView: React.FC = () => {
         </div>
 
         {/* Global Progress Track */}
-        <div className="mt-6 pt-5 border-t border-slate-800/80">
-          <div className="flex justify-between items-center text-xs text-slate-400 mb-2 font-medium">
-            <span>Overall Progress: {overallPercent}%</span>
-            <span>Target: {formatINR(totalGoalsTarget)}</span>
+        <div className="mt-6 pt-5 border-t border-slate-200/80 dark:border-[#202836]">
+          <div className="flex justify-between items-center text-xs text-slate-500 dark:text-slate-400 mb-2 font-medium">
+            <span className="font-numeric">Overall Progress: {overallPercent}%</span>
+            <span className="font-numeric">Target: {formatINR(totalGoalsTarget)}</span>
           </div>
-          <div className="h-3 w-full bg-slate-800/90 rounded-full overflow-hidden p-0.5 border border-slate-700/50">
+          <div className="h-3 w-full bg-slate-100 dark:bg-[#171E2A] rounded-full overflow-hidden p-0.5 border border-slate-200/60 dark:border-[#202836]">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-teal-400 to-emerald-400 transition-all duration-700 shadow-[0_0_14px_rgba(99,102,241,0.5)]"
+              className="h-full rounded-full bg-emerald-500 transition-all duration-700"
               style={{ width: `${overallPercent}%` }}
             />
           </div>
@@ -104,21 +101,21 @@ export const DreamsView: React.FC = () => {
 
         {/* Quick Metrics */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
-          <div className="bg-slate-800/50 border border-slate-700/40 rounded-2xl p-3">
+          <div className="bg-slate-50 dark:bg-[#171E2A] border border-slate-200/80 dark:border-[#202836] rounded-2xl p-3">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Target</span>
-            <p className="text-sm sm:text-base font-extrabold text-white mt-0.5">{formatCompactINR(totalGoalsTarget)}</p>
+            <p className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white mt-0.5 font-numeric">{formatCompactINR(totalGoalsTarget)}</p>
           </div>
-          <div className="bg-slate-800/50 border border-slate-700/40 rounded-2xl p-3">
+          <div className="bg-slate-50 dark:bg-[#171E2A] border border-slate-200/80 dark:border-[#202836] rounded-2xl p-3">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Saved</span>
-            <p className="text-sm sm:text-base font-extrabold text-emerald-400 mt-0.5">{formatCompactINR(totalGoalsSaved)}</p>
+            <p className="text-sm sm:text-base font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5 font-numeric">{formatCompactINR(totalGoalsSaved)}</p>
           </div>
-          <div className="bg-slate-800/50 border border-slate-700/40 rounded-2xl p-3">
+          <div className="bg-slate-50 dark:bg-[#171E2A] border border-slate-200/80 dark:border-[#202836] rounded-2xl p-3">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Active Dreams</span>
-            <p className="text-sm sm:text-base font-extrabold text-white mt-0.5">{dreams.length} goals</p>
+            <p className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white mt-0.5">{dreams.length} goals</p>
           </div>
-          <div className="bg-slate-800/50 border border-slate-700/40 rounded-2xl p-3">
+          <div className="bg-slate-50 dark:bg-[#171E2A] border border-slate-200/80 dark:border-[#202836] rounded-2xl p-3">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Success Rate</span>
-            <p className="text-sm sm:text-base font-extrabold text-indigo-400 mt-0.5">
+            <p className="text-sm sm:text-base font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5 font-numeric">
               {dreams.length > 0 ? `${Math.round((completedGoalsCount / dreams.length) * 100)}%` : '0%'}
             </p>
           </div>
@@ -127,8 +124,8 @@ export const DreamsView: React.FC = () => {
 
       {/* Goals Grid */}
       {dreams.length === 0 ? (
-        <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 p-8 shadow-sm">
-          <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center mx-auto mb-4">
+        <div className="text-center py-16 bg-white dark:bg-[#131822] rounded-3xl border border-dashed border-slate-200/90 dark:border-[#202836] p-8 shadow-sm">
+          <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mx-auto mb-4">
             <Target className="w-7 h-7" />
           </div>
           <h3 className="text-lg font-bold text-slate-900 dark:text-white">No active goals yet</h3>
@@ -163,7 +160,7 @@ export const DreamsView: React.FC = () => {
             return (
               <div
                 key={dream.id}
-                className="group bg-white dark:bg-slate-900/90 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 hover:border-emerald-500/40 transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between relative overflow-hidden"
+                className="group bg-white dark:bg-[#131822] rounded-3xl p-6 border border-slate-200/90 dark:border-[#202836] hover:border-emerald-500/40 transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between relative overflow-hidden"
               >
                 {/* Accent top stripe glow */}
                 <div
@@ -204,7 +201,7 @@ export const DreamsView: React.FC = () => {
                     <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => handleEdit(dream)}
-                        className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#171E2A] transition-colors"
                         title="Edit Goal"
                       >
                         <Edit3 className="w-3.5 h-3.5" />
@@ -230,7 +227,7 @@ export const DreamsView: React.FC = () => {
                         <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                           Saved
                         </span>
-                        <p className="text-xl font-extrabold text-slate-900 dark:text-white">
+                        <p className="text-xl font-extrabold text-slate-900 dark:text-white font-numeric">
                           {formatINR(dream.currentSaved)}
                         </p>
                       </div>
@@ -238,7 +235,7 @@ export const DreamsView: React.FC = () => {
                         <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                           Target
                         </span>
-                        <p className="text-sm font-bold text-slate-500 dark:text-slate-400">
+                        <p className="text-sm font-bold text-slate-500 dark:text-slate-400 font-numeric">
                           {formatINR(dream.targetAmount)}
                         </p>
                       </div>
@@ -247,18 +244,17 @@ export const DreamsView: React.FC = () => {
                     {/* Progress Bar */}
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-xs font-semibold">
-                        <span className="text-slate-500 dark:text-slate-400">{percent}% Complete</span>
+                        <span className="text-slate-500 dark:text-slate-400 font-numeric">{percent}% Complete</span>
                         <span className={isCompleted ? 'text-emerald-500 font-bold' : 'text-slate-400'}>
-                          {isCompleted ? 'Accomplished 🎉' : `${formatINR(remaining)} left`}
+                          {isCompleted ? 'Accomplished 🎉' : <span className="font-numeric">{formatINR(remaining)} left</span>}
                         </span>
                       </div>
-                      <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden p-0.5">
+                      <div className="w-full bg-slate-100 dark:bg-[#171E2A] rounded-full h-2.5 overflow-hidden p-0.5">
                         <div
                           className="h-full rounded-full transition-all duration-500"
                           style={{
                             width: `${Math.min(percent, 100)}%`,
                             backgroundColor: themeColor,
-                            boxShadow: `0 0 8px ${themeColor}60`,
                           }}
                         />
                       </div>
@@ -266,7 +262,7 @@ export const DreamsView: React.FC = () => {
 
                     {/* Deadline & Suggested Monthly Savings */}
                     {dream.targetDate && !isCompleted && monthsLeft !== null && (
-                      <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-100 dark:border-slate-800/80 text-xs space-y-1.5">
+                      <div className="p-3.5 bg-slate-50 dark:bg-[#171E2A] rounded-2xl border border-slate-200/80 dark:border-[#202836] text-xs space-y-1.5">
                         <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
                           <span className="flex items-center gap-1.5">
                             <Clock className="w-3.5 h-3.5" />
@@ -276,11 +272,11 @@ export const DreamsView: React.FC = () => {
                             {monthsLeft} mo. left
                           </span>
                         </div>
-                        <div className="flex items-center justify-between font-bold pt-1.5 border-t border-slate-200/60 dark:border-slate-700/60">
+                        <div className="flex items-center justify-between font-bold pt-1.5 border-t border-slate-200/60 dark:border-[#202836]">
                           <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                             <Zap className="w-3 h-3" /> Monthly Target:
                           </span>
-                          <span className="text-slate-900 dark:text-white">{formatINR(suggestedMonthly)} / mo</span>
+                          <span className="text-slate-900 dark:text-white font-numeric">{formatINR(suggestedMonthly)} / mo</span>
                         </div>
                       </div>
                     )}
@@ -288,13 +284,13 @@ export const DreamsView: React.FC = () => {
                 </div>
 
                 {/* Bottom Action */}
-                <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                <div className="mt-5 pt-4 border-t border-slate-100 dark:border-[#202836] flex items-center justify-between">
                   <span className="text-xs text-slate-400 font-medium">
                     {dream.contributions?.length || 0} contributions
                   </span>
                   <button
                     onClick={() => handleOpenContribution(dream)}
-                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-500 hover:text-slate-950 dark:hover:bg-emerald-500 dark:hover:text-slate-950 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all duration-200 active:scale-95"
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-[#171E2A] hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-600 dark:hover:text-white text-slate-700 dark:text-slate-300 text-xs font-bold transition-all duration-200 active:scale-95 border border-slate-200/60 dark:border-[#202836]"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>Log Savings</span>

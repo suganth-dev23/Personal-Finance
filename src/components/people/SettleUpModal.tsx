@@ -192,7 +192,7 @@ export const SettleUpModal: React.FC<SettleUpModalProps> = ({
               value={amount}
               onChange={e => setAmount(e.target.value)}
               placeholder="0.00"
-              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 pl-8 pr-4 py-2.5 text-slate-900 dark:text-white font-bold text-lg focus:outline-none"
+              className="font-numeric tabular-nums w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-slate-50 dark:bg-[#171E2A] pl-8 pr-4 py-2.5 text-slate-900 dark:text-slate-100 font-bold text-lg focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
             />
           </div>
         </div>
@@ -206,7 +206,7 @@ export const SettleUpModal: React.FC<SettleUpModalProps> = ({
               <button
                 type="button"
                 onClick={() => setDate(selectedTransaction.date)}
-                className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline"
+                className="text-[10px] font-bold font-numeric text-amber-600 dark:text-[#F5B742] hover:underline"
                 title="Use transaction date"
               >
                 Use tx date ({formatDate(selectedTransaction.date)})
@@ -218,7 +218,7 @@ export const SettleUpModal: React.FC<SettleUpModalProps> = ({
             required
             value={date}
             onChange={e => setDate(e.target.value)}
-            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none"
+            className="font-numeric tabular-nums w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-slate-50 dark:bg-[#171E2A] px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
           />
         </div>
 
@@ -231,19 +231,19 @@ export const SettleUpModal: React.FC<SettleUpModalProps> = ({
             value={note}
             onChange={e => setNote(e.target.value)}
             placeholder="e.g. Paid via GPay, Cash returned"
-            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none"
+            className="w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-slate-50 dark:bg-[#171E2A] px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
           />
         </div>
 
         {/* Link to Real Bank Transaction Section */}
-        <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+        <div className="pt-2 border-t border-slate-100 dark:border-[#202836]">
           <div className="flex items-center justify-between">
             <button
               type="button"
               onClick={() => setIsLinkingExpanded(!isLinkingExpanded)}
-              className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+              className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-amber-600 dark:hover:text-[#F5B742] transition-colors"
             >
-              <LinkIcon className="w-3.5 h-3.5 text-emerald-600" />
+              <LinkIcon className="w-3.5 h-3.5 text-amber-500 dark:text-[#F5B742]" />
               <span>Link to Bank Transaction (Optional)</span>
               {isLinkingExpanded ? (
                 <ChevronUp className="w-3.5 h-3.5 text-slate-400" />
@@ -253,26 +253,26 @@ export const SettleUpModal: React.FC<SettleUpModalProps> = ({
             </button>
 
             {selectedTxId && (
-              <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 text-[10px] font-bold">
+              <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[10px] font-bold">
                 1 Linked
               </span>
             )}
           </div>
 
           {isLinkingExpanded && (
-            <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
+            <div className="mt-3 p-3.5 bg-slate-50 dark:bg-[#171E2A] rounded-2xl border border-slate-200/80 dark:border-[#202836] space-y-3">
               {selectedTransaction ? (
                 /* Selected Linked Transaction Card */
-                <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-emerald-500/40 shadow-xs flex items-center justify-between gap-3">
+                <div className="p-3 rounded-xl bg-white dark:bg-[#131822] border border-emerald-500/40 shadow-xs flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                    <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center flex-shrink-0">
                       <Check className="w-4 h-4" />
                     </div>
                     <div className="min-w-0">
                       <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
                         {selectedTransaction.description}
                       </p>
-                      <p className="text-[11px] text-slate-400">
+                      <p className="text-[11px] text-slate-400 font-numeric">
                         {formatDate(selectedTransaction.date)} • {selectedTransaction.paymentMethod} •{' '}
                         <span className="font-extrabold text-emerald-600 dark:text-emerald-400">
                           {formatINR(selectedTransaction.amount)}
@@ -284,7 +284,7 @@ export const SettleUpModal: React.FC<SettleUpModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setSelectedTxId(null)}
-                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-rose-600 hover:bg-rose-50 text-[11px] font-bold transition-colors"
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#202836] text-slate-600 dark:text-slate-300 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-[11px] font-bold transition-colors"
                   >
                     <Unlink className="w-3 h-3" />
                     <span>Unlink</span>
@@ -300,7 +300,7 @@ export const SettleUpModal: React.FC<SettleUpModalProps> = ({
                       value={txSearchQuery}
                       onChange={e => setTxSearchQuery(e.target.value)}
                       placeholder={`Search ${expectedTxType} transactions...`}
-                      className="w-full pl-8 pr-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-900 dark:text-white focus:outline-none"
+                      className="w-full pl-8 pr-3 py-1.5 bg-white dark:bg-[#131822] border border-slate-200/90 dark:border-[#202836] rounded-xl text-xs font-medium text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
                     />
                   </div>
 
@@ -321,7 +321,7 @@ export const SettleUpModal: React.FC<SettleUpModalProps> = ({
                             className={`p-2 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-2 text-xs ${
                               isExactAmount
                                 ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800'
-                                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700/80 hover:border-emerald-400'
+                                : 'bg-white dark:bg-[#131822] border-slate-200/90 dark:border-[#202836] hover:border-amber-400'
                             }`}
                           >
                             <div className="min-w-0">
@@ -335,19 +335,19 @@ export const SettleUpModal: React.FC<SettleUpModalProps> = ({
                                   </span>
                                 )}
                                 {(txUsageCountMap.get(tx.id) || 0) > 0 && (
-                                  <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                                  <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-slate-100 dark:bg-[#202836] text-slate-600 dark:text-slate-300">
                                     Linked to {txUsageCountMap.get(tx.id)} other
                                   </span>
                                 )}
                               </div>
-                              <p className="text-[10px] text-slate-400 mt-0.5">
+                              <p className="text-[10px] text-slate-400 mt-0.5 font-numeric">
                                 {formatDate(tx.date)} • {tx.paymentMethod}
                                 {tx.referenceId ? ` • Ref: ${tx.referenceId}` : ''}
                               </p>
                             </div>
 
                             <div className="text-right flex-shrink-0">
-                              <span className="font-black text-slate-900 dark:text-white">
+                              <span className="font-numeric font-black text-slate-900 dark:text-white">
                                 {formatINR(tx.amount)}
                               </span>
                             </div>
@@ -362,17 +362,17 @@ export const SettleUpModal: React.FC<SettleUpModalProps> = ({
           )}
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-[#202836]">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#171E2A] transition-colors"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/30 transition-all active:scale-95"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-slate-950 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 shadow-md shadow-amber-500/20 transition-all active:scale-95"
           >
             {initialSettlement ? <Check className="w-4 h-4" /> : <HandCoins className="w-4 h-4" />}
             <span>{initialSettlement ? 'Save Changes' : 'Record Settlement'}</span>

@@ -44,14 +44,14 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   return (
     <div className={`w-full ${className}`}>
       {showPercentage && (
-        <div className="flex justify-between items-center text-xs font-semibold mb-1 text-slate-600 dark:text-slate-300">
+        <div className="flex justify-between items-center text-xs font-semibold mb-1 text-slate-600 dark:text-slate-300 font-numeric">
           <span>{rawPercentage.toFixed(1)}%</span>
           {rawPercentage > 100 && (
             <span className="text-rose-500 font-bold">Over limit (+{(rawPercentage - 100).toFixed(0)}%)</span>
           )}
         </div>
       )}
-      <div className={`w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden ${heightClasses}`}>
+      <div className={`w-full bg-slate-100 dark:bg-[#171E2A] border border-transparent dark:border-[#202836] rounded-full overflow-hidden ${heightClasses}`}>
         <div
           className={`${heightClasses} rounded-full transition-all duration-500 ${barColorClass}`}
           style={{

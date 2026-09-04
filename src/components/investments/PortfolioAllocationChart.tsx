@@ -2,24 +2,13 @@ import React, { useMemo } from 'react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { Investment } from '../../types/finance';
 import { formatINR, formatCompactINR } from '../../utils/currency';
+import { INDIAN_WEALTH_PALETTE } from '../../constants/theme';
 
 interface PortfolioAllocationChartProps {
   investments: Investment[];
 }
 
-const TYPE_COLORS: Record<string, string> = {
-  'Mutual Funds': '#10B981', // Emerald
-  'Stocks': '#3B82F6',       // Sapphire
-  'Fixed Deposit (FD)': '#0D9488', // Teal
-  'Recurring Deposit (RD)': '#06B6D4', // Cyan
-  'Gold / SGB': '#F5B742',   // Suvarna Gold
-  'Crypto': '#8B5CF6',       // Violet
-  'PPF / EPF': '#6366F1',    // Indigo
-  'NPS': '#EC4899',          // Coral Rose
-  'Real Estate': '#C28834',  // Bronze
-  'Bonds / Debt': '#14B8A6', // Mint
-  'Other': '#64748B',        // Slate
-};
+const TYPE_COLORS = INDIAN_WEALTH_PALETTE;
 
 export const PortfolioAllocationChart: React.FC<PortfolioAllocationChartProps> = ({ investments }) => {
   const allocationData = useMemo(() => {

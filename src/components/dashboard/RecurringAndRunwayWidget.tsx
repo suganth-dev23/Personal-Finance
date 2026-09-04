@@ -133,7 +133,7 @@ export const RecurringAndRunwayWidget: React.FC = () => {
             {recurringExpenses.map(item => (
               <div
                 key={item.clusterId}
-                className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-[#171E2A]/70 border border-slate-100 dark:border-[#202836] hover:border-slate-200 dark:hover:border-slate-700 transition-all"
+                className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-[#171E2A]/70 border border-slate-100 dark:border-[#202836] hover:border-slate-200 dark:hover:border-[#273243] transition-all"
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-[#202836] text-slate-600 dark:text-slate-300 flex items-center justify-center font-bold text-xs flex-shrink-0">

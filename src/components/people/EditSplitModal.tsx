@@ -103,7 +103,7 @@ export const EditSplitModal: React.FC<EditSplitModalProps> = ({
           <select
             value={contactId}
             onChange={e => setContactId(e.target.value)}
-            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2.5 text-sm font-semibold text-slate-900 dark:text-white focus:outline-none"
+            className="w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-slate-50 dark:bg-[#171E2A] px-3.5 py-2.5 text-sm font-semibold text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
           >
             <option value="">(Unnamed Person / Label)</option>
             {contacts.map(c => (
@@ -119,7 +119,7 @@ export const EditSplitModal: React.FC<EditSplitModalProps> = ({
           <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
             Direction
           </label>
-          <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
+          <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-[#171E2A] rounded-xl border border-transparent dark:border-[#202836]">
             <button
               type="button"
               onClick={() => setDirection('they_owe_me')}
@@ -156,15 +156,15 @@ export const EditSplitModal: React.FC<EditSplitModalProps> = ({
             required
             value={amount}
             onChange={e => setAmount(e.target.value)}
-            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2.5 text-sm font-bold text-slate-900 dark:text-white focus:outline-none"
+            className="font-numeric tabular-nums w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-slate-50 dark:bg-[#171E2A] px-3.5 py-2.5 text-sm font-bold text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
           />
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-slate-500 font-numeric">
             Total transaction: {formatINR(transaction.amount)} · Your share: <span className="font-bold text-slate-900 dark:text-white">{formatINR(yourShare)}</span>
           </p>
         </div>
 
         {/* Status Toggle */}
-        <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
+        <div className="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-[#171E2A] rounded-2xl border border-slate-200/80 dark:border-[#202836]">
           <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
             Settlement Status
           </span>
@@ -173,8 +173,8 @@ export const EditSplitModal: React.FC<EditSplitModalProps> = ({
             onClick={() => setIsSettled(!isSettled)}
             className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${
               isSettled
-                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
-                : 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
+                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
+                : 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'
             }`}
           >
             {isSettled ? 'Settled' : 'Pending'}
@@ -182,11 +182,11 @@ export const EditSplitModal: React.FC<EditSplitModalProps> = ({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
+        <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-[#202836]">
           <button
             type="button"
             onClick={handleRemoveSplit}
-            className="text-xs font-bold text-rose-600 hover:underline"
+            className="text-xs font-bold text-rose-600 dark:text-rose-400 hover:underline"
           >
             Remove Split
           </button>
@@ -195,13 +195,13 @@ export const EditSplitModal: React.FC<EditSplitModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#171E2A] transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm"
+              className="px-4 py-2 rounded-xl text-xs font-bold text-slate-950 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 shadow-md shadow-amber-500/20 active:scale-95 transition-all"
             >
               Save Changes
             </button>

@@ -170,7 +170,7 @@ export const PeopleView: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Top Header & Sub-Navigation Tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200 dark:border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/90 dark:border-[#202836]">
         <div>
           <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
             People & Splits
@@ -181,12 +181,12 @@ export const PeopleView: React.FC = () => {
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl text-xs font-bold self-start sm:self-auto">
+        <div className="flex items-center bg-slate-100 dark:bg-[#171E2A] p-1 rounded-2xl text-xs font-bold self-start sm:self-auto border border-slate-200/60 dark:border-[#202836]">
           <button
             onClick={() => setActiveTab('contacts')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${
               activeTab === 'contacts'
-                ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs'
+                ? 'bg-white dark:bg-[#202836] text-slate-900 dark:text-white shadow-xs'
                 : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
@@ -198,14 +198,14 @@ export const PeopleView: React.FC = () => {
             onClick={() => setActiveTab('history')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${
               activeTab === 'history'
-                ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs'
+                ? 'bg-white dark:bg-[#202836] text-slate-900 dark:text-white shadow-xs'
                 : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <History className="w-4 h-4 text-emerald-600" />
             <span>Settlement History</span>
             {settlements.length > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[10px]">
+              <span className="px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-[10px]">
                 {settlements.length}
               </span>
             )}
@@ -259,65 +259,63 @@ export const PeopleView: React.FC = () => {
         <SettlementHistoryView onBackToContacts={() => setActiveTab('contacts')} />
       ) : (
         <>
-          {/* Modern Minimalist Splits Hero Card (from Mockup) */}
-          <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 text-white rounded-3xl p-6 sm:p-7 border border-slate-800 shadow-xl relative overflow-hidden">
-            <div className="absolute -top-16 -right-16 w-56 h-56 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 relative z-10 pb-5 border-b border-slate-800">
+          {/* Modern Minimalist Splits Hero Card */}
+          <div className="bg-white dark:bg-[#131822] text-slate-900 dark:text-white rounded-3xl p-6 sm:p-7 border border-slate-200/90 dark:border-[#202836] shadow-sm relative overflow-hidden">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 relative z-10 pb-5 border-b border-slate-200/80 dark:border-[#202836]">
               {/* You Are Owed */}
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     You are Owed
                   </span>
                 </div>
-                <p className="text-3xl sm:text-4xl font-black text-emerald-400 tracking-tight">
+                <p className="text-3xl sm:text-4xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight font-numeric">
                   {formatINR(totalOwedToMe)}
                 </p>
-                <p className="text-xs text-slate-400">Repayments due from friends</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Repayments due from friends</p>
               </div>
 
               {/* You Owe */}
-              <div className="space-y-1 sm:border-l sm:border-slate-800 sm:pl-6">
+              <div className="space-y-1 sm:border-l sm:border-slate-200/80 sm:dark:border-[#202836] sm:pl-6">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-rose-500" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     You Owe
                   </span>
                 </div>
-                <p className="text-3xl sm:text-4xl font-black text-rose-400 tracking-tight">
+                <p className="text-3xl sm:text-4xl font-black text-rose-600 dark:text-rose-400 tracking-tight font-numeric">
                   {formatINR(totalIOwe)}
                 </p>
-                <p className="text-xs text-slate-400">Pending payments to others</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Pending payments to others</p>
               </div>
             </div>
 
             {/* Bottom Net Balance & Stats */}
             <div className="flex flex-wrap items-center justify-between gap-4 pt-4 relative z-10">
               <div className="flex items-baseline gap-2">
-                <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider">
+                <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">
                   Net Balance:
                 </span>
                 <span
-                  className={`text-xl font-black tracking-tight ${
+                  className={`text-xl font-black tracking-tight font-numeric ${
                     netOverall > 0
-                      ? 'text-emerald-400'
+                      ? 'text-emerald-600 dark:text-emerald-400'
                       : netOverall < 0
-                      ? 'text-rose-400'
-                      : 'text-slate-300'
+                      ? 'text-rose-600 dark:text-rose-400'
+                      : 'text-slate-700 dark:text-slate-300'
                   }`}
                 >
                   {netOverall >= 0 ? '+' : ''}{formatINR(netOverall)}
                 </span>
-                <span className="text-xs text-slate-400">
+                <span className="text-xs text-slate-500 dark:text-slate-400">
                   ({netOverall > 0 ? 'in your favor' : netOverall < 0 ? 'you owe overall' : 'settled'})
                 </span>
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700">
-                  <Users className="w-3.5 h-3.5 text-indigo-400" />
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 dark:bg-[#171E2A] text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-[#202836]">
+                  <Users className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                   <span>{activeContacts.length} active ({settledContacts.length} settled)</span>
                 </span>
               </div>
@@ -325,7 +323,7 @@ export const PeopleView: React.FC = () => {
           </div>
 
           {/* Action Bar & Filters */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-[#131822] p-4 sm:p-5 rounded-3xl border border-slate-200/90 dark:border-[#202836] shadow-sm">
             {/* Search */}
             <div className="relative w-full sm:w-80">
               <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -334,19 +332,19 @@ export const PeopleView: React.FC = () => {
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search by name or notes..."
-                className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-900 dark:text-white focus:outline-none"
+                className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-[#171E2A] border border-slate-200/90 dark:border-[#202836] rounded-xl text-xs font-medium text-slate-900 dark:text-white focus:outline-none"
               />
             </div>
 
             {/* Filter Pills + Add Contact Button */}
             <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end flex-wrap">
-              <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl text-xs">
+              <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#171E2A] p-1 rounded-xl text-xs border border-slate-200/60 dark:border-[#202836]">
                 <button
                   onClick={() => setFilterType('all')}
                   className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
                     filterType === 'all'
-                      ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs'
-                      : 'text-slate-500 hover:text-slate-700'
+                      ? 'bg-white dark:bg-[#202836] text-slate-900 dark:text-white shadow-xs'
+                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   All Friends
@@ -356,7 +354,7 @@ export const PeopleView: React.FC = () => {
                   className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
                     filterType === 'they_owe_me'
                       ? 'bg-emerald-600 text-white shadow-xs'
-                      : 'text-slate-500 hover:text-slate-700'
+                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   Owes You
@@ -366,7 +364,7 @@ export const PeopleView: React.FC = () => {
                   className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
                     filterType === 'i_owe_them'
                       ? 'bg-rose-600 text-white shadow-xs'
-                      : 'text-slate-500 hover:text-slate-700'
+                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   You Owe
@@ -376,7 +374,7 @@ export const PeopleView: React.FC = () => {
                   className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
                     filterType === 'settled'
                       ? 'bg-indigo-600 text-white shadow-xs'
-                      : 'text-slate-500 hover:text-slate-700'
+                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   Settled
@@ -396,8 +394,8 @@ export const PeopleView: React.FC = () => {
           {/* Active Contacts List */}
           <div className="space-y-4">
             {filteredActiveContacts.length === 0 && (
-              <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 p-8">
-                <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto text-slate-400">
+              <div className="text-center py-12 bg-white dark:bg-[#131822] rounded-3xl border border-dashed border-slate-200/90 dark:border-[#202836] p-8">
+                <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-[#171E2A] flex items-center justify-center mx-auto text-slate-400">
                   <Users className="w-6 h-6" />
                 </div>
                 <h3 className="mt-3 text-base font-bold text-slate-800 dark:text-slate-200">
@@ -438,12 +436,12 @@ export const PeopleView: React.FC = () => {
               return (
                 <div
                   key={contact.id}
-                  className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden transition-all"
+                  className="bg-white dark:bg-[#131822] rounded-3xl border border-slate-200/90 dark:border-[#202836] shadow-sm overflow-hidden transition-all"
                 >
                   {/* Contact Card Header */}
                   <div className="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-3.5">
-                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 text-emerald-700 dark:text-emerald-300 font-black text-lg flex items-center justify-center border border-emerald-500/30">
+                      <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-black text-lg flex items-center justify-center border border-emerald-500/20">
                         {contact.name.charAt(0).toUpperCase()}
                       </div>
                       <div>
@@ -460,7 +458,7 @@ export const PeopleView: React.FC = () => {
                       {/* Balance Badge */}
                       <div className="text-right">
                         <span
-                          className={`text-base sm:text-lg font-black tracking-tight ${
+                          className={`text-base sm:text-lg font-black tracking-tight font-numeric ${
                             isOwedToMe
                               ? 'text-emerald-600 dark:text-emerald-400'
                               : 'text-rose-600 dark:text-rose-400'
@@ -485,7 +483,7 @@ export const PeopleView: React.FC = () => {
 
                         <button
                           onClick={() => setExpandedContactId(isExpanded ? null : contact.id)}
-                          className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                          className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#171E2A] transition-colors"
                           title={isExpanded ? 'Collapse' : 'Expand splits'}
                         >
                           {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
@@ -496,7 +494,7 @@ export const PeopleView: React.FC = () => {
 
                   {/* Expanded Breakdown */}
                   {isExpanded && (
-                    <div className="border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 p-5 sm:p-6 space-y-5">
+                    <div className="border-t border-slate-100 dark:border-[#202836] bg-slate-50/50 dark:bg-[#171E2A]/50 p-5 sm:p-6 space-y-5">
                       {/* Linked Transaction Splits */}
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
@@ -529,8 +527,8 @@ export const PeopleView: React.FC = () => {
                                   key={`${tx.id}-${split.id}`}
                                   className={`p-3.5 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
                                     isSettled
-                                      ? 'bg-slate-100/70 dark:bg-slate-900/40 border-slate-200/60 dark:border-slate-800/60'
-                                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-xs'
+                                      ? 'bg-slate-100/70 dark:bg-[#171E2A]/70 border-slate-200/60 dark:border-[#202836]/60'
+                                      : 'bg-white dark:bg-[#131822] border-slate-200/90 dark:border-[#202836] shadow-xs'
                                   }`}
                                 >
                                   <div className="flex items-center gap-3 min-w-0">
@@ -540,14 +538,14 @@ export const PeopleView: React.FC = () => {
                                       className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all flex-shrink-0 ${
                                         isSettled
                                           ? 'bg-emerald-600 text-white shadow-xs'
-                                          : 'border border-slate-300 dark:border-slate-700 text-slate-400 hover:border-emerald-500 hover:text-emerald-600'
+                                          : 'border border-slate-300 dark:border-[#202836] text-slate-400 hover:border-emerald-500 hover:text-emerald-600'
                                       }`}
                                       title={isSettled ? 'Mark as Unsettled' : 'One-tap Mark as Settled in Full'}
                                     >
                                       {isSettled ? (
                                         <Check className="w-4 h-4" />
                                       ) : (
-                                        <Circle className="w-4 h-4 text-slate-300 dark:text-slate-600" />
+                                        <Circle className="w-4 h-4 text-slate-300 dark:text-slate-500" />
                                       )}
                                     </button>
 
@@ -562,7 +560,7 @@ export const PeopleView: React.FC = () => {
                                       <div className="flex items-center gap-2 text-[11px] text-slate-400 flex-wrap">
                                         <span>{formatDate(tx.date)}</span>
                                         <span>•</span>
-                                        <span>Total: {formatINR(tx.amount)}</span>
+                                        <span className="font-numeric">Total: {formatINR(tx.amount)}</span>
                                         <span>•</span>
                                         <span
                                           className={`font-semibold ${
@@ -580,7 +578,7 @@ export const PeopleView: React.FC = () => {
                                         <div className="flex items-center gap-1.5 mt-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-bold">
                                           <CheckCircle2 className="w-3 h-3 flex-shrink-0" />
                                           <span className="truncate">
-                                            Linked: {linkedTx.description} ({formatINR(linkedTx.amount)})
+                                            Linked: {linkedTx.description} (<span className="font-numeric">{formatINR(linkedTx.amount)}</span>)
                                           </span>
                                         </div>
                                       )}
@@ -589,7 +587,7 @@ export const PeopleView: React.FC = () => {
                                       {isPartial && (
                                         <div className="flex items-center gap-1.5 mt-1 text-[11px] text-amber-600 dark:text-amber-400 font-bold">
                                           <span>
-                                            Partial: {formatINR(split.settledAmount || 0)} paid • {formatINR(split.amount - (split.settledAmount || 0))} open
+                                            Partial: <span className="font-numeric">{formatINR(split.settledAmount || 0)}</span> paid • <span className="font-numeric">{formatINR(split.amount - (split.settledAmount || 0))}</span> open
                                           </span>
                                         </div>
                                       )}
@@ -598,7 +596,7 @@ export const PeopleView: React.FC = () => {
 
                                   <div className="flex items-center gap-2 flex-shrink-0">
                                     <span
-                                      className={`text-xs font-extrabold ${
+                                      className={`text-xs font-extrabold font-numeric ${
                                         isSettled
                                           ? 'text-slate-400 line-through'
                                           : split.direction === 'they_owe_me'
@@ -615,7 +613,7 @@ export const PeopleView: React.FC = () => {
                                       className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs ${
                                         isSettled || linkedTx
                                           ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900 border border-emerald-500/20'
-                                          : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border border-slate-200 dark:border-slate-700'
+                                          : 'bg-slate-100 dark:bg-[#171E2A] text-slate-700 dark:text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border border-slate-200 dark:border-[#202836]'
                                       }`}
                                       title="Connect Repayment Bank Transaction"
                                     >
@@ -626,7 +624,7 @@ export const PeopleView: React.FC = () => {
                                     {/* Edit Split Pencil Icon */}
                                     <button
                                       onClick={() => setEditingSplitItem({ tx, split })}
-                                      className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                                      className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#171E2A]"
                                       title="Edit Split Details"
                                     >
                                       <Edit3 className="w-3.5 h-3.5" />
@@ -641,10 +639,10 @@ export const PeopleView: React.FC = () => {
 
                       {/* Recent Settlement Records History */}
                       {contactSettlements.length > 0 && (
-                        <div className="space-y-2.5 pt-2 border-t border-slate-200/80 dark:border-slate-800">
+                        <div className="space-y-2.5 pt-2 border-t border-slate-200/80 dark:border-[#202836]">
                           <div className="flex items-center justify-between">
                             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                              <History className="w-3.5 h-3.5 text-indigo-500" />
+                              <History className="w-3.5 h-3.5 text-emerald-600" />
                               <span>Recent Settlements ({contactSettlements.length})</span>
                             </h4>
 
@@ -665,10 +663,10 @@ export const PeopleView: React.FC = () => {
                               return (
                                 <div
                                   key={set.id}
-                                  className="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-xs gap-2"
+                                  className="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 rounded-xl bg-white dark:bg-[#131822] border border-slate-200/80 dark:border-[#202836] text-xs gap-2"
                                 >
                                   <div className="flex items-center gap-2 min-w-0 flex-wrap">
-                                    <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                                    <span className="text-emerald-600 dark:text-emerald-400 font-bold font-numeric">
                                       {formatINR(set.amount)}
                                     </span>
                                     <span className="text-slate-600 dark:text-slate-300">
@@ -677,7 +675,7 @@ export const PeopleView: React.FC = () => {
                                     <span className="text-[10px] text-slate-400">({formatDate(set.date)})</span>
 
                                     {linkedTx && (
-                                      <span className="inline-flex items-center gap-1 px-2 py-0.2 rounded-md bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold">
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.2 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold">
                                         <CheckCircle2 className="w-2.5 h-2.5" />
                                         <span>Linked: {linkedTx.description}</span>
                                       </span>
@@ -731,10 +729,10 @@ export const PeopleView: React.FC = () => {
 
           {/* Settled / All Square Section (Collapsible) */}
           {filteredSettledContacts.length > 0 && (
-            <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
+            <div className="pt-4 border-t border-slate-200/90 dark:border-[#202836]">
               <button
                 onClick={() => setIsSettledSectionOpen(!isSettledSectionOpen)}
-                className="flex items-center justify-between w-full p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-600 dark:text-slate-300"
+                className="flex items-center justify-between w-full p-4 rounded-2xl bg-white dark:bg-[#131822] border border-slate-200/90 dark:border-[#202836] text-xs font-bold text-slate-600 dark:text-slate-300"
               >
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
@@ -748,10 +746,10 @@ export const PeopleView: React.FC = () => {
                   {filteredSettledContacts.map(contact => (
                     <div
                       key={contact.id}
-                      className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs"
+                      className="p-4 rounded-2xl bg-white dark:bg-[#131822] border border-slate-200/90 dark:border-[#202836] flex items-center justify-between text-xs"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-[#171E2A] text-slate-500 font-bold flex items-center justify-center">
                           {contact.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
@@ -761,7 +759,7 @@ export const PeopleView: React.FC = () => {
                       </div>
 
                       <div className="flex items-center gap-3">
-                        <span className="px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 font-extrabold text-[10px]">
+                        <span className="px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-extrabold text-[10px] font-numeric">
                           ₹0 (Square)
                         </span>
                         <button
