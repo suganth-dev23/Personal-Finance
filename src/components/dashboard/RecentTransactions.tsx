@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { formatINR } from '../../utils/currency';
@@ -8,7 +8,16 @@ import { IconRenderer } from '../common/IconRenderer';
 export const RecentTransactions: React.FC = () => {
   const { transactions, categories, contacts, setCurrentView } = useFinance();
 
-  const recentList = transactions.slice(0, 6);
+  // Sort descending (newest transaction first)
+  const recentList = useMemo(() => {
+    return [...transactions]
+      .sort((a, b) => {
+        const dateDiff = new Date(b.date).getTime() - new Date(a.date).getTime();
+        if (dateDiff !== 0) return dateDiff;
+        return (b.createdAt || '').localeCompare(a.createdAt || '');
+      })
+      .slice(0, 6);
+  }, [transactions]);
 
   const categoryMap = new Map(categories.map(c => [c.name.toLowerCase(), c]));
   const contactMap = new Map(contacts.map(c => [c.id, c]));
