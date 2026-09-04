@@ -18,7 +18,7 @@ import { CategoryExpenseChart } from './CategoryExpenseChart';
 import { BudgetHealthWidget } from './BudgetHealthWidget';
 import { RecentTransactions } from './RecentTransactions';
 import { AIInsightsWidget } from './AIInsightsWidget';
-import { RecurringAndRunwayWidget } from './RecurringAndRunwayWidget';
+import { CashFlowRunwayCard, RecurringBillsCard } from './RecurringAndRunwayWidget';
 import { OwedSummaryWidget } from './OwedSummaryWidget';
 import { formatINR } from '../../utils/currency';
 
@@ -271,28 +271,29 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx }) => 
         </div>
       </div>
 
-      {/* LEVEL 3: OPERATIONAL ACTIVITY & DERIVED INTELLIGENCE */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      {/* LEVEL 3: OPERATIONAL ACTIVITY & BUDGET HEALTH (BALANCED 1:1 ROW) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         {/* Recent Transactions: Primary Operational Ledger (7 cols) */}
         <div className="lg:col-span-7">
           <RecentTransactions />
         </div>
 
-        {/* Operational Side Column (5 cols): Splits & Budget Watchlist */}
-        <div className="lg:col-span-5 space-y-6">
-          <OwedSummaryWidget />
+        {/* Budget Health Watchlist (5 cols): 1:1 Height Alignment */}
+        <div className="lg:col-span-5">
           <BudgetHealthWidget />
         </div>
       </div>
 
-      {/* LEVEL 4: RUNWAY ANALYSIS & AI ASSISTANT */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-7">
-          <RecurringAndRunwayWidget />
-        </div>
-        <div className="lg:col-span-5">
-          <AIInsightsWidget />
-        </div>
+      {/* LEVEL 4: FINANCIAL COMMITMENTS & OBLIGATIONS (BALANCED 3-COLUMN ROW) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
+        <CashFlowRunwayCard />
+        <RecurringBillsCard />
+        <OwedSummaryWidget />
+      </div>
+
+      {/* LEVEL 5: AI FINANCIAL HEALTH ASSISTANT (FULL-WIDTH STUDIO BANNER) */}
+      <div>
+        <AIInsightsWidget />
       </div>
     </div>
   );

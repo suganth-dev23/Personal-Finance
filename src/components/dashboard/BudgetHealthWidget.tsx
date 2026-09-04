@@ -12,8 +12,12 @@ export const BudgetHealthWidget: React.FC = () => {
   const overBudgetCategories = budgetedCategories.filter(c => c.spent > c.budget);
   const nearBudgetCategories = budgetedCategories.filter(c => c.spent <= c.budget && c.percentUsed >= 80);
 
+  const totalBudget = budgetedCategories.reduce((acc, c) => acc + c.budget, 0);
+  const totalSpent = budgetedCategories.reduce((acc, c) => acc + c.spent, 0);
+  const overallPct = totalBudget > 0 ? Math.min(100, Math.round((totalSpent / totalBudget) * 100)) : 0;
+
   return (
-    <div className="bg-white dark:bg-[#131822] rounded-3xl p-6 shadow-xs border border-slate-200/90 dark:border-[#202836] flex flex-col justify-between">
+    <div className="bg-white dark:bg-[#131822] rounded-3xl p-6 shadow-xs border border-slate-200/90 dark:border-[#202836] flex flex-col justify-between h-full">
       <div>
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -60,27 +64,48 @@ export const BudgetHealthWidget: React.FC = () => {
           </div>
         )}
 
-        {/* Top 3 Budget Progress items */}
-        <div className="space-y-3.5">
-          {budgetedCategories.slice(0, 3).map(cat => (
-            <div key={cat.category} className="space-y-1.5">
-              <div className="flex justify-between items-center text-xs">
-                <span className="font-medium text-slate-800 dark:text-slate-200">{cat.category}</span>
-                <span className="font-numeric text-slate-500 dark:text-slate-400">
-                  <span className="font-semibold text-slate-800 dark:text-slate-200">{formatINR(cat.spent)}</span>
-                  <span className="text-slate-400 dark:text-slate-500"> / {formatINR(cat.budget)}</span>
-                </span>
+        {/* Budget Progress items */}
+        {budgetedCategories.length === 0 ? (
+          <div className="py-6 text-center">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">No category budgets established yet.</p>
+            <button
+              onClick={() => setCurrentView('budgets')}
+              className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline"
+            >
+              Set category limits →
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {budgetedCategories.slice(0, 4).map(cat => (
+              <div key={cat.category} className="space-y-1.5">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-medium text-slate-800 dark:text-slate-200">{cat.category}</span>
+                  <span className="font-numeric text-slate-500 dark:text-slate-400">
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">{formatINR(cat.spent)}</span>
+                    <span className="text-slate-400 dark:text-slate-500"> / {formatINR(cat.budget)}</span>
+                  </span>
+                </div>
+                <ProgressBar
+                  value={cat.spent}
+                  max={cat.budget}
+                  alertThresholds
+                  size="sm"
+                />
               </div>
-              <ProgressBar
-                value={cat.spent}
-                max={cat.budget}
-                alertThresholds
-                size="sm"
-              />
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
+
+      {totalBudget > 0 && (
+        <div className="pt-3.5 mt-4 border-t border-slate-100 dark:border-[#202836] flex items-center justify-between text-xs">
+          <span className="text-slate-500 dark:text-slate-400">Monthly budget total</span>
+          <span className="font-numeric font-semibold text-slate-800 dark:text-slate-200">
+            {formatINR(totalSpent)} <span className="text-slate-400 dark:text-slate-500 font-normal">/ {formatINR(totalBudget)} ({overallPct}%)</span>
+          </span>
+        </div>
+      )}
     </div>
   );
 };

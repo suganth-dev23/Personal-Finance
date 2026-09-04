@@ -8,13 +8,13 @@ import { IconRenderer } from '../common/IconRenderer';
 export const RecentTransactions: React.FC = () => {
   const { transactions, categories, contacts, setCurrentView } = useFinance();
 
-  const recentList = transactions.slice(0, 5);
+  const recentList = transactions.slice(0, 6);
 
   const categoryMap = new Map(categories.map(c => [c.name.toLowerCase(), c]));
   const contactMap = new Map(contacts.map(c => [c.id, c]));
 
   return (
-    <div className="bg-white dark:bg-[#131822] rounded-3xl p-6 shadow-sm border border-slate-200/90 dark:border-[#202836] flex flex-col justify-between">
+    <div className="bg-white dark:bg-[#131822] rounded-3xl p-6 shadow-xs border border-slate-200/90 dark:border-[#202836] flex flex-col justify-between h-full">
       <div>
         <div className="flex items-center justify-between mb-4">
           <div>

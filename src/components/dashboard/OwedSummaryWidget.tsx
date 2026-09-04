@@ -47,7 +47,7 @@ export const OwedSummaryWidget: React.FC = () => {
   const netBalance = totalOwedToMe - totalIOwe;
 
   return (
-    <div className="bg-white dark:bg-[#131822] rounded-3xl p-6 border border-slate-200/90 dark:border-[#202836] shadow-sm flex flex-col justify-between space-y-4">
+    <div className="bg-white dark:bg-[#131822] rounded-3xl p-6 border border-slate-200/90 dark:border-[#202836] shadow-xs flex flex-col justify-between h-full space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">

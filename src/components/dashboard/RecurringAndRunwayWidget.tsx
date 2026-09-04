@@ -11,22 +11,14 @@ import { useRecurringTransactions } from '../../hooks/useRecurringTransactions';
 import { useCashFlowRunway } from '../../hooks/useCashFlowRunway';
 import { formatINR } from '../../utils/currency';
 
-export const RecurringAndRunwayWidget: React.FC = () => {
-  const { transactions, totalBalance, notRecurringTxIds, toggleNotRecurring } = useFinance();
-
-  const {
-    recurringExpenses,
-    recurringIncomes,
-    totalMonthlyRecurringExpenses,
-  } = useRecurringTransactions(transactions, notRecurringTxIds);
-
+export const CashFlowRunwayCard: React.FC = () => {
+  const { transactions, totalBalance } = useFinance();
   const runway = useCashFlowRunway(transactions, totalBalance);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-      {/* 1. Cash-Flow Runway & Burn Analysis Card */}
-      <div className="lg:col-span-5 bg-white dark:bg-[#131822] rounded-3xl p-6 border border-slate-200/90 dark:border-[#202836] shadow-sm flex flex-col justify-between space-y-5">
-        <div className="flex items-center justify-between">
+    <div className="bg-white dark:bg-[#131822] rounded-3xl p-6 border border-slate-200/90 dark:border-[#202836] shadow-xs flex flex-col justify-between h-full space-y-4">
+      <div>
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-teal-500/10 dark:bg-teal-500/15 flex items-center justify-center text-teal-600 dark:text-teal-400">
               <Flame className="w-4 h-4" />
@@ -59,43 +51,61 @@ export const RecurringAndRunwayWidget: React.FC = () => {
           <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
             Estimated liquid longevity
           </span>
-          <div className="flex items-baseline gap-2 mt-1">
+          <div className="mt-1 flex flex-wrap items-baseline gap-2">
             <span className="text-2xl sm:text-3xl font-bold font-numeric text-slate-900 dark:text-white tracking-tight">
               {runway.runwayMonths === Infinity
                 ? 'Sustainable'
                 : `${runway.runwayMonths.toFixed(1)} mos`}
             </span>
             {runway.runwayMonths === Infinity && (
-              <span className="text-xs font-semibold font-numeric text-emerald-600 dark:text-emerald-400">
-                (Surplus: +{formatINR(runway.netMonthlyCashFlow)}/mo)
+              <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold font-numeric bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+                +{formatINR(runway.netMonthlyCashFlow)}/mo surplus
               </span>
             )}
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Zero-income baseline runway: <span className="font-semibold font-numeric text-slate-700 dark:text-slate-300">{runway.expenseOnlyRunwayMonths} months</span>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5">
+            Zero-income baseline runway:{' '}
+            <span className="font-semibold font-numeric text-slate-700 dark:text-slate-300">
+              {runway.expenseOnlyRunwayMonths} months
+            </span>
           </p>
-        </div>
-
-        {/* Burn Rate Sub-Stats */}
-        <div className="grid grid-cols-2 gap-3 pt-1 border-t border-slate-100 dark:border-[#202836]">
-          <div>
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Avg monthly spend</span>
-            <p className="text-sm font-semibold font-numeric text-slate-800 dark:text-slate-200 mt-0.5">
-              {formatINR(runway.averageMonthlyExpense)}
-            </p>
-          </div>
-          <div>
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Avg monthly inflow</span>
-            <p className="text-sm font-semibold font-numeric text-emerald-600 dark:text-emerald-400 mt-0.5">
-              +{formatINR(runway.averageMonthlyIncome)}
-            </p>
-          </div>
         </div>
       </div>
 
-      {/* 2. Detected Recurring Subscriptions & Fixed Commitments */}
-      <div className="lg:col-span-7 bg-white dark:bg-[#131822] rounded-3xl p-6 border border-slate-200/90 dark:border-[#202836] shadow-sm flex flex-col justify-between space-y-4">
-        <div className="flex items-center justify-between">
+      {/* Burn Rate Sub-Stats */}
+      <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100 dark:border-[#202836]">
+        <div>
+          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Avg monthly spend</span>
+          <p className="text-sm font-semibold font-numeric text-slate-800 dark:text-slate-200 mt-0.5">
+            {formatINR(runway.averageMonthlyExpense)}
+          </p>
+        </div>
+        <div>
+          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Avg monthly inflow</span>
+          <p className="text-sm font-semibold font-numeric text-emerald-600 dark:text-emerald-400 mt-0.5">
+            +{formatINR(runway.averageMonthlyIncome)}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const RecurringBillsCard: React.FC = () => {
+  const { transactions, notRecurringTxIds, toggleNotRecurring } = useFinance();
+
+  const {
+    recurringExpenses,
+    recurringIncomes,
+    totalMonthlyRecurringExpenses,
+  } = useRecurringTransactions(transactions, notRecurringTxIds);
+
+  const totalStreamCount = recurringExpenses.length + recurringIncomes.length;
+
+  return (
+    <div className="bg-white dark:bg-[#131822] rounded-3xl p-6 border border-slate-200/90 dark:border-[#202836] shadow-xs flex flex-col justify-between h-full space-y-4">
+      <div>
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-[#171E2A] flex items-center justify-center text-slate-600 dark:text-slate-300">
               <Repeat className="w-4 h-4" />
@@ -105,7 +115,7 @@ export const RecurringAndRunwayWidget: React.FC = () => {
                 Detected Recurring & Bills
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Auto-clustered (28–32 day cycle) with manual override
+                Auto-clustered (28–32 day cycle)
               </p>
             </div>
           </div>
@@ -118,14 +128,14 @@ export const RecurringAndRunwayWidget: React.FC = () => {
           </div>
         </div>
 
-        {recurringExpenses.length === 0 && recurringIncomes.length === 0 ? (
+        {totalStreamCount === 0 ? (
           <div className="text-center py-8 bg-slate-50 dark:bg-[#171E2A]/40 rounded-2xl border border-dashed border-slate-200 dark:border-[#202836] p-4">
             <Sparkles className="w-5 h-5 text-slate-400 mx-auto mb-2" />
             <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">
               No repeating monthly subscriptions detected yet
             </p>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-              As you log recurring expenses (e.g. Netflix, Rent, Electricity, SIPs) over 28-32 day cycles, they will automatically appear here.
+              As you log recurring expenses over 28-32 day cycles, they will automatically appear here.
             </p>
           </div>
         ) : (
@@ -218,6 +228,22 @@ export const RecurringAndRunwayWidget: React.FC = () => {
           </div>
         )}
       </div>
+
+      {totalStreamCount > 0 && (
+        <div className="pt-3 border-t border-slate-100 dark:border-[#202836] flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+          <span>{totalStreamCount} recurring {totalStreamCount === 1 ? 'commitment' : 'commitments'} detected</span>
+          <span className="font-numeric font-medium">Automatic cycle matching</span>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export const RecurringAndRunwayWidget: React.FC = () => {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <CashFlowRunwayCard />
+      <RecurringBillsCard />
     </div>
   );
 };
