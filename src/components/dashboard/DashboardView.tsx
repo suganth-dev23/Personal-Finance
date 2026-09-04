@@ -96,197 +96,172 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx }) => 
         </div>
       )}
 
-      {/* Minimalist Flow Hero Card (inspired by Variant 1B) */}
-      <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 text-white rounded-3xl p-6 sm:p-7 border border-slate-800 shadow-xl relative overflow-hidden">
-        {/* Glow orb in background */}
-        <div className="absolute -top-16 -right-16 w-56 h-56 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+      {/* LEVEL 1: THE MASTER WEALTH LEDGER ANCHOR */}
+      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] border border-slate-200/90 dark:border-[#202836] p-6 sm:p-8 shadow-xs">
+        {/* Subtle Suvarna gold accent hairline at top edge */}
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
 
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+        {/* Master Header: Net Worth & Action Cluster */}
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Total Net Balance
-            </span>
-            <div className="flex flex-wrap items-baseline gap-3 mt-1.5">
-              <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-white">
-                {formatINR(totalBalance)}
-              </h2>
-              <span
-                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                  currentMonthNet >= 0
-                    ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                    : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
-                }`}
-              >
-                <span>{currentMonthNet >= 0 ? '+' : ''}{formatINR(currentMonthNet)} this month</span>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-700 dark:text-[#F5B742] border border-amber-500/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#F5B742]" />
+                <span>Primary Wealth Ledger</span>
+              </span>
+              <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">
+                INR Account Aggregate
               </span>
             </div>
 
-            {/* Split Tracker Pill (from Variant 1B) */}
-            <div className="mt-3.5 flex flex-wrap items-center gap-2.5">
-              <button
-                type="button"
-                onClick={() => setCurrentView('people')}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-slate-800/90 hover:bg-slate-700 text-slate-300 border border-slate-700/80 transition-all active:scale-95"
-                title="View People & Expense Splits"
-              >
-                <Users className="w-3.5 h-3.5 text-indigo-400" />
-                <span>Split Tracker:</span>
-                {totalOwedToMe > 0 ? (
-                  <span className="font-bold text-emerald-400">Friends owe you {formatINR(totalOwedToMe)}</span>
-                ) : totalIOwe > 0 ? (
-                  <span className="font-bold text-rose-400">You owe {formatINR(totalIOwe)}</span>
-                ) : (
-                  <span className="text-slate-400 font-medium">All Settled</span>
-                )}
-              </button>
-
-              <span className="hidden sm:inline text-xs text-slate-400 font-medium">
-                • {currentMonthSavingsRate.toFixed(1)}% savings rate
+            <div className="mt-1">
+              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                Total net worth
               </span>
+              <div className="flex flex-wrap items-baseline gap-3 mt-0.5">
+                <h2 className="font-numeric text-4xl sm:text-5xl lg:text-[3.25rem] font-extrabold tracking-tight text-slate-900 dark:text-slate-50">
+                  {formatINR(totalBalance)}
+                </h2>
+                <span
+                  className={`font-numeric text-xs font-semibold px-2.5 py-1 rounded-md ${
+                    currentMonthNet >= 0
+                      ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-500/20'
+                      : 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-500/20'
+                  }`}
+                >
+                  {currentMonthNet >= 0 ? '+' : ''}{formatINR(currentMonthNet)} net this month
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 flex items-center gap-2">
+                <span>Monthly savings rate:</span>
+                <span className="font-numeric font-bold text-slate-800 dark:text-slate-200">
+                  {currentMonthSavingsRate.toFixed(1)}%
+                </span>
+                <span className="text-slate-300 dark:text-slate-700">•</span>
+                <button
+                  type="button"
+                  onClick={() => setCurrentView('people')}
+                  className="hover:underline text-indigo-600 dark:text-indigo-400 font-medium"
+                >
+                  {totalOwedToMe > 0
+                    ? `Friends owe ₹${totalOwedToMe.toLocaleString('en-IN')}`
+                    : totalIOwe > 0
+                    ? `You owe ₹${totalIOwe.toLocaleString('en-IN')}`
+                    : 'Split accounts settled'}
+                </button>
+              </p>
             </div>
           </div>
 
-          {/* 4 Circular Action Buttons matching Variant 1A/1B */}
-          <div className="flex items-center gap-3 sm:gap-4 self-start md:self-auto pt-1 md:pt-0">
+          {/* Action Cluster */}
+          <div className="flex flex-wrap items-center gap-2.5 self-start md:self-auto">
             <button
               onClick={onOpenAddTx}
-              className="flex flex-col items-center gap-1.5 group"
-              title="Add Transaction"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs sm:text-sm shadow-sm shadow-emerald-700/20 transition-all active:scale-95"
             >
-              <div className="w-12 h-12 rounded-2xl bg-emerald-600 group-hover:bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-900/40 transition-all active:scale-95">
-                <Plus className="w-5 h-5" />
-              </div>
-              <span className="text-[11px] font-bold text-slate-300 group-hover:text-white transition-colors">
-                Add
-              </span>
+              <Plus className="w-4 h-4" />
+              <span>Add transaction</span>
             </button>
 
             <button
               onClick={() => setCurrentView('people')}
-              className="flex flex-col items-center gap-1.5 group"
-              title="Split IOU / People"
+              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A212D] dark:hover:bg-[#232C3B] text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-[#273243] text-xs sm:text-sm font-medium transition-all active:scale-95"
             >
-              <div className="w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-indigo-400 flex items-center justify-center border border-slate-700 transition-all active:scale-95">
-                <Users className="w-5 h-5" />
-              </div>
-              <span className="text-[11px] font-bold text-slate-400 group-hover:text-slate-200 transition-colors">
-                Split
-              </span>
+              <Users className="w-4 h-4 text-indigo-500" />
+              <span>Split bill</span>
             </button>
 
             <button
-              onClick={() => setCurrentView('investments')}
-              className="flex flex-col items-center gap-1.5 group"
-              title="Investments Portfolio"
+              onClick={() => setCurrentView('import')}
+              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A212D] dark:hover:bg-[#232C3B] text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-[#273243] text-xs sm:text-sm font-medium transition-all active:scale-95"
             >
-              <div className="w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-teal-400 flex items-center justify-center border border-slate-700 transition-all active:scale-95">
-                <TrendingUp className="w-5 h-5" />
-              </div>
-              <span className="text-[11px] font-bold text-slate-400 group-hover:text-slate-200 transition-colors">
-                Invest
-              </span>
+              <UploadCloud className="w-4 h-4 text-slate-400" />
+              <span>Import</span>
             </button>
+          </div>
+        </div>
 
-            <button
-              onClick={() => setCurrentView('ai')}
-              className="flex flex-col items-center gap-1.5 group"
-              title="AI Health Analytics"
-            >
-              <div className="w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-violet-400 flex items-center justify-center border border-slate-700 transition-all active:scale-95">
-                <Sparkles className="w-5 h-5" />
-              </div>
-              <span className="text-[11px] font-bold text-slate-400 group-hover:text-slate-200 transition-colors">
-                AI Health
+        {/* Integrated Flow & Asset Shelves */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mt-7 pt-6 border-t border-slate-100 dark:border-[#1E2635]">
+          <div
+            onClick={() => setCurrentView('transactions')}
+            className="cursor-pointer p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#171E2A] hover:bg-slate-100 dark:hover:bg-[#1D2534] border border-slate-100 dark:border-[#232D3F] transition-all"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                Monthly inflow
               </span>
-            </button>
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold">↑</span>
+            </div>
+            <p className="font-numeric text-lg sm:text-xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
+              +{formatINR(currentMonthIncome)}
+            </p>
+            <span className="text-[11px] text-slate-400 mt-0.5 block truncate">
+              Credits &amp; earnings
+            </span>
+          </div>
+
+          <div
+            onClick={() => setCurrentView('transactions')}
+            className="cursor-pointer p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#171E2A] hover:bg-slate-100 dark:hover:bg-[#1D2534] border border-slate-100 dark:border-[#232D3F] transition-all"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                Monthly outflow
+              </span>
+              <span className="text-xs text-rose-600 dark:text-rose-400 font-bold">↓</span>
+            </div>
+            <p className="font-numeric text-lg sm:text-xl font-bold text-rose-600 dark:text-rose-400 mt-1">
+              -{formatINR(currentMonthExpense)}
+            </p>
+            <span className="text-[11px] text-slate-400 mt-0.5 block truncate">
+              Debits &amp; UPI spend
+            </span>
+          </div>
+
+          <div
+            onClick={() => setCurrentView('investments')}
+            className="cursor-pointer p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#171E2A] hover:bg-slate-100 dark:hover:bg-[#1D2534] border border-slate-100 dark:border-[#232D3F] transition-all"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                Invested assets
+              </span>
+              <span className="text-[11px] font-numeric font-bold text-[#C28834] dark:text-[#F5B742]">
+                {totalInvestmentGainLoss >= 0 ? '+' : ''}{totalInvestmentGainLossPct.toFixed(1)}%
+              </span>
+            </div>
+            <p className="font-numeric text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">
+              {formatINR(totalInvestmentValue)}
+            </p>
+            <span className="text-[11px] text-slate-400 mt-0.5 block truncate">
+              MF, Stocks, Gold, FDs
+            </span>
+          </div>
+
+          <div
+            onClick={() => setCurrentView('emergency')}
+            className="cursor-pointer p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#171E2A] hover:bg-slate-100 dark:hover:bg-[#1D2534] border border-slate-100 dark:border-[#232D3F] transition-all"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                Liquid runway
+              </span>
+              <span className="text-[11px] font-semibold text-slate-400">
+                {emergencyFund.targetMonths}m goal
+              </span>
+            </div>
+            <p className="font-numeric text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">
+              {emergencyFundRunwayMonths.toFixed(1)} mos
+            </p>
+            <span className="text-[11px] text-slate-400 mt-0.5 block truncate font-numeric">
+              {formatINR(emergencyFund.currentSaved)} liquid
+            </span>
           </div>
         </div>
       </div>
 
-      {/* 4 Prominent Metric Cards (Income, Expense, Portfolio, Emergency Runway) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div
-          onClick={() => setCurrentView('transactions')}
-          className="cursor-pointer bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all group"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Monthly Income
-            </span>
-            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-              <ArrowDownLeft className="w-4 h-4" />
-            </div>
-          </div>
-          <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-2">
-            +{formatINR(currentMonthIncome)}
-          </p>
-          <span className="text-xs text-slate-400 mt-1 block">
-            Credits &amp; Salary this month
-          </span>
-        </div>
-
-        <div
-          onClick={() => setCurrentView('transactions')}
-          className="cursor-pointer bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all group"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Monthly Expenses
-            </span>
-            <div className="p-2 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400">
-              <ArrowUpRight className="w-4 h-4" />
-            </div>
-          </div>
-          <p className="text-2xl font-black text-rose-600 dark:text-rose-400 mt-2">
-            -{formatINR(currentMonthExpense)}
-          </p>
-          <span className="text-xs text-slate-400 mt-1 block">
-            Debits &amp; UPI spending
-          </span>
-        </div>
-
-        <div
-          onClick={() => setCurrentView('investments')}
-          className="cursor-pointer bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all group"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Invested Portfolio
-            </span>
-            <div className="p-2 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400">
-              <TrendingUp className="w-4 h-4" />
-            </div>
-          </div>
-          <p className="text-2xl font-black text-slate-900 dark:text-white mt-2">
-            {formatINR(totalInvestmentValue)}
-          </p>
-          <span className="text-xs text-teal-600 dark:text-teal-400 font-bold mt-1 block">
-            {totalInvestmentGainLoss >= 0 ? '+' : ''}{totalInvestmentGainLossPct.toFixed(1)}% gain
-          </span>
-        </div>
-
-        <div
-          onClick={() => setCurrentView('emergency')}
-          className="cursor-pointer bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all group"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Emergency Runway
-            </span>
-            <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
-              <ShieldCheck className="w-4 h-4" />
-            </div>
-          </div>
-          <p className="text-2xl font-black text-slate-900 dark:text-white mt-2">
-            {emergencyFundRunwayMonths.toFixed(1)} Mo
-          </p>
-          <span className="text-xs text-slate-400 mt-1 block">
-            Funded: {formatINR(emergencyFund.currentSaved)}
-          </span>
-        </div>
-      </div>
-
-      {/* Main Charts Grid */}
+      {/* LEVEL 2: CASH FLOW VELOCITY & CATEGORY ALLOCATION */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-7">
           <CashFlowChart />
@@ -296,22 +271,27 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx }) => 
         </div>
       </div>
 
-      {/* Derived Analytics: Cash-Flow Runway & Recurring Subscriptions */}
-      <RecurringAndRunwayWidget />
+      {/* LEVEL 3: OPERATIONAL ACTIVITY & DERIVED INTELLIGENCE */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Recent Transactions: Primary Operational Ledger (7 cols) */}
+        <div className="lg:col-span-7">
+          <RecentTransactions />
+        </div>
 
-      {/* Widgets Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-        <div>
+        {/* Operational Side Column (5 cols): Splits & Budget Watchlist */}
+        <div className="lg:col-span-5 space-y-6">
+          <OwedSummaryWidget />
           <BudgetHealthWidget />
         </div>
-        <div>
-          <OwedSummaryWidget />
+      </div>
+
+      {/* LEVEL 4: RUNWAY ANALYSIS & AI ASSISTANT */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-7">
+          <RecurringAndRunwayWidget />
         </div>
-        <div>
+        <div className="lg:col-span-5">
           <AIInsightsWidget />
-        </div>
-        <div>
-          <RecentTransactions />
         </div>
       </div>
     </div>

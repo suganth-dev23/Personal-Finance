@@ -65,28 +65,28 @@ export const CashFlowChart: React.FC = () => {
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col h-full">
+    <div className="bg-white dark:bg-[#131822] rounded-3xl p-6 shadow-xs border border-slate-200/90 dark:border-[#202836] flex flex-col h-full">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <span>Cash Flow Trend</span>
-            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+          <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <span>Cash flow trajectory</span>
+            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
               6 Months
             </span>
           </h3>
-          <p className="text-xs text-slate-400 mt-0.5">
-            {chartMode === 'wave' ? 'Glowing net cash flow trajectory' : 'Income vs Expenses vs Net Savings in INR'}
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            {chartMode === 'wave' ? 'Net liquid savings velocity' : 'Income vs Expenses vs Net Savings in INR'}
           </p>
         </div>
 
         {/* View mode toggle */}
-        <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700/60">
+        <div className="flex items-center p-1 bg-slate-100 dark:bg-[#171E2A] rounded-xl border border-slate-200/80 dark:border-[#232D3F]">
           <button
             type="button"
             onClick={() => setChartMode('wave')}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
               chartMode === 'wave'
-                ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm'
+                ? 'bg-white dark:bg-[#202836] text-emerald-600 dark:text-emerald-400 shadow-xs'
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
             title="Minimalist Wave Flow"
@@ -97,9 +97,9 @@ export const CashFlowChart: React.FC = () => {
           <button
             type="button"
             onClick={() => setChartMode('bars')}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
               chartMode === 'bars'
-                ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm'
+                ? 'bg-white dark:bg-[#202836] text-emerald-600 dark:text-emerald-400 shadow-xs'
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
             title="Comparison Bars"
@@ -116,7 +116,7 @@ export const CashFlowChart: React.FC = () => {
             <AreaChart data={chartData} margin={{ top: 15, right: 10, left: -10, bottom: 0 }}>
               <defs>
                 <linearGradient id="emeraldCashFlow" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
+                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.35} />
                   <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
                 </linearGradient>
               </defs>
@@ -125,12 +125,12 @@ export const CashFlowChart: React.FC = () => {
                 dataKey="name"
                 axisLine={false}
                 tickLine={false}
-                tick={{ fontSize: 11, fill: '#94a3b8' }}
+                tick={{ fontSize: 11, fill: '#8F9CAE' }}
               />
               <YAxis
                 axisLine={false}
                 tickLine={false}
-                tick={{ fontSize: 11, fill: '#94a3b8' }}
+                tick={{ fontSize: 11, fill: '#8F9CAE' }}
                 tickFormatter={value => formatCompactINR(value)}
               />
               <Tooltip content={<CustomTooltip />} />
@@ -141,19 +141,19 @@ export const CashFlowChart: React.FC = () => {
               <Area
                 type="monotone"
                 dataKey="NetSavings"
-                name="Net Flow"
+                name="Net Savings"
                 stroke="#10b981"
-                strokeWidth={3}
+                strokeWidth={2.5}
                 fillOpacity={1}
                 fill="url(#emeraldCashFlow)"
-                dot={{ r: 4, fill: '#10b981', strokeWidth: 2, stroke: '#020617' }}
-                activeDot={{ r: 6, fill: '#34d399' }}
+                dot={{ r: 3.5, fill: '#10b981', strokeWidth: 2, stroke: '#0B0E14' }}
+                activeDot={{ r: 5, fill: '#34d399' }}
               />
               <Line
                 type="monotone"
                 dataKey="Income"
                 name="Income"
-                stroke="#38bdf8"
+                stroke="#059669"
                 strokeWidth={1.5}
                 strokeDasharray="4 4"
                 dot={false}
@@ -170,17 +170,17 @@ export const CashFlowChart: React.FC = () => {
             </AreaChart>
           ) : (
             <ComposedChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(156, 163, 175, 0.15)" />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(156, 163, 175, 0.12)" />
               <XAxis
                 dataKey="name"
                 axisLine={false}
                 tickLine={false}
-                tick={{ fontSize: 11, fill: '#94a3b8' }}
+                tick={{ fontSize: 11, fill: '#8F9CAE' }}
               />
               <YAxis
                 axisLine={false}
                 tickLine={false}
-                tick={{ fontSize: 11, fill: '#94a3b8' }}
+                tick={{ fontSize: 11, fill: '#8F9CAE' }}
                 tickFormatter={value => formatCompactINR(value)}
               />
               <Tooltip content={<CustomTooltip />} />
@@ -188,15 +188,15 @@ export const CashFlowChart: React.FC = () => {
                 wrapperStyle={{ fontSize: 11, paddingTop: 10 }}
                 formatter={value => <span className="text-slate-600 dark:text-slate-400 font-medium">{value}</span>}
               />
-              <Bar dataKey="Income" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={32} />
-              <Bar dataKey="Expenses" fill="#f43f5e" radius={[4, 4, 0, 0]} maxBarSize={32} />
+              <Bar dataKey="Income" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={28} />
+              <Bar dataKey="Expenses" fill="#f43f5e" radius={[4, 4, 0, 0]} maxBarSize={28} />
               <Line
                 type="monotone"
                 dataKey="NetSavings"
                 name="Net Savings"
-                stroke="#6366f1"
+                stroke="#F5B742"
                 strokeWidth={2.5}
-                dot={{ r: 3, fill: '#6366f1' }}
+                dot={{ r: 3, fill: '#F5B742' }}
               />
             </ComposedChart>
           )}

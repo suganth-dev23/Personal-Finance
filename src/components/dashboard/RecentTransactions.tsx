@@ -14,28 +14,28 @@ export const RecentTransactions: React.FC = () => {
   const contactMap = new Map(contacts.map(c => [c.id, c]));
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
+    <div className="bg-white dark:bg-[#131822] rounded-3xl p-6 shadow-sm border border-slate-200/90 dark:border-[#202836] flex flex-col justify-between">
       <div>
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-base font-bold text-slate-900 dark:text-white">
               Recent Transactions
             </h3>
-            <p className="text-xs text-slate-400">Latest entries across all accounts</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Latest entries across all accounts</p>
           </div>
           <button
             onClick={() => setCurrentView('transactions')}
-            className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-0.5"
+            className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-0.5"
           >
-            <span>View All</span>
+            <span>View all</span>
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
 
         {recentList.length === 0 ? (
-          <p className="text-xs text-slate-400 py-6 text-center">No transactions found.</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 py-6 text-center">No transactions found.</p>
         ) : (
-          <div className="divide-y divide-slate-100 dark:divide-slate-800">
+          <div className="divide-y divide-slate-100 dark:divide-[#202836]">
             {recentList.map(tx => {
               const isCredit = tx.type === 'credit';
               const catInfo = categoryMap.get(tx.category.toLowerCase());
@@ -82,7 +82,7 @@ export const RecentTransactions: React.FC = () => {
                     <div
                       className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
                       style={{
-                        backgroundColor: `${catInfo?.color || '#64748b'}20`,
+                        backgroundColor: `${catInfo?.color || '#64748b'}18`,
                         color: catInfo?.color || '#64748b',
                       }}
                     >
@@ -92,7 +92,7 @@ export const RecentTransactions: React.FC = () => {
                       <p className="font-semibold text-sm text-slate-900 dark:text-white truncate">
                         {tx.description}
                       </p>
-                      <div className="flex items-center gap-2 flex-wrap text-[11px] text-slate-400 mt-0.5">
+                      <div className="flex items-center gap-2 flex-wrap text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                         <span>
                           {formatDate(tx.date)} • {tx.paymentMethod}
                           {tx.person ? ` • with ${tx.person}` : ''}
@@ -100,12 +100,12 @@ export const RecentTransactions: React.FC = () => {
                         {hasSplits && (
                           <span
                             title={splitTooltip || undefined}
-                            className={`inline-flex items-center px-1.5 py-0.2 rounded-md text-[10px] font-bold ${
+                            className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-medium font-numeric ${
                               isSplitSettled
-                                ? 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 line-through'
+                                ? 'bg-slate-100 text-slate-500 dark:bg-[#171E2A] dark:text-slate-400 line-through'
                                 : isTheyOweMe
-                                ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
-                                : 'bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300'
+                                ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300'
+                                : 'bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300'
                             }`}
                           >
                             {splitBadgeText}
@@ -115,7 +115,7 @@ export const RecentTransactions: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="text-right flex-shrink-0 font-bold text-sm">
+                  <div className="text-right flex-shrink-0 font-semibold font-numeric text-sm">
                     <span
                       className={
                         isCredit

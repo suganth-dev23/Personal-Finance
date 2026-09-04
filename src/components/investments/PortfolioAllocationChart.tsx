@@ -8,17 +8,17 @@ interface PortfolioAllocationChartProps {
 }
 
 const TYPE_COLORS: Record<string, string> = {
-  'Mutual Funds': '#10b981',
-  'Stocks': '#3b82f6',
-  'Fixed Deposit (FD)': '#eab308',
-  'Recurring Deposit (RD)': '#f59e0b',
-  'Gold / SGB': '#f97316',
-  'Crypto': '#8b5cf6',
-  'PPF / EPF': '#06b6d4',
-  'NPS': '#6366f1',
-  'Real Estate': '#ec4899',
-  'Bonds / Debt': '#14b8a6',
-  'Other': '#64748b',
+  'Mutual Funds': '#10B981', // Emerald
+  'Stocks': '#3B82F6',       // Sapphire
+  'Fixed Deposit (FD)': '#0D9488', // Teal
+  'Recurring Deposit (RD)': '#06B6D4', // Cyan
+  'Gold / SGB': '#F5B742',   // Suvarna Gold
+  'Crypto': '#8B5CF6',       // Violet
+  'PPF / EPF': '#6366F1',    // Indigo
+  'NPS': '#EC4899',          // Coral Rose
+  'Real Estate': '#C28834',  // Bronze
+  'Bonds / Debt': '#14B8A6', // Mint
+  'Other': '#64748B',        // Slate
 };
 
 export const PortfolioAllocationChart: React.FC<PortfolioAllocationChartProps> = ({ investments }) => {
@@ -39,7 +39,7 @@ export const PortfolioAllocationChart: React.FC<PortfolioAllocationChartProps> =
       name: type,
       value: stats.value,
       invested: stats.invested,
-      color: TYPE_COLORS[type] || '#64748b',
+      color: TYPE_COLORS[type] || '#64748B',
       percentage: totalVal > 0 ? (stats.value / totalVal) * 100 : 0,
     })).sort((a, b) => b.value - a.value);
   }, [investments]);
@@ -52,12 +52,12 @@ export const PortfolioAllocationChart: React.FC<PortfolioAllocationChartProps> =
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-white dark:bg-slate-900 p-3 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 text-xs">
-          <p className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+        <div className="bg-slate-900/95 dark:bg-[#1A212D] p-3 rounded-xl shadow-xl border border-slate-700 dark:border-[#2D394C] text-xs font-numeric">
+          <p className="font-bold text-white flex items-center gap-2 font-sans">
             <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: data.color }} />
             {data.name}
           </p>
-          <p className="text-slate-600 dark:text-slate-300 font-semibold mt-1">
+          <p className="text-slate-300 font-semibold mt-1">
             Valuation: {formatINR(data.value)} ({data.percentage.toFixed(1)}%)
           </p>
           <p className="text-slate-400 text-[11px] mt-0.5">
@@ -70,13 +70,13 @@ export const PortfolioAllocationChart: React.FC<PortfolioAllocationChartProps> =
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
+    <div className="bg-white dark:bg-[#131822] rounded-3xl p-6 shadow-xs border border-slate-200/90 dark:border-[#202836] flex flex-col justify-between">
       <div className="flex items-center justify-between mb-2">
         <div>
-          <h3 className="text-base font-bold text-slate-900 dark:text-white">
-            Asset Class Allocation
+          <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+            Asset class allocation
           </h3>
-          <p className="text-xs text-slate-400">Diversification across Indian wealth buckets</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Diversification across Indian wealth buckets</p>
         </div>
       </div>
 
@@ -106,8 +106,8 @@ export const PortfolioAllocationChart: React.FC<PortfolioAllocationChartProps> =
               </PieChart>
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
-              <span className="text-[10px] uppercase font-bold text-slate-400">Total Portfolio</span>
-              <span className="text-sm font-extrabold text-slate-900 dark:text-white">
+              <span className="text-[10px] uppercase font-medium text-slate-400">Total Portfolio</span>
+              <span className="font-numeric text-sm font-bold text-slate-900 dark:text-slate-100">
                 {formatCompactINR(totalPortfolioValue)}
               </span>
             </div>
@@ -118,15 +118,15 @@ export const PortfolioAllocationChart: React.FC<PortfolioAllocationChartProps> =
               <div key={item.name} className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2 truncate">
                   <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
-                  <span className="font-semibold text-slate-700 dark:text-slate-300 truncate">
+                  <span className="font-medium text-slate-700 dark:text-slate-300 truncate">
                     {item.name}
                   </span>
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0 font-medium">
-                  <span className="font-bold text-slate-900 dark:text-white">
+                <div className="flex items-center gap-2 flex-shrink-0 font-numeric">
+                  <span className="font-semibold text-slate-900 dark:text-slate-100">
                     {formatINR(item.value)}
                   </span>
-                  <span className="text-[11px] text-slate-400 w-10 text-right">
+                  <span className="text-[11px] text-slate-400 w-10 text-right font-medium">
                     {item.percentage.toFixed(1)}%
                   </span>
                 </div>
