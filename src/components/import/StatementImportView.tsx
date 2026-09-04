@@ -10,6 +10,7 @@ import {
   Download,
   RefreshCw,
   FileCheck,
+  ShieldCheck,
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { StagedTransaction } from '../../types/finance';
@@ -180,35 +181,38 @@ export const StatementImportView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Top Banner */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-7 shadow-sm border border-slate-200 dark:border-slate-800">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Top Banner: Obsidian Import Center */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 text-white p-6 sm:p-8 border border-slate-800 shadow-xl shadow-slate-950/40">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+        <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-start gap-4">
-            <div className="p-3.5 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+            <div className="p-3.5 rounded-2xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
               <UploadCloud className="w-8 h-8" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-                  Statement & Bill Import Engine
-                </h2>
-                <span className="text-[10px] uppercase font-extrabold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
-                  Real Client Parsing
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Private Web Worker Parser
                 </span>
               </div>
-              <p className="text-xs text-slate-400 mt-1 max-w-xl leading-relaxed">
-                Upload your bank or UPI statements in CSV or PDF. DhanVeda extracts transaction lines, suggests merchant categories (Swiggy, Zepto, Zerodha, etc.), detects duplicates, and lets you review before adding.
+              <h2 className="text-xl sm:text-3xl font-extrabold tracking-tight text-white">
+                Statement Import Engine
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-xl leading-relaxed">
+                Upload CSV or PDF statements. DhanVeda extracts transaction lines, suggests Indian merchant categories, detects duplicates, and lets you review before adding.
               </p>
             </div>
           </div>
 
           <button
             onClick={handleDownloadSampleCSV}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition-colors self-start sm:self-auto"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs sm:text-sm font-bold transition-all duration-200 active:scale-95 self-start md:self-auto"
             title="Download a test CSV statement to verify parsing"
           >
-            <Download className="w-3.5 h-3.5" />
+            <Download className="w-4 h-4 text-emerald-400" />
             <span>Download Sample CSV</span>
           </button>
         </div>
@@ -216,16 +220,16 @@ export const StatementImportView: React.FC = () => {
 
       {/* Success Notification */}
       {successMessage && (
-        <div className="p-4 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 rounded-2xl flex items-center gap-3 text-sm text-emerald-800 dark:text-emerald-300 font-bold">
-          <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+        <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl flex items-center gap-3 text-sm text-emerald-400 font-bold">
+          <CheckCircle2 className="w-5 h-5 text-emerald-400" />
           <span>{successMessage} Redirecting to transaction history...</span>
         </div>
       )}
 
       {/* Parse Error Alert */}
       {parseError && (
-        <div className="p-4 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900 rounded-2xl flex items-start gap-3 text-xs text-rose-700 dark:text-rose-300">
-          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+        <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-2xl flex items-start gap-3 text-xs text-rose-300 font-medium">
+          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-rose-400" />
           <div>
             <span className="font-bold">Parsing Error: </span>
             {parseError}
@@ -246,7 +250,7 @@ export const StatementImportView: React.FC = () => {
           className={`border-2 border-dashed rounded-3xl p-10 sm:p-14 text-center cursor-pointer transition-all duration-200 ${
             isDragging
               ? 'border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/20 scale-[1.01]'
-              : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/60 hover:border-emerald-500 dark:hover:border-emerald-500'
+              : 'border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900/60 hover:border-emerald-500 dark:hover:border-emerald-500 shadow-sm'
           }`}
         >
           <input
@@ -257,15 +261,15 @@ export const StatementImportView: React.FC = () => {
             className="hidden"
           />
 
-          <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto text-slate-500 group-hover:text-emerald-600 transition-colors">
+          <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center mx-auto text-emerald-500 transition-transform group-hover:scale-110">
             {parsing ? (
-              <RefreshCw className="w-8 h-8 text-emerald-600 animate-spin" />
+              <RefreshCw className="w-8 h-8 text-emerald-500 animate-spin" />
             ) : (
-              <UploadCloud className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+              <UploadCloud className="w-8 h-8 text-emerald-500" />
             )}
           </div>
 
-          <h3 className="mt-4 text-base font-bold text-slate-900 dark:text-white">
+          <h3 className="mt-4 text-base sm:text-lg font-bold text-slate-900 dark:text-white">
             {parsing
               ? pdfProgress
                 ? `Extracting Page ${pdfProgress.page} of ${pdfProgress.totalPages}...`
@@ -274,12 +278,12 @@ export const StatementImportView: React.FC = () => {
           </h3>
 
           {pdfProgress && (
-            <div className="max-w-xs mx-auto mt-3 space-y-1">
-              <div className="flex justify-between text-xs text-slate-500 font-semibold">
+            <div className="max-w-xs mx-auto mt-3 space-y-1.5">
+              <div className="flex justify-between text-xs text-slate-400 font-semibold">
                 <span>Progress</span>
                 <span>{Math.round((pdfProgress.page / pdfProgress.totalPages) * 100)}%</span>
               </div>
-              <div className="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+              <div className="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden p-0.5">
                 <div
                   className="bg-emerald-500 h-full rounded-full transition-all duration-200"
                   style={{ width: `${(pdfProgress.page / pdfProgress.totalPages) * 100}%` }}
@@ -292,13 +296,13 @@ export const StatementImportView: React.FC = () => {
             Supports HDFC, ICICI, SBI, Axis, Kotak, GPay, PhonePe, Paytm, and standard Indian bank export formats (.CSV / .PDF)
           </p>
 
-          <div className="flex items-center justify-center gap-3 mt-6">
-            <span className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
-              <span>CSV Statements (Worker)</span>
+          <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
+            <span className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-500" />
+              <span>CSV Statements</span>
             </span>
-            <span className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-              <FileText className="w-3.5 h-3.5 text-blue-600" />
+            <span className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+              <FileText className="w-3.5 h-3.5 text-teal-400" />
               <span>PDF Statements (Web Worker)</span>
             </span>
           </div>
@@ -308,14 +312,14 @@ export const StatementImportView: React.FC = () => {
       {/* Review & Fix Staging Screen */}
       {stagedList && (
         <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-600">
-                <FileCheck className="w-5 h-5" />
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900/90 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div className="flex items-center gap-3.5">
+              <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-500">
+                <FileCheck className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                  Review & Fix Transactions: <span className="text-emerald-600">{fileName}</span>
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+                  Review & Fix Transactions: <span className="text-emerald-500">{fileName}</span>
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">
                   Verify dates, categories, and amounts before finalizing import
@@ -323,7 +327,7 @@ export const StatementImportView: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => setStagedList(null)}
@@ -335,7 +339,7 @@ export const StatementImportView: React.FC = () => {
               <button
                 type="button"
                 onClick={handleFinalImport}
-                className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-600/30 transition-all active:scale-95"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs sm:text-sm font-extrabold shadow-lg shadow-emerald-500/25 transition-all active:scale-95"
               >
                 <span>Commit & Import Selected</span>
                 <ArrowRight className="w-4 h-4" />

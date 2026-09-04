@@ -293,6 +293,107 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
           </div>
         </div>
 
+        {/* Quick Filter Chips (matching minimalist mockup) */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 no-scrollbar text-xs">
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedType('all');
+              setSelectedMethod('all');
+            }}
+            className={`px-3 py-1.5 rounded-full font-bold whitespace-nowrap transition-all ${
+              selectedType === 'all' && selectedMethod === 'all'
+                ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm'
+                : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200'
+            }`}
+          >
+            All ({transactions.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedType('debit')}
+            className={`px-3 py-1.5 rounded-full font-bold whitespace-nowrap transition-all ${
+              selectedType === 'debit'
+                ? 'bg-rose-600 text-white shadow-sm'
+                : 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 hover:bg-rose-100'
+            }`}
+          >
+            Expenses
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedType('credit')}
+            className={`px-3 py-1.5 rounded-full font-bold whitespace-nowrap transition-all ${
+              selectedType === 'credit'
+                ? 'bg-emerald-600 text-white shadow-sm'
+                : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 hover:bg-emerald-100'
+            }`}
+          >
+            Income
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedMethod(selectedMethod === 'UPI' ? 'all' : 'UPI')}
+            className={`px-3 py-1.5 rounded-full font-bold whitespace-nowrap transition-all ${
+              selectedMethod === 'UPI'
+                ? 'bg-indigo-600 text-white shadow-sm'
+                : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200'
+            }`}
+          >
+            UPI
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedMethod(selectedMethod.includes('Card') ? 'all' : 'Credit Card')}
+            className={`px-3 py-1.5 rounded-full font-bold whitespace-nowrap transition-all ${
+              selectedMethod.includes('Card')
+                ? 'bg-indigo-600 text-white shadow-sm'
+                : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200'
+            }`}
+          >
+            Cards
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedMethod(selectedMethod === 'Cash' ? 'all' : 'Cash')}
+            className={`px-3 py-1.5 rounded-full font-bold whitespace-nowrap transition-all ${
+              selectedMethod === 'Cash'
+                ? 'bg-indigo-600 text-white shadow-sm'
+                : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200'
+            }`}
+          >
+            Cash
+          </button>
+        </div>
+
+        {/* Summary Metric Strip */}
+        <div className="grid grid-cols-3 gap-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
+          <div>
+            <span className="text-slate-400 font-semibold block">Total In</span>
+            <span className="text-sm sm:text-base font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5 block">
+              +{formatINR(filteredIncome)}
+            </span>
+          </div>
+          <div>
+            <span className="text-slate-400 font-semibold block">Total Out</span>
+            <span className="text-sm sm:text-base font-extrabold text-rose-600 dark:text-rose-400 mt-0.5 block">
+              -{formatINR(filteredExpense)}
+            </span>
+          </div>
+          <div>
+            <span className="text-slate-400 font-semibold block">Net Flow</span>
+            <span
+              className={`text-sm sm:text-base font-extrabold mt-0.5 block ${
+                filteredNet >= 0
+                  ? 'text-emerald-600 dark:text-emerald-400'
+                  : 'text-rose-600 dark:text-rose-400'
+              }`}
+            >
+              {filteredNet >= 0 ? '+' : ''}{formatINR(filteredNet)}
+            </span>
+          </div>
+        </div>
+
         {/* Filter Dropdowns */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
           {/* Date Range */}
@@ -538,8 +639,106 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
                 </div>
               )}
 
-              {/* Transactions Table */}
-              <div className="overflow-x-auto">
+              {/* Mobile Cards Feed (matching minimalist mockup) */}
+              <div className="md:hidden divide-y divide-slate-100 dark:divide-slate-800/60">
+                {group.items.map(tx => {
+                  const isCredit = tx.type === 'credit';
+                  const isSelected = selectedTxIds.has(tx.id);
+                  const catInfo = categoryMap.get(tx.category.toLowerCase());
+
+                  return (
+                    <div
+                      key={tx.id}
+                      className={`p-4 flex items-center justify-between gap-3 transition-colors ${
+                        isSelected ? 'bg-emerald-50/40 dark:bg-emerald-950/20' : ''
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <button
+                          onClick={() => toggleSelectOne(tx.id)}
+                          className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 shrink-0"
+                        >
+                          {isSelected ? (
+                            <CheckSquare className="w-4 h-4 text-emerald-600" />
+                          ) : (
+                            <Square className="w-4 h-4" />
+                          )}
+                        </button>
+
+                        <div
+                          className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
+                          style={{
+                            backgroundColor: `${catInfo?.color || '#64748b'}20`,
+                            color: catInfo?.color || '#64748b',
+                          }}
+                        >
+                          <IconRenderer name={catInfo?.icon || 'Tag'} className="w-5 h-5" />
+                        </div>
+
+                        <div className="min-w-0">
+                          <p className="font-bold text-sm text-slate-900 dark:text-white truncate">
+                            {tx.description}
+                          </p>
+                          <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                            <span
+                              className="px-2 py-0.2 rounded-full text-[10px] font-bold"
+                              style={{
+                                backgroundColor: `${catInfo?.color || '#64748b'}15`,
+                                color: catInfo?.color || '#64748b',
+                              }}
+                            >
+                              {tx.category}
+                            </span>
+                            {tx.person && (
+                              <span className="px-1.5 py-0.2 rounded-md bg-slate-100 dark:bg-slate-800 text-[10px] text-slate-600 dark:text-slate-400 font-medium">
+                                {tx.person}
+                              </span>
+                            )}
+                            <span className="text-[10px] text-slate-400">
+                              {formatDate(tx.date)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="text-right shrink-0">
+                        <p
+                          className={`text-base font-extrabold ${
+                            isCredit
+                              ? 'text-emerald-600 dark:text-emerald-400'
+                              : 'text-slate-900 dark:text-white'
+                          }`}
+                        >
+                          {isCredit ? '+' : '-'}{formatINR(tx.amount)}
+                        </p>
+                        <div className="flex items-center justify-end gap-1 mt-1">
+                          <button
+                            onClick={() => onEditTransaction(tx)}
+                            className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                            title="Edit"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (window.confirm(`Delete transaction "${tx.description}"?`)) {
+                                deleteTransaction(tx.id);
+                              }
+                            }}
+                            className="p-1 rounded-lg text-slate-400 hover:text-rose-600"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop Transactions Table */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 text-[11px] font-bold text-slate-400 uppercase tracking-wider">

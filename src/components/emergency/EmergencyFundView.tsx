@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { ShieldCheck, Plus, ArrowDownLeft, ArrowUpRight, AlertTriangle, CheckCircle2, Sliders, Calendar } from 'lucide-react';
+import { ShieldCheck, Plus, ArrowDownLeft, ArrowUpRight, AlertTriangle, CheckCircle2, Sliders, Calendar, Sparkles, Shield } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { formatINR, formatCompactINR } from '../../utils/currency';
 import { formatDate } from '../../utils/date';
-import { ProgressBar } from '../common/ProgressBar';
 import { EmergencyContributionModal } from './EmergencyContributionModal';
 
 export const EmergencyFundView: React.FC = () => {
@@ -19,7 +18,7 @@ export const EmergencyFundView: React.FC = () => {
   const [manualTarget, setManualTarget] = useState(emergencyFund.manualTargetAmount ? emergencyFund.manualTargetAmount.toString() : '');
 
   const effectiveTarget = emergencyFund.manualTargetAmount || 360000;
-  const percentFunded = effectiveTarget > 0 ? (emergencyFund.currentSaved / effectiveTarget) * 100 : 0;
+  const percentFunded = effectiveTarget > 0 ? Math.min(100, Math.round((emergencyFund.currentSaved / effectiveTarget) * 100)) : 0;
   const deficit = Math.max(0, effectiveTarget - emergencyFund.currentSaved);
 
   const handleSaveSettings = (e: React.FormEvent) => {
@@ -30,40 +29,47 @@ export const EmergencyFundView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Top Banner & Runway Meter */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 dark:border-slate-800">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="flex items-start gap-4">
-            <div className="p-3.5 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
-              <ShieldCheck className="w-8 h-8" />
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Top Banner & Runway Meter: Obsidian Safety Reserve */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 text-white p-6 sm:p-8 border border-slate-800 shadow-xl shadow-slate-950/40">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+        <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Emergency Safety Reserve
+              </span>
+              <span className="text-xs text-slate-400 font-medium">
+                {emergencyFund.targetMonths} Months Goal
+              </span>
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-                  Emergency Safety Reserve
-                </h2>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
-                  {emergencyFund.targetMonths} Months Goal
-                </span>
-              </div>
-              <p className="text-xs text-slate-400 mt-1 max-w-xl leading-relaxed">
-                A liquid financial buffer to protect against unforeseen medical bills, job transitions, or major household emergencies without liquidating investments.
-              </p>
+
+            <div className="flex items-baseline gap-3">
+              <span className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white">
+                {formatINR(emergencyFund.currentSaved)}
+              </span>
+              <span className="text-sm font-bold text-emerald-400">
+                secured liquid cash
+              </span>
             </div>
+            <p className="text-xs sm:text-sm text-slate-400 mt-1">
+              Secures {emergencyFundRunwayMonths.toFixed(1)} months of baseline living expenses without selling investments.
+            </p>
           </div>
 
-          <div className="flex items-center gap-2.5 self-start md:self-auto">
+          <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-              className="flex items-center gap-1.5 px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition-all"
+              className="flex items-center gap-2 px-4 py-2.5 bg-slate-800/80 hover:bg-slate-700 text-slate-200 border border-slate-700/60 rounded-2xl text-xs sm:text-sm font-bold transition-all duration-200 active:scale-95"
             >
-              <Sliders className="w-3.5 h-3.5" />
+              <Sliders className="w-4 h-4 text-slate-400" />
               <span>Adjust Target</span>
             </button>
             <button
               onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-bold shadow-sm shadow-emerald-600/30 transition-all active:scale-95"
+              className="flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-2xl text-xs sm:text-sm shadow-lg shadow-emerald-500/25 transition-all duration-200 active:scale-95"
             >
               <Plus className="w-4 h-4" />
               <span>Log Contribution</span>
@@ -73,19 +79,19 @@ export const EmergencyFundView: React.FC = () => {
 
         {/* Settings Panel if toggled */}
         {isSettingsOpen && (
-          <form onSubmit={handleSaveSettings} className="mt-6 p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-4">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-              Customize Emergency Target
+          <form onSubmit={handleSaveSettings} className="mt-6 p-5 bg-slate-900/90 rounded-2xl border border-slate-700/60 space-y-4">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+              <Sliders className="w-3.5 h-3.5" /> Customize Emergency Target
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
                   Target Duration (Months of Expenses)
                 </label>
                 <select
                   value={targetMonths}
                   onChange={e => setTargetMonths(parseInt(e.target.value))}
-                  className="w-full py-2 px-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm"
+                  className="w-full py-2.5 px-3.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500"
                 >
                   <option value={3}>3 Months (Aggressive / High Job Security)</option>
                   <option value={6}>6 Months (Standard Recommended)</option>
@@ -95,7 +101,7 @@ export const EmergencyFundView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
                   Custom Target Amount (INR ₹)
                 </label>
                 <input
@@ -103,22 +109,22 @@ export const EmergencyFundView: React.FC = () => {
                   value={manualTarget}
                   onChange={e => setManualTarget(e.target.value)}
                   placeholder="e.g. 360000"
-                  className="w-full py-2 px-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm"
+                  className="w-full py-2.5 px-3.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500"
                 />
               </div>
             </div>
 
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setIsSettingsOpen(false)}
-                className="px-3 py-1.5 text-xs font-semibold text-slate-500 hover:bg-slate-200 rounded-lg"
+                className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white rounded-xl"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg"
+                className="px-5 py-2 text-xs font-bold text-slate-950 bg-emerald-500 hover:bg-emerald-400 rounded-xl shadow-md transition-all"
               >
                 Save Settings
               </button>
@@ -126,114 +132,99 @@ export const EmergencyFundView: React.FC = () => {
           </form>
         )}
 
-        {/* 3 Metric Pillars */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
-          <div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-              Current Saved
-            </span>
-            <p className="text-2xl font-extrabold text-slate-900 dark:text-white mt-0.5">
-              {formatINR(emergencyFund.currentSaved)}
-            </p>
-            <span className="text-xs text-slate-400">
-              Liquid savings in Bank/Sweep-in FD
-            </span>
+        {/* Progress Track */}
+        <div className="mt-6 pt-5 border-t border-slate-800/80">
+          <div className="flex justify-between items-center text-xs text-slate-400 mb-2 font-medium">
+            <span>{percentFunded}% Funded</span>
+            <span>{deficit > 0 ? `${formatINR(deficit)} to reach goal` : '100% Fully Funded 🎉'}</span>
           </div>
-
-          <div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-              Target Goal ({emergencyFund.targetMonths} Months)
-            </span>
-            <p className="text-2xl font-extrabold text-blue-600 dark:text-blue-400 mt-0.5">
-              {formatINR(effectiveTarget)}
-            </p>
-            <span className="text-xs text-slate-400">
-              {deficit > 0 ? `${formatINR(deficit)} remaining to target` : 'Fully funded! 🎉'}
-            </span>
-          </div>
-
-          <div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-              Runway Secured
-            </span>
-            <p className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5">
-              {emergencyFundRunwayMonths.toFixed(1)} Months
-            </p>
-            <span className="text-xs text-slate-400">
-              Based on your monthly living baseline
-            </span>
+          <div className="h-3 w-full bg-slate-800/90 rounded-full overflow-hidden p-0.5 border border-slate-700/50">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-teal-500 via-emerald-400 to-emerald-300 transition-all duration-700 shadow-[0_0_14px_rgba(16,185,129,0.5)]"
+              style={{ width: `${percentFunded}%` }}
+            />
           </div>
         </div>
 
-        {/* Big visual progress */}
-        <div className="mt-6 space-y-2">
-          <div className="flex justify-between items-center text-xs font-bold">
-            <span className="text-slate-600 dark:text-slate-300">
-              {percentFunded.toFixed(1)}% Completed
-            </span>
-            <span className={percentFunded >= 100 ? 'text-emerald-600 font-bold' : 'text-slate-500'}>
-              {percentFunded >= 100 ? 'Target Reached 🛡️' : `${formatINR(deficit)} to complete`}
-            </span>
+        {/* 4 Metric Pillars */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
+          <div className="bg-slate-800/50 border border-slate-700/40 rounded-2xl p-3">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Current Saved</span>
+            <p className="text-sm sm:text-base font-extrabold text-white mt-0.5">{formatCompactINR(emergencyFund.currentSaved)}</p>
           </div>
-          <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-4 overflow-hidden p-0.5">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-blue-500 via-indigo-500 to-emerald-500 transition-all duration-700"
-              style={{ width: `${Math.min(percentFunded, 100)}%` }}
-            />
+          <div className="bg-slate-800/50 border border-slate-700/40 rounded-2xl p-3">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Target Fund</span>
+            <p className="text-sm sm:text-base font-extrabold text-emerald-400 mt-0.5">{formatCompactINR(effectiveTarget)}</p>
+          </div>
+          <div className="bg-slate-800/50 border border-slate-700/40 rounded-2xl p-3">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Runway Secured</span>
+            <p className="text-sm sm:text-base font-extrabold text-teal-300 mt-0.5">{emergencyFundRunwayMonths.toFixed(1)} Months</p>
+          </div>
+          <div className="bg-slate-800/50 border border-slate-700/40 rounded-2xl p-3">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Shield Status</span>
+            <p className="text-sm sm:text-base font-extrabold text-emerald-400 mt-0.5">
+              {percentFunded >= 100 ? 'Fully Shielded' : percentFunded >= 50 ? 'Moderate' : 'Under Target'}
+            </p>
           </div>
         </div>
       </div>
 
       {/* Contribution & Withdrawal History */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
-        <div className="flex items-center justify-between mb-4">
+      <div className="bg-white dark:bg-slate-900/90 rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 dark:border-slate-800">
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">
+            <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
               Contribution & Activity Log
             </h3>
-            <p className="text-xs text-slate-400">
-              Historical ledger of deposits and emergency withdrawals
+            <p className="text-xs text-slate-400 mt-0.5">
+              Historical ledger of safety deposits and emergency withdrawals
             </p>
           </div>
-          <span className="text-xs font-bold text-slate-500">
-            {emergencyFund.contributions.length} entries
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+            {emergencyFund.contributions.length} records
           </span>
         </div>
 
         {emergencyFund.contributions.length === 0 ? (
-          <p className="text-xs text-slate-400 py-8 text-center">
-            No contributions logged yet. Click "Log Contribution" to record your first deposit.
-          </p>
+          <div className="text-center py-12 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
+            <Shield className="w-10 h-10 text-slate-300 dark:text-slate-700 mx-auto mb-2" />
+            <p className="text-xs text-slate-400">
+              No contributions logged yet. Click "Log Contribution" to record your first reserve deposit.
+            </p>
+          </div>
         ) : (
-          <div className="divide-y divide-slate-100 dark:divide-slate-800">
+          <div className="space-y-2.5">
             {emergencyFund.contributions.map(item => {
               const isDeposit = item.type === 'deposit';
 
               return (
-                <div key={item.id} className="py-3.5 flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
+                <div
+                  key={item.id}
+                  className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4 transition-colors"
+                >
+                  <div className="flex items-center gap-3.5">
                     <div
-                      className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
                         isDeposit
-                          ? 'bg-emerald-500/10 text-emerald-600'
-                          : 'bg-rose-500/10 text-rose-600'
+                          ? 'bg-emerald-500/10 text-emerald-500'
+                          : 'bg-rose-500/10 text-rose-500'
                       }`}
                     >
-                      {isDeposit ? <ArrowDownLeft className="w-4 h-4" /> : <ArrowUpRight className="w-4 h-4" />}
+                      {isDeposit ? <ArrowDownLeft className="w-5 h-5" /> : <ArrowUpRight className="w-5 h-5" />}
                     </div>
                     <div>
-                      <p className="font-semibold text-sm text-slate-900 dark:text-white">
-                        {item.note || (isDeposit ? 'Emergency Deposit' : 'Emergency Withdrawal')}
+                      <p className="font-bold text-sm text-slate-900 dark:text-white">
+                        {item.note || (isDeposit ? 'Safety Reserve Deposit' : 'Emergency Withdrawal')}
                       </p>
-                      <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1.5">
-                        <Calendar className="w-3 h-3" />
+                      <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1.5 font-medium">
+                        <Calendar className="w-3.5 h-3.5" />
                         <span>{formatDate(item.date)}</span>
                       </p>
                     </div>
                   </div>
 
-                  <div className="text-right font-bold text-sm">
-                    <span className={isDeposit ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600'}>
+                  <div className="text-right">
+                    <span className={`text-base font-extrabold ${isDeposit ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'}`}>
                       {isDeposit ? '+' : '-'}{formatINR(item.amount)}
                     </span>
                   </div>
