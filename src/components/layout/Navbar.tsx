@@ -122,8 +122,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAddTx }) => {
 
         {/* Mobile Theme Toggle */}
         <button
-          onClick={() => setDarkMode(!darkMode)}
-          className="lg:hidden p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+          onClick={() => setDarkMode(prev => !prev)}
+          className="lg:hidden p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          aria-label={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
         >
           {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
         </button>

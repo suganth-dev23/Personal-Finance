@@ -185,7 +185,11 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [currentView, setCurrentView] = useState<AppView>('dashboard');
   const [isInitialized, setIsInitialized] = useState(false);
   const [darkMode, setDarkMode] = useState<boolean>(() => {
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('dhanveda_dark_mode') : null;
+    if (saved !== null) {
+      return saved === 'true';
+    }
+    return typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -468,14 +472,17 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add('dark');
+      localStorage.setItem('dhanveda_dark_mode', 'true');
     } else {
       document.documentElement.classList.remove('dark');
+      localStorage.setItem('dhanveda_dark_mode', 'false');
     }
     if (isInitialized) {
       saveSingleRecord('userPreferences', {
         id: 'general',
         darkMode,
         notRecurringTxIds: Array.from(notRecurringTxIds),
+        updatedAt: new Date().toISOString(),
       }).catch(e => console.error('Error saving user preferences:', e));
     }
   }, [darkMode, notRecurringTxIds, isInitialized]);

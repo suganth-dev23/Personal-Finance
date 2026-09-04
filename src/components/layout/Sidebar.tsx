@@ -132,7 +132,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTx }) => {
           <span>100% Local Storage</span>
         </div>
         <button
-          onClick={() => setDarkMode(!darkMode)}
+          onClick={() => setDarkMode(prev => !prev)}
           className="p-2 rounded-xl text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
         >
