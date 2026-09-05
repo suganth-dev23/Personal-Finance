@@ -22,6 +22,8 @@ import {
   EmergencyFund,
   AISettings,
   SyncableStoreName,
+  RecurringPayment,
+  RecurringPaymentLog,
 } from '../types/finance';
 import {
   getAllFromStore,
@@ -238,6 +240,8 @@ export class DriveSyncService {
         localPrefs,
         localAISettings,
         localTombstones,
+        localRecurringPayments,
+        localRecurringPaymentLogs,
       ] = await Promise.all([
         getAllFromStore<Transaction>('transactions'),
         getAllFromStore<Category>('categories'),
@@ -251,6 +255,8 @@ export class DriveSyncService {
         getSingleRecord<UserPreferences>('userPreferences', 'general'),
         getSingleRecord<AISettings & { id: string }>('aiSettings', 'current'),
         getTombstones(),
+        getAllFromStore<RecurringPayment>('recurringPayments'),
+        getAllFromStore<RecurringPaymentLog>('recurringPaymentLogs'),
       ]);
 
       // 2. Fetch remote sync file
@@ -296,6 +302,8 @@ export class DriveSyncService {
             },
             contacts: localContacts,
             settlements: localSettlements,
+            recurringPayments: localRecurringPayments,
+            recurringPaymentLogs: localRecurringPaymentLogs,
           },
           tombstones: localTombstones,
         };
@@ -375,7 +383,7 @@ export class DriveSyncService {
         return Array.from(itemMap.values());
       };
 
-      // Merge all 8 multi-item stores
+      // Merge all multi-item stores
       const mergedTransactions = mergeArrayStore('transactions', localTransactions, remotePayload.stores.transactions || []);
       const mergedCategories = mergeArrayStore('categories', localCategories, remotePayload.stores.categories || []);
       const mergedBudgets = mergeArrayStore('budgets', localBudgets, remotePayload.stores.budgets || []);
@@ -384,6 +392,8 @@ export class DriveSyncService {
       const mergedContacts = mergeArrayStore('contacts', localContacts, remotePayload.stores.contacts || []);
       const mergedSettlements = mergeArrayStore('settlements', localSettlements, remotePayload.stores.settlements || []);
       const mergedAiReports = mergeArrayStore('aiReports', localAiReports, remotePayload.stores.aiReports || []);
+      const mergedRecurringPayments = mergeArrayStore('recurringPayments', localRecurringPayments, remotePayload.stores.recurringPayments || []);
+      const mergedRecurringPaymentLogs = mergeArrayStore('recurringPaymentLogs', localRecurringPaymentLogs, remotePayload.stores.recurringPaymentLogs || []);
 
       // Merge Single-Record Store: EmergencyFund
       const remoteEmergency = remotePayload.stores.emergencyFund;
@@ -456,6 +466,8 @@ export class DriveSyncService {
         saveAllToStore('contacts', mergedContacts),
         saveAllToStore('settlements', mergedSettlements),
         saveAllToStore('aiReports', mergedAiReports),
+        saveAllToStore('recurringPayments', mergedRecurringPayments),
+        saveAllToStore('recurringPaymentLogs', mergedRecurringPaymentLogs),
         saveSingleRecord('emergencyFund', mergedEmergency),
         saveSingleRecord('userPreferences', mergedPrefs),
         saveSingleRecord('aiSettings', mergedAISettings),
@@ -485,6 +497,8 @@ export class DriveSyncService {
           userPreferences: mergedPrefs,
           contacts: mergedContacts,
           settlements: mergedSettlements,
+          recurringPayments: mergedRecurringPayments,
+          recurringPaymentLogs: mergedRecurringPaymentLogs,
         },
         tombstones: mergedTombstones,
       };

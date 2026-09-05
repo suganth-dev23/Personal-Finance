@@ -76,6 +76,36 @@ export interface Transaction {
   splitWith?: SplitEntry[]; // array of split entries, 0 or more
 }
 
+export type RecurrenceFrequency = 'weekly' | 'monthly' | 'quarterly' | 'yearly';
+
+export interface RecurringPayment {
+  id: string;
+  name: string;               // e.g. "Netflix", "Rent", "Car EMI"
+  amount: number;
+  category: string;           // category name matching Category.name
+  frequency: RecurrenceFrequency;
+  dayOfMonth?: number;        // 1–31, relevant for monthly, quarterly, yearly
+  startDate: string;          // YYYY-MM-DD
+  endDate?: string;           // optional YYYY-MM-DD for fixed-term commitments
+  isActive: boolean;          // paused/cancelled subscriptions remain in history
+  paymentMethod?: PaymentMethod;
+  notes?: string;
+  autoLogTransaction: boolean; // whether "Mark as Paid" offers to create a real Transaction
+  createdAt: string;          // ISO string
+  updatedAt: string;          // ISO string for sync LWW
+}
+
+export interface RecurringPaymentLog {
+  id: string;
+  recurringPaymentId: string;
+  dueDate: string;            // YYYY-MM-DD
+  paidDate?: string;          // YYYY-MM-DD when paid, undefined if pending/overdue
+  amount: number;             // actual amount paid
+  linkedTransactionId?: string; // ID of created/matched Transaction
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Category {
   id: string;
   name: string;
@@ -220,7 +250,9 @@ export type SyncableStoreName =
   | 'dreams'
   | 'contacts'
   | 'settlements'
-  | 'aiReports';
+  | 'aiReports'
+  | 'recurringPayments'
+  | 'recurringPaymentLogs';
 
 export interface TombstoneRecord {
   id: string;
@@ -266,6 +298,8 @@ export interface SyncPayload {
     };
     contacts: Contact[];
     settlements: SettlementRecord[];
+    recurringPayments?: RecurringPayment[];
+    recurringPaymentLogs?: RecurringPaymentLog[];
   };
   tombstones: TombstoneRecord[];
 }

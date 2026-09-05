@@ -12,6 +12,8 @@ import {
   SettlementRecord,
   ContactBalance,
   SyncStatus,
+  RecurringPayment,
+  RecurringPaymentLog,
 } from '../types/finance';
 import {
   DEFAULT_CATEGORIES,
@@ -20,8 +22,11 @@ import {
   INITIAL_EMERGENCY_FUND,
   INITIAL_INVESTMENTS,
   INITIAL_DREAMS,
+  INITIAL_RECURRING_PAYMENTS,
+  INITIAL_RECURRING_PAYMENT_LOGS,
 } from '../utils/sampleData';
-import { getCurrentMonthYear } from '../utils/date';
+import { getCurrentMonthYear, getTodayString } from '../utils/date';
+import { getPaymentSchedule, calculateMonthlyEquivalent } from '../utils/recurringDates';
 import { DEFAULT_AI_MODELS, FinancialAggregates } from '../services/aiService';
 import {
   migrateFromLocalStorage,
@@ -40,6 +45,7 @@ export type AppView =
   | 'dashboard'
   | 'transactions'
   | 'budgets'
+  | 'recurring'
   | 'categories'
   | 'emergency'
   | 'investments'
@@ -65,6 +71,8 @@ interface FinanceContextType {
   dreams: DreamGoal[];
   contacts: Contact[];
   settlements: SettlementRecord[];
+  recurringPayments: RecurringPayment[];
+  recurringPaymentLogs: RecurringPaymentLog[];
   aiSettings: AISettings;
   aiReports: AIHealthReport[];
   notRecurringTxIds: Set<string>;
@@ -141,6 +149,19 @@ interface FinanceContextType {
   deleteDream: (id: string) => void;
   addDreamContribution: (dreamId: string, amount: number, note?: string, date?: string) => void;
 
+  // Recurring Payments CRUD
+  addRecurringPayment: (payment: Omit<RecurringPayment, 'id' | 'createdAt' | 'updatedAt'>) => RecurringPayment;
+  updateRecurringPayment: (id: string, payment: Partial<RecurringPayment>) => void;
+  deleteRecurringPayment: (id: string) => void;
+  pauseRecurringPayment: (id: string) => void;
+  markRecurringPaymentPaid: (
+    recurringPaymentId: string,
+    dueDate: string,
+    actualAmount?: number,
+    linkedTransactionId?: string,
+    createTransaction?: boolean
+  ) => void;
+
   // AI
   updateAISettings: (settings: Partial<AISettings>) => void;
   saveAIReport: (report: Omit<AIHealthReport, 'id' | 'createdAt'>) => void;
@@ -169,6 +190,9 @@ interface FinanceContextType {
   totalOwedToMe: number;
   totalIOwe: number;
   categorySpendingThisMonth: { category: string; spent: number; budget: number; percentUsed: number; color: string; icon: string }[];
+  upcomingRecurringPayments: Array<RecurringPayment & { nextDueDate: string; daysUntilDue: number }>;
+  overdueRecurringPayments: Array<RecurringPayment & { dueDate: string; daysOverdue: number }>;
+  totalMonthlyRecurringCommitment: number;
   getAggregatesForAI: () => FinancialAggregates;
 }
 
@@ -200,6 +224,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [dreams, setDreams] = useState<DreamGoal[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [settlements, setSettlements] = useState<SettlementRecord[]>([]);
+  const [recurringPayments, setRecurringPayments] = useState<RecurringPayment[]>(INITIAL_RECURRING_PAYMENTS);
+  const [recurringPaymentLogs, setRecurringPaymentLogs] = useState<RecurringPaymentLog[]>(INITIAL_RECURRING_PAYMENT_LOGS);
   const [notRecurringTxIds, setNotRecurringTxIds] = useState<Set<string>>(new Set());
 
   const [aiSettings, setAISettings] = useState<AISettings>({
@@ -232,6 +258,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         dbAiSet,
         dbAiReports,
         dbPrefs,
+        dbRecPay,
+        dbRecLogs,
       ] = await Promise.all([
         getAllFromStore<Transaction>('transactions'),
         getAllFromStore<Category>('categories'),
@@ -244,6 +272,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         getSingleRecord<AISettings & { id: string }>('aiSettings'),
         getAllFromStore<AIHealthReport>('aiReports'),
         getSingleRecord<UserPreferences>('userPreferences', 'general'),
+        getAllFromStore<RecurringPayment>('recurringPayments'),
+        getAllFromStore<RecurringPaymentLog>('recurringPaymentLogs'),
       ]);
 
       if (dbTx && Array.isArray(dbTx)) {
@@ -276,6 +306,16 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (dbDreams && Array.isArray(dbDreams)) setDreams(dbDreams);
       if (dbContacts && Array.isArray(dbContacts)) setContacts(dbContacts);
       if (dbSettlements && Array.isArray(dbSettlements)) setSettlements(dbSettlements);
+      if (dbRecPay && Array.isArray(dbRecPay) && dbRecPay.length > 0) {
+        setRecurringPayments(dbRecPay);
+      } else {
+        setRecurringPayments(INITIAL_RECURRING_PAYMENTS);
+      }
+      if (dbRecLogs && Array.isArray(dbRecLogs) && dbRecLogs.length > 0) {
+        setRecurringPaymentLogs(dbRecLogs);
+      } else {
+        setRecurringPaymentLogs(INITIAL_RECURRING_PAYMENT_LOGS);
+      }
       if (dbAiSet) {
         const { id: _id, ...cleanAi } = dbAiSet;
         setAISettings({
@@ -458,6 +498,16 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (!isInitialized) return;
     saveAllToStore('settlements', settlements).catch(e => console.error('Error saving settlements:', e));
   }, [settlements, isInitialized]);
+
+  useEffect(() => {
+    if (!isInitialized) return;
+    saveAllToStore('recurringPayments', recurringPayments).catch(e => console.error('Error saving recurring payments:', e));
+  }, [recurringPayments, isInitialized]);
+
+  useEffect(() => {
+    if (!isInitialized) return;
+    saveAllToStore('recurringPaymentLogs', recurringPaymentLogs).catch(e => console.error('Error saving recurring payment logs:', e));
+  }, [recurringPaymentLogs, isInitialized]);
 
   useEffect(() => {
     if (!isInitialized) return;
@@ -1001,6 +1051,88 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     );
   };
 
+  // Recurring Payments CRUD
+  const addRecurringPayment = (
+    paymentData: Omit<RecurringPayment, 'id' | 'createdAt' | 'updatedAt'>
+  ): RecurringPayment => {
+    const now = new Date().toISOString();
+    const newPayment: RecurringPayment = {
+      ...paymentData,
+      id: `rec-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      createdAt: now,
+      updatedAt: now,
+    };
+    setRecurringPayments(prev => [newPayment, ...prev]);
+    return newPayment;
+  };
+
+  const updateRecurringPayment = (id: string, updated: Partial<RecurringPayment>) => {
+    const now = new Date().toISOString();
+    setRecurringPayments(prev =>
+      prev.map(p => (p.id === id ? { ...p, ...updated, updatedAt: now } : p))
+    );
+  };
+
+  const deleteRecurringPayment = (id: string) => {
+    addTombstone('recurringPayments', id);
+    const logsToDelete = recurringPaymentLogs.filter(l => l.recurringPaymentId === id);
+    logsToDelete.forEach(l => addTombstone('recurringPaymentLogs', l.id));
+
+    setRecurringPayments(prev => prev.filter(p => p.id !== id));
+    setRecurringPaymentLogs(prev => prev.filter(l => l.recurringPaymentId !== id));
+  };
+
+  const pauseRecurringPayment = (id: string) => {
+    const now = new Date().toISOString();
+    setRecurringPayments(prev =>
+      prev.map(p => (p.id === id ? { ...p, isActive: !p.isActive, updatedAt: now } : p))
+    );
+  };
+
+  const markRecurringPaymentPaid = (
+    recurringPaymentId: string,
+    dueDate: string,
+    actualAmount?: number,
+    linkedTransactionId?: string,
+    createTransaction?: boolean
+  ) => {
+    const payment = recurringPayments.find(p => p.id === recurringPaymentId);
+    if (!payment) return;
+
+    const paidAmount = actualAmount !== undefined ? actualAmount : payment.amount;
+    const paidDate = getTodayString();
+    const now = new Date().toISOString();
+
+    let txId = linkedTransactionId;
+    const shouldCreateTx = createTransaction !== undefined ? createTransaction : Boolean(payment.autoLogTransaction);
+
+    if (shouldCreateTx && !txId) {
+      const newTx = addTransaction({
+        date: paidDate,
+        amount: paidAmount,
+        type: 'debit',
+        category: payment.category,
+        description: `${payment.name} (Recurring: ${dueDate})`,
+        paymentMethod: payment.paymentMethod || 'Other',
+        source: 'manual',
+      });
+      txId = newTx.id;
+    }
+
+    const newLog: RecurringPaymentLog = {
+      id: `reclog-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      recurringPaymentId,
+      dueDate,
+      paidDate,
+      amount: paidAmount,
+      linkedTransactionId: txId,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    setRecurringPaymentLogs(prev => [newLog, ...prev]);
+  };
+
   // AI Settings
   const updateAISettings = (settings: Partial<AISettings>) => {
     setAISettings(prev => {
@@ -1042,6 +1174,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setDreams(INITIAL_DREAMS);
     setContacts([]);
     setSettlements([]);
+    setRecurringPayments(INITIAL_RECURRING_PAYMENTS);
+    setRecurringPaymentLogs(INITIAL_RECURRING_PAYMENT_LOGS);
   };
 
   const clearAllData = async () => {
@@ -1051,6 +1185,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setDreams([]);
     setContacts([]);
     setSettlements([]);
+    setRecurringPayments([]);
+    setRecurringPaymentLogs([]);
     setAIReports([]);
     setEmergencyFund(EMPTY_EMERGENCY_FUND);
     setNotRecurringTxIds(new Set());
@@ -1069,6 +1205,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       dreams,
       contacts,
       settlements,
+      recurringPayments,
+      recurringPaymentLogs,
       aiReports,
       userPreferences: {
         darkMode,
@@ -1089,6 +1227,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (Array.isArray(data.dreams)) setDreams(data.dreams);
       if (Array.isArray(data.contacts)) setContacts(data.contacts);
       if (Array.isArray(data.settlements)) setSettlements(data.settlements);
+      if (Array.isArray(data.recurringPayments)) setRecurringPayments(data.recurringPayments);
+      if (Array.isArray(data.recurringPaymentLogs)) setRecurringPaymentLogs(data.recurringPaymentLogs);
       if (Array.isArray(data.aiReports)) setAIReports(data.aiReports);
       if (data.userPreferences) {
         if (data.userPreferences.darkMode !== undefined) setDarkMode(data.userPreferences.darkMode);
@@ -1323,6 +1463,45 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return result.sort((a, b) => b.spent - a.spent);
   }, [currentMonthTransactions, budgets, categories]);
 
+  // Derived Recurring Payments
+  const totalMonthlyRecurringCommitment = useMemo(() => {
+    return recurringPayments
+      .filter(p => p.isActive)
+      .reduce((sum, p) => sum + calculateMonthlyEquivalent(p.amount, p.frequency), 0);
+  }, [recurringPayments]);
+
+  const { upcomingRecurringPayments, overdueRecurringPayments } = useMemo(() => {
+    const upcoming: Array<RecurringPayment & { nextDueDate: string; daysUntilDue: number }> = [];
+    const overdue: Array<RecurringPayment & { dueDate: string; daysOverdue: number }> = [];
+
+    const now = new Date();
+    recurringPayments
+      .filter(p => p.isActive)
+      .forEach(p => {
+        const schedule = getPaymentSchedule(p, recurringPaymentLogs, now);
+        if (schedule.activeDueDate) {
+          if (schedule.isOverdue) {
+            overdue.push({
+              ...p,
+              dueDate: schedule.activeDueDate,
+              daysOverdue: Math.abs(schedule.daysDiff),
+            });
+          } else {
+            upcoming.push({
+              ...p,
+              nextDueDate: schedule.activeDueDate,
+              daysUntilDue: Math.max(0, schedule.daysDiff),
+            });
+          }
+        }
+      });
+
+    overdue.sort((a, b) => b.daysOverdue - a.daysOverdue);
+    upcoming.sort((a, b) => a.daysUntilDue - b.daysUntilDue);
+
+    return { upcomingRecurringPayments: upcoming, overdueRecurringPayments: overdue };
+  }, [recurringPayments, recurringPaymentLogs]);
+
   const getAggregatesForAI = (): FinancialAggregates => {
     const invBreakdownMap: Record<string, number> = {};
     investments.forEach(i => {
@@ -1384,6 +1563,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         dreams,
         contacts,
         settlements,
+        recurringPayments,
+        recurringPaymentLogs,
         aiSettings,
         aiReports,
         notRecurringTxIds,
@@ -1425,6 +1606,11 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         updateDream,
         deleteDream,
         addDreamContribution,
+        addRecurringPayment,
+        updateRecurringPayment,
+        deleteRecurringPayment,
+        pauseRecurringPayment,
+        markRecurringPaymentPaid,
         updateAISettings,
         saveAIReport,
         deleteAIReport,
@@ -1448,6 +1634,9 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         totalOwedToMe,
         totalIOwe,
         categorySpendingThisMonth,
+        upcomingRecurringPayments,
+        overdueRecurringPayments,
+        totalMonthlyRecurringCommitment,
         getAggregatesForAI,
       }}
     >

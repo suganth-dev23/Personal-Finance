@@ -22,6 +22,9 @@ const PeopleView = lazy(() =>
 const BudgetsView = lazy(() =>
   import('./components/budgets/BudgetsView').then(m => ({ default: m.BudgetsView }))
 );
+const RecurringPaymentsView = lazy(() =>
+  import('./components/recurring/RecurringPaymentsView').then(m => ({ default: m.RecurringPaymentsView }))
+);
 const CategoriesView = lazy(() =>
   import('./components/categories/CategoriesView').then(m => ({ default: m.CategoriesView }))
 );
@@ -83,6 +86,7 @@ const MainContent: React.FC = () => {
               )}
               {currentView === 'people' && <PeopleView />}
               {currentView === 'budgets' && <BudgetsView />}
+              {currentView === 'recurring' && <RecurringPaymentsView />}
               {currentView === 'categories' && <CategoriesView />}
               {currentView === 'emergency' && <EmergencyFundView />}
               {currentView === 'investments' && <InvestmentsView />}

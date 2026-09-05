@@ -13,6 +13,7 @@ const VIEW_TITLES: Record<AppView, { title: string; subtitle: string }> = {
   transactions: { title: 'Transaction History', subtitle: 'Search, filter, and manage all your bank & UPI records' },
   people: { title: 'People & Expense Splits', subtitle: 'Track IOUs, who owes you, who you owe, and settlements' },
   budgets: { title: 'Monthly Budgets', subtitle: 'Set limits per category and track spending velocity' },
+  recurring: { title: 'Recurring Payments', subtitle: 'Fixed commitments, subscriptions, EMIs, and monthly bills' },
   categories: { title: 'Spending Categories', subtitle: 'Default and custom category breakdown & icons' },
   emergency: { title: 'Emergency Fund', subtitle: 'Build and track your 6-month living expenses safety net' },
   investments: { title: 'Investments Portfolio', subtitle: 'Track Stocks, Mutual Funds, FD, Gold, EPF & Crypto' },

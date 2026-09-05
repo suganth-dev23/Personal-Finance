@@ -12,6 +12,8 @@ import {
   SettlementRecord,
   TombstoneRecord,
   SyncableStoreName,
+  RecurringPayment,
+  RecurringPaymentLog,
 } from '../types/finance';
 
 export interface UserPreferences {
@@ -83,10 +85,22 @@ export interface DhanVedaDBSchema extends DBSchema {
       'by-deletedAt': string;
     };
   };
+  recurringPayments: {
+    key: string;
+    value: RecurringPayment;
+  };
+  recurringPaymentLogs: {
+    key: string;
+    value: RecurringPaymentLog;
+    indexes: {
+      'by-recurringPaymentId': string;
+      'by-dueDate': string;
+    };
+  };
 }
 
 const DB_NAME = 'dhanveda_db';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 
 let dbPromise: Promise<IDBPDatabase<DhanVedaDBSchema>> | null = null;
 
@@ -159,6 +173,18 @@ export function getDB(): Promise<IDBPDatabase<DhanVedaDBSchema>> {
           const tombStore = db.createObjectStore('tombstones', { keyPath: 'id' });
           tombStore.createIndex('by-store', 'store');
           tombStore.createIndex('by-deletedAt', 'deletedAt');
+        }
+
+        // Recurring payments store (version 4)
+        if (!db.objectStoreNames.contains('recurringPayments')) {
+          db.createObjectStore('recurringPayments', { keyPath: 'id' });
+        }
+
+        // Recurring payment logs store (version 4)
+        if (!db.objectStoreNames.contains('recurringPaymentLogs')) {
+          const logStore = db.createObjectStore('recurringPaymentLogs', { keyPath: 'id' });
+          logStore.createIndex('by-recurringPaymentId', 'recurringPaymentId');
+          logStore.createIndex('by-dueDate', 'dueDate');
         }
       },
     });
@@ -419,14 +445,14 @@ export async function normalizeSplitData(): Promise<void> {
 
 // Storage helpers
 export async function getAllFromStore<T>(
-  storeName: 'transactions' | 'categories' | 'budgets' | 'investments' | 'dreams' | 'aiReports' | 'contacts' | 'settlements'
+  storeName: 'transactions' | 'categories' | 'budgets' | 'investments' | 'dreams' | 'aiReports' | 'contacts' | 'settlements' | 'recurringPayments' | 'recurringPaymentLogs'
 ): Promise<T[]> {
   const db = await getDB();
   return (await db.getAll(storeName)) as T[];
 }
 
 export async function saveAllToStore<T extends { id: string }>(
-  storeName: 'transactions' | 'categories' | 'budgets' | 'investments' | 'dreams' | 'aiReports' | 'contacts' | 'settlements',
+  storeName: 'transactions' | 'categories' | 'budgets' | 'investments' | 'dreams' | 'aiReports' | 'contacts' | 'settlements' | 'recurringPayments' | 'recurringPaymentLogs',
   items: T[]
 ): Promise<void> {
   const db = await getDB();
@@ -466,6 +492,8 @@ export async function clearAllStores(): Promise<void> {
     db.clear('aiReports'),
     db.clear('contacts'),
     db.clear('settlements'),
+    db.clear('recurringPayments'),
+    db.clear('recurringPaymentLogs'),
     db.put('emergencyFund', {
       id: 'current',
       targetMonths: 6,

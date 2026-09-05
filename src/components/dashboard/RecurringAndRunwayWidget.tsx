@@ -5,6 +5,7 @@ import {
   Sparkles,
   TrendingUp,
   X,
+  ArrowRight,
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { useRecurringTransactions } from '../../hooks/useRecurringTransactions';
@@ -92,7 +93,7 @@ export const CashFlowRunwayCard: React.FC = () => {
 };
 
 export const RecurringBillsCard: React.FC = () => {
-  const { transactions, notRecurringTxIds, toggleNotRecurring } = useFinance();
+  const { transactions, notRecurringTxIds, toggleNotRecurring, setCurrentView } = useFinance();
 
   const {
     recurringExpenses,
@@ -129,14 +130,21 @@ export const RecurringBillsCard: React.FC = () => {
         </div>
 
         {totalStreamCount === 0 ? (
-          <div className="text-center py-8 bg-slate-50 dark:bg-[#171E2A]/40 rounded-2xl border border-dashed border-slate-200 dark:border-[#202836] p-4">
+          <div className="text-center py-7 bg-slate-50 dark:bg-[#171E2A]/40 rounded-2xl border border-dashed border-slate-200 dark:border-[#202836] p-4">
             <Sparkles className="w-5 h-5 text-slate-400 mx-auto mb-2" />
             <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">
               No repeating monthly subscriptions detected yet
             </p>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 max-w-xs mx-auto">
               As you log recurring expenses over 28-32 day cycles, they will automatically appear here.
             </p>
+            <button
+              onClick={() => setCurrentView('recurring')}
+              className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-400 hover:underline"
+            >
+              <span>Manage Declared Fixed Bills & EMIs</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
           </div>
         ) : (
           <div className="space-y-2.5 max-h-56 overflow-y-auto pr-1">
@@ -231,8 +239,14 @@ export const RecurringBillsCard: React.FC = () => {
 
       {totalStreamCount > 0 && (
         <div className="pt-3 border-t border-slate-100 dark:border-[#202836] flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
-          <span>{totalStreamCount} recurring {totalStreamCount === 1 ? 'commitment' : 'commitments'} detected</span>
-          <span className="font-numeric font-medium">Automatic cycle matching</span>
+          <span>{totalStreamCount} {totalStreamCount === 1 ? 'stream' : 'streams'} detected</span>
+          <button
+            onClick={() => setCurrentView('recurring')}
+            className="text-amber-600 dark:text-amber-400 hover:underline font-semibold flex items-center gap-1 cursor-pointer"
+          >
+            <span>Declared Bills</span>
+            <ArrowRight className="w-3 h-3" />
+          </button>
         </div>
       )}
     </div>
