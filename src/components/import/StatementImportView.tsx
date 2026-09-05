@@ -181,39 +181,82 @@ export const StatementImportView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Top Banner: Modern Minimalist Mineral Import Center */}
+    <div className="space-y-6 max-w-7xl mx-auto pb-16">
+      {/* Hero Overview: Mineral Card with Gold Import Highlight */}
       <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] text-slate-900 dark:text-white p-6 sm:p-8 border border-slate-200/90 dark:border-[#202836] shadow-sm">
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="flex items-start gap-4">
-            <div className="p-3.5 rounded-2xl bg-amber-500/10 text-amber-700 dark:text-[#F5B742] border border-amber-500/20">
-              <UploadCloud className="w-8 h-8" />
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-500/10 dark:bg-amber-400/10 text-amber-600 dark:text-amber-400">
+                <UploadCloud className="h-4 w-4" />
+              </span>
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                STATEMENT IMPORT ENGINE
+              </span>
             </div>
-            <div>
-              <div className="flex items-center gap-2 mb-1.5">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-700 dark:text-[#F5B742] border border-amber-500/20">
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#F5B742]" /> Private Web Worker Parser
-                </span>
-              </div>
-              <h2 className="text-xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                Statement Import Engine
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+              Bank &amp; UPI Statement Parser
+            </p>
+            <div className="flex items-baseline gap-3">
+              <h2 className="text-3xl sm:text-4xl font-black font-numeric tracking-tight text-slate-900 dark:text-white">
+                Statement Center
               </h2>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-xl leading-relaxed">
-                Upload CSV or PDF statements. DhanVeda extracts transaction lines, suggests Indian merchant categories, detects duplicates, and lets you review before adding.
-              </p>
+              <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                zero server upload
+              </span>
             </div>
+            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+              Private web-worker statement extraction for HDFC, SBI, ICICI, Axis, Kotak, GPay, PhonePe &amp; Paytm
+            </p>
           </div>
 
-          <button
-            onClick={handleDownloadSampleCSV}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-[#171E2A] hover:bg-slate-200 dark:hover:bg-[#202836] text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-[#202836] text-xs sm:text-sm font-bold transition-all duration-200 active:scale-95 self-start md:self-auto"
-            title="Download a test CSV statement to verify parsing"
-          >
-            <Download className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span>Download Sample CSV</span>
-          </button>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={handleDownloadSampleCSV}
+              className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-slate-100 dark:bg-[#171E2A] hover:bg-slate-200 dark:hover:bg-[#202836] text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-[#202836] text-xs sm:text-sm font-bold transition-colors"
+              title="Download a test CSV statement to verify parsing"
+            >
+              <Download className="w-4 h-4 text-amber-500" />
+              <span>Download Sample CSV</span>
+            </button>
+          </div>
         </div>
+
+        {/* 4-column summary strip */}
+        <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-slate-200/80 dark:border-[#202836]">
+          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+            <span className="text-xs text-slate-500 dark:text-slate-400">Formats Supported</span>
+            <p className="text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">CSV &amp; PDF</p>
+          </div>
+          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+            <span className="text-xs text-slate-500 dark:text-slate-400">Privacy Architecture</span>
+            <p className="text-lg font-bold font-numeric text-emerald-600 dark:text-emerald-400 mt-0.5">100% Client-Side</p>
+          </div>
+          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+            <span className="text-xs text-slate-500 dark:text-slate-400">Parser Pipeline</span>
+            <p className="text-lg font-bold font-numeric text-teal-600 dark:text-teal-400 mt-0.5">Web Worker</p>
+          </div>
+          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+            <span className="text-xs text-slate-500 dark:text-slate-400">Duplicate Check</span>
+            <p className="text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">Active Hash</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Section Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">
+            Upload Bank Statement
+          </h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Drag &amp; drop your statement document or click to browse
+          </p>
+        </div>
+        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+          CSV / PDF supported
+        </span>
       </div>
 
       {/* Success Notification */}

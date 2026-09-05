@@ -52,40 +52,46 @@ export const BudgetsView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Hero Overview: Modern Minimalist Mineral Card */}
+    <div className="space-y-6 max-w-7xl mx-auto pb-16">
+      {/* Hero Overview: Mineral Card with Gold Budget Highlight */}
       <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] text-slate-900 dark:text-white p-6 sm:p-8 border border-slate-200/90 dark:border-[#202836] shadow-sm">
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-700 dark:text-[#F5B742] border border-amber-500/20">
-                <Sparkles className="w-3 h-3 text-[#F5B742]" /> Monthly Budget Status
+              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-500/10 dark:bg-amber-400/10 text-amber-600 dark:text-amber-400">
+                <PieChart className="h-4 w-4" />
               </span>
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium font-numeric">
-                {overallPercent}% Used
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                MONTHLY BUDGET STATUS
               </span>
             </div>
-
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+              Remaining Spend Allocation
+            </p>
             <div className="flex items-baseline gap-3">
-              <span className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white font-numeric">
+              <h2 className="text-3xl sm:text-4xl font-black font-numeric tracking-tight text-slate-900 dark:text-white">
                 {formatINR(Math.abs(remainingBudget))}
-              </span>
-              <span className={`text-sm font-bold ${isOverTotal ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+              </h2>
+              <span
+                className={`text-sm font-semibold ${
+                  isOverTotal ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'
+                }`}
+              >
                 {isOverTotal ? 'over budget' : 'remaining'}
               </span>
             </div>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-              Of <span className="font-numeric">{formatINR(totalBudgeted)}</span> total monthly allocated limit
+            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+              {overallPercent}% used of {formatINR(totalBudgeted)} monthly limit • {budgets.length} active category limits
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={handleOpenAdd}
-              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold rounded-2xl text-xs sm:text-sm shadow-sm transition-all duration-200 active:scale-95"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-3 text-sm font-bold text-slate-950 shadow-sm hover:from-amber-400 hover:to-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 dark:focus:ring-offset-slate-900 transition-all active:scale-[0.98]"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="h-4 w-4 stroke-[2.5]" />
               <span>Set New Budget</span>
             </button>
           </div>
@@ -111,27 +117,42 @@ export const BudgetsView: React.FC = () => {
           </div>
         </div>
 
-        {/* Micro-metrics Pills */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
-          <div className="bg-slate-50 dark:bg-[#171E2A] border border-slate-200/80 dark:border-[#202836] rounded-2xl p-3">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Allowed</span>
-            <p className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white mt-0.5 font-numeric">{formatCompactINR(totalBudgeted)}</p>
+        {/* 4-column summary strip */}
+        <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-slate-200/80 dark:border-[#202836]">
+          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+            <span className="text-xs text-slate-500 dark:text-slate-400">Total Allowed</span>
+            <p className="text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">{formatCompactINR(totalBudgeted)}</p>
           </div>
-          <div className="bg-slate-50 dark:bg-[#171E2A] border border-slate-200/80 dark:border-[#202836] rounded-2xl p-3">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Actual Spent</span>
-            <p className="text-sm sm:text-base font-extrabold text-rose-600 dark:text-rose-400 mt-0.5 font-numeric">{formatCompactINR(totalSpentInBudgeted)}</p>
+          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+            <span className="text-xs text-slate-500 dark:text-slate-400">Actual Spent</span>
+            <p className="text-lg font-bold font-numeric text-rose-600 dark:text-rose-400 mt-0.5">{formatCompactINR(totalSpentInBudgeted)}</p>
           </div>
-          <div className="bg-slate-50 dark:bg-[#171E2A] border border-slate-200/80 dark:border-[#202836] rounded-2xl p-3">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Categories</span>
-            <p className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white mt-0.5">{budgets.length} active</p>
+          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+            <span className="text-xs text-slate-500 dark:text-slate-400">Active Caps</span>
+            <p className="text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">{budgets.length}</p>
           </div>
-          <div className="bg-slate-50 dark:bg-[#171E2A] border border-slate-200/80 dark:border-[#202836] rounded-2xl p-3">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Pace Status</span>
-            <p className={`text-sm sm:text-base font-extrabold mt-0.5 ${isOverTotal ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+            <span className="text-xs text-slate-500 dark:text-slate-400">Velocity Status</span>
+            <p className={`text-lg font-bold font-numeric mt-0.5 ${isOverTotal ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
               {isOverTotal ? 'Over Budget' : overallPercent >= 85 ? 'Near Ceiling' : 'Safe Velocity'}
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Section Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">
+            Category Spending Limits
+          </h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Active monthly expenditure caps, pacing status, and overrun protection
+          </p>
+        </div>
+        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+          {budgets.length} categories
+        </span>
       </div>
 
       {/* Categories Budgets Grid */}
@@ -193,10 +214,10 @@ export const BudgetsView: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => handleEdit(b)}
-                      className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#171E2A] transition-colors"
+                      className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200/90 dark:border-[#202836] text-slate-400 hover:bg-slate-50 dark:hover:bg-[#171E2A] hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
                       title="Edit Limit"
                     >
                       <Edit3 className="w-3.5 h-3.5" />
@@ -207,7 +228,7 @@ export const BudgetsView: React.FC = () => {
                           deleteBudget(b.id);
                         }
                       }}
-                      className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                      className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200/90 dark:border-[#202836] text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
                       title="Delete Budget"
                     >
                       <Trash2 className="w-3.5 h-3.5" />

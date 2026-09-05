@@ -141,39 +141,110 @@ export const AIHealthSummaryView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      {/* BYOK Settings Card: Modern Minimalist AI Studio */}
-      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] text-slate-900 dark:text-white p-6 sm:p-8 border border-slate-200/90 dark:border-[#202836] shadow-sm space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto pb-16">
+      {/* Hero Overview: Mineral Card with Gold AI Highlight */}
+      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] text-slate-900 dark:text-white p-6 sm:p-8 border border-slate-200/90 dark:border-[#202836] shadow-sm">
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-700 dark:text-[#F5B742] border border-amber-500/20">
-                <Sparkles className="w-3 h-3 text-[#F5B742]" /> AI Financial Advisor (BYOK)
+              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-500/10 dark:bg-amber-400/10 text-amber-600 dark:text-amber-400">
+                <Sparkles className="h-4 w-4" />
               </span>
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                100% Private Client-Side
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                FINANCIAL HEALTH INTELLIGENCE
               </span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-              Financial Health Intelligence
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-2xl">
-              Get an instant, actionable breakdown of cash flows, burn rate, and investment velocity directly with zero server telemetry.
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+              Private Client-Side Intelligence Engine
+            </p>
+            <div className="flex items-baseline gap-3">
+              <h2 className="text-3xl sm:text-4xl font-black font-numeric tracking-tight text-slate-900 dark:text-white">
+                Zero-Telemetry
+              </h2>
+              <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                100% private in-browser
+              </span>
+            </div>
+            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+              Direct client-to-API inference with Gemini, Claude, or ChatGPT • Zero server-side telemetry
             </p>
           </div>
 
-          <div className="flex items-center gap-2 self-start md:self-auto">
-            <span className="text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl font-semibold flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <span>Zero-Telemetry</span>
-            </span>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={handleGenerate}
+              disabled={loading}
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-3 text-sm font-bold text-slate-950 shadow-sm hover:from-amber-400 hover:to-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 dark:focus:ring-offset-slate-900 transition-all active:scale-[0.98] disabled:opacity-50"
+            >
+              {loading ? (
+                <>
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                  <span>Synthesizing...</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4 stroke-[2.5]" />
+                  <span>Generate Health Assessment</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
 
+        {/* 4-column summary strip */}
+        <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-slate-200/80 dark:border-[#202836]">
+          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+            <span className="text-xs text-slate-500 dark:text-slate-400">Monthly Inflow</span>
+            <p className="text-lg font-bold font-numeric text-emerald-600 dark:text-emerald-400 mt-0.5">
+              +{formatINR(currentMonthIncome)}
+            </p>
+          </div>
+
+          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+            <span className="text-xs text-slate-500 dark:text-slate-400">Monthly Outflow</span>
+            <p className="text-lg font-bold font-numeric text-rose-600 dark:text-rose-400 mt-0.5">
+              -{formatINR(currentMonthExpense)}
+            </p>
+          </div>
+
+          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+            <span className="text-xs text-slate-500 dark:text-slate-400">Savings Rate</span>
+            <p className="text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">
+              {currentMonthSavingsRate.toFixed(1)}%
+            </p>
+          </div>
+
+          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+            <span className="text-xs text-slate-500 dark:text-slate-400">Liquid Runway</span>
+            <p className="text-lg font-bold font-numeric text-teal-600 dark:text-teal-400 mt-0.5">
+              {emergencyFundRunwayMonths.toFixed(1)} mos
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Section Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">
+            AI Engine Configuration
+          </h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Select your provider and manage private API keys (stored solely in browser IndexedDB)
+          </p>
+        </div>
+        <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+          <ShieldCheck className="w-3.5 h-3.5" />
+          <span>Zero-Telemetry</span>
+        </span>
+      </div>
+
+      {/* BYOK Settings Card */}
+      <div className="rounded-3xl bg-white dark:bg-[#131822] text-slate-900 dark:text-white p-6 sm:p-7 border border-slate-200/90 dark:border-[#202836] shadow-sm space-y-6">
         {/* Provider Tabs */}
         <div>
-          <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3">
+          <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
             Select AI Intelligence Engine
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -193,7 +264,7 @@ export const AIHealthSummaryView: React.FC = () => {
                   }}
                   className={`p-4 rounded-2xl text-left border transition-all duration-200 ${
                     isSelected
-                      ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/40'
+                      ? 'border-amber-500 bg-amber-500/10 ring-1 ring-amber-500/40'
                       : 'border-slate-200/90 dark:border-[#202836] bg-slate-50 dark:bg-[#171E2A] hover:border-slate-300 dark:hover:border-slate-700'
                   }`}
                 >

@@ -34,6 +34,7 @@ export const SettingsView: React.FC = () => {
     budgets,
     investments,
     dreams,
+    categories,
     syncStatus,
     lastSyncedAt,
     syncError,
@@ -102,23 +103,84 @@ export const SettingsView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      {/* Privacy Guarantee Header */}
-      <div className="relative overflow-hidden bg-white dark:bg-[#131822] rounded-3xl p-6 shadow-sm border border-slate-200/90 dark:border-[#202836]">
+    <div className="space-y-6 max-w-7xl mx-auto pb-16">
+      {/* Privacy Guarantee Header: Mineral Card with Gold Security Highlight */}
+      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] text-slate-900 dark:text-white p-6 sm:p-8 border border-slate-200/90 dark:border-[#202836] shadow-sm">
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
-        <div className="flex items-start gap-4">
-          <div className="p-3 rounded-2xl bg-amber-500/10 text-[#F5B742] shrink-0">
-            <Shield className="w-6 h-6" />
-          </div>
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-              Data Privacy & Local Storage Guarantee
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-              DhanVeda is architected as an offline-first client application. All financial records, custom categories, investments, and API keys are stored solely inside your browser's private <code className="bg-slate-100 dark:bg-[#171E2A] border border-slate-200/60 dark:border-[#202836] px-1 py-0.5 rounded text-emerald-600 dark:text-emerald-400 font-mono">IndexedDB</code>. No telemetry, corporate database, or analytics tracker ever receives your data.
+            <div className="flex items-center gap-2 mb-2">
+              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-500/10 dark:bg-amber-400/10 text-amber-600 dark:text-amber-400">
+                <Shield className="h-4 w-4" />
+              </span>
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                DATA SOVEREIGNTY &amp; ARCHITECTURE
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+              Client-Side Storage Guarantee
+            </p>
+            <div className="flex items-baseline gap-3">
+              <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900 dark:text-white">
+                100% Local-First
+              </h2>
+              <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                Private IndexedDB
+              </span>
+            </div>
+            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+              All financial records, goals, and API keys are stored solely inside your browser's private database.
             </p>
           </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={handleExportBackup}
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-3 text-sm font-bold text-slate-950 shadow-sm hover:from-amber-400 hover:to-amber-500 transition-all active:scale-[0.98]"
+            >
+              <Download className="h-4 w-4 stroke-[2.5]" />
+              <span>Export Full Backup</span>
+            </button>
+          </div>
         </div>
+
+        {/* 4-column summary strip */}
+        <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-slate-200/80 dark:border-[#202836]">
+          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+            <span className="text-xs text-slate-500 dark:text-slate-400">Local Engine</span>
+            <p className="text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">IndexedDB v4</p>
+          </div>
+          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+            <span className="text-xs text-slate-500 dark:text-slate-400">Cloud Sync</span>
+            <p className={`text-lg font-bold mt-0.5 ${isDriveConnected ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500'}`}>
+              {isDriveConnected ? 'Drive Connected' : 'Offline Mode'}
+            </p>
+          </div>
+          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+            <span className="text-xs text-slate-500 dark:text-slate-400">Ledger Count</span>
+            <p className="text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">{transactions.length} records</p>
+          </div>
+          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+            <span className="text-xs text-slate-500 dark:text-slate-400">Categories</span>
+            <p className="text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">{categories.length} types</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Section Header: Cloud Sync */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">
+            Google Drive Cloud Sync
+          </h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Multi-device automatic synchronization using your own Google Drive storage
+          </p>
+        </div>
+        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+          {isDriveConnected ? 'Active' : 'Disconnected'}
+        </span>
       </div>
 
       {/* Google Drive Cross-Device Sync */}
@@ -130,7 +192,7 @@ export const SettingsView: React.FC = () => {
             </div>
             <div>
               <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <span>Google Drive Cloud Sync & Multi-Device</span>
+                <span>Google Drive Cloud Sync &amp; Multi-Device</span>
                 {isDriveConnected ? (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>

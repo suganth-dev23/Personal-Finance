@@ -113,19 +113,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx }) => 
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-700 dark:text-[#F5B742] border border-amber-500/20">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#F5B742]" />
-                <span>Primary Wealth Ledger</span>
+              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-500/10 dark:bg-amber-400/10 text-amber-600 dark:text-amber-400">
+                <Wallet className="h-4 w-4" />
               </span>
-              <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">
-                INR Account Aggregate
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                PRIMARY WEALTH LEDGER
               </span>
             </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+              Net Worth Aggregate
+            </p>
 
             <div className="mt-1">
-              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                Total net worth
-              </span>
               <div className="flex flex-wrap items-baseline gap-3 mt-0.5">
                 <h2 className="font-numeric text-4xl sm:text-5xl lg:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50">
                   {formatINR(animatedTotalBalance)}
@@ -165,9 +164,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx }) => 
           <div className="flex flex-wrap items-center gap-2.5 self-start md:self-auto">
             <button
               onClick={onOpenAddTx}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold text-xs sm:text-sm shadow-sm transition-all active:scale-95"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-3 text-sm font-bold text-slate-950 shadow-sm hover:from-amber-400 hover:to-amber-500 transition-all active:scale-[0.98]"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="h-4 w-4 stroke-[2.5]" />
               <span>Add transaction</span>
             </button>
 

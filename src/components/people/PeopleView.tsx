@@ -168,56 +168,116 @@ export const PeopleView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Top Header & Sub-Navigation Tabs */}
-      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] border border-slate-200/90 dark:border-[#202836] p-6 sm:p-8 shadow-sm">
+    <div className="space-y-6 max-w-7xl mx-auto pb-16">
+      {/* Hero Overview: Single Unified Master Mineral Card */}
+      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] text-slate-900 dark:text-white p-6 sm:p-8 border border-slate-200/90 dark:border-[#202836] shadow-sm">
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-700 dark:text-[#F5B742] border border-amber-500/20">
-                <Users className="w-3 h-3" /> People & Splits
+              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-500/10 dark:bg-amber-400/10 text-amber-600 dark:text-amber-400">
+                <Users className="h-4 w-4" />
+              </span>
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                PEOPLE &amp; SHARED BALANCES
               </span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-              People & Splits
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Manage shared expense balances, IOUs, and repayment history
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+              Net Peer Aggregate Balance
+            </p>
+            <div className="flex items-baseline gap-3">
+              <h2 className="text-3xl sm:text-4xl font-black font-numeric tracking-tight text-slate-900 dark:text-white">
+                {netOverall >= 0 ? '+' : ''}{formatINR(netOverall)}
+              </h2>
+              <span
+                className={`text-sm font-semibold ${
+                  netOverall > 0
+                    ? 'text-emerald-600 dark:text-emerald-400'
+                    : netOverall < 0
+                    ? 'text-rose-600 dark:text-rose-400'
+                    : 'text-slate-500 dark:text-slate-400'
+                }`}
+              >
+                {netOverall > 0 ? 'in your favor' : netOverall < 0 ? 'you owe overall' : 'all accounts square'}
+              </span>
+            </div>
+            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+              {activeContacts.length} active peer accounts with open balances • {settledContacts.length} friends settled
             </p>
           </div>
 
-          {/* Tab Switcher */}
-          <div className="flex items-center bg-slate-100 dark:bg-[#171E2A] p-1 rounded-2xl text-xs font-bold self-start sm:self-auto border border-slate-200/60 dark:border-[#202836]">
-            <button
-              onClick={() => setActiveTab('contacts')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${
-                activeTab === 'contacts'
-                  ? 'bg-white dark:bg-[#202836] text-slate-900 dark:text-white shadow-xs'
-                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <Users className="w-4 h-4" />
-              <span>Contacts & Balances</span>
-            </button>
+          {/* Tab Switcher & CTA */}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center bg-slate-100 dark:bg-[#171E2A] p-1 rounded-2xl text-xs font-bold border border-slate-200/60 dark:border-[#202836]">
+              <button
+                onClick={() => setActiveTab('contacts')}
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all ${
+                  activeTab === 'contacts'
+                    ? 'bg-white dark:bg-[#202836] text-slate-900 dark:text-white shadow-xs'
+                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <Users className="w-3.5 h-3.5" />
+                <span>Contacts</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('history')}
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all ${
+                  activeTab === 'history'
+                    ? 'bg-white dark:bg-[#202836] text-slate-900 dark:text-white shadow-xs'
+                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <History className="w-3.5 h-3.5 text-emerald-600" />
+                <span>History</span>
+                {settlements.length > 0 && (
+                  <span className="px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-[10px]">
+                    {settlements.length}
+                  </span>
+                )}
+              </button>
+            </div>
 
             <button
-              onClick={() => setActiveTab('history')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${
-                activeTab === 'history'
-                  ? 'bg-white dark:bg-[#202836] text-slate-900 dark:text-white shadow-xs'
-                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-              }`}
+              onClick={() => setIsAddContactOpen(true)}
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-3 text-sm font-bold text-slate-950 shadow-sm hover:from-amber-400 hover:to-amber-500 transition-all active:scale-[0.98]"
             >
-              <History className="w-4 h-4 text-emerald-600" />
-              <span>Settlement History</span>
-              {settlements.length > 0 && (
-                <span className="px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-[10px]">
-                  {settlements.length}
-                </span>
-              )}
+              <UserPlus className="h-4 w-4 stroke-[2.5]" />
+              <span>Add Person</span>
             </button>
+          </div>
+        </div>
+
+        {/* 4-column summary strip */}
+        <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-slate-200/80 dark:border-[#202836]">
+          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+            <span className="text-xs text-slate-500 dark:text-slate-400">You Are Owed</span>
+            <p className="text-lg font-bold font-numeric text-emerald-600 dark:text-emerald-400 mt-0.5">
+              +{formatINR(totalOwedToMe)}
+            </p>
+          </div>
+
+          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+            <span className="text-xs text-slate-500 dark:text-slate-400">You Owe</span>
+            <p className="text-lg font-bold font-numeric text-rose-600 dark:text-rose-400 mt-0.5">
+              -{formatINR(totalIOwe)}
+            </p>
+          </div>
+
+          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+            <span className="text-xs text-slate-500 dark:text-slate-400">Active Contacts</span>
+            <p className="text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">
+              {activeContacts.length}
+            </p>
+          </div>
+
+          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+            <span className="text-xs text-slate-500 dark:text-slate-400">Settled All Square</span>
+            <p className="text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">
+              {settledContacts.length}
+            </p>
           </div>
         </div>
       </div>
@@ -268,68 +328,19 @@ export const PeopleView: React.FC = () => {
         <SettlementHistoryView onBackToContacts={() => setActiveTab('contacts')} />
       ) : (
         <>
-          {/* Modern Minimalist Splits Hero Card */}
-          <div className="bg-white dark:bg-[#131822] text-slate-900 dark:text-white rounded-3xl p-6 sm:p-7 border border-slate-200/90 dark:border-[#202836] shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 relative z-10 pb-5 border-b border-slate-200/80 dark:border-[#202836]">
-              {/* You Are Owed */}
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                    You are Owed
-                  </span>
-                </div>
-                <p className="text-3xl sm:text-4xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight font-numeric">
-                  {formatINR(totalOwedToMe)}
-                </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Repayments due from friends</p>
-              </div>
-
-              {/* You Owe */}
-              <div className="space-y-1 sm:border-l sm:border-slate-200/80 sm:dark:border-[#202836] sm:pl-6">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-rose-500" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                    You Owe
-                  </span>
-                </div>
-                <p className="text-3xl sm:text-4xl font-black text-rose-600 dark:text-rose-400 tracking-tight font-numeric">
-                  {formatINR(totalIOwe)}
-                </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Pending payments to others</p>
-              </div>
+          {/* Section Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">
+                Friends &amp; Shared Balances
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Track individual IOUs, link bank repayments, and settle up
+              </p>
             </div>
-
-            {/* Bottom Net Balance & Stats */}
-            <div className="flex flex-wrap items-center justify-between gap-4 pt-4 relative z-10">
-              <div className="flex items-baseline gap-2">
-                <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">
-                  Net Balance:
-                </span>
-                <span
-                  className={`text-xl font-black tracking-tight font-numeric ${
-                    netOverall > 0
-                      ? 'text-emerald-600 dark:text-emerald-400'
-                      : netOverall < 0
-                      ? 'text-rose-600 dark:text-rose-400'
-                      : 'text-slate-700 dark:text-slate-300'
-                  }`}
-                >
-                  {netOverall >= 0 ? '+' : ''}{formatINR(netOverall)}
-                </span>
-                <span className="text-xs text-slate-500 dark:text-slate-400">
-                  ({netOverall > 0 ? 'in your favor' : netOverall < 0 ? 'you owe overall' : 'settled'})
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 dark:bg-[#171E2A] text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-[#202836]">
-                  <Users className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
-                  <span>{activeContacts.length} active ({settledContacts.length} settled)</span>
-                </span>
-              </div>
-            </div>
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+              {activeContacts.length} active debts
+            </span>
           </div>
 
           {/* Action Bar & Filters */}

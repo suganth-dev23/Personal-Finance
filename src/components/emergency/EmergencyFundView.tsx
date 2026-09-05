@@ -29,47 +29,49 @@ export const EmergencyFundView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Top Banner & Runway Meter: Modern Minimalist Mineral Card */}
+    <div className="space-y-6 max-w-7xl mx-auto pb-16">
+      {/* Top Banner & Runway Meter: Mineral Card with Gold Reserve Highlight */}
       <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] text-slate-900 dark:text-white p-6 sm:p-8 border border-slate-200/90 dark:border-[#202836] shadow-sm">
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-700 dark:text-[#F5B742] border border-amber-500/20">
-                <ShieldCheck className="w-3.5 h-3.5 text-[#F5B742]" /> Emergency Safety Reserve
+              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-500/10 dark:bg-amber-400/10 text-amber-600 dark:text-amber-400">
+                <ShieldCheck className="h-4 w-4" />
               </span>
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                {emergencyFund.targetMonths} Months Goal
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                EMERGENCY SAFETY RESERVE
               </span>
             </div>
-
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+              Secured Liquid Cash Runway
+            </p>
             <div className="flex items-baseline gap-3">
-              <span className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white font-numeric">
+              <h2 className="text-3xl sm:text-4xl font-black font-numeric tracking-tight text-slate-900 dark:text-white">
                 {formatINR(emergencyFund.currentSaved)}
-              </span>
-              <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
-                secured liquid cash
+              </h2>
+              <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                {percentFunded}% funded
               </span>
             </div>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-              Secures <span className="font-numeric font-bold">{emergencyFundRunwayMonths.toFixed(1)}</span> months of baseline living expenses without selling investments.
+            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+              Secures <span className="font-numeric font-bold">{emergencyFundRunwayMonths.toFixed(1)}</span> months of baseline expenses • Goal: {emergencyFund.targetMonths} months ({formatINR(effectiveTarget)})
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 dark:bg-[#171E2A] hover:bg-slate-200 dark:hover:bg-[#202836] text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-[#202836] rounded-2xl text-xs sm:text-sm font-bold transition-all duration-200 active:scale-95"
+              className="inline-flex items-center gap-2 px-4 py-3 bg-slate-100 dark:bg-[#171E2A] hover:bg-slate-200 dark:hover:bg-[#202836] text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-[#202836] rounded-xl text-xs sm:text-sm font-bold transition-all active:scale-95"
             >
               <Sliders className="w-4 h-4 text-slate-400" />
               <span>Adjust Target</span>
             </button>
             <button
               onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold rounded-2xl text-xs sm:text-sm shadow-sm transition-all duration-200 active:scale-95"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-3 text-sm font-bold text-slate-950 shadow-sm hover:from-amber-400 hover:to-amber-500 transition-all active:scale-[0.98]"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="h-4 w-4 stroke-[2.5]" />
               <span>Log Contribution</span>
             </button>
           </div>
@@ -78,7 +80,7 @@ export const EmergencyFundView: React.FC = () => {
         {/* Settings Panel if toggled */}
         {isSettingsOpen && (
           <form onSubmit={handleSaveSettings} className="mt-6 p-5 bg-slate-50 dark:bg-[#171E2A] rounded-2xl border border-slate-200/80 dark:border-[#202836] space-y-4">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
               <Sliders className="w-3.5 h-3.5" /> Customize Emergency Target
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -89,7 +91,7 @@ export const EmergencyFundView: React.FC = () => {
                 <select
                   value={targetMonths}
                   onChange={e => setTargetMonths(parseInt(e.target.value))}
-                  className="w-full py-2.5 px-3.5 bg-white dark:bg-[#131822] border border-slate-200/90 dark:border-[#202836] rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
+                  className="w-full py-2.5 px-3.5 bg-white dark:bg-[#131822] border border-slate-200/90 dark:border-[#202836] rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:border-amber-500"
                 >
                   <option value={3}>3 Months (Aggressive / High Job Security)</option>
                   <option value={6}>6 Months (Standard Recommended)</option>
@@ -107,7 +109,7 @@ export const EmergencyFundView: React.FC = () => {
                   value={manualTarget}
                   onChange={e => setManualTarget(e.target.value)}
                   placeholder="e.g. 360000"
-                  className="w-full py-2.5 px-3.5 bg-white dark:bg-[#131822] border border-slate-200/90 dark:border-[#202836] rounded-xl text-sm text-slate-900 dark:text-white font-numeric focus:outline-none focus:border-emerald-500"
+                  className="w-full py-2.5 px-3.5 bg-white dark:bg-[#131822] border border-slate-200/90 dark:border-[#202836] rounded-xl text-sm text-slate-900 dark:text-white font-numeric focus:outline-none focus:border-amber-500"
                 />
               </div>
             </div>
@@ -122,7 +124,7 @@ export const EmergencyFundView: React.FC = () => {
               </button>
               <button
                 type="submit"
-                className="px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md transition-all"
+                className="px-5 py-2 text-xs font-bold text-slate-950 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 rounded-xl shadow-sm transition-all"
               >
                 Save Settings
               </button>
@@ -145,30 +147,45 @@ export const EmergencyFundView: React.FC = () => {
         </div>
 
         {/* 4 Metric Pillars */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
-          <div className="bg-slate-50 dark:bg-[#171E2A] border border-slate-200/80 dark:border-[#202836] rounded-2xl p-3">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Current Saved</span>
-            <p className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white mt-0.5 font-numeric">{formatCompactINR(emergencyFund.currentSaved)}</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-slate-200/80 dark:border-[#202836]">
+          <div className="bg-slate-50 dark:bg-[#171E2A] border border-slate-200/60 dark:border-[#202836]/60 rounded-2xl p-3.5">
+            <span className="text-xs text-slate-500 dark:text-slate-400">Current Saved</span>
+            <p className="text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">{formatCompactINR(emergencyFund.currentSaved)}</p>
           </div>
-          <div className="bg-slate-50 dark:bg-[#171E2A] border border-slate-200/80 dark:border-[#202836] rounded-2xl p-3">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Target Fund</span>
-            <p className="text-sm sm:text-base font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5 font-numeric">{formatCompactINR(effectiveTarget)}</p>
+          <div className="bg-slate-50 dark:bg-[#171E2A] border border-slate-200/60 dark:border-[#202836]/60 rounded-2xl p-3.5">
+            <span className="text-xs text-slate-500 dark:text-slate-400">Target Fund</span>
+            <p className="text-lg font-bold font-numeric text-emerald-600 dark:text-emerald-400 mt-0.5">{formatCompactINR(effectiveTarget)}</p>
           </div>
-          <div className="bg-slate-50 dark:bg-[#171E2A] border border-slate-200/80 dark:border-[#202836] rounded-2xl p-3">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Runway Secured</span>
-            <p className="text-sm sm:text-base font-extrabold text-teal-600 dark:text-teal-400 mt-0.5 font-numeric">{emergencyFundRunwayMonths.toFixed(1)} Months</p>
+          <div className="bg-slate-50 dark:bg-[#171E2A] border border-slate-200/60 dark:border-[#202836]/60 rounded-2xl p-3.5">
+            <span className="text-xs text-slate-500 dark:text-slate-400">Runway Secured</span>
+            <p className="text-lg font-bold font-numeric text-teal-600 dark:text-teal-400 mt-0.5">{emergencyFundRunwayMonths.toFixed(1)} Months</p>
           </div>
-          <div className="bg-slate-50 dark:bg-[#171E2A] border border-slate-200/80 dark:border-[#202836] rounded-2xl p-3">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Shield Status</span>
-            <p className="text-sm sm:text-base font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5">
+          <div className="bg-slate-50 dark:bg-[#171E2A] border border-slate-200/60 dark:border-[#202836]/60 rounded-2xl p-3.5">
+            <span className="text-xs text-slate-500 dark:text-slate-400">Shield Status</span>
+            <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
               {percentFunded >= 100 ? 'Fully Shielded' : percentFunded >= 50 ? 'Moderate' : 'Under Target'}
             </p>
           </div>
         </div>
       </div>
 
+      {/* Section Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">
+            Contribution &amp; Activity Log
+          </h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Historical ledger of safety deposits and emergency withdrawals
+          </p>
+        </div>
+        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+          {emergencyFund.contributions.length} records
+        </span>
+      </div>
+
       {/* Contribution & Withdrawal History */}
-      <div className="bg-white dark:bg-[#131822] rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/90 dark:border-[#202836]">
+      <div className="bg-white dark:bg-[#131822] rounded-3xl p-5 sm:p-7 shadow-sm border border-slate-200/90 dark:border-[#202836]">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
