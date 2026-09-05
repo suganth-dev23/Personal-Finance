@@ -81,7 +81,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTx }) => {
       <div className="px-4 pt-4 pb-2">
         <button
           onClick={onOpenAddTx}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white font-semibold text-sm shadow-sm transition-all duration-150 transform active:scale-[0.98]"
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold text-sm shadow-sm transition-all duration-150 transform active:scale-[0.98]"
         >
           <Plus className="w-4 h-4" />
           <span>Add Transaction</span>

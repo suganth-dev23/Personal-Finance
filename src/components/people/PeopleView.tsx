@@ -308,7 +308,7 @@ export const PeopleView: React.FC = () => {
                 );
                 setLinkSuggestionPrompt(null);
               }}
-              className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-colors"
+              className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 text-xs font-bold shadow-xs transition-all active:scale-95"
             >
               Link to Settlement
             </button>

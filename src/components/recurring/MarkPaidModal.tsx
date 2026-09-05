@@ -152,7 +152,7 @@ export const MarkPaidModal: React.FC<MarkPaidModalProps> = ({
           </button>
           <button
             type="submit"
-            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 transition-colors"
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 px-5 py-2.5 text-sm font-bold text-slate-950 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 transition-all active:scale-95"
           >
             <CheckCircle2 className="h-4 w-4" />
             <span>Confirm Payment</span>

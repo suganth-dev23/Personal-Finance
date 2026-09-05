@@ -602,9 +602,9 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
 
       {/* Bulk Action Bar when items selected */}
       {selectedTxIds.size > 0 && (
-        <div className="bg-emerald-600 text-white rounded-2xl p-4 flex items-center justify-between shadow-lg shadow-emerald-600/20 transition-all">
+        <div className="bg-slate-900 dark:bg-[#131822] text-white rounded-2xl p-4 flex items-center justify-between border border-slate-800 dark:border-[#202836] shadow-xl shadow-black/20 transition-all">
           <div className="flex items-center gap-3">
-            <span className="font-bold text-sm">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-[#F5B742] border border-amber-500/20">
               {selectedTxIds.size} transaction{selectedTxIds.size > 1 ? 's' : ''} selected
             </span>
           </div>
@@ -612,13 +612,13 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={() => setSelectedTxIds(new Set())}
-              className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-xs font-semibold"
+              className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 dark:bg-[#171E2A] dark:hover:bg-[#202836] text-xs font-semibold text-slate-300 border border-slate-700/60 dark:border-[#202836] transition-colors"
             >
               Deselect All
             </button>
             <button
               onClick={handleBulkDelete}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-xs font-bold shadow-xs"
+              className="flex items-center gap-1 px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-xs font-bold shadow-xs active:scale-95 transition-all"
             >
               <Trash2 className="w-3.5 h-3.5" />
               <span>Delete Selected</span>

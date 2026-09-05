@@ -128,7 +128,7 @@ export const DreamContributionModal: React.FC<DreamContributionModalProps> = ({
           </button>
           <button
             type="submit"
-            className="px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/30 transition-all duration-150"
+            className="px-6 py-2.5 rounded-xl text-sm font-bold text-slate-950 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 shadow-sm transition-all duration-150 active:scale-95"
           >
             Save Contribution
           </button>

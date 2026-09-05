@@ -380,7 +380,7 @@ export const StatementImportView: React.FC = () => {
               <button
                 type="button"
                 onClick={handleFinalImport}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold shadow-md shadow-emerald-600/25 transition-all active:scale-95"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 text-xs sm:text-sm font-extrabold shadow-sm transition-all active:scale-95"
               >
                 <span>Commit & Import Selected</span>
                 <ArrowRight className="w-4 h-4" />

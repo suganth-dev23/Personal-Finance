@@ -308,7 +308,7 @@ export const DreamsView: React.FC = () => {
                   </span>
                   <button
                     onClick={() => handleOpenContribution(dream)}
-                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-[#171E2A] hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-600 dark:hover:text-white text-slate-700 dark:text-slate-300 text-xs font-bold transition-all duration-200 active:scale-95 border border-slate-200/60 dark:border-[#202836]"
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-[#171E2A] hover:bg-amber-500 hover:text-slate-950 dark:hover:bg-[#F5B742] dark:hover:text-slate-950 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all duration-200 active:scale-95 border border-slate-200/60 dark:border-[#202836]"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>Log Savings</span>
