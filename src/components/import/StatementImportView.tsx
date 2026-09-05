@@ -184,15 +184,16 @@ export const StatementImportView: React.FC = () => {
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Top Banner: Modern Minimalist Mineral Import Center */}
       <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] text-slate-900 dark:text-white p-6 sm:p-8 border border-slate-200/90 dark:border-[#202836] shadow-sm">
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-start gap-4">
-            <div className="p-3.5 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+            <div className="p-3.5 rounded-2xl bg-amber-500/10 text-amber-700 dark:text-[#F5B742] border border-amber-500/20">
               <UploadCloud className="w-8 h-8" />
             </div>
             <div>
               <div className="flex items-center gap-2 mb-1.5">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> Private Web Worker Parser
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-700 dark:text-[#F5B742] border border-amber-500/20">
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#F5B742]" /> Private Web Worker Parser
                 </span>
               </div>
               <h2 className="text-xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">

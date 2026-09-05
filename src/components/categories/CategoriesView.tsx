@@ -35,11 +35,12 @@ export const CategoriesView: React.FC = () => {
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Top Banner: Modern Minimalist Mineral Overview */}
       <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] text-slate-900 dark:text-white p-6 sm:p-8 border border-slate-200/90 dark:border-[#202836] shadow-sm">
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                <Layers className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> Taxonomy & Rules
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-700 dark:text-[#F5B742] border border-amber-500/20">
+                <Layers className="w-3 h-3 text-[#F5B742]" /> Taxonomy & Rules
               </span>
               <span className="text-xs text-slate-500 dark:text-slate-400 font-medium font-numeric">
                 {categories.length} Categories Total
@@ -57,7 +58,7 @@ export const CategoriesView: React.FC = () => {
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={handleOpenAdd}
-              className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl text-xs sm:text-sm shadow-md shadow-emerald-600/25 transition-all duration-200 active:scale-95"
+              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold rounded-2xl text-xs sm:text-sm shadow-sm transition-all duration-200 active:scale-95"
             >
               <Plus className="w-4 h-4" />
               <span>New Category</span>

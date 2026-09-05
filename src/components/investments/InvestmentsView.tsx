@@ -85,11 +85,14 @@ export const InvestmentsView: React.FC = () => {
     <div className="space-y-6">
       {/* Portfolio Hero Card */}
       <div className="bg-white dark:bg-[#131822] rounded-3xl p-6 sm:p-7 border border-slate-200/90 dark:border-[#202836] shadow-sm relative overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
           <div>
-            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-              Portfolio Valuation
-            </span>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-700 dark:text-[#F5B742] border border-amber-500/20">
+                <TrendingUp className="w-3 h-3" /> Portfolio Valuation
+              </span>
+            </div>
             <div className="flex flex-wrap items-baseline gap-3 mt-1.5">
               <h2 className="text-3xl sm:text-5xl font-bold font-numeric tracking-tight text-slate-900 dark:text-white">
                 {formatINR(totalInvestmentValue)}
@@ -114,7 +117,7 @@ export const InvestmentsView: React.FC = () => {
 
           <button
             onClick={handleOpenAdd}
-            className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white rounded-xl text-xs sm:text-sm font-semibold shadow-sm transition-all active:scale-95 self-start sm:self-auto"
+            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 rounded-xl text-xs sm:text-sm font-bold shadow-sm transition-all active:scale-95 self-start sm:self-auto"
           >
             <Plus className="w-4 h-4" />
             <span>Add Holding</span>
@@ -209,7 +212,7 @@ export const InvestmentsView: React.FC = () => {
       {/* Holdings List with Filters */}
       {investments.length === 0 ? (
         <div className="text-center py-16 bg-white dark:bg-[#131822] rounded-3xl border border-dashed border-slate-200 dark:border-[#202836] p-8">
-          <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-[#171E2A] flex items-center justify-center mx-auto text-slate-400">
+          <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto text-[#F5B742]">
             <TrendingUp className="w-6 h-6" />
           </div>
           <h3 className="mt-3 text-base font-bold text-slate-800 dark:text-slate-200">No investment holdings logged yet</h3>
@@ -218,7 +221,7 @@ export const InvestmentsView: React.FC = () => {
           </p>
           <button
             onClick={handleOpenAdd}
-            className="mt-4 px-4 py-2 bg-slate-900 hover:bg-slate-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-sm"
+            className="mt-4 px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 rounded-xl text-xs font-bold shadow-sm"
           >
             Add Your First Holding
           </button>

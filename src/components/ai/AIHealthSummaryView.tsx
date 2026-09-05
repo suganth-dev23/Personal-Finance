@@ -144,11 +144,12 @@ export const AIHealthSummaryView: React.FC = () => {
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* BYOK Settings Card: Modern Minimalist AI Studio */}
       <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] text-slate-900 dark:text-white p-6 sm:p-8 border border-slate-200/90 dark:border-[#202836] shadow-sm space-y-6">
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                <Sparkles className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> AI Financial Advisor (BYOK)
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-700 dark:text-[#F5B742] border border-amber-500/20">
+                <Sparkles className="w-3 h-3 text-[#F5B742]" /> AI Financial Advisor (BYOK)
               </span>
               <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                 100% Private Client-Side
@@ -273,7 +274,7 @@ export const AIHealthSummaryView: React.FC = () => {
           <button
             onClick={handleGenerate}
             disabled={loading}
-            className="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-emerald-600/25 transition-all duration-200 active:scale-95 disabled:opacity-50"
+            className="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-extrabold text-xs sm:text-sm shadow-md transition-all duration-200 active:scale-95 disabled:opacity-50"
           >
             {loading ? (
               <>
@@ -282,7 +283,7 @@ export const AIHealthSummaryView: React.FC = () => {
               </>
             ) : (
               <>
-                <Sparkles className="w-4 h-4 text-white" />
+                <Sparkles className="w-4 h-4 text-slate-950" />
                 <span>Generate Health Assessment</span>
               </>
             )}

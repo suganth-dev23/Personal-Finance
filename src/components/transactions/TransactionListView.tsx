@@ -3,6 +3,7 @@ import {
   Search,
   Download,
   Plus,
+  Receipt,
   Trash2,
   CheckSquare,
   Square,
@@ -250,47 +251,60 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Top Filter & Action Bar */}
-      <div className="bg-white dark:bg-[#131822] rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-200/90 dark:border-[#202836] space-y-4">
-        {/* Search & Main Buttons */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-          <div className="relative flex-1">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              placeholder="Search by note, person, merchant, category, or amount..."
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-[#171E2A] border border-slate-200/90 dark:border-[#202836] rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
-            />
-            {searchTerm && (
-              <button
-                onClick={() => setSearchTerm('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-              >
-                Clear
-              </button>
-            )}
+      {/* Hero Overview */}
+      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] border border-slate-200/90 dark:border-[#202836] p-6 sm:p-8 shadow-sm">
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-700 dark:text-[#F5B742] border border-amber-500/20">
+                <Receipt className="w-3 h-3" /> Transaction Ledger
+              </span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+              {filteredTransactions.length} <span className="text-slate-400 dark:text-slate-500 font-medium text-xl">transactions</span>
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Full history · filter, search, export, or bulk delete</p>
           </div>
-
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 self-start sm:self-auto">
             <button
               onClick={exportToCSV}
-              className="flex items-center gap-1.5 px-3.5 py-2.5 bg-slate-100 dark:bg-[#171E2A] hover:bg-slate-200 dark:hover:bg-[#202836] text-slate-700 dark:text-slate-300 rounded-xl text-xs sm:text-sm font-semibold transition-colors"
-              title="Export filtered transactions to CSV"
+              className="flex items-center gap-1.5 px-3.5 py-2.5 bg-slate-100 dark:bg-[#171E2A] hover:bg-slate-200 dark:hover:bg-[#202836] text-slate-700 dark:text-slate-300 rounded-xl text-xs sm:text-sm font-semibold transition-colors border border-slate-200/90 dark:border-[#202836]"
             >
               <Download className="w-4 h-4" />
               <span>Export CSV</span>
             </button>
-
             <button
               onClick={onOpenAddModal}
-              className="flex items-center gap-1.5 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white rounded-xl text-xs sm:text-sm font-bold shadow-sm transition-all active:scale-95"
+              className="flex items-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 rounded-xl text-xs sm:text-sm font-bold shadow-sm transition-all active:scale-95"
             >
               <Plus className="w-4 h-4" />
               <span>Add Entry</span>
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* Top Filter Card */}
+      <div className="bg-white dark:bg-[#131822] rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-200/90 dark:border-[#202836] space-y-4">
+        {/* Search */}
+        <div className="relative">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            placeholder="Search by note, person, merchant, category, or amount..."
+            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-[#171E2A] border border-slate-200/90 dark:border-[#202836] rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+          />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            >
+              Clear
+            </button>
+          )}
         </div>
 
         {/* Quick Filter Chips */}

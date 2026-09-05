@@ -75,15 +75,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx }) => 
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <button
                 onClick={onOpenAddTx}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-emerald-900 font-bold text-xs sm:text-sm hover:bg-emerald-50 transition-all shadow-md active:scale-95"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-slate-900 font-bold text-xs sm:text-sm hover:bg-white/90 transition-all shadow-md active:scale-95"
               >
-                <Plus className="w-4 h-4 text-emerald-600" />
+                <Plus className="w-4 h-4 text-amber-500" />
                 <span>Add First Transaction</span>
               </button>
 
               <button
                 onClick={() => setCurrentView('import')}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-700/80 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm border border-white/20 transition-all"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm border border-white/20 transition-all"
               >
                 <UploadCloud className="w-4 h-4" />
                 <span>Import Statement (CSV/PDF)</span>
@@ -106,7 +106,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx }) => 
 
       {/* LEVEL 1: THE MASTER WEALTH LEDGER ANCHOR */}
       <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] border border-slate-200/90 dark:border-[#202836] p-6 sm:p-8 shadow-xs">
-        {/* Subtle Suvarna gold accent hairline at top edge */}
+        {/* Suvarna gold accent hairline at top edge */}
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
 
         {/* Master Header: Net Worth & Action Cluster */}
@@ -165,7 +165,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx }) => 
           <div className="flex flex-wrap items-center gap-2.5 self-start md:self-auto">
             <button
               onClick={onOpenAddTx}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs sm:text-sm shadow-sm shadow-emerald-700/20 transition-all active:scale-95"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold text-xs sm:text-sm shadow-sm transition-all active:scale-95"
             >
               <Plus className="w-4 h-4" />
               <span>Add transaction</span>

@@ -104,9 +104,10 @@ export const SettingsView: React.FC = () => {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Privacy Guarantee Header */}
-      <div className="bg-white dark:bg-[#131822] rounded-3xl p-6 shadow-sm border border-slate-200/90 dark:border-[#202836]">
+      <div className="relative overflow-hidden bg-white dark:bg-[#131822] rounded-3xl p-6 shadow-sm border border-slate-200/90 dark:border-[#202836]">
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
         <div className="flex items-start gap-4">
-          <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+          <div className="p-3 rounded-2xl bg-amber-500/10 text-[#F5B742] shrink-0">
             <Shield className="w-6 h-6" />
           </div>
           <div>
@@ -363,7 +364,7 @@ export const SettingsView: React.FC = () => {
             <button
               type="button"
               onClick={handleExportBackup}
-              className="mt-4 flex items-center justify-center gap-1.5 px-4 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl text-xs font-bold transition-all active:scale-95 shadow-sm"
+              className="mt-4 flex items-center justify-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 rounded-xl text-xs font-bold transition-all active:scale-95 shadow-sm"
             >
               <Download className="w-3.5 h-3.5" />
               <span>Download JSON Backup</span>
