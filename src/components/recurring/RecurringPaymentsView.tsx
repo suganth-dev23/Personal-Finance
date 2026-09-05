@@ -136,7 +136,7 @@ export const RecurringPaymentsView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-16">
+    <div className="space-y-6 w-full pb-16">
       {/* Hero Overview: Mineral Card with Gold Commitment Highlight */}
       <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] text-slate-900 dark:text-white p-6 sm:p-8 border border-slate-200/90 dark:border-[#202836] shadow-sm">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">

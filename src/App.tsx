@@ -74,7 +74,7 @@ const MainContent: React.FC = () => {
         <Navbar onOpenAddTx={handleOpenAddTx} />
 
         {/* Dynamic Lazy-Loaded View Router */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+        <main className="flex-1 px-4 sm:px-8 py-6 w-full">
           <Suspense fallback={<ViewSkeleton />}>
             <ViewTransition viewKey={currentView}>
               {currentView === 'dashboard' && <DashboardView onOpenAddTx={handleOpenAddTx} />}

@@ -224,8 +224,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [dreams, setDreams] = useState<DreamGoal[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [settlements, setSettlements] = useState<SettlementRecord[]>([]);
-  const [recurringPayments, setRecurringPayments] = useState<RecurringPayment[]>(INITIAL_RECURRING_PAYMENTS);
-  const [recurringPaymentLogs, setRecurringPaymentLogs] = useState<RecurringPaymentLog[]>(INITIAL_RECURRING_PAYMENT_LOGS);
+  const [recurringPayments, setRecurringPayments] = useState<RecurringPayment[]>([]);
+  const [recurringPaymentLogs, setRecurringPaymentLogs] = useState<RecurringPaymentLog[]>([]);
   const [notRecurringTxIds, setNotRecurringTxIds] = useState<Set<string>>(new Set());
 
   const [aiSettings, setAISettings] = useState<AISettings>({
@@ -306,15 +306,11 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (dbDreams && Array.isArray(dbDreams)) setDreams(dbDreams);
       if (dbContacts && Array.isArray(dbContacts)) setContacts(dbContacts);
       if (dbSettlements && Array.isArray(dbSettlements)) setSettlements(dbSettlements);
-      if (dbRecPay && Array.isArray(dbRecPay) && dbRecPay.length > 0) {
+      if (dbRecPay && Array.isArray(dbRecPay)) {
         setRecurringPayments(dbRecPay);
-      } else {
-        setRecurringPayments(INITIAL_RECURRING_PAYMENTS);
       }
-      if (dbRecLogs && Array.isArray(dbRecLogs) && dbRecLogs.length > 0) {
+      if (dbRecLogs && Array.isArray(dbRecLogs)) {
         setRecurringPaymentLogs(dbRecLogs);
-      } else {
-        setRecurringPaymentLogs(INITIAL_RECURRING_PAYMENT_LOGS);
       }
       if (dbAiSet) {
         const { id: _id, ...cleanAi } = dbAiSet;

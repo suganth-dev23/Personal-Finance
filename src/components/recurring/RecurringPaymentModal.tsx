@@ -115,10 +115,10 @@ export const RecurringPaymentModal: React.FC<RecurringPaymentModalProps> = ({
       onClose={onClose}
       title={initialPayment ? 'Edit Recurring Payment' : 'New Recurring Payment'}
       subtitle="Declare a fixed recurring expense, subscription, EMI, or SIP for automatic tracking"
-      maxWidth="lg"
+      maxWidth="2xl"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Title / Name */}
+        {/* Commitment Name */}
         <div>
           <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
             Commitment Name *
@@ -178,40 +178,39 @@ export const RecurringPaymentModal: React.FC<RecurringPaymentModalProps> = ({
           </div>
         </div>
 
-        {/* Day of Month (if not weekly) */}
-        {frequency !== 'weekly' && (
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
-              Due Day of Month (1 – 31) *
-            </label>
-            <div className="flex items-center gap-3">
-              <input
-                type="number"
-                min="1"
-                max="31"
-                required
-                value={dayOfMonth}
-                onChange={e => setDayOfMonth(Math.max(1, Math.min(31, parseInt(e.target.value, 10) || 1)))}
-                className="w-28 rounded-xl border border-slate-200/90 dark:border-[#202836] bg-white dark:bg-[#171E2A] px-3.5 py-2.5 text-sm text-slate-900 dark:text-white font-numeric font-bold focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
-              />
-              <span className="text-xs text-slate-500 dark:text-slate-400">
-                e.g. 5th of every month
-              </span>
-            </div>
-
-            {dayOfMonth >= 29 && (
-              <div className="mt-2 flex items-start gap-2 rounded-xl bg-amber-500/10 border border-amber-500/20 p-2.5 text-xs text-amber-700 dark:text-amber-300">
-                <Info className="h-4 w-4 shrink-0 mt-0.5" />
-                <span>
-                  <strong>Short month protection:</strong> In months with fewer than {dayOfMonth} days (like February with 28/29 days or April/June with 30 days), this bill will automatically adjust to the last valid day of that month.
+        {/* Due Day of Month & Category */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {frequency !== 'weekly' ? (
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                Due Day of Month (1 – 31) *
+              </label>
+              <div className="flex items-center gap-2.5">
+                <input
+                  type="number"
+                  min="1"
+                  max="31"
+                  required
+                  value={dayOfMonth}
+                  onChange={e => setDayOfMonth(Math.max(1, Math.min(31, parseInt(e.target.value, 10) || 1)))}
+                  className="w-24 rounded-xl border border-slate-200/90 dark:border-[#202836] bg-white dark:bg-[#171E2A] px-3.5 py-2.5 text-sm text-slate-900 dark:text-white font-numeric font-bold focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+                />
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  {dayOfMonth >= 29 ? 'Auto short-month protected' : 'e.g. 5th of every month'}
                 </span>
               </div>
-            )}
-          </div>
-        )}
+            </div>
+          ) : (
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                Recurrence Cycle
+              </label>
+              <p className="text-xs text-slate-500 dark:text-slate-400 py-2.5">
+                Calculated weekly from start date
+              </p>
+            </div>
+          )}
 
-        {/* Category & Payment Method */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
               Category *
@@ -224,23 +223,6 @@ export const RecurringPaymentModal: React.FC<RecurringPaymentModalProps> = ({
               {categories.map(c => (
                 <option key={c.id} value={c.name}>
                   {c.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
-              Payment Method
-            </label>
-            <select
-              value={paymentMethod}
-              onChange={e => setPaymentMethod(e.target.value as PaymentMethod)}
-              className="w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-white dark:bg-[#171E2A] px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
-            >
-              {PAYMENT_METHODS.map(m => (
-                <option key={m} value={m}>
-                  {m}
                 </option>
               ))}
             </select>
@@ -274,30 +256,46 @@ export const RecurringPaymentModal: React.FC<RecurringPaymentModalProps> = ({
               placeholder="Leave empty for ongoing"
               className="w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-white dark:bg-[#171E2A] px-3.5 py-2.5 text-sm text-slate-900 dark:text-white font-numeric focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
             />
-            <p className="mt-1 text-[11px] text-slate-400">
-              For loans, EMIs, or finite subscriptions
-            </p>
           </div>
         </div>
 
-        {/* Auto Log Transaction Toggle */}
-        <div className="rounded-xl border border-slate-200/90 dark:border-[#202836] bg-slate-50 dark:bg-[#131822] p-3.5">
-          <label className="flex items-start gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={autoLogTransaction}
-              onChange={e => setAutoLogTransaction(e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-slate-300 text-amber-500 focus:ring-amber-500 dark:border-slate-600 dark:bg-slate-700"
-            />
-            <div className="flex-1">
-              <span className="text-sm font-semibold text-slate-900 dark:text-white">
-                Pre-select "Record in Transactions" when marking paid
-              </span>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                When checked, marking this bill paid will default to logging an expense in your transaction history. You can still untoggle it per occurrence.
-              </p>
-            </div>
-          </label>
+        {/* Payment Method & Auto-Log Toggle */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+              Payment Method
+            </label>
+            <select
+              value={paymentMethod}
+              onChange={e => setPaymentMethod(e.target.value as PaymentMethod)}
+              className="w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-white dark:bg-[#171E2A] px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+            >
+              {PAYMENT_METHODS.map(m => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="rounded-xl border border-slate-200/90 dark:border-[#202836] bg-slate-50 dark:bg-[#131822] p-3 flex items-center">
+            <label className="flex items-start gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={autoLogTransaction}
+                onChange={e => setAutoLogTransaction(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-amber-500 focus:ring-amber-500 dark:border-slate-600 dark:bg-slate-700"
+              />
+              <div className="flex-1">
+                <span className="text-xs font-semibold text-slate-900 dark:text-white leading-tight block">
+                  Auto-log to ledger when paid
+                </span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight block mt-0.5">
+                  Pre-selects transaction entry on payment
+                </span>
+              </div>
+            </label>
+          </div>
         </div>
 
         {/* Notes */}
@@ -305,12 +303,12 @@ export const RecurringPaymentModal: React.FC<RecurringPaymentModalProps> = ({
           <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
             Notes / Account Ref (Optional)
           </label>
-          <textarea
-            rows={2}
+          <input
+            type="text"
             value={notes}
             onChange={e => setNotes(e.target.value)}
-            placeholder="e.g. Consumer ID 10928374, HDFC Bank Auto-Debit, 1-year prepaid plan"
-            className="w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-white dark:bg-[#171E2A] px-3.5 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none resize-none"
+            placeholder="e.g. Consumer ID 10928374, HDFC Auto-Debit, 1-year prepaid plan"
+            className="w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-white dark:bg-[#171E2A] px-3.5 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
           />
         </div>
 
@@ -325,7 +323,7 @@ export const RecurringPaymentModal: React.FC<RecurringPaymentModalProps> = ({
           </button>
           <button
             type="submit"
-            className="rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-2.5 text-sm font-bold text-slate-950 shadow-sm hover:from-amber-400 hover:to-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 dark:focus:ring-offset-slate-900 transition-colors"
+            className="rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 px-5 py-2.5 text-sm font-bold text-slate-950 shadow-sm transition-all active:scale-95"
           >
             {initialPayment ? 'Update Commitment' : 'Add Commitment'}
           </button>
