@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import confetti from 'canvas-confetti';
 import { Modal } from '../common/Modal';
 import { useFinance } from '../../context/FinanceContext';
 import { DreamGoal } from '../../types/finance';
@@ -33,19 +32,6 @@ export const DreamContributionModal: React.FC<DreamContributionModalProps> = ({
     }
 
     addDreamContribution(dream.id, num, note.trim() || undefined, date);
-
-    // If goal completed or near completion, shoot celebratory confetti!
-    if (dream.currentSaved + num >= dream.targetAmount) {
-      try {
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 },
-        });
-      } catch {
-        // ignore
-      }
-    }
 
     setAmount('');
     setNote('');

@@ -5,8 +5,10 @@ import { Category } from '../../types/finance';
 import { formatINR } from '../../utils/currency';
 import { IconRenderer } from '../common/IconRenderer';
 import { CategoryModal } from './CategoryModal';
+import { useStaggerChildren } from '../../hooks/useStaggerChildren';
 
 export const CategoriesView: React.FC = () => {
+  const { containerRef: catGridRef, getChildStyle } = useStaggerChildren(40);
   const {
     categories,
     deleteCategory,
@@ -112,14 +114,15 @@ export const CategoriesView: React.FC = () => {
       </div>
 
       {/* Categories Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {categories.map(cat => {
+      <div ref={catGridRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {categories.map((cat, idx) => {
           const spentThisMonth = spendingMap.get(cat.name.toLowerCase()) || 0;
 
           return (
             <div
               key={cat.id}
-              className="group bg-white dark:bg-[#131822] rounded-3xl p-5 border border-slate-200/90 dark:border-[#202836] hover:border-amber-400/50 dark:hover:border-amber-500/30 transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between"
+              style={getChildStyle(idx)}
+              className="group bg-white dark:bg-[#131822] rounded-3xl p-5 border border-slate-200/90 dark:border-[#202836] hover:border-amber-400/50 dark:hover:border-amber-500/30 transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between animate-slide-up"
             >
               <div>
                 <div className="flex items-start justify-between">

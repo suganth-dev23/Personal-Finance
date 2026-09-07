@@ -10,6 +10,7 @@ import {
   Moon,
   Users,
   CalendarClock,
+  Trophy,
 } from 'lucide-react';
 import { useFinance, AppView } from '../../context/FinanceContext';
 
@@ -54,6 +55,7 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ isOpen, onCl
   if (!shouldRender) return null;
 
   const ALL_SECTIONS: { id: AppView; label: string; icon: React.ElementType }[] = [
+    { id: 'badges', label: 'Achievements & Badges', icon: Trophy },
     { id: 'recurring', label: 'Recurring Payments', icon: CalendarClock },
     { id: 'people', label: 'People / Splits & IOUs', icon: Users },
     { id: 'categories', label: 'Spending Categories', icon: Tags },

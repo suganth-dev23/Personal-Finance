@@ -1,10 +1,22 @@
 import { useState, useEffect, useRef } from 'react';
 
+export interface UseCountUpOptions {
+  duration?: number;
+  onComplete?: () => void;
+}
+
 /**
  * High-performance 60fps number counter hook using requestAnimationFrame
  * with an ease-out expo deceleration curve.
  */
-export function useCountUp(target: number, duration = 450): number {
+export function useCountUp(target: number, duration?: number): number;
+export function useCountUp(target: number, options?: UseCountUpOptions): number;
+export function useCountUp(target: number, arg?: number | UseCountUpOptions): number {
+  const duration = typeof arg === 'number' ? arg : arg?.duration ?? 450;
+  const onComplete = typeof arg === 'object' ? arg?.onComplete : undefined;
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
+
   const [value, setValue] = useState(target);
   const prevRef = useRef(target);
   const rafRef = useRef<number>(0);
@@ -32,6 +44,7 @@ export function useCountUp(target: number, duration = 450): number {
       } else {
         setValue(target);
         prevRef.current = target;
+        onCompleteRef.current?.();
       }
     };
 

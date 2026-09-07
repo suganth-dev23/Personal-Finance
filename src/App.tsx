@@ -1,5 +1,7 @@
 import React, { useState, Suspense, lazy } from 'react';
 import { FinanceProvider, useFinance } from './context/FinanceContext';
+import { GamificationProvider } from './context/GamificationContext';
+import { ToastProvider } from './components/common/ToastProvider';
 import { Sidebar } from './components/layout/Sidebar';
 import { Navbar } from './components/layout/Navbar';
 import { MobileNav } from './components/layout/MobileNav';
@@ -46,6 +48,10 @@ const StatementImportView = lazy(() =>
 const SettingsView = lazy(() =>
   import('./components/settings/SettingsView').then(m => ({ default: m.SettingsView }))
 );
+const BadgeShowcase = lazy(() =>
+  import('./components/gamification/BadgeShowcase').then(m => ({ default: m.BadgeShowcase }))
+);
+import { BadgePopup } from './components/gamification/BadgePopup';
 
 const MainContent: React.FC = () => {
   const { currentView } = useFinance();
@@ -94,6 +100,7 @@ const MainContent: React.FC = () => {
               {currentView === 'ai' && <AIHealthSummaryView />}
               {currentView === 'import' && <StatementImportView />}
               {currentView === 'settings' && <SettingsView />}
+              {currentView === 'badges' && <BadgeShowcase />}
             </ViewTransition>
           </Suspense>
         </main>
@@ -121,7 +128,12 @@ const MainContent: React.FC = () => {
 export default function App() {
   return (
     <FinanceProvider>
-      <MainContent />
+      <GamificationProvider>
+        <ToastProvider>
+          <MainContent />
+          <BadgePopup />
+        </ToastProvider>
+      </GamificationProvider>
     </FinanceProvider>
   );
 }

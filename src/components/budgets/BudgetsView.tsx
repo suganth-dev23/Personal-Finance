@@ -6,8 +6,10 @@ import { formatINR, formatCompactINR } from '../../utils/currency';
 import { ProgressBar } from '../common/ProgressBar';
 import { IconRenderer } from '../common/IconRenderer';
 import { BudgetModal } from './BudgetModal';
+import { useStaggerChildren } from '../../hooks/useStaggerChildren';
 
 export const BudgetsView: React.FC = () => {
+  const { containerRef: budgetGridRef, getChildStyle } = useStaggerChildren(60);
   const {
     budgets,
     categories,
@@ -103,18 +105,14 @@ export const BudgetsView: React.FC = () => {
             <span className="font-numeric">Spent: {formatINR(totalSpentInBudgeted)}</span>
             <span className="font-numeric">Limit: {formatINR(totalBudgeted)}</span>
           </div>
-          <div className="h-3 w-full bg-slate-100 dark:bg-[#171E2A] rounded-full overflow-hidden p-0.5 border border-slate-200/60 dark:border-[#202836]">
-            <div
-              className={`h-full rounded-full transition-all duration-700 ${
-                isOverTotal
-                  ? 'bg-rose-500'
-                  : overallPercent >= 85
-                  ? 'bg-amber-400'
-                  : 'bg-emerald-500'
-              }`}
-              style={{ width: `${Math.min(100, overallPercent)}%` }}
-            />
-          </div>
+          <ProgressBar
+            value={totalSpentInBudgeted}
+            max={totalBudgeted}
+            alertThresholds
+            showMilestones
+            glowOnMilestone
+            size="md"
+          />
         </div>
 
         {/* 4-column summary strip */}
@@ -173,8 +171,8 @@ export const BudgetsView: React.FC = () => {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {budgets.map(b => {
+        <div ref={budgetGridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {budgets.map((b, idx) => {
             const catInfo = categoryMap.get(b.category.toLowerCase());
             const spent = spendingMap.get(b.category.toLowerCase()) || 0;
             const remaining = b.monthlyLimit - spent;
@@ -185,9 +183,10 @@ export const BudgetsView: React.FC = () => {
             return (
               <div
                 key={b.id}
-                className={`group bg-white dark:bg-[#131822] rounded-3xl p-5 border transition-all duration-300 shadow-sm hover:shadow-md ${
+                style={getChildStyle(idx)}
+                className={`group bg-white dark:bg-[#131822] rounded-3xl p-5 border transition-all duration-300 shadow-sm hover:shadow-md animate-slide-up ${
                   isOver
-                    ? 'border-rose-300 dark:border-rose-900/60 ring-1 ring-rose-500/20'
+                    ? 'border-rose-400 dark:border-rose-600/70 ring-2 ring-rose-500/30 animate-shake-x animate-pulse-danger'
                     : isNear
                     ? 'border-amber-300 dark:border-amber-900/60'
                     : 'border-slate-200/90 dark:border-[#202836] hover:border-emerald-500/40'
@@ -255,18 +254,14 @@ export const BudgetsView: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="h-2.5 w-full bg-slate-100 dark:bg-[#171E2A] rounded-full overflow-hidden p-0.5">
-                    <div
-                      className={`h-full rounded-full transition-all duration-500 ${
-                        isOver
-                          ? 'bg-rose-500'
-                          : isNear
-                          ? 'bg-amber-400'
-                          : 'bg-emerald-500'
-                      }`}
-                      style={{ width: `${Math.min(100, percentUsed)}%` }}
-                    />
-                  </div>
+                  <ProgressBar
+                    value={spent}
+                    max={b.monthlyLimit}
+                    alertThresholds
+                    showMilestones
+                    glowOnMilestone
+                    size="sm"
+                  />
 
                   <div className="flex justify-between items-center text-[11px] pt-1">
                     <span className="font-semibold text-slate-400 font-numeric">{percentUsed.toFixed(0)}% utilized</span>

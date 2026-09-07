@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   Transaction,
   Category,
@@ -53,7 +53,24 @@ export type AppView =
   | 'people'
   | 'ai'
   | 'import'
-  | 'settings';
+  | 'settings'
+  | 'badges';
+
+export type FinanceEvent =
+  | { type: 'transaction_added'; tx: Transaction; silent?: boolean }
+  | { type: 'transaction_deleted'; count: number }
+  | { type: 'budget_exceeded'; category: string; spent: number; limit: number }
+  | { type: 'dream_contributed'; dreamId: string; dreamName: string; amount: number; isCompleted: boolean }
+  | { type: 'dream_completed'; dream: DreamGoal }
+  | { type: 'emergency_contributed'; amount: number; fundType: 'deposit' | 'withdrawal'; isFullyFunded: boolean }
+  | { type: 'recurring_paid'; paymentName: string; amount: number }
+  | { type: 'settlement_recorded'; contactName: string; amount: number; allSettled: boolean }
+  | { type: 'investment_updated'; totalValue: number }
+  | { type: 'streak_continued'; days: number }
+  | { type: 'streak_broken' }
+  | { type: 'badge_earned'; badge: { id: string; name: string; description: string; icon: string } };
+
+export type FinanceEventListener = (event: FinanceEvent) => void;
 
 interface FinanceContextType {
   // State
@@ -62,6 +79,10 @@ interface FinanceContextType {
   darkMode: boolean;
   setDarkMode: (val: boolean | ((prev: boolean) => boolean)) => void;
   isInitialized: boolean;
+
+  // Event Pub/Sub
+  subscribeFinanceEvent: (listener: FinanceEventListener) => () => void;
+  emitFinanceEvent: (event: FinanceEvent) => void;
   
   transactions: Transaction[];
   categories: Category[];
@@ -90,7 +111,7 @@ interface FinanceContextType {
   reloadFromDB: () => Promise<void>;
 
   // Transactions CRUD
-  addTransaction: (tx: Omit<Transaction, 'id' | 'createdAt'>) => Transaction;
+  addTransaction: (tx: Omit<Transaction, 'id' | 'createdAt'>, options?: { silent?: boolean }) => Transaction;
   addMultipleTransactions: (txs: Omit<Transaction, 'id' | 'createdAt'>[]) => void;
   updateTransaction: (id: string, tx: Partial<Transaction>) => void;
   deleteTransaction: (id: string) => void;
@@ -242,6 +263,26 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [syncError, setSyncError] = useState<string | null>(null);
   const [isDriveConnected, setIsDriveConnected] = useState<boolean>(false);
   const [driveUserEmail, setDriveUserEmail] = useState<string | null>(null);
+
+  // In-memory pub/sub for domain finance events
+  const eventListenersRef = useRef<Set<FinanceEventListener>>(new Set());
+
+  const subscribeFinanceEvent = useCallback((listener: FinanceEventListener) => {
+    eventListenersRef.current.add(listener);
+    return () => {
+      eventListenersRef.current.delete(listener);
+    };
+  }, []);
+
+  const emitFinanceEvent = useCallback((event: FinanceEvent) => {
+    eventListenersRef.current.forEach(listener => {
+      try {
+        listener(event);
+      } catch (err) {
+        console.error('Error in finance event listener:', err);
+      }
+    });
+  }, []);
 
   // Reload all records from IndexedDB into React state
   const reloadFromDB = useCallback(async () => {
@@ -546,7 +587,10 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   // Transaction operations
-  const addTransaction = (txData: Omit<Transaction, 'id' | 'createdAt'>): Transaction => {
+  const addTransaction = (
+    txData: Omit<Transaction, 'id' | 'createdAt'>,
+    options?: { silent?: boolean }
+  ): Transaction => {
     const now = new Date().toISOString();
     const newTx: Transaction = {
       ...txData,
@@ -555,6 +599,9 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       updatedAt: now,
     };
     setTransactions(prev => [newTx, ...prev]);
+    if (!options?.silent) {
+      emitFinanceEvent({ type: 'transaction_added', tx: newTx });
+    }
     return newTx;
   };
 
@@ -581,6 +628,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setTransactions(prev => prev.filter(t => t.id !== id));
     // Clean up any auto-settlements tied to this transaction
     setSettlements(prev => prev.filter(s => s.sourceTransactionId !== id));
+    emitFinanceEvent({ type: 'transaction_deleted', count: 1 });
   };
 
   const deleteMultipleTransactions = (ids: string[]) => {
@@ -588,6 +636,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const set = new Set(ids);
     setTransactions(prev => prev.filter(t => !set.has(t.id)));
     setSettlements(prev => prev.filter(s => !s.sourceTransactionId || !set.has(s.sourceTransactionId)));
+    emitFinanceEvent({ type: 'transaction_deleted', count: ids.length });
   };
 
   // Contact CRUD operations
@@ -647,6 +696,13 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       linkedTransactionId,
     };
     setSettlements(prev => [newSettlement, ...prev]);
+    const contact = contacts.find(c => c.id === contactId);
+    emitFinanceEvent({
+      type: 'settlement_recorded',
+      contactName: contact ? contact.name : 'Contact',
+      amount,
+      allSettled: false,
+    });
     return newSettlement;
   };
 
@@ -708,6 +764,13 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
           sourceSplitEntryId: targetEntryId,
         };
         setSettlements(prev => [newSettlement, ...prev]);
+        const contact = contacts.find(c => c.id === targetEntry.contactId);
+        emitFinanceEvent({
+          type: 'settlement_recorded',
+          contactName: contact ? contact.name : 'Contact',
+          amount: targetEntry.amount,
+          allSettled: false,
+        });
         return newSettlement;
       }
       return undefined;
@@ -808,6 +871,13 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
             linkedTransactionId: options.linkedTransactionId || undefined,
           };
           setSettlements(prev => [newSettlement, ...prev]);
+          const contact = contacts.find(c => c.id === targetEntry.contactId);
+          emitFinanceEvent({
+            type: 'settlement_recorded',
+            contactName: contact ? contact.name : 'Contact',
+            amount: finalSettledAmount,
+            allSettled: false,
+          });
           return newSettlement;
         }
       }
@@ -929,6 +999,16 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         updatedAt: now,
       };
     });
+
+    const target = emergencyFund.manualTargetAmount || (emergencyFund.targetMonths * (emergencyFund.monthlyExpenseBaseline || 50000));
+    const finalSaved = type === 'deposit' ? emergencyFund.currentSaved + amount : Math.max(0, emergencyFund.currentSaved - amount);
+    const isFullyFunded = finalSaved >= target;
+    emitFinanceEvent({
+      type: 'emergency_contributed',
+      amount,
+      fundType: type,
+      isFullyFunded,
+    });
   };
 
   // Investments operations
@@ -1045,6 +1125,27 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         return d;
       })
     );
+
+    const targetDream = dreams.find(d => d.id === dreamId);
+    if (targetDream) {
+      const isCompleted = (targetDream.currentSaved + amount) >= targetDream.targetAmount;
+      emitFinanceEvent({
+        type: 'dream_contributed',
+        dreamId,
+        dreamName: targetDream.name,
+        amount,
+        isCompleted,
+      });
+      if (isCompleted) {
+        emitFinanceEvent({
+          type: 'dream_completed',
+          dream: {
+            ...targetDream,
+            currentSaved: targetDream.currentSaved + amount,
+          },
+        });
+      }
+    }
   };
 
   // Recurring Payments CRUD
@@ -1111,7 +1212,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         description: `${payment.name} (Recurring: ${dueDate})`,
         paymentMethod: payment.paymentMethod || 'Other',
         source: 'manual',
-      });
+      }, { silent: true });
       txId = newTx.id;
     }
 
@@ -1127,6 +1228,11 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
 
     setRecurringPaymentLogs(prev => [newLog, ...prev]);
+    emitFinanceEvent({
+      type: 'recurring_paid',
+      paymentName: payment.name,
+      amount: paidAmount,
+    });
   };
 
   // AI Settings
@@ -1459,6 +1565,32 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return result.sort((a, b) => b.spent - a.spent);
   }, [currentMonthTransactions, budgets, categories]);
 
+  // Budget exceeded detector (fires when percentUsed crosses 100)
+  const prevSpendingRef = useRef<Map<string, number>>(new Map());
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    categorySpendingThisMonth.forEach(cat => {
+      if (cat.budget > 0) {
+        const prevPercent = prevSpendingRef.current.get(cat.category.toLowerCase()) ?? 0;
+        if (prevPercent <= 100 && cat.percentUsed > 100) {
+          emitFinanceEvent({
+            type: 'budget_exceeded',
+            category: cat.category,
+            spent: cat.spent,
+            limit: cat.budget,
+          });
+        }
+      }
+    });
+
+    const newMap = new Map<string, number>();
+    categorySpendingThisMonth.forEach(cat => {
+      newMap.set(cat.category.toLowerCase(), cat.percentUsed);
+    });
+    prevSpendingRef.current = newMap;
+  }, [categorySpendingThisMonth, isInitialized, emitFinanceEvent]);
+
   // Derived Recurring Payments
   const totalMonthlyRecurringCommitment = useMemo(() => {
     return recurringPayments
@@ -1551,6 +1683,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         darkMode,
         setDarkMode,
         isInitialized,
+        subscribeFinanceEvent,
+        emitFinanceEvent,
         transactions,
         categories,
         budgets,

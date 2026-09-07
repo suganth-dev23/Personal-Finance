@@ -21,13 +21,17 @@ import { AIInsightsWidget } from './AIInsightsWidget';
 import { CashFlowRunwayCard, RecurringBillsCard } from './RecurringAndRunwayWidget';
 import { OwedSummaryWidget } from './OwedSummaryWidget';
 import { formatINR } from '../../utils/currency';
-import { useCountUp } from '../../hooks/useCountUp';
+import { AnimatedNumber } from '../common/AnimatedNumber';
+import { StreakBanner } from '../common/StreakBanner';
+import { HealthGauge } from '../gamification/HealthGauge';
+import { useStaggerChildren } from '../../hooks/useStaggerChildren';
 
 interface DashboardViewProps {
   onOpenAddTx: () => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx }) => {
+  const { containerRef: summaryStripRef, getChildStyle: getSummaryStyle } = useStaggerChildren(50);
   const {
     transactions,
     totalBalance,
@@ -47,13 +51,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx }) => 
     setCurrentView,
     resetToDemoData,
   } = useFinance();
-
-  // Smooth number count-up animations for hero metrics
-  const animatedTotalBalance = useCountUp(totalBalance);
-  const animatedIncome = useCountUp(currentMonthIncome);
-  const animatedExpense = useCountUp(currentMonthExpense);
-  const animatedInvestment = useCountUp(totalInvestmentValue);
-  const animatedLiquid = useCountUp(emergencyFund.currentSaved);
 
   return (
     <div className="space-y-6">
@@ -127,7 +124,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx }) => 
             <div className="mt-1">
               <div className="flex flex-wrap items-baseline gap-3 mt-0.5">
                 <h2 className="font-numeric text-4xl sm:text-5xl lg:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50">
-                  {formatINR(animatedTotalBalance)}
+                  <AnimatedNumber value={totalBalance} showDirection={true} />
                 </h2>
                 <span
                   className={`font-numeric text-xs font-semibold px-2.5 py-1 rounded-md ${
@@ -189,10 +186,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx }) => 
         </div>
 
         {/* Integrated Flow & Asset Shelves */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mt-7 pt-6 border-t border-slate-100 dark:border-[#202836]">
+        <div ref={summaryStripRef} className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mt-7 pt-6 border-t border-slate-100 dark:border-[#202836]">
           <div
+            style={getSummaryStyle(0)}
             onClick={() => setCurrentView('transactions')}
-            className="cursor-pointer p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#171E2A] hover:bg-slate-100 dark:hover:bg-[#1C2433] border border-slate-100 dark:border-[#202836] transition-all hover:-translate-y-0.5 hover:shadow-sm"
+            className="animate-slide-up cursor-pointer p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#171E2A] hover:bg-slate-100 dark:hover:bg-[#1C2433] border border-slate-100 dark:border-[#202836] transition-all hover:-translate-y-0.5 hover:shadow-sm"
           >
             <div className="flex items-center justify-between">
               <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
@@ -201,7 +199,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx }) => 
               <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold">↑</span>
             </div>
             <p className="font-numeric text-lg sm:text-xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
-              +{formatINR(animatedIncome)}
+              +<AnimatedNumber value={currentMonthIncome} />
             </p>
             <span className="text-xs text-slate-400 mt-0.5 block truncate">
               Credits &amp; earnings
@@ -209,8 +207,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx }) => 
           </div>
 
           <div
+            style={getSummaryStyle(1)}
             onClick={() => setCurrentView('transactions')}
-            className="cursor-pointer p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#171E2A] hover:bg-slate-100 dark:hover:bg-[#1C2433] border border-slate-100 dark:border-[#202836] transition-all hover:-translate-y-0.5 hover:shadow-sm"
+            className="animate-slide-up cursor-pointer p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#171E2A] hover:bg-slate-100 dark:hover:bg-[#1C2433] border border-slate-100 dark:border-[#202836] transition-all hover:-translate-y-0.5 hover:shadow-sm"
           >
             <div className="flex items-center justify-between">
               <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
@@ -219,7 +218,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx }) => 
               <span className="text-xs text-rose-600 dark:text-rose-400 font-bold">↓</span>
             </div>
             <p className="font-numeric text-lg sm:text-xl font-bold text-rose-600 dark:text-rose-400 mt-1">
-              -{formatINR(animatedExpense)}
+              -<AnimatedNumber value={currentMonthExpense} />
             </p>
             <span className="text-xs text-slate-400 mt-0.5 block truncate">
               Debits &amp; UPI spend
@@ -227,8 +226,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx }) => 
           </div>
 
           <div
+            style={getSummaryStyle(2)}
             onClick={() => setCurrentView('investments')}
-            className="cursor-pointer p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#171E2A] hover:bg-slate-100 dark:hover:bg-[#1C2433] border border-slate-100 dark:border-[#202836] transition-all hover:-translate-y-0.5 hover:shadow-sm"
+            className="animate-slide-up cursor-pointer p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#171E2A] hover:bg-slate-100 dark:hover:bg-[#1C2433] border border-slate-100 dark:border-[#202836] transition-all hover:-translate-y-0.5 hover:shadow-sm"
           >
             <div className="flex items-center justify-between">
               <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
@@ -239,7 +239,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx }) => 
               </span>
             </div>
             <p className="font-numeric text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">
-              {formatINR(animatedInvestment)}
+              <AnimatedNumber value={totalInvestmentValue} />
             </p>
             <span className="text-xs text-slate-400 mt-0.5 block truncate">
               MF, Stocks, Gold, FDs
@@ -247,8 +247,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx }) => 
           </div>
 
           <div
+            style={getSummaryStyle(3)}
             onClick={() => setCurrentView('emergency')}
-            className="cursor-pointer p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#171E2A] hover:bg-slate-100 dark:hover:bg-[#1C2433] border border-slate-100 dark:border-[#202836] transition-all hover:-translate-y-0.5 hover:shadow-sm"
+            className="animate-slide-up cursor-pointer p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#171E2A] hover:bg-slate-100 dark:hover:bg-[#1C2433] border border-slate-100 dark:border-[#202836] transition-all hover:-translate-y-0.5 hover:shadow-sm"
           >
             <div className="flex items-center justify-between">
               <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
@@ -262,11 +263,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx }) => 
               {emergencyFundRunwayMonths.toFixed(1)} mos
             </p>
             <span className="text-xs text-slate-400 mt-0.5 block truncate font-numeric">
-              {formatINR(animatedLiquid)} liquid
+              <AnimatedNumber value={emergencyFund.currentSaved} /> liquid
             </span>
           </div>
         </div>
       </div>
+
+      {/* GAMIFICATION STREAK BANNER */}
+      <StreakBanner />
 
       {/* LEVEL 2: CASH FLOW VELOCITY & CATEGORY ALLOCATION */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -276,6 +280,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx }) => 
         <div className="lg:col-span-5">
           <CategoryExpenseChart />
         </div>
+      </div>
+
+      {/* FINANCIAL HEALTH INDEX & 5 PILLARS GAUGE */}
+      <div>
+        <HealthGauge />
       </div>
 
       {/* LEVEL 3: OPERATIONAL ACTIVITY & BUDGET HEALTH (BALANCED 1:1 ROW) */}

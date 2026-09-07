@@ -14,6 +14,7 @@ import {
   SyncableStoreName,
   RecurringPayment,
   RecurringPaymentLog,
+  GamificationState,
 } from '../types/finance';
 
 export interface UserPreferences {
@@ -97,10 +98,14 @@ export interface DhanVedaDBSchema extends DBSchema {
       'by-dueDate': string;
     };
   };
+  gamification: {
+    key: string;
+    value: GamificationState & { id: string };
+  };
 }
 
 const DB_NAME = 'dhanveda_db';
-const DB_VERSION = 4;
+const DB_VERSION = 5;
 
 let dbPromise: Promise<IDBPDatabase<DhanVedaDBSchema>> | null = null;
 
@@ -185,6 +190,11 @@ export function getDB(): Promise<IDBPDatabase<DhanVedaDBSchema>> {
           const logStore = db.createObjectStore('recurringPaymentLogs', { keyPath: 'id' });
           logStore.createIndex('by-recurringPaymentId', 'recurringPaymentId');
           logStore.createIndex('by-dueDate', 'dueDate');
+        }
+
+        // Gamification store (version 5)
+        if (!db.objectStoreNames.contains('gamification')) {
+          db.createObjectStore('gamification', { keyPath: 'id' });
         }
       },
     });
@@ -467,7 +477,7 @@ export async function saveAllToStore<T extends { id: string }>(
 }
 
 export async function getSingleRecord<T>(
-  storeName: 'emergencyFund' | 'aiSettings' | 'userPreferences',
+  storeName: 'emergencyFund' | 'aiSettings' | 'userPreferences' | 'gamification',
   id = 'current'
 ): Promise<T | undefined> {
   const db = await getDB();
@@ -475,11 +485,20 @@ export async function getSingleRecord<T>(
 }
 
 export async function saveSingleRecord<T extends { id: string }>(
-  storeName: 'emergencyFund' | 'aiSettings' | 'userPreferences',
+  storeName: 'emergencyFund' | 'aiSettings' | 'userPreferences' | 'gamification',
   data: T
 ): Promise<void> {
   const db = await getDB();
   await db.put(storeName, data as any);
+}
+
+export async function getGamificationState(): Promise<GamificationState | null> {
+  const record = await getSingleRecord<GamificationState & { id: string }>('gamification', 'current');
+  return record || null;
+}
+
+export async function saveGamificationState(state: GamificationState): Promise<void> {
+  return saveSingleRecord('gamification', { ...state, id: 'current' });
 }
 
 export async function clearAllStores(): Promise<void> {
@@ -494,6 +513,7 @@ export async function clearAllStores(): Promise<void> {
     db.clear('settlements'),
     db.clear('recurringPayments'),
     db.clear('recurringPaymentLogs'),
+    db.clear('gamification'),
     db.put('emergencyFund', {
       id: 'current',
       targetMonths: 6,

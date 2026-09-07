@@ -40,7 +40,7 @@ export const BudgetHealthWidget: React.FC = () => {
 
         {/* Alerts if any */}
         {overBudgetCategories.length > 0 ? (
-          <div className="mb-4 p-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 rounded-xl flex items-start gap-2.5">
+          <div className="mb-4 p-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 rounded-xl flex items-start gap-2.5 animate-shake-x animate-pulse-danger">
             <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
             <div className="text-xs text-rose-700 dark:text-rose-300">
               <span className="font-semibold">{overBudgetCategories.length} category exceeded: </span>
@@ -90,6 +90,7 @@ export const BudgetHealthWidget: React.FC = () => {
                   value={cat.spent}
                   max={cat.budget}
                   alertThresholds
+                  glowOnMilestone
                   size="sm"
                 />
               </div>

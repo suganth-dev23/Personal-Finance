@@ -303,3 +303,48 @@ export interface SyncPayload {
   };
   tombstones: TombstoneRecord[];
 }
+
+// ── Gamification System Types (Phase 4) ──
+
+export type BadgeTier = 'bronze' | 'silver' | 'gold' | 'diamond';
+export type BadgeCategory = 'budgeting' | 'saving' | 'investing' | 'consistency' | 'milestone';
+
+export interface Badge {
+  id: string;
+  name: string;
+  description: string;
+  category: BadgeCategory;
+  tier: BadgeTier;
+  icon: string; // Lucide icon name
+  xp: number;
+  unlockedAt?: string; // ISO 8601 string if unlocked
+  progress?: number; // 0 - 100 percentage
+  targetCount?: number;
+  currentCount?: number;
+}
+
+export interface StreakData {
+  currentStreak: number;
+  longestStreak: number;
+  lastActiveDate: string; // YYYY-MM-DD
+}
+
+export interface FinancialHealthScore {
+  overallScore: number; // 0 - 100
+  savingsScore: number; // 0 - 25
+  budgetScore: number; // 0 - 25
+  emergencyScore: number; // 0 - 20
+  debtScore: number; // 0 - 15
+  consistencyScore: number; // 0 - 15
+  grade: 'Excellent' | 'Good' | 'Fair' | 'Needs Attention';
+  trend: 'up' | 'down' | 'neutral';
+}
+
+export interface GamificationState {
+  streak: StreakData;
+  unlockedBadgeIds: string[];
+  unlockedBadgeDates: Record<string, string>; // badgeId -> ISO string
+  totalXP: number;
+  level: number;
+}
+

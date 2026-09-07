@@ -214,7 +214,7 @@ export const RecurringPaymentsView: React.FC = () => {
 
       {/* Overdue Alerts Section (if any overdue commitments) */}
       {overdueRecurringPayments.length > 0 && (
-        <div className="rounded-3xl border border-rose-200 dark:border-rose-900/50 bg-rose-50/70 dark:bg-rose-950/20 p-5 sm:p-6 transition-all">
+        <div className="rounded-3xl border border-rose-200 dark:border-rose-900/50 bg-rose-50/70 dark:bg-rose-950/20 p-5 sm:p-6 transition-all animate-shake-x">
           <div className="flex items-center gap-2.5 mb-4 text-rose-700 dark:text-rose-400">
             <AlertCircle className="h-5 w-5 shrink-0" />
             <h3 className="font-bold text-base">Overdue Payments Requiring Attention</h3>
@@ -229,7 +229,7 @@ export const RecurringPaymentsView: React.FC = () => {
               return (
                 <div
                   key={`overdue-${item.id}-${item.dueDate}`}
-                  className="flex items-center justify-between gap-3 rounded-2xl bg-white dark:bg-[#131822] p-4 border border-rose-200 dark:border-rose-900/40 shadow-sm"
+                  className="flex items-center justify-between gap-3 rounded-2xl bg-white dark:bg-[#131822] p-4 border border-rose-200 dark:border-rose-900/40 shadow-sm animate-pulse-danger"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div

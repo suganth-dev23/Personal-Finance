@@ -21,7 +21,10 @@ const VIEW_TITLES: Record<AppView, { title: string; subtitle: string }> = {
   ai: { title: 'AI Financial Health Summary', subtitle: 'Bring-Your-Own-Key private AI insights (Gemini / OpenAI / Claude)' },
   import: { title: 'Statement & Bill Import', subtitle: 'Parse PDF & CSV bank statements with auto-categorization' },
   settings: { title: 'App Settings & Backup', subtitle: 'API keys, local storage data export & demo data' },
+  badges: { title: 'Achievements & Badges', subtitle: 'Trophies, unlockable financial discipline milestones & XP' },
 };
+
+import { StreakBanner } from '../common/StreakBanner';
 
 export const Navbar: React.FC<NavbarProps> = ({ onOpenAddTx }) => {
   const {
@@ -89,6 +92,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAddTx }) => {
             <span className="font-semibold font-numeric text-[#F43F5E] dark:text-rose-400">-{formatINR(currentMonthExpense)}</span>
           </div>
         </div>
+
+        {/* Daily Streak Indicator */}
+        <StreakBanner compact={true} />
 
         {/* AI Quick Button */}
         {currentView !== 'ai' && (

@@ -15,8 +15,10 @@ import {
   Sun,
   Plus,
   Users,
+  Trophy,
 } from 'lucide-react';
 import { useFinance, AppView } from '../../context/FinanceContext';
+import { useGamification } from '../../context/GamificationContext';
 import { formatINR } from '../../utils/currency';
 
 interface NavItem {
@@ -36,6 +38,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'emergency', label: 'Emergency Fund', icon: ShieldCheck },
   { id: 'investments', label: 'Investments', icon: TrendingUp },
   { id: 'dreams', label: 'Goals & Dreams', icon: Target },
+  { id: 'badges', label: 'Achievements', icon: Trophy },
   { id: 'ai', label: 'AI Health Summary', icon: Sparkles },
   { id: 'import', label: 'Import Statement', icon: UploadCloud },
   { id: 'settings', label: 'Settings', icon: Settings },
@@ -47,6 +50,7 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTx }) => {
   const { currentView, setCurrentView, darkMode, setDarkMode, totalBalance } = useFinance();
+  const { levelInfo, totalXP } = useGamification();
 
   return (
     <aside className="hidden lg:flex flex-col w-64 border-r border-slate-200/90 dark:border-[#202836] bg-white dark:bg-[#131822] h-screen sticky top-0 z-30 select-none">
@@ -61,7 +65,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTx }) => {
               DhanVeda
             </h1>
             <p className="text-xs font-medium text-[#C28834] dark:text-[#F5B742]/90 mt-1">
-              INR Wealth & Health
+              INR Wealth &amp; Health
             </p>
           </div>
         </div>
@@ -74,6 +78,28 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTx }) => {
           <p className="text-base font-bold font-numeric text-slate-900 dark:text-white mt-0.5">
             {formatINR(totalBalance)}
           </p>
+        </div>
+
+        {/* Gamification Level Status */}
+        <div
+          onClick={() => setCurrentView('badges')}
+          className="mt-2.5 p-2.5 bg-amber-500/5 hover:bg-amber-500/10 dark:bg-amber-500/10 dark:hover:bg-amber-500/15 rounded-2xl border border-amber-500/20 transition-all cursor-pointer group"
+          title={`Level ${levelInfo.level} Wealth Architect. ${levelInfo.xpToNext} XP to Level ${levelInfo.level + 1}. Click to view Achievements.`}
+        >
+          <div className="flex items-center justify-between text-xs mb-1">
+            <span className="font-extrabold uppercase tracking-wider text-[11px] text-amber-700 dark:text-[#F5B742] flex items-center gap-1">
+              <Trophy className="w-3 h-3 text-[#F5B742]" /> Level {levelInfo.level}
+            </span>
+            <span className="font-numeric text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
+              {totalXP} XP
+            </span>
+          </div>
+          <div className="h-1.5 w-full bg-slate-200/70 dark:bg-[#202836] rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-amber-500 to-amber-600 rounded-full transition-all duration-500"
+              style={{ width: `${levelInfo.progress}%` }}
+            />
+          </div>
         </div>
       </div>
 

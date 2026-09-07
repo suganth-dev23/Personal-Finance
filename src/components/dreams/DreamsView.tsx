@@ -16,10 +16,13 @@ import { DreamGoal } from '../../types/finance';
 import { formatINR, formatCompactINR } from '../../utils/currency';
 import { formatDate, calculateMonthsDiff } from '../../utils/date';
 import { IconRenderer } from '../common/IconRenderer';
+import { ProgressBar } from '../common/ProgressBar';
 import { DreamModal } from './DreamModal';
 import { DreamContributionModal } from './DreamContributionModal';
+import { useStaggerChildren } from '../../hooks/useStaggerChildren';
 
 export const DreamsView: React.FC = () => {
+  const { containerRef: dreamGridRef, getChildStyle } = useStaggerChildren(60);
   const { dreams, deleteDream, totalGoalsTarget, totalGoalsSaved } = useFinance();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -94,12 +97,13 @@ export const DreamsView: React.FC = () => {
             <span className="font-numeric">Overall Progress: {overallPercent}%</span>
             <span className="font-numeric">Target: {formatINR(totalGoalsTarget)}</span>
           </div>
-          <div className="h-3 w-full bg-slate-100 dark:bg-[#171E2A] rounded-full overflow-hidden p-0.5 border border-slate-200/60 dark:border-[#202836]">
-            <div
-              className="h-full rounded-full bg-emerald-500 transition-all duration-700"
-              style={{ width: `${overallPercent}%` }}
-            />
-          </div>
+          <ProgressBar
+            value={totalGoalsSaved}
+            max={totalGoalsTarget}
+            showMilestones
+            glowOnMilestone
+            size="md"
+          />
         </div>
 
         {/* 4-column summary strip */}
@@ -158,8 +162,8 @@ export const DreamsView: React.FC = () => {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {dreams.map(dream => {
+        <div ref={dreamGridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {dreams.map((dream, idx) => {
             const percent = dream.targetAmount > 0 ? Math.min(100, Math.round((dream.currentSaved / dream.targetAmount) * 100)) : 0;
             const remaining = Math.max(0, dream.targetAmount - dream.currentSaved);
             const isCompleted = percent >= 100;
@@ -178,7 +182,12 @@ export const DreamsView: React.FC = () => {
             return (
               <div
                 key={dream.id}
-                className="group bg-white dark:bg-[#131822] rounded-3xl p-6 border border-slate-200/90 dark:border-[#202836] hover:border-emerald-500/40 transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between relative overflow-hidden"
+                style={getChildStyle(idx)}
+                className={`group bg-white dark:bg-[#131822] rounded-3xl p-6 border transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between relative overflow-hidden animate-slide-up ${
+                  isCompleted
+                    ? 'border-amber-400/60 dark:border-amber-400/40 ring-1 ring-amber-400/20'
+                    : 'border-slate-200/90 dark:border-[#202836] hover:border-emerald-500/40'
+                }`}
               >
                 {/* Accent top stripe glow */}
                 <div
@@ -267,15 +276,14 @@ export const DreamsView: React.FC = () => {
                           {isCompleted ? 'Accomplished 🎉' : <span className="font-numeric">{formatINR(remaining)} left</span>}
                         </span>
                       </div>
-                      <div className="w-full bg-slate-100 dark:bg-[#171E2A] rounded-full h-2.5 overflow-hidden p-0.5">
-                        <div
-                          className="h-full rounded-full transition-all duration-500"
-                          style={{
-                            width: `${Math.min(percent, 100)}%`,
-                            backgroundColor: themeColor,
-                          }}
-                        />
-                      </div>
+                      <ProgressBar
+                        value={dream.currentSaved}
+                        max={dream.targetAmount}
+                        color={themeColor}
+                        showMilestones
+                        glowOnMilestone
+                        size="sm"
+                      />
                     </div>
 
                     {/* Deadline & Suggested Monthly Savings */}

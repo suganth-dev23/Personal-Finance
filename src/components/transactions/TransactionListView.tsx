@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Search,
   Download,
@@ -14,6 +14,7 @@ import { Transaction, TransactionType } from '../../types/finance';
 import { formatINR } from '../../utils/currency';
 import { formatDate, getMonthName } from '../../utils/date';
 import { IconRenderer } from '../common/IconRenderer';
+import { useStaggerChildren } from '../../hooks/useStaggerChildren';
 
 interface TransactionListViewProps {
   onOpenAddModal: () => void;
@@ -26,13 +27,33 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
   onOpenAddModal,
   onEditTransaction,
 }) => {
+  const { containerRef: mobileListRef, getChildStyle: getMobileStyle } = useStaggerChildren(25);
+  const { containerRef: desktopTableRef, getChildStyle: getDesktopStyle } = useStaggerChildren(25);
   const {
     transactions,
     categories,
     contacts,
     deleteTransaction,
     deleteMultipleTransactions,
+    subscribeFinanceEvent,
   } = useFinance();
+
+  // Highlight newly added transaction
+  const [highlightedTxId, setHighlightedTxId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!subscribeFinanceEvent) return;
+    const unsubscribe = subscribeFinanceEvent((event) => {
+      if (event.type === 'transaction_added' && event.tx?.id) {
+        setHighlightedTxId(event.tx.id);
+        const timer = setTimeout(() => {
+          setHighlightedTxId(null);
+        }, 3000);
+        return () => clearTimeout(timer);
+      }
+    });
+    return unsubscribe;
+  }, [subscribeFinanceEvent]);
 
   // Filters & Search
   const [searchTerm, setSearchTerm] = useState('');
@@ -667,17 +688,23 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
               )}
 
               {/* Mobile Cards Feed (matching minimalist mockup) */}
-              <div className="md:hidden divide-y divide-slate-100 dark:divide-slate-800/60">
-                {group.items.map(tx => {
+              <div ref={mobileListRef} className="md:hidden divide-y divide-slate-100 dark:divide-slate-800/60">
+                {group.items.map((tx, idx) => {
                   const isCredit = tx.type === 'credit';
                   const isSelected = selectedTxIds.has(tx.id);
+                  const isHighlighted = highlightedTxId === tx.id;
                   const catInfo = categoryMap.get(tx.category.toLowerCase());
 
                   return (
                     <div
                       key={tx.id}
-                      className={`p-4 flex items-center justify-between gap-3 transition-colors ${
-                        isSelected ? 'bg-emerald-50/40 dark:bg-emerald-950/20' : ''
+                      style={getMobileStyle(Math.min(idx, 15))}
+                      className={`p-4 flex items-center justify-between gap-3 transition-all duration-300 animate-slide-up ${
+                        isHighlighted
+                          ? 'animate-pulse-success ring-2 ring-emerald-500/50 bg-emerald-500/10 dark:bg-emerald-500/15 rounded-2xl'
+                          : isSelected
+                          ? 'bg-emerald-50/40 dark:bg-emerald-950/20'
+                          : ''
                       }`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
@@ -765,7 +792,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
               </div>
 
               {/* Desktop Transactions Table */}
-              <div className="hidden md:block overflow-x-auto">
+              <div ref={desktopTableRef} className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-slate-200/80 dark:border-[#202836] bg-slate-50/70 dark:bg-[#171E2A]/50 text-xs font-medium text-slate-500 dark:text-slate-400">
@@ -788,16 +815,22 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-[#202836] text-sm">
-                    {group.items.map(tx => {
+                    {group.items.map((tx, idx) => {
                       const isCredit = tx.type === 'credit';
                       const isSelected = selectedTxIds.has(tx.id);
+                      const isHighlighted = highlightedTxId === tx.id;
                       const catInfo = categoryMap.get(tx.category.toLowerCase());
 
                       return (
                         <tr
                           key={tx.id}
-                          className={`hover:bg-slate-50/70 dark:hover:bg-[#171E2A]/40 transition-colors ${
-                            isSelected ? 'bg-emerald-50/40 dark:bg-emerald-950/20' : ''
+                          style={getDesktopStyle(Math.min(idx, 15))}
+                          className={`hover:bg-slate-50/70 dark:hover:bg-[#171E2A]/40 transition-all duration-300 animate-slide-up ${
+                            isHighlighted
+                              ? 'animate-pulse-success ring-2 ring-emerald-500/50 bg-emerald-500/10 dark:bg-emerald-500/15'
+                              : isSelected
+                              ? 'bg-emerald-50/40 dark:bg-emerald-950/20'
+                              : ''
                           }`}
                         >
                           <td className="py-3.5 px-4 text-center">

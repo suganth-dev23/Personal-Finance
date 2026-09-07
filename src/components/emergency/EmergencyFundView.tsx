@@ -3,9 +3,13 @@ import { ShieldCheck, Plus, ArrowDownLeft, ArrowUpRight, AlertTriangle, CheckCir
 import { useFinance } from '../../context/FinanceContext';
 import { formatINR, formatCompactINR } from '../../utils/currency';
 import { formatDate } from '../../utils/date';
+import { ProgressBar } from '../common/ProgressBar';
+import { AnimatedNumber } from '../common/AnimatedNumber';
+import { useStaggerChildren } from '../../hooks/useStaggerChildren';
 import { EmergencyContributionModal } from './EmergencyContributionModal';
 
 export const EmergencyFundView: React.FC = () => {
+  const { containerRef: metricPillarsRef, getChildStyle } = useStaggerChildren(40);
   const {
     emergencyFund,
     emergencyFundRunwayMonths,
@@ -48,9 +52,15 @@ export const EmergencyFundView: React.FC = () => {
             </p>
             <div className="flex items-baseline gap-3">
               <h2 className="text-3xl sm:text-4xl font-black font-numeric tracking-tight text-slate-900 dark:text-white">
-                {formatINR(emergencyFund.currentSaved)}
+                <AnimatedNumber value={emergencyFund.currentSaved} />
               </h2>
-              <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+              <span className={`text-sm font-semibold ${
+                percentFunded >= 100
+                  ? 'text-emerald-600 dark:text-emerald-400'
+                  : percentFunded >= 50
+                  ? 'text-amber-600 dark:text-amber-400'
+                  : 'text-rose-600 dark:text-rose-400'
+              }`}>
                 {percentFunded}% funded
               </span>
             </div>
@@ -138,32 +148,39 @@ export const EmergencyFundView: React.FC = () => {
             <span className="font-numeric">{percentFunded}% Funded</span>
             <span>{deficit > 0 ? <span className="font-numeric">{formatINR(deficit)} to reach goal</span> : '100% Fully Funded 🎉'}</span>
           </div>
-          <div className="h-3 w-full bg-slate-100 dark:bg-[#171E2A] rounded-full overflow-hidden p-0.5 border border-slate-200/60 dark:border-[#202836]">
-            <div
-              className="h-full rounded-full bg-emerald-500 transition-all duration-700"
-              style={{ width: `${percentFunded}%` }}
-            />
-          </div>
+          <ProgressBar
+            value={emergencyFund.currentSaved}
+            max={effectiveTarget}
+            showMilestones
+            glowOnMilestone
+            size="md"
+          />
         </div>
 
         {/* 4 Metric Pillars */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-slate-200/80 dark:border-[#202836]">
-          <div className="bg-slate-50 dark:bg-[#171E2A] border border-slate-200/60 dark:border-[#202836]/60 rounded-2xl p-3.5">
+        <div ref={metricPillarsRef} className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-slate-200/80 dark:border-[#202836]">
+          <div style={getChildStyle(0)} className="animate-slide-up bg-slate-50 dark:bg-[#171E2A] border border-slate-200/60 dark:border-[#202836]/60 rounded-2xl p-3.5">
             <span className="text-xs text-slate-500 dark:text-slate-400">Current Saved</span>
             <p className="text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">{formatCompactINR(emergencyFund.currentSaved)}</p>
           </div>
-          <div className="bg-slate-50 dark:bg-[#171E2A] border border-slate-200/60 dark:border-[#202836]/60 rounded-2xl p-3.5">
+          <div style={getChildStyle(1)} className="animate-slide-up bg-slate-50 dark:bg-[#171E2A] border border-slate-200/60 dark:border-[#202836]/60 rounded-2xl p-3.5">
             <span className="text-xs text-slate-500 dark:text-slate-400">Target Fund</span>
             <p className="text-lg font-bold font-numeric text-emerald-600 dark:text-emerald-400 mt-0.5">{formatCompactINR(effectiveTarget)}</p>
           </div>
-          <div className="bg-slate-50 dark:bg-[#171E2A] border border-slate-200/60 dark:border-[#202836]/60 rounded-2xl p-3.5">
+          <div style={getChildStyle(2)} className="animate-slide-up bg-slate-50 dark:bg-[#171E2A] border border-slate-200/60 dark:border-[#202836]/60 rounded-2xl p-3.5">
             <span className="text-xs text-slate-500 dark:text-slate-400">Runway Secured</span>
             <p className="text-lg font-bold font-numeric text-teal-600 dark:text-teal-400 mt-0.5">{emergencyFundRunwayMonths.toFixed(1)} Months</p>
           </div>
-          <div className="bg-slate-50 dark:bg-[#171E2A] border border-slate-200/60 dark:border-[#202836]/60 rounded-2xl p-3.5">
+          <div style={getChildStyle(3)} className="animate-slide-up bg-slate-50 dark:bg-[#171E2A] border border-slate-200/60 dark:border-[#202836]/60 rounded-2xl p-3.5">
             <span className="text-xs text-slate-500 dark:text-slate-400">Shield Status</span>
-            <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
-              {percentFunded >= 100 ? 'Fully Shielded' : percentFunded >= 50 ? 'Moderate' : 'Under Target'}
+            <p className={`text-lg font-bold mt-0.5 ${
+              percentFunded >= 100
+                ? 'text-emerald-600 dark:text-emerald-400'
+                : percentFunded >= 50
+                ? 'text-amber-600 dark:text-amber-400'
+                : 'text-rose-600 dark:text-rose-400'
+            }`}>
+              {percentFunded >= 100 ? 'Fully Shielded' : percentFunded >= 50 ? 'Moderate Cushion' : 'Under Target'}
             </p>
           </div>
         </div>

@@ -16,8 +16,10 @@ import { formatINR } from '../../utils/currency';
 import { InvestmentModal } from './InvestmentModal';
 import { PortfolioAllocationChart } from './PortfolioAllocationChart';
 import { INDIAN_WEALTH_PALETTE } from '../../constants/theme';
+import { useStaggerChildren } from '../../hooks/useStaggerChildren';
 
 export const InvestmentsView: React.FC = () => {
+  const { containerRef: assetGridRef, getChildStyle } = useStaggerChildren(50);
   const {
     investments,
     totalInvestmentValue,
@@ -217,12 +219,13 @@ export const InvestmentsView: React.FC = () => {
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {assetSegments.map(seg => (
+          <div ref={assetGridRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {assetSegments.map((seg, idx) => (
               <div
                 key={seg.type}
+                style={getChildStyle(idx)}
                 onClick={() => setFilterType(filterType === seg.type ? 'all' : seg.type)}
-                className={`cursor-pointer bg-white dark:bg-[#131822] rounded-3xl p-5 border transition-all hover:shadow-md ${
+                className={`cursor-pointer bg-white dark:bg-[#131822] rounded-3xl p-5 border transition-all hover:shadow-md animate-slide-up ${
                   filterType === seg.type
                     ? 'border-[#F5B742] dark:border-[#F5B742] shadow-sm ring-1 ring-[#F5B742]/40'
                     : 'border-slate-200/90 dark:border-[#202836] shadow-xs'
