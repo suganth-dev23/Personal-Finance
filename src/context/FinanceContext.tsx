@@ -14,6 +14,8 @@ import {
   SyncStatus,
   RecurringPayment,
   RecurringPaymentLog,
+  OwedDirection,
+  SplitEntry,
 } from '../types/finance';
 import {
   DEFAULT_CATEGORIES,
@@ -128,7 +130,8 @@ interface FinanceContextType {
     date?: string,
     sourceTransactionId?: string,
     sourceSplitEntryId?: string,
-    linkedTransactionId?: string
+    linkedTransactionId?: string,
+    direction?: OwedDirection
   ) => SettlementRecord;
   updateSettlement: (id: string, updated: Partial<SettlementRecord>) => void;
   deleteSettlement: (id: string) => void;
@@ -264,6 +267,28 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isDriveConnected, setIsDriveConnected] = useState<boolean>(false);
   const [driveUserEmail, setDriveUserEmail] = useState<string | null>(null);
 
+  // Synchronous references to in-memory state for safe sync flushes
+  const transactionsRef = useRef(transactions);
+  transactionsRef.current = transactions;
+  const contactsRef = useRef(contacts);
+  contactsRef.current = contacts;
+  const settlementsRef = useRef(settlements);
+  settlementsRef.current = settlements;
+  const categoriesRef = useRef(categories);
+  categoriesRef.current = categories;
+  const budgetsRef = useRef(budgets);
+  budgetsRef.current = budgets;
+  const emergencyFundRef = useRef(emergencyFund);
+  emergencyFundRef.current = emergencyFund;
+  const investmentsRef = useRef(investments);
+  investmentsRef.current = investments;
+  const dreamsRef = useRef(dreams);
+  dreamsRef.current = dreams;
+  const recurringPaymentsRef = useRef(recurringPayments);
+  recurringPaymentsRef.current = recurringPayments;
+  const recurringPaymentLogsRef = useRef(recurringPaymentLogs);
+  recurringPaymentLogsRef.current = recurringPaymentLogs;
+
   // In-memory pub/sub for domain finance events
   const eventListenersRef = useRef<Set<FinanceEventListener>>(new Set());
 
@@ -319,21 +344,36 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       if (dbTx && Array.isArray(dbTx)) {
         const normalized = dbTx.map(t => {
+          let splitWith: SplitEntry[] | undefined = undefined;
           if (t.splitWith && !Array.isArray(t.splitWith) && typeof t.splitWith === 'object') {
             const single = t.splitWith as any;
-            return {
-              ...t,
-              splitWith: [{
-                id: single.id || `split-${t.id}-1`,
-                contactId: single.contactId,
-                label: single.label,
-                amount: single.amount,
-                direction: single.direction || 'they_owe_me',
-                settled: Boolean(single.settled),
-              }],
-            };
+            splitWith = [{
+              id: single.id || `split-${t.id}-1`,
+              contactId: single.contactId ? String(single.contactId).trim() : undefined,
+              label: single.label || (!single.contactId ? 'Unnamed Person' : undefined),
+              amount: Number(single.amount) || 0,
+              direction: single.direction === 'i_owe_them' ? 'i_owe_them' : 'they_owe_me',
+              settled: Boolean(single.settled),
+              settledAmount: typeof single.settledAmount === 'number' ? single.settledAmount : undefined,
+              linkedTransactionId: single.linkedTransactionId || undefined,
+            }];
+          } else if (Array.isArray(t.splitWith)) {
+            splitWith = t.splitWith.map((entry, idx) => ({
+              id: entry.id || `split-${t.id}-${idx + 1}`,
+              contactId: entry.contactId ? String(entry.contactId).trim() : undefined,
+              label: entry.label || (!entry.contactId ? `Person ${idx + 1}` : undefined),
+              amount: Number(entry.amount) || 0,
+              direction: entry.direction === 'i_owe_them' ? 'i_owe_them' : 'they_owe_me',
+              settled: Boolean(entry.settled),
+              settledAmount: typeof entry.settledAmount === 'number' ? entry.settledAmount : undefined,
+              linkedTransactionId: entry.linkedTransactionId || undefined,
+            }));
           }
-          return t;
+          return {
+            ...t,
+            amount: Number(t.amount) || 0,
+            splitWith: splitWith && splitWith.length > 0 ? splitWith : undefined,
+          };
         });
         setTransactions(normalized);
       }
@@ -396,8 +436,22 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [reloadFromDB]);
 
   // Sync methods
-  const triggerSync = useCallback(async (showFeedback = true): Promise<boolean> => {
+  const triggerSync = useCallback(async (_showFeedback = true): Promise<boolean> => {
     try {
+      // 1. Immediately flush all current in-memory React state to IndexedDB so driveSync reads 100% current data
+      await Promise.all([
+        saveAllToStore('transactions', transactionsRef.current),
+        saveAllToStore('contacts', contactsRef.current),
+        saveAllToStore('settlements', settlementsRef.current),
+        saveAllToStore('categories', categoriesRef.current),
+        saveAllToStore('budgets', budgetsRef.current),
+        saveAllToStore('investments', investmentsRef.current),
+        saveAllToStore('dreams', dreamsRef.current),
+        saveAllToStore('recurringPayments', recurringPaymentsRef.current),
+        saveAllToStore('recurringPaymentLogs', recurringPaymentLogsRef.current),
+        saveSingleRecord('emergencyFund', { ...emergencyFundRef.current, id: 'current' }),
+      ]);
+
       const ok = await driveSyncService.sync();
       if (ok) {
         await reloadFromDB();
@@ -645,7 +699,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const newContact: Contact = {
       ...contactData,
       id: `contact-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-      createdAt: now.split('T')[0],
+      createdAt: now,
       updatedAt: now,
     };
     setContacts(prev => [...prev, newContact]);
@@ -680,7 +734,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     date?: string,
     sourceTransactionId?: string,
     sourceSplitEntryId?: string,
-    linkedTransactionId?: string
+    linkedTransactionId?: string,
+    direction?: OwedDirection
   ): SettlementRecord => {
     const now = new Date().toISOString();
     const newSettlement: SettlementRecord = {
@@ -694,6 +749,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       sourceTransactionId,
       sourceSplitEntryId,
       linkedTransactionId,
+      direction,
     };
     setSettlements(prev => [newSettlement, ...prev]);
     const contact = contacts.find(c => c.id === contactId);
@@ -1453,17 +1509,37 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         s => s.contactId === contact.id && !s.sourceTransactionId
       );
       genericSettlements.forEach(s => {
-        if (owedToMe > 0) {
+        if (s.direction === 'they_owe_me') {
+          // Contact repaid user: reduce owedToMe
           owedToMe = Math.max(0, owedToMe - s.amount);
-        } else if (iOweThem > 0) {
+        } else if (s.direction === 'i_owe_them') {
+          // User repaid contact: reduce iOweThem
           iOweThem = Math.max(0, iOweThem - s.amount);
+        } else {
+          // Fallback if direction was not stored (legacy records):
+          if (owedToMe >= iOweThem) {
+            const deduction = Math.min(owedToMe, s.amount);
+            owedToMe -= deduction;
+            const leftover = s.amount - deduction;
+            if (leftover > 0) {
+              iOweThem = Math.max(0, iOweThem - leftover);
+            }
+          } else {
+            const deduction = Math.min(iOweThem, s.amount);
+            iOweThem -= deduction;
+            const leftover = s.amount - deduction;
+            if (leftover > 0) {
+              owedToMe = Math.max(0, owedToMe - leftover);
+            }
+          }
         }
         if (s.date > lastUpdated) {
           lastUpdated = s.date;
         }
       });
 
-      const netAmount = owedToMe > 0 ? owedToMe : (iOweThem > 0 ? -iOweThem : 0);
+      // True net balance: positive = they owe user; negative = user owes them
+      const netAmount = owedToMe - iOweThem;
 
       return {
         contactId: contact.id,

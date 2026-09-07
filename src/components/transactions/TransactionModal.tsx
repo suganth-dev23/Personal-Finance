@@ -11,6 +11,7 @@ interface TransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialTransaction?: Transaction | null;
+  initialContactId?: string;
 }
 
 const PAYMENT_METHODS: PaymentMethod[] = [
@@ -39,6 +40,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   isOpen,
   onClose,
   initialTransaction,
+  initialContactId,
 }) => {
   const {
     transactions,
@@ -82,6 +84,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   const [splitRows, setSplitRows] = useState<SplitRowState[]>([]);
   const [unnamedCountToAdd, setUnnamedCountToAdd] = useState<number>(3);
   const [isCreatingContact, setIsCreatingContact] = useState<boolean>(false);
+  const [creatingContactForRowId, setCreatingContactForRowId] = useState<string | null>(null);
   const [newPersonName, setNewPersonName] = useState<string>('');
 
   const numAmount = parseFloat(amount) || 0;
@@ -211,15 +214,34 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
       setCategory('Food & Dining');
       setPaymentMethod('UPI');
       setDescription('');
-      setPerson('');
       setReferenceId('');
-      setIsSplitEnabled(false);
-      setAutoSplitRemaining(true);
-      setSplitRows([]);
+
+      if (initialContactId) {
+        const contact = contacts.find(c => c.id === initialContactId);
+        setPerson(contact ? contact.name : '');
+        setIsSplitEnabled(true);
+        setAutoSplitRemaining(true);
+        setSplitRows([
+          {
+            id: `split-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+            contactId: initialContactId,
+            amount: 0,
+            direction: 'they_owe_me',
+            settled: false,
+            isPinned: false,
+          },
+        ]);
+      } else {
+        setPerson('');
+        setIsSplitEnabled(false);
+        setAutoSplitRemaining(true);
+        setSplitRows([]);
+      }
     }
     setIsCreatingContact(false);
     setNewPersonName('');
-  }, [initialTransaction, isOpen]);
+    setCreatingContactForRowId(null);
+  }, [initialTransaction, initialContactId, isOpen, contacts]);
 
   // Recalculate auto-split when total amount changes and auto-split is on
   const handleAmountChange = (newAmountStr: string) => {
@@ -260,11 +282,18 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   const handleCreateNewPerson = () => {
     if (!newPersonName.trim()) return;
     const created = addContact({ name: newPersonName.trim() });
+    const targetRowId = creatingContactForRowId;
     setIsCreatingContact(false);
     setNewPersonName('');
+    setCreatingContactForRowId(null);
 
-    // Add this new contact as a split row
-    handleAddNamedPerson(created.id);
+    if (targetRowId) {
+      // Direct update to the split row where user chose "+ Add new contact..."
+      handleRowChange(targetRowId, { contactId: created.id, label: undefined });
+    } else {
+      // Added from "+ Add Person" button
+      handleAddNamedPerson(created.id);
+    }
   };
 
   // Add a named split row
@@ -273,7 +302,15 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
     // Find next available contact not yet chosen
     const usedContactIds = new Set(splitRows.map(r => r.contactId).filter(Boolean));
     const availableContact = contacts.find(c => !usedContactIds.has(c.id));
-    const targetContactId = preferredContactId || availableContact?.id || contacts[0]?.id || '';
+    const targetContactId = preferredContactId || availableContact?.id;
+
+    if (!targetContactId) {
+      // Either contacts is empty or all contacts are already added to this split!
+      // Prompt inline contact creation bar immediately rather than adding a broken row
+      setIsCreatingContact(true);
+      setCreatingContactForRowId(null);
+      return;
+    }
 
     const newRow: SplitRowState = {
       id: `split-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
@@ -390,29 +427,37 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 
     let splitPayload: SplitEntry[] | undefined = undefined;
     if (isSplitEnabled && splitRows.length > 0) {
-      // Validate sum of splits
-      const totalSplitSum = splitRows.reduce((sum, r) => sum + (r.amount || 0), 0);
-      if (totalSplitSum > parsedAmount + 0.01) {
+      // Validate sum of splits (with 0.02 float tolerance)
+      const totalSplitSum = splitRows.reduce((sum, r) => {
+        const val = typeof r.amount === 'number' ? r.amount : parseFloat(r.amount as any) || 0;
+        return sum + val;
+      }, 0);
+
+      if (totalSplitSum > parsedAmount + 0.02) {
         alert(`Total split amounts (₹${totalSplitSum.toFixed(2)}) cannot exceed the transaction amount (₹${parsedAmount.toFixed(2)}).`);
         return;
       }
 
-      // Check for any named row with invalid amount
+      // Check for any split row with invalid or zero amount
       for (const row of splitRows) {
-        if (row.amount <= 0) {
+        const rowAmt = typeof row.amount === 'number' ? row.amount : parseFloat(row.amount as any) || 0;
+        if (rowAmt <= 0) {
           alert('Each split row must have an owed amount greater than ₹0.');
           return;
         }
       }
 
-      splitPayload = splitRows.map(r => ({
-        id: r.id,
-        contactId: r.contactId || undefined,
-        label: r.label || (!r.contactId ? 'Unnamed Person' : undefined),
-        amount: Number(r.amount.toFixed(2)),
-        direction: r.direction,
-        settled: r.settled,
-      }));
+      splitPayload = splitRows.map(r => {
+        const val = typeof r.amount === 'number' ? r.amount : parseFloat(r.amount as any) || 0;
+        return {
+          id: r.id,
+          contactId: r.contactId ? String(r.contactId).trim() : undefined,
+          label: r.label || (!r.contactId ? 'Unnamed Person' : undefined),
+          amount: Number(val.toFixed(2)),
+          direction: r.direction,
+          settled: Boolean(r.settled),
+        };
+      });
     }
 
     const trimmedPerson = person.trim() || undefined;
@@ -656,7 +701,16 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                   const enabled = e.target.checked;
                   setIsSplitEnabled(enabled);
                   if (enabled && splitRows.length === 0) {
-                    handleAddNamedPerson();
+                    const trimmedPerson = person.trim().toLowerCase();
+                    const matchedContact = trimmedPerson ? contacts.find(c => c.name.toLowerCase() === trimmedPerson) : undefined;
+                    if (matchedContact) {
+                      handleAddNamedPerson(matchedContact.id);
+                    } else if (person.trim()) {
+                      const created = addContact({ name: person.trim() });
+                      handleAddNamedPerson(created.id);
+                    } else {
+                      handleAddNamedPerson();
+                    }
                   }
                 }}
                 className="sr-only peer"
@@ -733,6 +787,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                     onClick={() => {
                       setIsCreatingContact(false);
                       setNewPersonName('');
+                      setCreatingContactForRowId(null);
                     }}
                     className="p-1.5 rounded-lg bg-slate-200 dark:bg-[#202836] text-slate-600 dark:text-slate-300 hover:bg-slate-300"
                     title="Cancel"
@@ -761,6 +816,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                           onChange={e => {
                             const val = e.target.value;
                             if (val === '__new__') {
+                              setCreatingContactForRowId(row.id);
                               setIsCreatingContact(true);
                             } else if (val === '') {
                               handleRowChange(row.id, {

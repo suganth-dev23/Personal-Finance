@@ -40,6 +40,9 @@ export interface SettlementRecord {
   sourceSplitEntryId?: string; // Identifies which SplitEntry within that transaction
   // A transaction (imported or manual) that represents this repayment in the cash ledger
   linkedTransactionId?: string;
+  // Direction of this settlement from app owner's perspective:
+  // 'they_owe_me' = contact paid user back; 'i_owe_them' = user paid contact back
+  direction?: OwedDirection;
 }
 
 export interface ContactBalance {

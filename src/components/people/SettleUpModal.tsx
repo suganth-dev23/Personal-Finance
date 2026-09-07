@@ -132,12 +132,15 @@ export const SettleUpModal: React.FC<SettleUpModalProps> = ({
       return;
     }
 
+    const settlementDirection = isTheyOweMe ? 'they_owe_me' : 'i_owe_them';
+
     if (initialSettlement) {
       updateSettlement(initialSettlement.id, {
         amount: parsed,
         date,
         note: note.trim(),
         linkedTransactionId: selectedTxId || undefined,
+        direction: settlementDirection,
       });
     } else {
       recordSettlement(
@@ -147,7 +150,8 @@ export const SettleUpModal: React.FC<SettleUpModalProps> = ({
         date,
         undefined,
         undefined,
-        selectedTxId || undefined
+        selectedTxId || undefined,
+        settlementDirection
       );
     }
 

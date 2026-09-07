@@ -358,8 +358,19 @@ export class DriveSyncService {
             } else if (remoteTime > localTime) {
               winner = remoteItem;
             } else {
-              // Deterministic tie-breaker using deviceId
-              winner = localDeviceId >= remoteDeviceId ? localItem : remoteItem;
+              // If timestamps are tied, preserve record that contains splits
+              const localSplits = (localItem as any).splitWith;
+              const remoteSplits = (remoteItem as any).splitWith;
+              const localHasSplits = Array.isArray(localSplits) && localSplits.length > 0;
+              const remoteHasSplits = Array.isArray(remoteSplits) && remoteSplits.length > 0;
+              if (localHasSplits && !remoteHasSplits) {
+                winner = localItem;
+              } else if (!localHasSplits && remoteHasSplits) {
+                winner = remoteItem;
+              } else {
+                // Deterministic tie-breaker using deviceId
+                winner = localDeviceId >= remoteDeviceId ? localItem : remoteItem;
+              }
             }
 
             // Check if tombstone is newer than winner
@@ -384,7 +395,27 @@ export class DriveSyncService {
       };
 
       // Merge all multi-item stores
-      const mergedTransactions = mergeArrayStore('transactions', localTransactions, remotePayload.stores.transactions || []);
+      const rawMergedTransactions = mergeArrayStore('transactions', localTransactions, remotePayload.stores.transactions || []);
+      const mergedTransactions = rawMergedTransactions.map(t => {
+        let cleanSplits: any[] | undefined = undefined;
+        if (Array.isArray(t.splitWith) && t.splitWith.length > 0) {
+          cleanSplits = t.splitWith.map((s, idx) => ({
+            id: s.id || `split-${t.id}-${idx + 1}`,
+            contactId: s.contactId ? String(s.contactId).trim() : undefined,
+            label: s.label || (!s.contactId ? `Person ${idx + 1}` : undefined),
+            amount: Number(s.amount) || 0,
+            direction: s.direction === 'i_owe_them' ? 'i_owe_them' : 'they_owe_me',
+            settled: Boolean(s.settled),
+            settledAmount: typeof s.settledAmount === 'number' ? s.settledAmount : undefined,
+            linkedTransactionId: s.linkedTransactionId || undefined,
+          }));
+        }
+        return {
+          ...t,
+          amount: Number(t.amount) || 0,
+          splitWith: cleanSplits,
+        };
+      });
       const mergedCategories = mergeArrayStore('categories', localCategories, remotePayload.stores.categories || []);
       const mergedBudgets = mergeArrayStore('budgets', localBudgets, remotePayload.stores.budgets || []);
       const mergedInvestments = mergeArrayStore('investments', localInvestments, remotePayload.stores.investments || []);
