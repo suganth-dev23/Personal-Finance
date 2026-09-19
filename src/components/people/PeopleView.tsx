@@ -2,8 +2,6 @@ import React, { useState, useMemo } from 'react';
 import {
   Users,
   UserPlus,
-  ArrowUpRight,
-  ArrowDownLeft,
   Search,
   CheckCircle2,
   Circle,
@@ -38,9 +36,11 @@ export const PeopleView: React.FC = () => {
     contactBalances,
     totalOwedToMe,
     totalIOwe,
+    addContact,
     deleteContact,
     deleteSettlement,
     quickToggleSettleTransaction,
+    assignSplitToContact,
     linkSettlementToTransaction,
   } = useFinance();
 
@@ -130,6 +130,79 @@ export const PeopleView: React.FC = () => {
       );
     });
   }, [settledContacts, searchQuery]);
+
+  // Identify all splits that are NOT linked to an existing contact
+  const contactIdsSet = useMemo(() => new Set(contacts.map(c => c.id)), [contacts]);
+
+  const unassignedSplits = useMemo(() => {
+    const list: { tx: Transaction; split: SplitEntry }[] = [];
+    transactions.forEach(tx => {
+      if (tx.splitWith && Array.isArray(tx.splitWith)) {
+        tx.splitWith.forEach(split => {
+          if (!split.contactId || !contactIdsSet.has(split.contactId)) {
+            list.push({ tx, split });
+          }
+        });
+      }
+    });
+    // Sort descending by transaction date
+    list.sort((a, b) => b.tx.date.localeCompare(a.tx.date));
+    return list;
+  }, [transactions, contactIdsSet]);
+
+  const unassignedTotals = useMemo(() => {
+    let owedToMe = 0;
+    let iOwe = 0;
+    unassignedSplits.forEach(({ split }) => {
+      const settledAmt = split.settled
+        ? (split.settledAmount !== undefined ? split.settledAmount : split.amount)
+        : (split.settledAmount || 0);
+      const remaining = Math.max(0, split.amount - settledAmt);
+      if (remaining > 0) {
+        if (split.direction === 'they_owe_me') {
+          owedToMe += remaining;
+        } else {
+          iOwe += remaining;
+        }
+      }
+    });
+    return {
+      owedToMe: Number(owedToMe.toFixed(2)),
+      iOwe: Number(iOwe.toFixed(2)),
+      net: Number((owedToMe - iOwe).toFixed(2)),
+    };
+  }, [unassignedSplits]);
+
+  const filteredUnassignedSplits = useMemo(() => {
+    return unassignedSplits.filter(({ tx, split }) => {
+      const label = (split.label || 'Unnamed Person').toLowerCase();
+      const desc = tx.description.toLowerCase();
+      const matchesSearch =
+        label.includes(searchQuery.toLowerCase()) ||
+        desc.includes(searchQuery.toLowerCase());
+      if (!matchesSearch) return false;
+
+      if (filterType === 'they_owe_me') return !split.settled && split.direction === 'they_owe_me';
+      if (filterType === 'i_owe_them') return !split.settled && split.direction === 'i_owe_them';
+      if (filterType === 'settled') return Boolean(split.settled);
+      return true;
+    });
+  }, [unassignedSplits, searchQuery, filterType]);
+
+  const handleAssignSplit = (
+    txId: string,
+    splitId: string,
+    targetContactId: string,
+    fallbackLabel?: string
+  ) => {
+    if (targetContactId === '__new__') {
+      const name = fallbackLabel?.replace(/\(unnamed\)/i, '').trim() || 'New Friend';
+      const created = addContact({ name });
+      assignSplitToContact(txId, splitId, created.id);
+    } else if (targetContactId) {
+      assignSplitToContact(txId, splitId, targetContactId);
+    }
+  };
 
   const netOverall = totalOwedToMe - totalIOwe;
 
@@ -417,7 +490,161 @@ export const PeopleView: React.FC = () => {
 
           {/* Active Contacts List */}
           <div className="space-y-4">
-            {filteredActiveContacts.length === 0 && (
+            {/* Unassigned & Ad-Hoc Splits Card */}
+            {filteredUnassignedSplits.length > 0 && (
+              <div className="relative overflow-hidden bg-white dark:bg-[#131822] rounded-3xl border border-amber-500/30 dark:border-amber-500/40 shadow-sm transition-all">
+                {/* Gold Accent Hairline */}
+                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
+
+                <div className="p-5 sm:p-6">
+                  {/* Card Header */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-[#202836]">
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-11 h-11 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-[#F5B742] flex items-center justify-center border border-amber-500/20">
+                        <Users className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                            Unassigned &amp; Ad-Hoc Splits
+                          </h3>
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-700 dark:text-[#F5B742] border border-amber-500/25">
+                            {filteredUnassignedSplits.length} split{filteredUnassignedSplits.length === 1 ? '' : 's'}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-400 mt-0.5">
+                          Splits recorded without a saved contact. Settle directly or assign to a friend below.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Unassigned Net Balance */}
+                    <div className="flex items-center gap-3 self-start sm:self-center">
+                      {unassignedTotals.owedToMe > 0 && (
+                        <div className="text-right">
+                          <span className="text-[10px] font-semibold text-slate-400 block uppercase tracking-wider">
+                            Owed to You
+                          </span>
+                          <span className="text-sm font-bold font-numeric text-emerald-600 dark:text-emerald-400">
+                            +{formatINR(unassignedTotals.owedToMe)}
+                          </span>
+                        </div>
+                      )}
+                      {unassignedTotals.iOwe > 0 && (
+                        <div className="text-right">
+                          <span className="text-[10px] font-semibold text-slate-400 block uppercase tracking-wider">
+                            You Owe
+                          </span>
+                          <span className="text-sm font-bold font-numeric text-rose-600 dark:text-rose-400">
+                            -{formatINR(unassignedTotals.iOwe)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Split Entries List */}
+                  <div className="mt-4 space-y-2.5">
+                    {filteredUnassignedSplits.map(({ tx, split }) => {
+                      const isTheyOweMe = split.direction === 'they_owe_me';
+                      return (
+                        <div
+                          key={`${tx.id}-${split.id}`}
+                          className={`p-3.5 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                            split.settled
+                              ? 'bg-slate-50/50 dark:bg-[#171E2A]/40 border-slate-200/50 dark:border-[#202836]/50 opacity-70'
+                              : 'bg-slate-50 dark:bg-[#171E2A] border-slate-200/80 dark:border-[#202836]'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            {/* Quick Settle Checkbox */}
+                            <button
+                              type="button"
+                              onClick={() => quickToggleSettleTransaction(tx.id, split.id)}
+                              className={`p-1.5 rounded-xl transition-all ${
+                                split.settled
+                                  ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25'
+                                  : 'bg-white dark:bg-[#131822] text-slate-400 hover:text-amber-500 border border-slate-200 dark:border-[#202836]'
+                              }`}
+                              title={split.settled ? 'Mark Unsettled' : 'Mark Settled'}
+                            >
+                              {split.settled ? (
+                                <CheckCircle2 className="w-4 h-4" />
+                              ) : (
+                                <Circle className="w-4 h-4" />
+                              )}
+                            </button>
+
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-xs font-bold text-slate-900 dark:text-white">
+                                  {split.label || 'Unnamed Person'}
+                                </span>
+                                {split.settled ? (
+                                  <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-slate-200/70 dark:bg-[#202836] text-slate-600 dark:text-slate-400">
+                                    Settled
+                                  </span>
+                                ) : (
+                                  <span
+                                    className={`px-1.5 py-0.5 rounded-md text-[9px] font-bold ${
+                                      isTheyOweMe
+                                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                                        : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                                    }`}
+                                  >
+                                    {isTheyOweMe ? 'Owes you' : 'You owe'}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                                {tx.description} • {formatDate(tx.date)}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2.5 self-end sm:self-center flex-shrink-0">
+                            <span
+                              className={`font-numeric font-bold text-sm ${
+                                split.settled
+                                  ? 'text-slate-400 line-through'
+                                  : isTheyOweMe
+                                  ? 'text-emerald-600 dark:text-emerald-400'
+                                  : 'text-rose-600 dark:text-rose-400'
+                              }`}
+                            >
+                              {isTheyOweMe ? '+' : '-'}{formatINR(split.amount)}
+                            </span>
+
+                            {/* Assign to Contact Dropdown */}
+                            <select
+                              value=""
+                              onChange={e =>
+                                handleAssignSplit(tx.id, split.id, e.target.value, split.label)
+                              }
+                              className="text-xs font-semibold rounded-xl border border-slate-200/90 dark:border-[#202836] bg-white dark:bg-[#131822] text-slate-700 dark:text-slate-300 px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500 cursor-pointer"
+                            >
+                              <option value="" disabled>
+                                Assign to friend...
+                              </option>
+                              {contacts.map(c => (
+                                <option key={c.id} value={c.id}>
+                                  Assign to {c.name}
+                                </option>
+                              ))}
+                              <option value="__new__">
+                                + Add as new friend &quot;{split.label || 'Friend'}&quot;
+                              </option>
+                            </select>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {filteredActiveContacts.length === 0 && filteredUnassignedSplits.length === 0 && (
               <div className="text-center py-12 bg-white dark:bg-[#131822] rounded-3xl border border-dashed border-slate-200/90 dark:border-[#202836] p-8">
                 <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-[#171E2A] flex items-center justify-center mx-auto text-slate-400">
                   <Users className="w-6 h-6" />

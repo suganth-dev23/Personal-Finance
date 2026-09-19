@@ -137,6 +137,7 @@ interface FinanceContextType {
   deleteSettlement: (id: string) => void;
   linkSettlementToTransaction: (settlementId: string, transactionId?: string) => void;
   quickToggleSettleTransaction: (transactionId: string, splitEntryId?: string) => SettlementRecord | undefined;
+  assignSplitToContact: (transactionId: string, splitEntryId: string, contactId: string) => void;
   settleSplitEntry: (
     transactionId: string,
     splitEntryId: string,
@@ -269,25 +270,39 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Synchronous references to in-memory state for safe sync flushes
   const transactionsRef = useRef(transactions);
-  transactionsRef.current = transactions;
   const contactsRef = useRef(contacts);
-  contactsRef.current = contacts;
   const settlementsRef = useRef(settlements);
-  settlementsRef.current = settlements;
   const categoriesRef = useRef(categories);
-  categoriesRef.current = categories;
   const budgetsRef = useRef(budgets);
-  budgetsRef.current = budgets;
   const emergencyFundRef = useRef(emergencyFund);
-  emergencyFundRef.current = emergencyFund;
   const investmentsRef = useRef(investments);
-  investmentsRef.current = investments;
   const dreamsRef = useRef(dreams);
-  dreamsRef.current = dreams;
   const recurringPaymentsRef = useRef(recurringPayments);
-  recurringPaymentsRef.current = recurringPayments;
   const recurringPaymentLogsRef = useRef(recurringPaymentLogs);
-  recurringPaymentLogsRef.current = recurringPaymentLogs;
+
+  useEffect(() => {
+    transactionsRef.current = transactions;
+    contactsRef.current = contacts;
+    settlementsRef.current = settlements;
+    categoriesRef.current = categories;
+    budgetsRef.current = budgets;
+    emergencyFundRef.current = emergencyFund;
+    investmentsRef.current = investments;
+    dreamsRef.current = dreams;
+    recurringPaymentsRef.current = recurringPayments;
+    recurringPaymentLogsRef.current = recurringPaymentLogs;
+  }, [
+    transactions,
+    contacts,
+    settlements,
+    categories,
+    budgets,
+    emergencyFund,
+    investments,
+    dreams,
+    recurringPayments,
+    recurringPaymentLogs,
+  ]);
 
   // In-memory pub/sub for domain finance events
   const eventListenersRef = useRef<Set<FinanceEventListener>>(new Set());
@@ -652,6 +667,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       createdAt: now,
       updatedAt: now,
     };
+    transactionsRef.current = [newTx, ...transactionsRef.current];
     setTransactions(prev => [newTx, ...prev]);
     if (!options?.silent) {
       emitFinanceEvent({ type: 'transaction_added', tx: newTx });
@@ -668,19 +684,26 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       createdAt: now,
       updatedAt: now,
     }));
+    transactionsRef.current = [...newTxs, ...transactionsRef.current];
     setTransactions(prev => [...newTxs, ...prev]);
   };
 
   const updateTransaction = (id: string, updated: Partial<Transaction>) => {
+    const now = new Date().toISOString();
+    transactionsRef.current = transactionsRef.current.map(t =>
+      t.id === id ? { ...t, ...updated, updatedAt: now } : t
+    );
     setTransactions(prev =>
-      prev.map(t => (t.id === id ? { ...t, ...updated, updatedAt: new Date().toISOString() } : t))
+      prev.map(t => (t.id === id ? { ...t, ...updated, updatedAt: now } : t))
     );
   };
 
   const deleteTransaction = (id: string) => {
     addTombstone('transactions', id);
+    transactionsRef.current = transactionsRef.current.filter(t => t.id !== id);
     setTransactions(prev => prev.filter(t => t.id !== id));
     // Clean up any auto-settlements tied to this transaction
+    settlementsRef.current = settlementsRef.current.filter(s => s.sourceTransactionId !== id);
     setSettlements(prev => prev.filter(s => s.sourceTransactionId !== id));
     emitFinanceEvent({ type: 'transaction_deleted', count: 1 });
   };
@@ -688,7 +711,9 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const deleteMultipleTransactions = (ids: string[]) => {
     ids.forEach(id => addTombstone('transactions', id));
     const set = new Set(ids);
+    transactionsRef.current = transactionsRef.current.filter(t => !set.has(t.id));
     setTransactions(prev => prev.filter(t => !set.has(t.id)));
+    settlementsRef.current = settlementsRef.current.filter(s => !s.sourceTransactionId || !set.has(s.sourceTransactionId));
     setSettlements(prev => prev.filter(s => !s.sourceTransactionId || !set.has(s.sourceTransactionId)));
     emitFinanceEvent({ type: 'transaction_deleted', count: ids.length });
   };
@@ -702,19 +727,26 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       createdAt: now,
       updatedAt: now,
     };
+    contactsRef.current = [...contactsRef.current, newContact];
     setContacts(prev => [...prev, newContact]);
     return newContact;
   };
 
   const updateContact = (id: string, updated: Partial<Contact>) => {
+    const now = new Date().toISOString();
+    contactsRef.current = contactsRef.current.map(c =>
+      c.id === id ? { ...c, ...updated, updatedAt: now } : c
+    );
     setContacts(prev =>
-      prev.map(c => (c.id === id ? { ...c, ...updated, updatedAt: new Date().toISOString() } : c))
+      prev.map(c => (c.id === id ? { ...c, ...updated, updatedAt: now } : c))
     );
   };
 
   const deleteContact = (id: string) => {
     addTombstone('contacts', id);
+    contactsRef.current = contactsRef.current.filter(c => c.id !== id);
     setContacts(prev => prev.filter(c => c.id !== id));
+    settlementsRef.current = settlementsRef.current.filter(s => s.contactId !== id);
     setSettlements(prev => prev.filter(s => s.contactId !== id));
     setTransactions(prev =>
       prev.map(t => {
@@ -857,6 +889,26 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       );
       return undefined;
     }
+  };
+
+  const assignSplitToContact = (
+    transactionId: string,
+    splitEntryId: string,
+    contactId: string
+  ) => {
+    const tx = transactions.find(t => t.id === transactionId);
+    if (!tx || !tx.splitWith || !Array.isArray(tx.splitWith)) return;
+    const now = new Date().toISOString();
+    const updatedSplits = tx.splitWith.map(e =>
+      e.id === splitEntryId
+        ? {
+            ...e,
+            contactId,
+            label: undefined,
+          }
+        : e
+    );
+    updateTransaction(transactionId, { splitWith: updatedSplits, updatedAt: now });
   };
 
   const settleSplitEntry = (
@@ -1797,6 +1849,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         deleteSettlement,
         linkSettlementToTransaction,
         quickToggleSettleTransaction,
+        assignSplitToContact,
         settleSplitEntry,
         addCategory,
         updateCategory,

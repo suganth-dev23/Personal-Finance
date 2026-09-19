@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Modal } from '../common/Modal';
 import { useFinance } from '../../context/FinanceContext';
 import { Transaction, TransactionType, PaymentMethod, OwedDirection, SplitEntry } from '../../types/finance';
@@ -177,70 +177,87 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
     []
   );
 
+  const prevIsOpenRef = useRef(false);
+  const prevInitialTxIdRef = useRef<string | undefined>(undefined);
+  const prevInitialContactIdRef = useRef<string | undefined>(undefined);
+
   useEffect(() => {
-    if (initialTransaction) {
-      setDate(initialTransaction.date);
-      setAmount(initialTransaction.amount.toString());
-      setType(initialTransaction.type);
-      setCategory(initialTransaction.category);
-      setPaymentMethod(initialTransaction.paymentMethod);
-      setDescription(initialTransaction.description);
-      setPerson(initialTransaction.person || '');
-      setReferenceId(initialTransaction.referenceId || '');
+    const isOpening = isOpen && !prevIsOpenRef.current;
+    const isDifferentTx = isOpen && initialTransaction?.id !== prevInitialTxIdRef.current;
+    const isDifferentContact = isOpen && initialContactId !== prevInitialContactIdRef.current;
 
-      if (initialTransaction.splitWith && initialTransaction.splitWith.length > 0) {
-        setIsSplitEnabled(true);
-        setAutoSplitRemaining(false); // Preserve existing custom amounts on edit
-        setSplitRows(
-          initialTransaction.splitWith.map(s => ({
-            id: s.id || `split-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-            contactId: s.contactId,
-            label: s.label,
-            amount: s.amount,
-            direction: s.direction,
-            settled: Boolean(s.settled),
-            isPinned: true,
-          }))
-        );
-      } else {
-        setIsSplitEnabled(false);
-        setAutoSplitRemaining(true);
-        setSplitRows([]);
-      }
-    } else {
-      setDate(getTodayString());
-      setAmount('');
-      setType('debit');
-      setCategory('Food & Dining');
-      setPaymentMethod('UPI');
-      setDescription('');
-      setReferenceId('');
+    // Only re-initialize form state when modal transitions from closed to open,
+    // or when the targeted transaction/contact genuinely changes.
+    // NEVER wipe user inputs or split rows simply because `contacts` state updated!
+    if (isOpening || isDifferentTx || isDifferentContact) {
+      if (initialTransaction) {
+        setDate(initialTransaction.date);
+        setAmount(initialTransaction.amount.toString());
+        setType(initialTransaction.type);
+        setCategory(initialTransaction.category);
+        setPaymentMethod(initialTransaction.paymentMethod);
+        setDescription(initialTransaction.description);
+        setPerson(initialTransaction.person || '');
+        setReferenceId(initialTransaction.referenceId || '');
 
-      if (initialContactId) {
-        const contact = contacts.find(c => c.id === initialContactId);
-        setPerson(contact ? contact.name : '');
-        setIsSplitEnabled(true);
-        setAutoSplitRemaining(true);
-        setSplitRows([
-          {
-            id: `split-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-            contactId: initialContactId,
-            amount: 0,
-            direction: 'they_owe_me',
-            settled: false,
-            isPinned: false,
-          },
-        ]);
+        if (initialTransaction.splitWith && initialTransaction.splitWith.length > 0) {
+          setIsSplitEnabled(true);
+          setAutoSplitRemaining(false); // Preserve existing custom amounts on edit
+          setSplitRows(
+            initialTransaction.splitWith.map(s => ({
+              id: s.id || `split-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+              contactId: s.contactId,
+              label: s.label,
+              amount: s.amount,
+              direction: s.direction,
+              settled: Boolean(s.settled),
+              isPinned: true,
+            }))
+          );
+        } else {
+          setIsSplitEnabled(false);
+          setAutoSplitRemaining(true);
+          setSplitRows([]);
+        }
       } else {
-        setPerson('');
-        setIsSplitEnabled(false);
-        setAutoSplitRemaining(true);
-        setSplitRows([]);
+        setDate(getTodayString());
+        setAmount('');
+        setType('debit');
+        setCategory('Food & Dining');
+        setPaymentMethod('UPI');
+        setDescription('');
+        setReferenceId('');
+
+        if (initialContactId) {
+          const contact = contacts.find(c => c.id === initialContactId);
+          setPerson(contact ? contact.name : '');
+          setIsSplitEnabled(true);
+          setAutoSplitRemaining(true);
+          setSplitRows([
+            {
+              id: `split-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+              contactId: initialContactId,
+              amount: 0,
+              direction: 'they_owe_me',
+              settled: false,
+              isPinned: false,
+            },
+          ]);
+        } else {
+          setPerson('');
+          setIsSplitEnabled(false);
+          setAutoSplitRemaining(true);
+          setSplitRows([]);
+        }
       }
+      setIsCreatingContact(false);
+      setNewPersonName('');
+      setCreatingContactForRowId(null);
     }
-    setIsCreatingContact(false);
-    setNewPersonName('');
-    setCreatingContactForRowId(null);
+
+    prevIsOpenRef.current = isOpen;
+    prevInitialTxIdRef.current = initialTransaction?.id;
+    prevInitialContactIdRef.current = initialContactId;
   }, [initialTransaction, initialContactId, isOpen, contacts]);
 
   // Recalculate auto-split when total amount changes and auto-split is on
