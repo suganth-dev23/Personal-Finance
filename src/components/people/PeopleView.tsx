@@ -973,7 +973,11 @@ export const PeopleView: React.FC = () => {
                       {/* Delete Contact Action */}
                       <div className="pt-2 flex justify-end">
                         <button
-                          onClick={() => deleteContact(contact.id)}
+                          onClick={() => {
+                            if (window.confirm(`Delete "${contact.name}" and unlink all their splits? This cannot be undone.`)) {
+                              deleteContact(contact.id);
+                            }
+                          }}
                           className="text-xs font-semibold text-rose-600 hover:underline flex items-center gap-1"
                         >
                           <Trash2 className="w-3 h-3" />
@@ -1031,7 +1035,11 @@ export const PeopleView: React.FC = () => {
                           <span>Split Bill</span>
                         </button>
                         <button
-                          onClick={() => deleteContact(contact.id)}
+                          onClick={() => {
+                            if (window.confirm(`Delete "${contact.name}"? This cannot be undone.`)) {
+                              deleteContact(contact.id);
+                            }
+                          }}
                           className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg"
                           title="Delete Contact"
                         >

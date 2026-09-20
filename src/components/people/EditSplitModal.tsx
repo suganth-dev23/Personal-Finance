@@ -17,7 +17,14 @@ export const EditSplitModal: React.FC<EditSplitModalProps> = ({
   transaction,
   splitEntry,
 }) => {
-  const { contacts, updateTransaction } = useFinance();
+  const {
+    contacts,
+    updateTransaction,
+    settlements,
+    updateSettlement,
+    recordSettlement,
+    deleteSettlement,
+  } = useFinance();
 
   const [contactId, setContactId] = useState<string>('');
   const [direction, setDirection] = useState<OwedDirection>('they_owe_me');
@@ -65,11 +72,45 @@ export const EditSplitModal: React.FC<EditSplitModalProps> = ({
             amount: parsedAmount,
             direction,
             settled: isSettled,
+            settledAmount: isSettled ? parsedAmount : undefined,
           }
         : s
     );
 
     updateTransaction(transaction.id, { splitWith: updatedSplits });
+
+    // Sync settlement record
+    const existingSettlement = settlements.find(
+      s => s.sourceTransactionId === transaction.id && s.sourceSplitEntryId === splitEntry.id
+    );
+
+    if (isSettled) {
+      if (contactId) {
+        if (existingSettlement) {
+          updateSettlement(existingSettlement.id, {
+            amount: parsedAmount,
+            contactId,
+            direction,
+          });
+        } else {
+          recordSettlement(
+            contactId,
+            parsedAmount,
+            `Settlement for "${transaction.description}"`,
+            transaction.date,
+            transaction.id,
+            splitEntry.id,
+            undefined,
+            direction
+          );
+        }
+      }
+    } else {
+      if (existingSettlement) {
+        deleteSettlement(existingSettlement.id);
+      }
+    }
+
     onClose();
   };
 
@@ -80,6 +121,14 @@ export const EditSplitModal: React.FC<EditSplitModalProps> = ({
       updateTransaction(transaction.id, {
         splitWith: updatedSplits.length > 0 ? updatedSplits : undefined,
       });
+
+      const existingSettlement = settlements.find(
+        s => s.sourceTransactionId === transaction.id && s.sourceSplitEntryId === splitEntry.id
+      );
+      if (existingSettlement) {
+        deleteSettlement(existingSettlement.id);
+      }
+
       onClose();
     }
   };

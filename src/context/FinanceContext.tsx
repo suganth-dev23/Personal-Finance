@@ -702,9 +702,17 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     addTombstone('transactions', id);
     transactionsRef.current = transactionsRef.current.filter(t => t.id !== id);
     setTransactions(prev => prev.filter(t => t.id !== id));
-    // Clean up any auto-settlements tied to this transaction
-    settlementsRef.current = settlementsRef.current.filter(s => s.sourceTransactionId !== id);
-    setSettlements(prev => prev.filter(s => s.sourceTransactionId !== id));
+    // Clean up any auto-settlements tied to this transaction & tombstone them for Drive sync
+    const tiedSettlements = settlementsRef.current.filter(s => s.sourceTransactionId === id);
+    tiedSettlements.forEach(s => addTombstone('settlements', s.id));
+    settlementsRef.current = settlementsRef.current
+      .filter(s => s.sourceTransactionId !== id)
+      .map(s => s.linkedTransactionId === id ? { ...s, linkedTransactionId: undefined } : s);
+    setSettlements(prev =>
+      prev
+        .filter(s => s.sourceTransactionId !== id)
+        .map(s => s.linkedTransactionId === id ? { ...s, linkedTransactionId: undefined } : s)
+    );
     emitFinanceEvent({ type: 'transaction_deleted', count: 1 });
   };
 
@@ -713,8 +721,18 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const set = new Set(ids);
     transactionsRef.current = transactionsRef.current.filter(t => !set.has(t.id));
     setTransactions(prev => prev.filter(t => !set.has(t.id)));
-    settlementsRef.current = settlementsRef.current.filter(s => !s.sourceTransactionId || !set.has(s.sourceTransactionId));
-    setSettlements(prev => prev.filter(s => !s.sourceTransactionId || !set.has(s.sourceTransactionId)));
+    const tiedSettlements = settlementsRef.current.filter(
+      s => s.sourceTransactionId && set.has(s.sourceTransactionId)
+    );
+    tiedSettlements.forEach(s => addTombstone('settlements', s.id));
+    settlementsRef.current = settlementsRef.current
+      .filter(s => !s.sourceTransactionId || !set.has(s.sourceTransactionId))
+      .map(s => s.linkedTransactionId && set.has(s.linkedTransactionId) ? { ...s, linkedTransactionId: undefined } : s);
+    setSettlements(prev =>
+      prev
+        .filter(s => !s.sourceTransactionId || !set.has(s.sourceTransactionId))
+        .map(s => s.linkedTransactionId && set.has(s.linkedTransactionId) ? { ...s, linkedTransactionId: undefined } : s)
+    );
     emitFinanceEvent({ type: 'transaction_deleted', count: ids.length });
   };
 
@@ -748,13 +766,21 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setContacts(prev => prev.filter(c => c.id !== id));
     settlementsRef.current = settlementsRef.current.filter(s => s.contactId !== id);
     setSettlements(prev => prev.filter(s => s.contactId !== id));
+    const now = new Date().toISOString();
+    transactionsRef.current = transactionsRef.current.map(t => {
+      if (!t.splitWith || !Array.isArray(t.splitWith)) return t;
+      const updatedSplits = t.splitWith.map(s =>
+        s.contactId === id ? { ...s, contactId: undefined, label: s.label || 'Former Contact' } : s
+      );
+      return { ...t, splitWith: updatedSplits, updatedAt: now };
+    });
     setTransactions(prev =>
       prev.map(t => {
         if (!t.splitWith || !Array.isArray(t.splitWith)) return t;
         const updatedSplits = t.splitWith.map(s =>
           s.contactId === id ? { ...s, contactId: undefined, label: s.label || 'Former Contact' } : s
         );
-        return { ...t, splitWith: updatedSplits, updatedAt: new Date().toISOString() };
+        return { ...t, splitWith: updatedSplits, updatedAt: now };
       })
     );
   };
@@ -783,6 +809,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       linkedTransactionId,
       direction,
     };
+    settlementsRef.current = [newSettlement, ...settlementsRef.current];
     setSettlements(prev => [newSettlement, ...prev]);
     const contact = contacts.find(c => c.id === contactId);
     emitFinanceEvent({
@@ -796,20 +823,31 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const deleteSettlement = (id: string) => {
     addTombstone('settlements', id);
+    settlementsRef.current = settlementsRef.current.filter(s => s.id !== id);
     setSettlements(prev => prev.filter(s => s.id !== id));
   };
 
   const updateSettlement = (id: string, updated: Partial<SettlementRecord>) => {
+    const now = new Date().toISOString();
+    settlementsRef.current = settlementsRef.current.map(s =>
+      s.id === id ? { ...s, ...updated, updatedAt: now } : s
+    );
     setSettlements(prev =>
-      prev.map(s => (s.id === id ? { ...s, ...updated, updatedAt: new Date().toISOString() } : s))
+      prev.map(s => (s.id === id ? { ...s, ...updated, updatedAt: now } : s))
     );
   };
 
   const linkSettlementToTransaction = (settlementId: string, transactionId?: string) => {
+    const now = new Date().toISOString();
+    settlementsRef.current = settlementsRef.current.map(s =>
+      s.id === settlementId
+        ? { ...s, linkedTransactionId: transactionId || undefined, updatedAt: now }
+        : s
+    );
     setSettlements(prev =>
       prev.map(s =>
         s.id === settlementId
-          ? { ...s, linkedTransactionId: transactionId || undefined, updatedAt: new Date().toISOString() }
+          ? { ...s, linkedTransactionId: transactionId || undefined, updatedAt: now }
           : s
       )
     );
@@ -850,7 +888,9 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
           updatedAt: now,
           sourceTransactionId: transactionId,
           sourceSplitEntryId: targetEntryId,
+          direction: targetEntry.direction,
         };
+        settlementsRef.current = [newSettlement, ...settlementsRef.current];
         setSettlements(prev => [newSettlement, ...prev]);
         const contact = contacts.find(c => c.id === targetEntry.contactId);
         emitFinanceEvent({
@@ -878,6 +918,13 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (toDelete) {
         addTombstone('settlements', toDelete.id);
       }
+      settlementsRef.current = settlementsRef.current.filter(
+        s =>
+          !(
+            s.sourceTransactionId === transactionId &&
+            (s.sourceSplitEntryId === targetEntryId || !s.sourceSplitEntryId)
+          )
+      );
       setSettlements(prev =>
         prev.filter(
           s =>
@@ -898,13 +945,14 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   ) => {
     const tx = transactions.find(t => t.id === transactionId);
     if (!tx || !tx.splitWith || !Array.isArray(tx.splitWith)) return;
+
     const now = new Date().toISOString();
     const updatedSplits = tx.splitWith.map(e =>
       e.id === splitEntryId
         ? {
             ...e,
             contactId,
-            label: undefined,
+            label: undefined, // Clear generic label once assigned to a real person
           }
         : e
     );
@@ -927,18 +975,20 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     const targetEntry = tx.splitWith.find(e => e.id === splitEntryId);
     if (!targetEntry) return undefined;
+
     const now = new Date().toISOString();
 
     if (options.settled) {
       const finalSettledAmount =
-        options.settledAmount !== undefined ? options.settledAmount : targetEntry.amount;
-      const isFull = finalSettledAmount >= targetEntry.amount - 0.001;
+        typeof options.settledAmount === 'number' ? options.settledAmount : targetEntry.amount;
+      const isFullSettlement = finalSettledAmount >= targetEntry.amount - 0.01;
 
+      // 1. Update splitEntry on transaction
       const updatedSplits = tx.splitWith.map(e =>
         e.id === splitEntryId
           ? {
               ...e,
-              settled: isFull,
+              settled: isFullSettlement,
               settledAmount: finalSettledAmount,
               linkedTransactionId: options.linkedTransactionId || undefined,
             }
@@ -946,8 +996,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       );
       updateTransaction(transactionId, { splitWith: updatedSplits, updatedAt: now });
 
+      // 2. If attached to a contact, record or update SettlementRecord
       if (targetEntry.contactId) {
-        // Check if a settlement record already exists for this split
         const existingSettlement = settlements.find(
           s =>
             s.sourceTransactionId === transactionId &&
@@ -961,6 +1011,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
             date: options.date || existingSettlement.date,
             note: options.note || existingSettlement.note,
             linkedTransactionId: options.linkedTransactionId || undefined,
+            direction: targetEntry.direction,
             updatedAt: now,
           };
           updateSettlement(existingSettlement.id, updatedRecord);
@@ -977,7 +1028,9 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
             sourceTransactionId: transactionId,
             sourceSplitEntryId: splitEntryId,
             linkedTransactionId: options.linkedTransactionId || undefined,
+            direction: targetEntry.direction,
           };
+          settlementsRef.current = [newSettlement, ...settlementsRef.current];
           setSettlements(prev => [newSettlement, ...prev]);
           const contact = contacts.find(c => c.id === targetEntry.contactId);
           emitFinanceEvent({
@@ -997,7 +1050,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
           ? {
               ...e,
               settled: false,
-              settledAmount: 0,
+              settledAmount: undefined,
               linkedTransactionId: undefined,
             }
           : e
@@ -1013,6 +1066,13 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (toDelete) {
         addTombstone('settlements', toDelete.id);
       }
+      settlementsRef.current = settlementsRef.current.filter(
+        s =>
+          !(
+            s.sourceTransactionId === transactionId &&
+            (s.sourceSplitEntryId === splitEntryId || !s.sourceSplitEntryId)
+          )
+      );
       setSettlements(prev =>
         prev.filter(
           s =>
@@ -1035,25 +1095,31 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       isCustom: true,
       updatedAt: now,
     };
+    categoriesRef.current = [...categoriesRef.current, newCat];
     setCategories(prev => [...prev, newCat]);
     return newCat;
   };
 
   const updateCategory = (id: string, updated: Partial<Category>) => {
+    const now = new Date().toISOString();
+    categoriesRef.current = categoriesRef.current.map(c =>
+      c.id === id ? { ...c, ...updated, updatedAt: now } : c
+    );
     setCategories(prev =>
-      prev.map(c => (c.id === id ? { ...c, ...updated, updatedAt: new Date().toISOString() } : c))
+      prev.map(c => (c.id === id ? { ...c, ...updated, updatedAt: now } : c))
     );
   };
 
   const deleteCategory = (id: string) => {
     addTombstone('categories', id);
+    categoriesRef.current = categoriesRef.current.filter(c => c.id !== id);
     setCategories(prev => prev.filter(c => c.id !== id));
   };
 
   // Budget operations
   const setBudgetForCategory = (category: string, monthlyLimit: number) => {
     const now = new Date().toISOString();
-    setBudgets(prev => {
+    const updater = (prev: Budget[]) => {
       const existingIdx = prev.findIndex(b => b.category.toLowerCase() === category.toLowerCase());
       if (existingIdx >= 0) {
         const next = [...prev];
@@ -1062,21 +1128,31 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       } else {
         return [...prev, { id: `b-${Date.now()}`, category, monthlyLimit, updatedAt: now }];
       }
-    });
+    };
+    budgetsRef.current = updater(budgetsRef.current);
+    setBudgets(updater);
   };
 
   const deleteBudget = (id: string) => {
     addTombstone('budgets', id);
+    budgetsRef.current = budgetsRef.current.filter(b => b.id !== id);
     setBudgets(prev => prev.filter(b => b.id !== id));
   };
 
   // Emergency Fund operations
   const updateEmergencySettings = (targetMonths: number, manualTargetAmount?: number) => {
+    const now = new Date().toISOString();
+    emergencyFundRef.current = {
+      ...emergencyFundRef.current,
+      targetMonths,
+      manualTargetAmount,
+      updatedAt: now,
+    };
     setEmergencyFund(prev => ({
       ...prev,
       targetMonths,
       manualTargetAmount,
-      updatedAt: new Date().toISOString(),
+      updatedAt: now,
     }));
   };
 
@@ -1098,18 +1174,29 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       updatedAt: now,
     };
 
+    const newSaved = type === 'deposit'
+      ? emergencyFundRef.current.currentSaved + amount
+      : Math.max(0, emergencyFundRef.current.currentSaved - amount);
+
+    emergencyFundRef.current = {
+      ...emergencyFundRef.current,
+      currentSaved: newSaved,
+      contributions: [newContribution, ...emergencyFundRef.current.contributions],
+      updatedAt: now,
+    };
+
     setEmergencyFund(prev => {
-      const newSaved = type === 'deposit' ? prev.currentSaved + amount : Math.max(0, prev.currentSaved - amount);
+      const saved = type === 'deposit' ? prev.currentSaved + amount : Math.max(0, prev.currentSaved - amount);
       return {
         ...prev,
-        currentSaved: newSaved,
+        currentSaved: saved,
         contributions: [newContribution, ...prev.contributions],
         updatedAt: now,
       };
     });
 
     const target = emergencyFund.manualTargetAmount || (emergencyFund.targetMonths * (emergencyFund.monthlyExpenseBaseline || 50000));
-    const finalSaved = type === 'deposit' ? emergencyFund.currentSaved + amount : Math.max(0, emergencyFund.currentSaved - amount);
+    const finalSaved = newSaved;
     const isFullyFunded = finalSaved >= target;
     emitFinanceEvent({
       type: 'emergency_contributed',
@@ -1137,12 +1224,23 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         },
       ],
     };
+    investmentsRef.current = [newInv, ...investmentsRef.current];
     setInvestments(prev => [newInv, ...prev]);
     return newInv;
   };
 
   const updateInvestment = (id: string, updated: Partial<Investment>) => {
     const now = new Date().toISOString();
+    investmentsRef.current = investmentsRef.current.map(i =>
+      i.id === id
+        ? {
+            ...i,
+            ...updated,
+            lastUpdated: now.split('T')[0],
+            updatedAt: now,
+          }
+        : i
+    );
     setInvestments(prev =>
       prev.map(i =>
         i.id === id
@@ -1159,6 +1257,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const deleteInvestment = (id: string) => {
     addTombstone('investments', id);
+    investmentsRef.current = investmentsRef.current.filter(i => i.id !== id);
     setInvestments(prev => prev.filter(i => i.id !== id));
   };
 
@@ -1193,18 +1292,24 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
       ] : [],
     };
+    dreamsRef.current = [newDream, ...dreamsRef.current];
     setDreams(prev => [newDream, ...prev]);
     return newDream;
   };
 
   const updateDream = (id: string, updated: Partial<DreamGoal>) => {
+    const now = new Date().toISOString();
+    dreamsRef.current = dreamsRef.current.map(d =>
+      d.id === id ? { ...d, ...updated, updatedAt: now } : d
+    );
     setDreams(prev =>
-      prev.map(d => (d.id === id ? { ...d, ...updated, updatedAt: new Date().toISOString() } : d))
+      prev.map(d => (d.id === id ? { ...d, ...updated, updatedAt: now } : d))
     );
   };
 
   const deleteDream = (id: string) => {
     addTombstone('dreams', id);
+    dreamsRef.current = dreamsRef.current.filter(d => d.id !== id);
     setDreams(prev => prev.filter(d => d.id !== id));
   };
 
@@ -1220,7 +1325,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       updatedAt: now,
     };
 
-    setDreams(prev =>
+    const dreamUpdater = (prev: DreamGoal[]) =>
       prev.map(d => {
         if (d.id === dreamId) {
           return {
@@ -1231,8 +1336,10 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
           };
         }
         return d;
-      })
-    );
+      });
+
+    dreamsRef.current = dreamUpdater(dreamsRef.current);
+    setDreams(dreamUpdater);
 
     const targetDream = dreams.find(d => d.id === dreamId);
     if (targetDream) {
@@ -1267,12 +1374,16 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       createdAt: now,
       updatedAt: now,
     };
+    recurringPaymentsRef.current = [newPayment, ...recurringPaymentsRef.current];
     setRecurringPayments(prev => [newPayment, ...prev]);
     return newPayment;
   };
 
   const updateRecurringPayment = (id: string, updated: Partial<RecurringPayment>) => {
     const now = new Date().toISOString();
+    recurringPaymentsRef.current = recurringPaymentsRef.current.map(p =>
+      p.id === id ? { ...p, ...updated, updatedAt: now } : p
+    );
     setRecurringPayments(prev =>
       prev.map(p => (p.id === id ? { ...p, ...updated, updatedAt: now } : p))
     );
@@ -1283,12 +1394,17 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const logsToDelete = recurringPaymentLogs.filter(l => l.recurringPaymentId === id);
     logsToDelete.forEach(l => addTombstone('recurringPaymentLogs', l.id));
 
+    recurringPaymentsRef.current = recurringPaymentsRef.current.filter(p => p.id !== id);
+    recurringPaymentLogsRef.current = recurringPaymentLogsRef.current.filter(l => l.recurringPaymentId !== id);
     setRecurringPayments(prev => prev.filter(p => p.id !== id));
     setRecurringPaymentLogs(prev => prev.filter(l => l.recurringPaymentId !== id));
   };
 
   const pauseRecurringPayment = (id: string) => {
     const now = new Date().toISOString();
+    recurringPaymentsRef.current = recurringPaymentsRef.current.map(p =>
+      p.id === id ? { ...p, isActive: !p.isActive, updatedAt: now } : p
+    );
     setRecurringPayments(prev =>
       prev.map(p => (p.id === id ? { ...p, isActive: !p.isActive, updatedAt: now } : p))
     );
@@ -1335,6 +1451,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       updatedAt: now,
     };
 
+    recurringPaymentLogsRef.current = [newLog, ...recurringPaymentLogsRef.current];
     setRecurringPaymentLogs(prev => [newLog, ...prev]);
     emitFinanceEvent({
       type: 'recurring_paid',
@@ -1386,6 +1503,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setSettlements([]);
     setRecurringPayments(INITIAL_RECURRING_PAYMENTS);
     setRecurringPaymentLogs(INITIAL_RECURRING_PAYMENT_LOGS);
+    setAIReports([]);
+    setNotRecurringTxIds(new Set());
   };
 
   const clearAllData = async () => {

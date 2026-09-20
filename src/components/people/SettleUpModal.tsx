@@ -43,7 +43,7 @@ export const SettleUpModal: React.FC<SettleUpModalProps> = ({
   const contactNet = contact ? balanceMap.get(contact.id) || 0 : 0;
   // If contact owes me (net > 0), they repay me -> Bank Transaction is a CREDIT
   // If I owe contact (net < 0), I repay them -> Bank Transaction is a DEBIT
-  const isTheyOweMe = contactNet >= 0;
+  const isTheyOweMe = contactNet > 0;
   const expectedTxType: TransactionType = isTheyOweMe ? 'credit' : 'debit';
 
   useEffect(() => {

@@ -272,13 +272,25 @@ export function getPaymentSchedule(
     const candidateObj = new Date(refObj);
     candidateObj.setDate(refObj.getDate() + diff);
 
-    const candidateStr = formatDateISO(
+    let candidateStr = formatDateISO(
       candidateObj.getFullYear(),
       candidateObj.getMonth() + 1,
       candidateObj.getDate()
     );
 
-    const isPaid = isOccurrencePaid(payment.id, candidateStr, logs);
+    // If this week's occurrence is already paid, advance to next week
+    let isPaid = isOccurrencePaid(payment.id, candidateStr, logs);
+    if (isPaid) {
+      const nextWeekObj = new Date(candidateObj);
+      nextWeekObj.setDate(candidateObj.getDate() + 7);
+      candidateStr = formatDateISO(
+        nextWeekObj.getFullYear(),
+        nextWeekObj.getMonth() + 1,
+        nextWeekObj.getDate()
+      );
+      isPaid = isOccurrencePaid(payment.id, candidateStr, logs);
+    }
+
     const daysDiff = Math.round(
       (new Date(candidateStr).getTime() - new Date(todayStr).getTime()) / (1000 * 60 * 60 * 24)
     );

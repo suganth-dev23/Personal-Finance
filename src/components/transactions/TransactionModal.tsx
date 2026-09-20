@@ -135,7 +135,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
       referenceId: referenceId.trim() || undefined,
     });
 
-    // 2. Record linked settlement
+    // 2. Record linked settlement (with correct direction so balance is properly deducted)
     recordSettlement(
       matchingRepaymentContact.contact.id,
       parsedAmount,
@@ -143,7 +143,8 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
       date,
       undefined,
       undefined,
-      newTx.id
+      newTx.id,
+      matchingRepaymentContact.isOwedToMe ? 'they_owe_me' : 'i_owe_them'
     );
 
     onClose();
@@ -253,6 +254,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
       setIsCreatingContact(false);
       setNewPersonName('');
       setCreatingContactForRowId(null);
+      setDismissedSettlementSuggestion(false);
     }
 
     prevIsOpenRef.current = isOpen;

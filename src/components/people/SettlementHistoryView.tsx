@@ -240,9 +240,10 @@ export const SettlementHistoryView: React.FC<SettlementHistoryViewProps> = () =>
               : null;
 
             // Determine if this was a repayment to the user or by the user
-            // If sourceTx exists with splitWith, check that entry direction
             let isTheyPaidMe = true;
-            if (sourceTx && sourceTx.splitWith) {
+            if (settlement.direction) {
+              isTheyPaidMe = settlement.direction === 'they_owe_me';
+            } else if (sourceTx && sourceTx.splitWith) {
               const entry = sourceTx.splitWith.find(
                 e => e.id === settlement.sourceSplitEntryId || e.contactId === settlement.contactId
               );
