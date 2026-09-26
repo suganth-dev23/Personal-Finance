@@ -61,6 +61,7 @@ export const DreamContributionModal: React.FC<DreamContributionModalProps> = ({
             <input
               type="number"
               step="0.01"
+              inputMode="decimal"
               required
               value={amount}
               onChange={e => setAmount(e.target.value)}

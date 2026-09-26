@@ -66,14 +66,18 @@ export const ALL_BADGES: BadgeDefinition[] = [
   {
     id: 'budget_zero_waste',
     name: 'Frugal Titan',
-    description: 'Spend under 80% across all budgeted categories with active limits.',
+    description: 'Spend under 80% across all budgeted categories with active limits (evaluated mid-month onwards).',
     category: 'budgeting',
     tier: 'gold',
     icon: 'Zap',
     xp: 500,
     evaluate: ctx => {
       const budgeted = ctx.categorySpendingThisMonth.filter(c => c.budget > 0);
-      if (budgeted.length === 0) return { isUnlocked: false, progress: 0 };
+      const dayOfMonth = new Date().getDate();
+      const hasActivity = budgeted.some(c => c.spent > 0);
+      if (budgeted.length < 2 || !hasActivity || dayOfMonth < 15) {
+        return { isUnlocked: false, progress: budgeted.length >= 2 ? 50 : 0 };
+      }
       const allUnder80 = budgeted.every(c => c.percentUsed <= 80);
       return {
         isUnlocked: allUnder80,
@@ -84,14 +88,18 @@ export const ALL_BADGES: BadgeDefinition[] = [
   {
     id: 'budget_centurion',
     name: 'Zero-Deficit Master',
-    description: 'Keep all budgeted categories strictly under 100% with at least 2 budgets set.',
+    description: 'Keep all budgeted categories strictly under 100% through the month with at least 2 budgets set.',
     category: 'budgeting',
     tier: 'diamond',
     icon: 'Award',
     xp: 1000,
     evaluate: ctx => {
       const budgeted = ctx.categorySpendingThisMonth.filter(c => c.budget > 0);
-      if (budgeted.length < 2) return { isUnlocked: false, progress: 0 };
+      const dayOfMonth = new Date().getDate();
+      const totalDebits = ctx.transactions.filter(t => t.type === 'debit').length;
+      if (budgeted.length < 2 || dayOfMonth < 25 || totalDebits < 5) {
+        return { isUnlocked: false, progress: budgeted.length >= 2 ? 75 : 0 };
+      }
       const allUnder = budgeted.every(c => c.percentUsed <= 100);
       return {
         isUnlocked: allUnder,
@@ -128,7 +136,8 @@ export const ALL_BADGES: BadgeDefinition[] = [
     icon: 'Compass',
     xp: 300,
     evaluate: ctx => {
-      const count = ctx.dreams.length;
+      const activeFunded = ctx.dreams.filter(d => (d.currentSaved || 0) > 0);
+      const count = activeFunded.length;
       return {
         isUnlocked: count >= 3,
         progress: Math.min(100, Math.round((count / 3) * 100)),
@@ -234,7 +243,10 @@ export const ALL_BADGES: BadgeDefinition[] = [
     icon: 'Layers',
     xp: 300,
     evaluate: ctx => {
-      const types = new Set(ctx.investments.map(i => i.type));
+      const activeInvestments = ctx.investments.filter(
+        i => (i.currentValue || 0) > 0 || (i.investedAmount || 0) > 0
+      );
+      const types = new Set(activeInvestments.map(i => i.type));
       const count = types.size;
       return {
         isUnlocked: count >= 3,
@@ -410,7 +422,7 @@ export const ALL_BADGES: BadgeDefinition[] = [
     description: 'Connect Google Drive for private, cross-device sync.',
     category: 'milestone',
     tier: 'silver',
-    icon: 'CloudCheck',
+    icon: 'CloudUpload',
     xp: 250,
     evaluate: ctx => {
       return {

@@ -222,6 +222,7 @@ export const SettleSplitModal: React.FC<SettleSplitModalProps> = ({
             <input
               type="number"
               step="0.01"
+              inputMode="decimal"
               required
               value={settledAmount}
               onChange={e => setSettledAmount(e.target.value)}

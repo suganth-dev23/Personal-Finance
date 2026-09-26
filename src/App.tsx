@@ -83,7 +83,12 @@ const MainContent: React.FC = () => {
         <main className="flex-1 px-4 sm:px-8 py-6 w-full">
           <Suspense fallback={<ViewSkeleton />}>
             <ViewTransition viewKey={currentView}>
-              {currentView === 'dashboard' && <DashboardView onOpenAddTx={handleOpenAddTx} />}
+              {currentView === 'dashboard' && (
+                <DashboardView
+                  onOpenAddTx={handleOpenAddTx}
+                  onEditTransaction={handleEditTx}
+                />
+              )}
               {currentView === 'transactions' && (
                 <TransactionListView
                   onOpenAddModal={handleOpenAddTx}
@@ -107,7 +112,10 @@ const MainContent: React.FC = () => {
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <MobileNav onOpenMore={() => setIsMoreDrawerOpen(true)} />
+      <MobileNav
+        onOpenMore={() => setIsMoreDrawerOpen(true)}
+        onOpenAddTx={handleOpenAddTx}
+      />
 
       {/* Mobile More Drawer */}
       <MobileMoreDrawer

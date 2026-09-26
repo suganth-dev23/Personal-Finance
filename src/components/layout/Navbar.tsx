@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, UploadCloud, Sparkles, Sun, Moon, RefreshCw } from 'lucide-react';
+import { Plus, Sparkles, Sun, Moon, RefreshCw } from 'lucide-react';
 import { useFinance, AppView } from '../../context/FinanceContext';
 import { formatINR } from '../../utils/currency';
 import { getCurrentMonthYear } from '../../utils/date';
@@ -45,8 +45,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAddTx }) => {
     <header className="sticky top-0 z-20 bg-white/90 dark:bg-[#0B0E14]/90 backdrop-blur-md border-b border-slate-200/90 dark:border-[#202836] px-4 sm:px-8 py-4 flex items-center justify-between transition-colors">
       {/* Title info */}
       <div>
-        <div className="flex items-center gap-2">
-          <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-none">
+        <div className="flex items-center gap-2 min-w-0">
+          <h1 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-none truncate max-w-[180px] sm:max-w-none">
             {meta.title}
           </h1>
           <span className="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-[#171E2A] text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-[#202836]">
@@ -107,24 +107,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAddTx }) => {
           </button>
         )}
 
-        {/* Import Quick Button */}
-        {currentView !== 'import' && (
-          <button
-            onClick={() => setCurrentView('import')}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-[#171E2A] dark:hover:bg-[#202836] transition-colors"
-          >
-            <UploadCloud className="w-3.5 h-3.5" />
-            <span>Import</span>
-          </button>
-        )}
 
-        {/* Add Transaction Button */}
+        {/* Add Transaction Button (Desktop/Tablet) */}
         <button
           onClick={onOpenAddTx}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold text-xs sm:text-sm shadow-sm transition-all duration-150 transform active:scale-95"
+          className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold text-xs sm:text-sm shadow-sm transition-all duration-150 transform active:scale-95"
         >
           <Plus className="w-4 h-4" />
-          <span className="hidden xs:inline">Add</span>
+          <span>Add</span>
         </button>
 
         {/* Mobile Theme Toggle */}

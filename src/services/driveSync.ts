@@ -20,6 +20,8 @@ import {
   SettlementRecord,
   AIHealthReport,
   EmergencyFund,
+  EmergencyContribution,
+  DreamContribution,
   AISettings,
   SyncableStoreName,
   RecurringPayment,
@@ -419,7 +421,40 @@ export class DriveSyncService {
       const mergedCategories = mergeArrayStore('categories', localCategories, remotePayload.stores.categories || []);
       const mergedBudgets = mergeArrayStore('budgets', localBudgets, remotePayload.stores.budgets || []);
       const mergedInvestments = mergeArrayStore('investments', localInvestments, remotePayload.stores.investments || []);
-      const mergedDreams = mergeArrayStore('dreams', localDreams, remotePayload.stores.dreams || []);
+      const mergedDreamsBase = mergeArrayStore('dreams', localDreams, remotePayload.stores.dreams || []);
+      // Reconcile nested contribution arrays for each dream goal so contributions from neither device are clobbered
+      const localDreamsMap = new Map((localDreams || []).map(d => [d.id, d]));
+      const remoteDreamsMap = new Map((remotePayload.stores.dreams || []).map(d => [d.id, d]));
+      const mergedDreams = mergedDreamsBase.map(goal => {
+        const localGoal = localDreamsMap.get(goal.id);
+        const remoteGoal = remoteDreamsMap.get(goal.id);
+        if (localGoal && remoteGoal) {
+          const contribMap = new Map<string, DreamContribution>();
+          for (const c of [...(localGoal.contributions || []), ...(remoteGoal.contributions || [])]) {
+            if (!c) continue;
+            const key = c.id || `${c.date}-${c.amount}`;
+            const existing = contribMap.get(key);
+            if (!existing) {
+              contribMap.set(key, c);
+            } else {
+              const cTime = c.updatedAt || c.createdAt || '1970-01-01';
+              const eTime = existing.updatedAt || existing.createdAt || '1970-01-01';
+              if (cTime > eTime) {
+                contribMap.set(key, c);
+              }
+            }
+          }
+          const mergedContributions = Array.from(contribMap.values())
+            .sort((a, b) => b.date.localeCompare(a.date));
+          const totalSaved = mergedContributions.reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
+          return {
+            ...goal,
+            contributions: mergedContributions,
+            currentSaved: mergedContributions.length > 0 ? totalSaved : goal.currentSaved,
+          };
+        }
+        return goal;
+      });
       const mergedContacts = mergeArrayStore('contacts', localContacts, remotePayload.stores.contacts || []);
       const mergedSettlements = mergeArrayStore('settlements', localSettlements, remotePayload.stores.settlements || []);
       const mergedAiReports = mergeArrayStore('aiReports', localAiReports, remotePayload.stores.aiReports || []);
@@ -438,9 +473,44 @@ export class DriveSyncService {
       if (remoteEmergency) {
         const localTime = localEmergency?.updatedAt || '1970-01-01';
         const remoteTime = remoteEmergency.updatedAt || '1970-01-01';
-        if (remoteTime > localTime || (remoteTime === localTime && remoteDeviceId > localDeviceId)) {
-          mergedEmergency = remoteEmergency;
+        const winner = (remoteTime > localTime || (remoteTime === localTime && remoteDeviceId > localDeviceId))
+          ? remoteEmergency
+          : (localEmergency || remoteEmergency);
+
+        // Union-merge nested contribution arrays
+        const localContribs = localEmergency?.contributions || [];
+        const remoteContribs = remoteEmergency.contributions || [];
+        const contribMap = new Map<string, EmergencyContribution>();
+
+        for (const c of [...localContribs, ...remoteContribs]) {
+          if (!c) continue;
+          const key = c.id || `${c.date}-${c.amount}-${c.type}`;
+          const existing = contribMap.get(key);
+          if (!existing) {
+            contribMap.set(key, c);
+          } else {
+            const cTime = c.updatedAt || c.createdAt || '1970-01-01';
+            const eTime = existing.updatedAt || existing.createdAt || '1970-01-01';
+            if (cTime > eTime) {
+              contribMap.set(key, c);
+            }
+          }
         }
+        const mergedContributions = Array.from(contribMap.values())
+          .sort((a, b) => b.date.localeCompare(a.date));
+
+        // Recompute currentSaved from merged contributions
+        let calculatedSaved = 0;
+        mergedContributions.forEach(c => {
+          if (c.type === 'deposit') calculatedSaved += Number(c.amount) || 0;
+          else calculatedSaved = Math.max(0, calculatedSaved - (Number(c.amount) || 0));
+        });
+
+        mergedEmergency = {
+          ...winner,
+          contributions: mergedContributions,
+          currentSaved: mergedContributions.length > 0 ? calculatedSaved : winner.currentSaved,
+        };
       }
 
       // Merge Single-Record Store: UserPreferences

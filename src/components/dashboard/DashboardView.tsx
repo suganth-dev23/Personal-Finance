@@ -1,18 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Wallet,
-  TrendingUp,
-  ShieldCheck,
-  Target,
-  ArrowUpRight,
-  ArrowDownLeft,
   Plus,
   UploadCloud,
   Sparkles,
   Users,
+  CalendarClock,
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
-import { StatCard } from '../common/StatCard';
+import { Transaction } from '../../types/finance';
 import { CashFlowChart } from './CashFlowChart';
 import { CategoryExpenseChart } from './CategoryExpenseChart';
 import { BudgetHealthWidget } from './BudgetHealthWidget';
@@ -22,32 +18,38 @@ import { CashFlowRunwayCard, RecurringBillsCard } from './RecurringAndRunwayWidg
 import { OwedSummaryWidget } from './OwedSummaryWidget';
 import { formatINR } from '../../utils/currency';
 import { AnimatedNumber } from '../common/AnimatedNumber';
-import { StreakBanner } from '../common/StreakBanner';
 import { HealthGauge } from '../gamification/HealthGauge';
+import { HealthGaugeCompact } from '../gamification/HealthGaugeCompact';
 import { useStaggerChildren } from '../../hooks/useStaggerChildren';
 
 interface DashboardViewProps {
   onOpenAddTx: () => void;
+  onEditTransaction?: (tx: Transaction) => void;
 }
 
-export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx }) => {
+export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx, onEditTransaction }) => {
   const { containerRef: summaryStripRef, getChildStyle: getSummaryStyle } = useStaggerChildren(50);
+  const [mobileTab, setMobileTab] = useState<'overview' | 'commitments'>('overview');
+
+  const handleTabChange = (tab: 'overview' | 'commitments') => {
+    setMobileTab(tab);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
   const {
     transactions,
     totalBalance,
+    totalNetWorth,
+    netSharedBalance,
+    peerBalanceSummary,
     totalInvestmentValue,
     totalInvestmentGainLoss,
     totalInvestmentGainLossPct,
     emergencyFund,
     emergencyFundRunwayMonths,
-    totalGoalsSaved,
-    totalGoalsTarget,
     currentMonthIncome,
     currentMonthExpense,
     currentMonthNet,
     currentMonthSavingsRate,
-    totalOwedToMe,
-    totalIOwe,
     setCurrentView,
     resetToDemoData,
   } = useFinance();
@@ -102,7 +104,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx }) => 
       )}
 
       {/* LEVEL 1: THE MASTER WEALTH LEDGER ANCHOR */}
-      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] border border-slate-200/90 dark:border-[#202836] p-6 sm:p-8 shadow-xs">
+      <div
+        className={`relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] border border-slate-200/90 dark:border-[#202836] p-4 sm:p-8 shadow-xs ${
+          mobileTab !== 'overview' ? 'hidden sm:block' : ''
+        }`}
+      >
         {/* Suvarna gold accent hairline at top edge */}
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
 
@@ -114,17 +120,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx }) => 
                 <Wallet className="h-4 w-4" />
               </span>
               <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
-                PRIMARY WEALTH LEDGER
+                TOTAL NET WORTH
               </span>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
-              Net Worth Aggregate
+            <p className="hidden sm:block text-xs text-slate-500 dark:text-slate-400 mb-1">
+              Consolidated Personal Wealth (Assets &minus; Liabilities)
             </p>
 
             <div className="mt-1">
               <div className="flex flex-wrap items-baseline gap-3 mt-0.5">
-                <h2 className="font-numeric text-4xl sm:text-5xl lg:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50">
-                  <AnimatedNumber value={totalBalance} showDirection={true} />
+                <h2 className="font-numeric text-2xl sm:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50">
+                  <AnimatedNumber value={totalNetWorth} showDirection={false} />
                 </h2>
                 <span
                   className={`font-numeric text-xs font-semibold px-2.5 py-1 rounded-md ${
@@ -133,10 +139,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx }) => 
                       : 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-500/20'
                   }`}
                 >
-                  {currentMonthNet >= 0 ? '+' : ''}{formatINR(currentMonthNet)} net this month
+                  {currentMonthNet >= 0 ? '+' : ''}{formatINR(currentMonthNet)} cashflow this month
                 </span>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 flex items-center gap-2">
+              <p className="hidden sm:flex text-xs text-slate-500 dark:text-slate-400 mt-2 items-center gap-2 flex-wrap">
                 <span>Monthly savings rate:</span>
                 <span className="font-numeric font-bold text-slate-800 dark:text-slate-200">
                   {currentMonthSavingsRate.toFixed(1)}%
@@ -147,18 +153,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx }) => 
                   onClick={() => setCurrentView('people')}
                   className="hover:underline text-indigo-600 dark:text-indigo-400 font-medium"
                 >
-                  {totalOwedToMe > 0
-                    ? `Friends owe ₹${totalOwedToMe.toLocaleString('en-IN')}`
-                    : totalIOwe > 0
-                    ? `You owe ₹${totalIOwe.toLocaleString('en-IN')}`
-                    : 'Split accounts settled'}
+                  {peerBalanceSummary.displayText}
                 </button>
               </p>
             </div>
           </div>
 
-          {/* Action Cluster */}
-          <div className="flex flex-wrap items-center gap-2.5 self-start md:self-auto">
+          {/* Action Cluster (Desktop) */}
+          <div className="hidden sm:flex flex-wrap items-center gap-2.5">
             <button
               onClick={onOpenAddTx}
               className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-3 text-sm font-bold text-slate-950 shadow-sm hover:from-amber-400 hover:to-amber-500 transition-all active:scale-[0.98]"
@@ -174,74 +176,68 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx }) => 
               <Users className="w-4 h-4 text-indigo-500" />
               <span>Split bill</span>
             </button>
-
-            <button
-              onClick={() => setCurrentView('import')}
-              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#171E2A] dark:hover:bg-[#1C2433] text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-[#202836] text-xs sm:text-sm font-medium transition-all active:scale-95"
-            >
-              <UploadCloud className="w-4 h-4 text-slate-400" />
-              <span>Import</span>
-            </button>
           </div>
         </div>
 
+
         {/* Integrated Flow & Asset Shelves */}
-        <div ref={summaryStripRef} className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mt-7 pt-6 border-t border-slate-100 dark:border-[#202836]">
+        <div ref={summaryStripRef} className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mt-6 pt-5 sm:mt-7 sm:pt-6 border-t border-slate-100 dark:border-[#202836]">
           <div
             style={getSummaryStyle(0)}
             onClick={() => setCurrentView('transactions')}
-            className="animate-slide-up cursor-pointer p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#171E2A] hover:bg-slate-100 dark:hover:bg-[#1C2433] border border-slate-100 dark:border-[#202836] transition-all hover:-translate-y-0.5 hover:shadow-sm"
+            className="animate-slide-up cursor-pointer p-3 sm:p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#171E2A] hover:bg-slate-100 dark:hover:bg-[#1C2433] border border-slate-100 dark:border-[#202836] transition-all hover:-translate-y-0.5 hover:shadow-sm"
           >
             <div className="flex items-center justify-between">
               <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                Monthly inflow
+                Bank & Cash
               </span>
-              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold">↑</span>
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold">Liquid</span>
             </div>
-            <p className="font-numeric text-lg sm:text-xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
-              +<AnimatedNumber value={currentMonthIncome} />
+            <p className="font-numeric text-base sm:text-xl font-bold text-slate-900 dark:text-white mt-1">
+              <AnimatedNumber value={totalBalance} />
             </p>
-            <span className="text-xs text-slate-400 mt-0.5 block truncate">
-              Credits &amp; earnings
+            <span className="text-[11px] text-slate-400 mt-0.5 block truncate">
+              +{formatINR(currentMonthIncome)} in this mo
             </span>
           </div>
 
           <div
             style={getSummaryStyle(1)}
             onClick={() => setCurrentView('transactions')}
-            className="animate-slide-up cursor-pointer p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#171E2A] hover:bg-slate-100 dark:hover:bg-[#1C2433] border border-slate-100 dark:border-[#202836] transition-all hover:-translate-y-0.5 hover:shadow-sm"
+            className="animate-slide-up cursor-pointer p-3 sm:p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#171E2A] hover:bg-slate-100 dark:hover:bg-[#1C2433] border border-slate-100 dark:border-[#202836] transition-all hover:-translate-y-0.5 hover:shadow-sm"
           >
             <div className="flex items-center justify-between">
               <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                Monthly outflow
+                Monthly spend
               </span>
               <span className="text-xs text-rose-600 dark:text-rose-400 font-bold">↓</span>
             </div>
-            <p className="font-numeric text-lg sm:text-xl font-bold text-rose-600 dark:text-rose-400 mt-1">
+            <p className="font-numeric text-base sm:text-xl font-bold text-rose-600 dark:text-rose-400 mt-1">
               -<AnimatedNumber value={currentMonthExpense} />
             </p>
-            <span className="text-xs text-slate-400 mt-0.5 block truncate">
-              Debits &amp; UPI spend
+            <span className="text-[11px] text-slate-400 mt-0.5 block truncate">
+              Debits &amp; UPI
             </span>
           </div>
 
           <div
             style={getSummaryStyle(2)}
             onClick={() => setCurrentView('investments')}
-            className="animate-slide-up cursor-pointer p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#171E2A] hover:bg-slate-100 dark:hover:bg-[#1C2433] border border-slate-100 dark:border-[#202836] transition-all hover:-translate-y-0.5 hover:shadow-sm"
+            className="animate-slide-up cursor-pointer p-3 sm:p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#171E2A] hover:bg-slate-100 dark:hover:bg-[#1C2433] border border-slate-100 dark:border-[#202836] transition-all hover:-translate-y-0.5 hover:shadow-sm"
           >
             <div className="flex items-center justify-between">
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                Invested assets
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">
+                <span className="sm:hidden">Investments</span>
+                <span className="hidden sm:inline">Invested assets</span>
               </span>
               <span className="text-xs font-numeric font-bold text-[#C28834] dark:text-[#F5B742]">
                 {totalInvestmentGainLoss >= 0 ? '+' : ''}{totalInvestmentGainLossPct.toFixed(1)}%
               </span>
             </div>
-            <p className="font-numeric text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">
+            <p className="font-numeric text-base sm:text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">
               <AnimatedNumber value={totalInvestmentValue} />
             </p>
-            <span className="text-xs text-slate-400 mt-0.5 block truncate">
+            <span className="text-[11px] text-slate-400 mt-0.5 block truncate">
               MF, Stocks, Gold, FDs
             </span>
           </div>
@@ -249,7 +245,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx }) => 
           <div
             style={getSummaryStyle(3)}
             onClick={() => setCurrentView('emergency')}
-            className="animate-slide-up cursor-pointer p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#171E2A] hover:bg-slate-100 dark:hover:bg-[#1C2433] border border-slate-100 dark:border-[#202836] transition-all hover:-translate-y-0.5 hover:shadow-sm"
+            className="animate-slide-up cursor-pointer p-3 sm:p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#171E2A] hover:bg-slate-100 dark:hover:bg-[#1C2433] border border-slate-100 dark:border-[#202836] transition-all hover:-translate-y-0.5 hover:shadow-sm"
           >
             <div className="flex items-center justify-between">
               <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
@@ -259,57 +255,105 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx }) => 
                 {emergencyFund.targetMonths}m goal
               </span>
             </div>
-            <p className="font-numeric text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">
+            <p className="font-numeric text-base sm:text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">
               {emergencyFundRunwayMonths.toFixed(1)} mos
             </p>
-            <span className="text-xs text-slate-400 mt-0.5 block truncate font-numeric">
-              <AnimatedNumber value={emergencyFund.currentSaved} /> liquid
+            <span className="text-[11px] text-slate-400 mt-0.5 block truncate font-numeric">
+              <AnimatedNumber value={emergencyFund.currentSaved} /> saved
             </span>
           </div>
         </div>
       </div>
 
-      {/* GAMIFICATION STREAK BANNER */}
-      <StreakBanner />
-
-      {/* LEVEL 2: CASH FLOW VELOCITY & CATEGORY ALLOCATION */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-7">
-          <CashFlowChart />
-        </div>
-        <div className="lg:col-span-5">
-          <CategoryExpenseChart />
+      {/* MOBILE SEGMENTED VIEW SWITCHER (sm:hidden) - Sticky beneath top navbar */}
+      <div className="sm:hidden sticky top-14 z-20 -mx-4 px-4 py-2 bg-[#F8F9FA]/95 dark:bg-[#0B0E14]/95 backdrop-blur-md transition-all">
+        <div className="flex items-center p-1 rounded-2xl bg-slate-100 dark:bg-[#171E2A] border border-slate-200/80 dark:border-[#202836] text-xs font-bold shadow-xs">
+          <button
+            type="button"
+            onClick={() => handleTabChange('overview')}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl transition-all ${
+              mobileTab === 'overview'
+                ? 'bg-white dark:bg-[#202836] text-slate-900 dark:text-[#F5B742] shadow-xs'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+            }`}
+          >
+            <Wallet className="w-3.5 h-3.5" />
+            <span>Overview</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleTabChange('commitments')}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl transition-all ${
+              mobileTab === 'commitments'
+                ? 'bg-white dark:bg-[#202836] text-slate-900 dark:text-[#F5B742] shadow-xs'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+            }`}
+          >
+            <CalendarClock className="w-3.5 h-3.5" />
+            <span>Commitments</span>
+          </button>
         </div>
       </div>
 
-      {/* FINANCIAL HEALTH INDEX & 5 PILLARS GAUGE */}
-      <div>
-        <HealthGauge />
+      {/* MOBILE CONTENT ACCORDING TO ACTIVE SEGMENT */}
+      <div className="sm:hidden space-y-4">
+        {mobileTab === 'overview' && (
+          <>
+            <CashFlowChart />
+            <CategoryExpenseChart />
+            <HealthGaugeCompact />
+            <BudgetHealthWidget />
+            <RecentTransactions onEditTransaction={onEditTransaction} />
+          </>
+        )}
+        {mobileTab === 'commitments' && (
+          <>
+            <CashFlowRunwayCard />
+            <RecurringBillsCard />
+            <OwedSummaryWidget />
+            <AIInsightsWidget />
+          </>
+        )}
       </div>
 
-      {/* LEVEL 3: OPERATIONAL ACTIVITY & BUDGET HEALTH (BALANCED 1:1 ROW) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-        {/* Recent Transactions: Primary Operational Ledger (7 cols) */}
-        <div className="lg:col-span-7">
-          <RecentTransactions />
+      {/* DESKTOP CONTENT (ALL LEVELS IN COMPREHENSIVE GRID) */}
+      <div className="hidden sm:block space-y-6">
+        {/* LEVEL 2: CASH FLOW VELOCITY & CATEGORY ALLOCATION */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="lg:col-span-7">
+            <CashFlowChart />
+          </div>
+          <div className="lg:col-span-5">
+            <CategoryExpenseChart />
+          </div>
         </div>
 
-        {/* Budget Health Watchlist (5 cols): 1:1 Height Alignment */}
-        <div className="lg:col-span-5">
-          <BudgetHealthWidget />
+        {/* FINANCIAL HEALTH INDEX & 5 PILLARS GAUGE */}
+        <div>
+          <HealthGauge />
         </div>
-      </div>
 
-      {/* LEVEL 4: FINANCIAL COMMITMENTS & OBLIGATIONS (BALANCED 3-COLUMN ROW) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
-        <CashFlowRunwayCard />
-        <RecurringBillsCard />
-        <OwedSummaryWidget />
-      </div>
+        {/* LEVEL 3: OPERATIONAL ACTIVITY & BUDGET HEALTH */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+          <div className="lg:col-span-7">
+            <RecentTransactions onEditTransaction={onEditTransaction} />
+          </div>
+          <div className="lg:col-span-5">
+            <BudgetHealthWidget />
+          </div>
+        </div>
 
-      {/* LEVEL 5: AI FINANCIAL HEALTH ASSISTANT (FULL-WIDTH STUDIO BANNER) */}
-      <div>
-        <AIInsightsWidget />
+        {/* LEVEL 4: FINANCIAL COMMITMENTS & OBLIGATIONS */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
+          <CashFlowRunwayCard />
+          <RecurringBillsCard />
+          <OwedSummaryWidget />
+        </div>
+
+        {/* LEVEL 5: AI FINANCIAL HEALTH ASSISTANT */}
+        <div>
+          <AIInsightsWidget />
+        </div>
       </div>
     </div>
   );

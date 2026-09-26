@@ -246,7 +246,7 @@ export const PeopleView: React.FC = () => {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
       {/* Hero Overview: Single Unified Master Mineral Card */}
-      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] text-slate-900 dark:text-white p-6 sm:p-8 border border-slate-200/90 dark:border-[#202836] shadow-sm">
+      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] text-slate-900 dark:text-white p-4 sm:p-8 border border-slate-200/90 dark:border-[#202836] shadow-sm">
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -434,11 +434,11 @@ export const PeopleView: React.FC = () => {
             </div>
 
             {/* Filter Pills + Add Contact Button */}
-            <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end flex-wrap">
-              <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#171E2A] p-1 rounded-xl text-xs border border-slate-200/60 dark:border-[#202836]">
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+              <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#171E2A] p-1 rounded-xl text-xs border border-slate-200/60 dark:border-[#202836] overflow-x-auto no-scrollbar max-w-[calc(100%-80px)] sm:max-w-none">
                 <button
                   onClick={() => setFilterType('all')}
-                  className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
+                  className={`px-2.5 py-1 rounded-lg font-bold transition-all whitespace-nowrap ${
                     filterType === 'all'
                       ? 'bg-white dark:bg-[#202836] text-slate-900 dark:text-white shadow-xs'
                       : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
@@ -448,7 +448,7 @@ export const PeopleView: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setFilterType('they_owe_me')}
-                  className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
+                  className={`px-2.5 py-1 rounded-lg font-bold transition-all whitespace-nowrap ${
                     filterType === 'they_owe_me'
                       ? 'bg-emerald-600 text-white shadow-xs'
                       : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
@@ -458,7 +458,7 @@ export const PeopleView: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setFilterType('i_owe_them')}
-                  className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
+                  className={`px-2.5 py-1 rounded-lg font-bold transition-all whitespace-nowrap ${
                     filterType === 'i_owe_them'
                       ? 'bg-rose-600 text-white shadow-xs'
                       : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
@@ -468,7 +468,7 @@ export const PeopleView: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setFilterType('settled')}
-                  className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
+                  className={`px-2.5 py-1 rounded-lg font-bold transition-all whitespace-nowrap ${
                     filterType === 'settled'
                       ? 'bg-indigo-600 text-white shadow-xs'
                       : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
@@ -480,10 +480,11 @@ export const PeopleView: React.FC = () => {
 
               <button
                 onClick={() => setIsAddContactOpen(true)}
-                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold rounded-xl text-xs sm:text-sm shadow-sm transition-all active:scale-95"
+                className="flex items-center gap-1.5 px-3.5 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold rounded-xl text-xs sm:text-sm shadow-sm transition-all active:scale-95 whitespace-nowrap flex-shrink-0"
               >
                 <UserPlus className="w-3.5 h-3.5" />
-                <span>Add Person</span>
+                <span className="hidden xs:inline">Add Person</span>
+                <span className="xs:hidden">Add</span>
               </button>
             </div>
           </div>
@@ -496,7 +497,7 @@ export const PeopleView: React.FC = () => {
                 {/* Gold Accent Hairline */}
                 <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
 
-                <div className="p-5 sm:p-6">
+                <div className="p-4 sm:p-6">
                   {/* Card Header */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-[#202836]">
                     <div className="flex items-center gap-3.5">
@@ -621,7 +622,7 @@ export const PeopleView: React.FC = () => {
                               onChange={e =>
                                 handleAssignSplit(tx.id, split.id, e.target.value, split.label)
                               }
-                              className="text-xs font-semibold rounded-xl border border-slate-200/90 dark:border-[#202836] bg-white dark:bg-[#131822] text-slate-700 dark:text-slate-300 px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500 cursor-pointer"
+                              className="text-xs font-semibold rounded-xl border border-slate-200/90 dark:border-[#202836] bg-white dark:bg-[#131822] text-slate-700 dark:text-slate-300 px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500 cursor-pointer w-full sm:w-auto"
                             >
                               <option value="" disabled>
                                 Assign to friend...
@@ -690,26 +691,29 @@ export const PeopleView: React.FC = () => {
                   className="bg-white dark:bg-[#131822] rounded-3xl border border-slate-200/90 dark:border-[#202836] shadow-sm overflow-hidden transition-all"
                 >
                   {/* Contact Card Header */}
-                  <div className="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="flex items-center gap-3.5">
-                      <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-black text-lg flex items-center justify-center border border-emerald-500/20">
+                  <div
+                    onClick={() => setExpandedContactId(isExpanded ? null : contact.id)}
+                    className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 cursor-pointer select-none hover:bg-slate-50/50 dark:hover:bg-[#171E2A]/30 transition-colors"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-black text-base sm:text-lg flex items-center justify-center border border-emerald-500/20 flex-shrink-0">
                         {contact.name.charAt(0).toUpperCase()}
                       </div>
-                      <div>
-                        <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                      <div className="min-w-0">
+                        <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white truncate">
                           {contact.name}
                         </h3>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-[11px] sm:text-xs text-slate-400 truncate">
                           {contact.notes || `${contactSplitEntries.length} linked splits`}
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between sm:justify-end gap-3">
+                    <div className="flex items-center justify-between sm:justify-end gap-2.5 sm:gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-[#202836]">
                       {/* Balance Badge */}
-                      <div className="text-right">
+                      <div className="text-left sm:text-right">
                         <span
-                          className={`text-base sm:text-lg font-black tracking-tight font-numeric ${
+                          className={`text-sm sm:text-lg font-black tracking-tight font-numeric ${
                             isOwedToMe
                               ? 'text-emerald-600 dark:text-emerald-400'
                               : 'text-rose-600 dark:text-rose-400'
@@ -717,37 +721,41 @@ export const PeopleView: React.FC = () => {
                         >
                           {isOwedToMe ? `+${formatINR(netAmount)}` : `-${formatINR(Math.abs(netAmount))}`}
                         </span>
-                        <p className="text-[11px] font-bold text-slate-400">
+                        <p className="text-[10px] sm:text-[11px] font-bold text-slate-400">
                           {isOwedToMe ? 'Owes You' : 'You Owe'}
                         </p>
                       </div>
 
                       {/* Actions */}
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
                         <button
-                          onClick={() => setSplitModalContact(contact)}
-                          className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 dark:bg-[#171E2A] text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-[#202836] rounded-xl text-xs font-bold transition-all border border-slate-200/80 dark:border-[#202836] active:scale-95"
+                          type="button"
+                          onClick={e => {
+                            e.stopPropagation();
+                            setSplitModalContact(contact);
+                          }}
+                          className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-slate-100 dark:bg-[#171E2A] text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-[#202836] rounded-xl text-xs font-bold transition-all border border-slate-200/80 dark:border-[#202836] active:scale-95"
                           title="Split a new bill or expense with this person"
                         >
                           <Plus className="w-3.5 h-3.5 text-amber-500" />
-                          <span>Split Bill</span>
+                          <span className="hidden xs:inline">Split</span>
                         </button>
 
                         <button
-                          onClick={() => setSettleContact({ contact, amount: Math.abs(netAmount) })}
-                          className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition-colors active:scale-95"
+                          type="button"
+                          onClick={e => {
+                            e.stopPropagation();
+                            setSettleContact({ contact, amount: Math.abs(netAmount) });
+                          }}
+                          className="flex items-center gap-1 px-3 sm:px-3.5 py-1.5 sm:py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition-colors active:scale-95"
                         >
                           <HandCoins className="w-3.5 h-3.5" />
-                          <span>Settle Up</span>
+                          <span>Settle</span>
                         </button>
 
-                        <button
-                          onClick={() => setExpandedContactId(isExpanded ? null : contact.id)}
-                          className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#171E2A] transition-colors"
-                          title={isExpanded ? 'Collapse' : 'Expand splits'}
-                        >
-                          {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                        </button>
+                        <div className="p-1 sm:p-2 rounded-xl text-slate-400">
+                          {isExpanded ? <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5" /> : <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />}
+                        </div>
                       </div>
                     </div>
                   </div>

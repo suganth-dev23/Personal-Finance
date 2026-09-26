@@ -7,12 +7,20 @@ import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig({
   server: {
     host: true, // Exposes Vite dev server to your local Wi-Fi network
+    port: 5173,
+    allowedHosts: true, // Required for Vite 8 tunnels (Cloudflare, Ngrok, localtunnel) and mDNS .local
+  },
+  preview: {
+    host: true,
+    port: 4173,
+    allowedHosts: true,
   },
   plugins: [
     react(),
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: null,
       includeAssets: [
         'favicon.svg',
         'apple-touch-icon.png',
@@ -50,7 +58,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+        globPatterns: ['**/*.{js,mjs,css,html,ico,png,svg,woff,woff2}'],
         maximumFileSizeToCacheInBytes: 3500000,
         runtimeCaching: [
           {

@@ -86,6 +86,7 @@ export const EmergencyContributionModal: React.FC<EmergencyContributionModalProp
             <input
               type="number"
               step="0.01"
+              inputMode="decimal"
               required
               value={amount}
               onChange={e => setAmount(e.target.value)}

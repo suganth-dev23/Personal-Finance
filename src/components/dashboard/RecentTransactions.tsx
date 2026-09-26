@@ -5,7 +5,13 @@ import { formatINR } from '../../utils/currency';
 import { formatDate } from '../../utils/date';
 import { IconRenderer } from '../common/IconRenderer';
 
-export const RecentTransactions: React.FC = () => {
+import { Transaction } from '../../types/finance';
+
+interface RecentTransactionsProps {
+  onEditTransaction?: (tx: Transaction) => void;
+}
+
+export const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEditTransaction }) => {
   const { transactions, categories, contacts, setCurrentView } = useFinance();
 
   // Sort descending (newest transaction first)
@@ -23,7 +29,7 @@ export const RecentTransactions: React.FC = () => {
   const contactMap = new Map(contacts.map(c => [c.id, c]));
 
   return (
-    <div className="bg-white dark:bg-[#131822] rounded-3xl p-6 shadow-xs border border-slate-200/90 dark:border-[#202836] flex flex-col justify-between h-full">
+    <div className="bg-white dark:bg-[#131822] rounded-3xl p-4 sm:p-6 shadow-xs border border-slate-200/90 dark:border-[#202836] flex flex-col justify-between h-full">
       <div>
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -63,14 +69,14 @@ export const RecentTransactions: React.FC = () => {
                     : split.label || 'Unnamed Person';
                   isSplitSettled = split.settled;
                   isTheyOweMe = split.direction === 'they_owe_me';
-                  splitBadgeText = `Split with ${personName} · ${formatINR(split.amount)} ${
-                    split.settled ? '(Settled)' : isTheyOweMe ? 'owed' : 'you owe'
-                  }`;
+                  const statusLabel = split.settled ? 'settled' : isTheyOweMe ? 'owed' : 'due';
+                  splitBadgeText = `Split · ${formatINR(split.amount)} ${statusLabel}`;
+                  splitTooltip = `Split with ${personName} · ${formatINR(split.amount)} (${statusLabel})`;
                 } else {
                   const totalSplit = splits.reduce((sum, s) => sum + s.amount, 0);
                   isSplitSettled = splits.every(s => s.settled);
-                  splitBadgeText = `Split with ${splits.length} people · ${formatINR(totalSplit)} owed ${
-                    isSplitSettled ? '(Settled)' : ''
+                  splitBadgeText = `Split (${splits.length}) · ${formatINR(totalSplit)} ${
+                    isSplitSettled ? 'settled' : 'owed'
                   }`;
                   splitTooltip = splits
                     .map(
@@ -86,7 +92,23 @@ export const RecentTransactions: React.FC = () => {
               }
 
               return (
-                <div key={tx.id} className="py-3 flex items-center justify-between gap-3">
+                <div
+                  key={tx.id}
+                  onClick={() => onEditTransaction?.(tx)}
+                  className={`py-3 flex items-center justify-between gap-3 rounded-2xl px-2 -mx-2 transition-all ${
+                    onEditTransaction
+                      ? 'cursor-pointer hover:bg-slate-50/80 dark:hover:bg-[#1A2130]/60 active:scale-[0.99]'
+                      : ''
+                  }`}
+                  role={onEditTransaction ? 'button' : undefined}
+                  tabIndex={onEditTransaction ? 0 : undefined}
+                  onKeyDown={e => {
+                    if (onEditTransaction && (e.key === 'Enter' || e.key === ' ')) {
+                      e.preventDefault();
+                      onEditTransaction(tx);
+                    }
+                  }}
+                >
                   <div className="flex items-center gap-3 min-w-0">
                     <div
                       className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"

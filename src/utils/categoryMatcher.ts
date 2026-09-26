@@ -50,7 +50,7 @@ export const DEFAULT_CATEGORY_RULES: KeywordRule[] = [
     category: 'Bills & Utilities',
     keywords: [
       'bescom', 'tata power', 'adani electricity', 'cesc', 'bses', 'mahadiscom',
-      'airtel', 'jio', 'vi', 'vodafone', 'bsnl', 'act fibernet', 'hathway', 'tata play',
+      'airtel', 'jio', 'vi recharge', 'vodafone idea', 'vodafone', 'bsnl', 'act fibernet', 'hathway', 'tata play',
       'dishtv', 'electricity', 'water board', 'gas', 'indane', 'hp gas', 'bharat gas',
       'piped gas', 'recharge', 'broadband', 'wifi', 'utility', 'maintenance'
     ],
@@ -143,9 +143,10 @@ export function suggestCategory(description: string, defaultFallback = 'Others')
 
   for (const rule of DEFAULT_CATEGORY_RULES) {
     for (const kw of rule.keywords) {
-      // Check whole word or substring
-      const regex = new RegExp(`\\b${kw}\\b`, 'i');
-      if (regex.test(cleanText) || cleanText.includes(kw)) {
+      // Check whole word or phrase with word boundaries
+      const escapedKw = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`\\b${escapedKw}\\b`, 'i');
+      if (regex.test(cleanText)) {
         return {
           category: rule.category,
           suggestedType: rule.suggestedType,

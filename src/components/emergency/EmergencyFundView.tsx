@@ -35,7 +35,7 @@ export const EmergencyFundView: React.FC = () => {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
       {/* Top Banner & Runway Meter: Mineral Card with Gold Reserve Highlight */}
-      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] text-slate-900 dark:text-white p-6 sm:p-8 border border-slate-200/90 dark:border-[#202836] shadow-sm">
+      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] text-slate-900 dark:text-white p-4 sm:p-8 border border-slate-200/90 dark:border-[#202836] shadow-sm">
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
@@ -116,6 +116,7 @@ export const EmergencyFundView: React.FC = () => {
                 </label>
                 <input
                   type="number"
+                  inputMode="decimal"
                   value={manualTarget}
                   onChange={e => setManualTarget(e.target.value)}
                   placeholder="e.g. 360000"

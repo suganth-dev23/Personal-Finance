@@ -122,6 +122,7 @@ export const DreamModal: React.FC<DreamModalProps> = ({
             <input
               type="number"
               step="100"
+              inputMode="decimal"
               required
               value={targetAmount}
               onChange={e => setTargetAmount(e.target.value)}
@@ -157,6 +158,7 @@ export const DreamModal: React.FC<DreamModalProps> = ({
               </label>
               <input
                 type="number"
+                inputMode="decimal"
                 value={initialSaved}
                 onChange={e => setInitialSaved(e.target.value)}
                 placeholder="0.00"

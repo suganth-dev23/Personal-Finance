@@ -8,7 +8,6 @@ import {
 } from 'recharts';
 import { useFinance } from '../../context/FinanceContext';
 import { formatINR, formatCompactINR } from '../../utils/currency';
-import { IconRenderer } from '../common/IconRenderer';
 
 const PALETTE_FALLBACK = [
   '#10B981', // Emerald
@@ -25,6 +24,9 @@ export const CategoryExpenseChart: React.FC = () => {
   const { categorySpendingThisMonth, currentMonthExpense } = useFinance();
 
   const expenseCategories = categorySpendingThisMonth.filter(c => c.spent > 0);
+  const otherCategories = expenseCategories.slice(5);
+  const otherSpent = otherCategories.reduce((sum, c) => sum + c.spent, 0);
+  const otherPct = currentMonthExpense > 0 ? (otherSpent / currentMonthExpense) * 100 : 0;
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -51,7 +53,7 @@ export const CategoryExpenseChart: React.FC = () => {
   };
 
   return (
-    <div className="bg-white dark:bg-[#131822] rounded-3xl p-6 shadow-xs border border-slate-200/90 dark:border-[#202836] flex flex-col h-full">
+    <div className="bg-white dark:bg-[#131822] rounded-3xl p-4 sm:p-6 shadow-xs border border-slate-200/90 dark:border-[#202836] flex flex-col h-full">
       <div className="flex items-center justify-between mb-2">
         <div>
           <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
@@ -132,6 +134,25 @@ export const CategoryExpenseChart: React.FC = () => {
                 </div>
               );
             })}
+
+            {otherCategories.length > 0 && (
+              <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-100 dark:border-[#202836]">
+                <div className="flex items-center gap-2 truncate">
+                  <span className="w-2.5 h-2.5 rounded-full flex-shrink-0 bg-slate-400 dark:bg-slate-500" />
+                  <span className="font-medium text-slate-500 dark:text-slate-400 truncate">
+                    Other ({otherCategories.length})
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0 font-numeric">
+                  <span className="font-semibold text-slate-700 dark:text-slate-300">
+                    {formatINR(otherSpent)}
+                  </span>
+                  <span className="text-[11px] text-slate-400 w-9 text-right font-medium">
+                    {otherPct.toFixed(0)}%
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

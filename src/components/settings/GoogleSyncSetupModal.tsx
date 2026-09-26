@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Modal } from '../common/Modal';
 import { googleAuthService } from '../../services/googleAuth';
 import { ExternalLink, Copy, Check, Cloud, Key, ShieldCheck } from 'lucide-react';
+import { copyToClipboard } from '../../utils/clipboard';
 
 interface GoogleSyncSetupModalProps {
   isOpen: boolean;
@@ -20,10 +21,12 @@ export const GoogleSyncSetupModal: React.FC<GoogleSyncSetupModalProps> = ({
 
   const currentOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173';
 
-  const handleCopyOrigin = () => {
-    navigator.clipboard.writeText(currentOrigin);
-    setCopiedOrigin(true);
-    setTimeout(() => setCopiedOrigin(false), 2000);
+  const handleCopyOrigin = async () => {
+    const success = await copyToClipboard(currentOrigin);
+    if (success) {
+      setCopiedOrigin(true);
+      setTimeout(() => setCopiedOrigin(false), 2000);
+    }
   };
 
   const handleSave = (e: React.FormEvent) => {

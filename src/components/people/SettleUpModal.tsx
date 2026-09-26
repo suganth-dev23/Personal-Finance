@@ -43,7 +43,10 @@ export const SettleUpModal: React.FC<SettleUpModalProps> = ({
   const contactNet = contact ? balanceMap.get(contact.id) || 0 : 0;
   // If contact owes me (net > 0), they repay me -> Bank Transaction is a CREDIT
   // If I owe contact (net < 0), I repay them -> Bank Transaction is a DEBIT
-  const isTheyOweMe = contactNet > 0;
+  // CRITICAL: If editing an existing settlement, preserve initialSettlement.direction so 0 balance doesn't flip it!
+  const isTheyOweMe = initialSettlement
+    ? (initialSettlement.direction ? initialSettlement.direction === 'they_owe_me' : contactNet >= 0)
+    : (contactNet !== 0 ? contactNet > 0 : true);
   const expectedTxType: TransactionType = isTheyOweMe ? 'credit' : 'debit';
 
   useEffect(() => {
@@ -132,7 +135,7 @@ export const SettleUpModal: React.FC<SettleUpModalProps> = ({
       return;
     }
 
-    const settlementDirection = isTheyOweMe ? 'they_owe_me' : 'i_owe_them';
+    const settlementDirection = initialSettlement?.direction || (isTheyOweMe ? 'they_owe_me' : 'i_owe_them');
 
     if (initialSettlement) {
       updateSettlement(initialSettlement.id, {
@@ -192,6 +195,7 @@ export const SettleUpModal: React.FC<SettleUpModalProps> = ({
             <input
               type="number"
               step="0.01"
+              inputMode="decimal"
               required
               value={amount}
               onChange={e => setAmount(e.target.value)}

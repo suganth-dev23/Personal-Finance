@@ -65,7 +65,19 @@ export function useCashFlowRunway(
     let statusLabel = 'Healthy Runway';
     let statusColor = 'text-emerald-600 dark:text-emerald-400';
 
-    if (averageMonthlyExpense === 0 && liquidBalance === 0) {
+    if (currentBalance < 0) {
+      if (netMonthlyCashFlow > 0) {
+        runwayMonths = Number((Math.abs(currentBalance) / netMonthlyCashFlow).toFixed(1));
+        status = 'moderate';
+        statusLabel = `Overdraft (~${runwayMonths}mo to clear)`;
+        statusColor = 'text-amber-600 dark:text-amber-400';
+      } else {
+        runwayMonths = 0;
+        status = 'critical';
+        statusLabel = 'Overdraft (Deficit / Burn)';
+        statusColor = 'text-rose-600 dark:text-rose-400';
+      }
+    } else if (averageMonthlyExpense === 0 && liquidBalance === 0) {
       status = 'moderate';
       statusLabel = 'No Activity';
       statusColor = 'text-slate-500';

@@ -273,7 +273,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
       {/* Hero Overview: Mineral Card with Gold Ledger Highlight */}
-      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] text-slate-900 dark:text-white p-6 sm:p-8 border border-slate-200/90 dark:border-[#202836] shadow-sm">
+      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] text-slate-900 dark:text-white p-4 sm:p-8 border border-slate-200/90 dark:border-[#202836] shadow-sm">
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
@@ -305,18 +305,18 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
             <button
               onClick={exportToCSV}
-              className="inline-flex items-center gap-1.5 px-4 py-3 bg-slate-100 dark:bg-[#171E2A] hover:bg-slate-200 dark:hover:bg-[#202836] text-slate-700 dark:text-slate-300 rounded-xl text-xs sm:text-sm font-bold transition-colors border border-slate-200/80 dark:border-[#202836]"
+              className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-3 bg-slate-100 dark:bg-[#171E2A] hover:bg-slate-200 dark:hover:bg-[#202836] text-slate-700 dark:text-slate-300 rounded-xl text-xs sm:text-sm font-bold transition-colors border border-slate-200/80 dark:border-[#202836]"
               title="Export filtered transactions to CSV"
             >
               <Download className="h-4 w-4" />
-              <span>Export CSV</span>
+              <span className="hidden xs:inline">Export CSV</span>
             </button>
             <button
               onClick={onOpenAddModal}
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-3 text-sm font-bold text-slate-950 shadow-sm hover:from-amber-400 hover:to-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 dark:focus:ring-offset-slate-900 transition-all active:scale-[0.98]"
+              className="hidden sm:inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-3 text-sm font-bold text-slate-950 shadow-sm hover:from-amber-400 hover:to-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 dark:focus:ring-offset-slate-900 transition-all active:scale-[0.98]"
             >
               <Plus className="h-4 w-4 stroke-[2.5]" />
               <span>New Transaction</span>
@@ -325,31 +325,31 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
         </div>
 
         {/* 4-column summary strip */}
-        <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-slate-200/80 dark:border-[#202836]">
-          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
-            <span className="text-xs text-slate-500 dark:text-slate-400">Total Inflow</span>
-            <p className="text-lg font-bold font-numeric text-emerald-600 dark:text-emerald-400 mt-0.5">
+        <div className="mt-4 sm:mt-6 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 pt-4 sm:pt-6 border-t border-slate-200/80 dark:border-[#202836]">
+          <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+            <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">Total Inflow</span>
+            <p className="text-sm sm:text-lg font-bold font-numeric text-emerald-600 dark:text-emerald-400 mt-0.5">
               +{formatINR(filteredIncome)}
             </p>
           </div>
 
-          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
-            <span className="text-xs text-slate-500 dark:text-slate-400">Total Outflow</span>
-            <p className="text-lg font-bold font-numeric text-rose-600 dark:text-rose-400 mt-0.5">
+          <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+            <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">Total Outflow</span>
+            <p className="text-sm sm:text-lg font-bold font-numeric text-rose-600 dark:text-rose-400 mt-0.5">
               -{formatINR(filteredExpense)}
             </p>
           </div>
 
-          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
-            <span className="text-xs text-slate-500 dark:text-slate-400">Entries Shown</span>
-            <p className="text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">
+          <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+            <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">Entries Shown</span>
+            <p className="text-sm sm:text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">
               {filteredTransactions.length}
             </p>
           </div>
 
-          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
-            <span className="text-xs text-slate-500 dark:text-slate-400">Ledger Velocity</span>
-            <p className={`text-lg font-bold font-numeric mt-0.5 ${
+          <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+            <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">Ledger Velocity</span>
+            <p className={`text-sm sm:text-lg font-bold font-numeric mt-0.5 ${
               filteredNet >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
             }`}>
               {filteredNet >= 0 ? '+' : ''}{formatINR(filteredNet)}
@@ -361,10 +361,10 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
       {/* Section Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">
+          <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight">
             All Transactions
           </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
             Search, filter, or group by month &amp; year
           </p>
         </div>
@@ -374,7 +374,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
       </div>
 
       {/* Filter & Search Bar */}
-      <div className="bg-white dark:bg-[#131822] rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-200/90 dark:border-[#202836] space-y-4">
+      <div className="bg-white dark:bg-[#131822] rounded-3xl p-3.5 sm:p-6 shadow-sm border border-slate-200/90 dark:border-[#202836] space-y-3 sm:space-y-4">
         {/* Search */}
         <div className="relative">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />

@@ -146,6 +146,7 @@ export const RecurringPaymentModal: React.FC<RecurringPaymentModalProps> = ({
               <input
                 type="number"
                 step="any"
+                inputMode="decimal"
                 required
                 value={amountStr}
                 onChange={e => setAmountStr(e.target.value)}

@@ -8,7 +8,7 @@ export const AIInsightsWidget: React.FC = () => {
   const latestReport = aiReports[0];
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] border border-slate-200/90 dark:border-[#202836] p-6 shadow-xs">
+    <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] border border-slate-200/90 dark:border-[#202836] p-4 sm:p-6 shadow-xs">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
         {/* Left identity cluster */}
         <div className="flex items-start gap-3.5 max-w-sm shrink-0">

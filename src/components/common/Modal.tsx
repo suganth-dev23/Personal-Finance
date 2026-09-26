@@ -70,7 +70,7 @@ export const Modal: React.FC<ModalProps> = ({
   }[maxWidth];
 
   const modalContent = (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 md:p-6 overflow-hidden">
+    <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 md:p-6 overflow-hidden">
       {/* Backdrop with fade transition */}
       <div
         className={`fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-200 ease-out ${
@@ -79,32 +79,36 @@ export const Modal: React.FC<ModalProps> = ({
         onClick={onClose}
       />
 
-      {/* Modal Dialog with scale & fade transition */}
+      {/* Modal Dialog: Bottom-sheet on mobile, centered modal on desktop */}
       <div
-        className={`relative w-full ${maxWidthClasses} bg-white dark:bg-[#131822] rounded-3xl shadow-2xl border border-slate-200/90 dark:border-[#202836] flex flex-col max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3.5rem)] overflow-hidden z-10 transition-all duration-200 ease-out transform my-auto ${
+        className={`relative w-full ${maxWidthClasses} bg-white dark:bg-[#131822] rounded-t-3xl sm:rounded-3xl shadow-2xl border-t sm:border border-slate-200/90 dark:border-[#202836] flex flex-col max-h-[92dvh] sm:max-h-[calc(100dvh-3.5rem)] overflow-hidden z-10 transition-all duration-250 ease-out transform ${
           isAnimatingIn
             ? 'opacity-100 scale-100 translate-y-0'
-            : 'opacity-0 scale-95 translate-y-2'
+            : 'opacity-0 sm:scale-95 translate-y-12 sm:translate-y-2'
         }`}
       >
+        {/* Mobile Drag Indicator */}
+        <div className="sm:hidden w-10 h-1 rounded-full bg-slate-300 dark:bg-[#202836] mx-auto mt-2.5 -mb-2 shrink-0" />
+
         {/* Header */}
-        <div className="shrink-0 flex items-start justify-between p-5 sm:p-6 border-b border-slate-100 dark:border-[#202836]">
+        <div className="shrink-0 flex items-start justify-between p-4 sm:p-6 border-b border-slate-100 dark:border-[#202836]">
           <div>
-            <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight">{title}</h3>
+            <h3 className="text-base sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-tight">{title}</h3>
             {subtitle && (
-              <p className="mt-1 text-xs sm:text-sm text-slate-500 dark:text-slate-400">{subtitle}</p>
+              <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-slate-500 dark:text-slate-400">{subtitle}</p>
             )}
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#171E2A] transition-colors active:scale-95 shrink-0"
+            aria-label="Close modal"
+            className="p-1.5 sm:p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#171E2A] transition-colors active:scale-95 shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Body */}
-        <div className="p-5 sm:p-6 overflow-y-auto flex-1 overscroll-contain">
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1 overscroll-contain">
           {children}
         </div>
       </div>

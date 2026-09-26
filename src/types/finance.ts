@@ -43,6 +43,12 @@ export interface SettlementRecord {
   // Direction of this settlement from app owner's perspective:
   // 'they_owe_me' = contact paid user back; 'i_owe_them' = user paid contact back
   direction?: OwedDirection;
+  // Tracks all splits reconciled by this settlement (multi-split support)
+  reconciledSplits?: Array<{
+    transactionId: string;
+    splitEntryId: string;
+    amount: number;
+  }>;
 }
 
 export interface ContactBalance {

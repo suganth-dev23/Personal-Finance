@@ -30,6 +30,19 @@ import {
   Landmark,
   CircleDollarSign,
   Tag,
+  PieChart,
+  Award,
+  Target,
+  Trophy,
+  Shield,
+  Crown,
+  Layers,
+  Gem,
+  Flame,
+  Receipt,
+  CheckCircle2,
+  Users,
+  CloudUpload,
 } from 'lucide-react';
 
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -63,6 +76,19 @@ const ICON_MAP: Record<string, React.ElementType> = {
   Landmark,
   CircleDollarSign,
   Tag,
+  PieChart,
+  Award,
+  Target,
+  Trophy,
+  Shield,
+  Crown,
+  Layers,
+  Gem,
+  Flame,
+  Receipt,
+  CheckCircle2,
+  Users,
+  CloudUpload,
 };
 
 interface IconRendererProps {

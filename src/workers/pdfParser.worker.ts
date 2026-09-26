@@ -78,10 +78,13 @@ export function extractTransactionsFromPDFLines(lines: string[]): StagedTransact
     if (matches.length === 0) return;
 
     let type: TransactionType = 'debit';
-    const isCr = /\b(CR|Credit|Deposit|Salary|Refund|Cashback|Direct Dep|ACH CR|NEFT CR|RTGS CR|UPI CR|Interest|Dividend|Received from)\b/i.test(line);
-    const isDr = /\b(DR|Debit|Withdrawal|Wdl|Paid to|POS|Purchase)\b/i.test(line);
+    const isCreditCardPayment = /\b(credit\s*card|cc\s*bill|cc\s*payment|card\s*payment|billdesk|autopay\s*cc)\b/i.test(line);
+    const isCr = !isCreditCardPayment && /\b(CR|Credit|Deposit|Salary|Refund|Cashback|Direct Dep|ACH CR|NEFT CR|RTGS CR|UPI CR|Interest|Dividend|Received from)\b/i.test(line);
+    const isDr = isCreditCardPayment || /\b(DR|Debit|Withdrawal|Wdl|Paid to|POS|Purchase)\b/i.test(line);
 
-    if (matches[0].isCr || (isCr && !isDr)) {
+    if (isCreditCardPayment) {
+      type = 'debit';
+    } else if (matches[0].isCr || (isCr && !isDr)) {
       type = 'credit';
     } else if (matches[0].isDr || isDr) {
       type = 'debit';
@@ -115,12 +118,20 @@ export function extractTransactionsFromPDFLines(lines: string[]): StagedTransact
     const categoryMatch = suggestCategory(descCandidate);
     const paymentMethod: PaymentMethod = detectPaymentMethod(descCandidate);
 
+    const resolvedType: TransactionType = isCreditCardPayment
+      ? 'debit'
+      : (categoryMatch.suggestedType === 'credit' && !isDr)
+      ? 'credit'
+      : (categoryMatch.suggestedType === 'debit' && !isCr)
+      ? 'debit'
+      : type;
+
     rowIndex++;
     transactions.push({
       tempId: `staged-pdf-${Date.now()}-${rowIndex}`,
       date: normalizedDate,
       amount: Number(amount.toFixed(2)),
-      type: (categoryMatch.suggestedType === 'credit' && !isDr) ? 'credit' : type,
+      type: resolvedType,
       category: categoryMatch.category,
       paymentMethod,
       description: descCandidate,

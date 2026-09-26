@@ -10,17 +10,16 @@ import {
   CheckCircle,
   AlertCircle,
   Sparkles,
-  Info,
   Cloud,
   CloudOff,
-  ExternalLink,
-  Smartphone,
+  UploadCloud,
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { AIProvider } from '../../types/finance';
 import { DEFAULT_AI_MODELS } from '../../services/aiService';
 import { googleAuthService } from '../../services/googleAuth';
 import { GoogleSyncSetupModal } from './GoogleSyncSetupModal';
+import { StatementImportView } from '../import/StatementImportView';
 
 export const SettingsView: React.FC = () => {
   const {
@@ -43,10 +42,14 @@ export const SettingsView: React.FC = () => {
     triggerSync,
     connectDrive,
     disconnectDrive,
+    currentView,
   } = useFinance();
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  const [activeTab, setActiveTab] = useState<'settings' | 'import'>(
+    currentView === 'import' ? 'import' : 'settings'
+  );
   const [provider, setProvider] = useState<AIProvider>(aiSettings.provider || 'gemini');
   const [apiKey, setApiKey] = useState(aiSettings.apiKey || '');
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -104,8 +107,40 @@ export const SettingsView: React.FC = () => {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
-      {/* Privacy Guarantee Header: Mineral Card with Gold Security Highlight */}
-      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] text-slate-900 dark:text-white p-6 sm:p-8 border border-slate-200/90 dark:border-[#202836] shadow-sm">
+      {/* Settings vs Statement Import Tabs */}
+      <div className="flex items-center p-1 bg-slate-100 dark:bg-[#171E2A] rounded-2xl border border-slate-200/80 dark:border-[#202836] max-w-md shadow-xs">
+        <button
+          type="button"
+          onClick={() => setActiveTab('settings')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+            activeTab === 'settings'
+              ? 'bg-white dark:bg-[#202836] text-slate-900 dark:text-[#F5B742] shadow-xs'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+          }`}
+        >
+          <SettingsIcon className="w-4 h-4" />
+          <span>General & Sync</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('import')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+            activeTab === 'import'
+              ? 'bg-white dark:bg-[#202836] text-slate-900 dark:text-[#F5B742] shadow-xs'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+          }`}
+        >
+          <UploadCloud className="w-4 h-4" />
+          <span>Statement Import</span>
+        </button>
+      </div>
+
+      {activeTab === 'import' ? (
+        <StatementImportView />
+      ) : (
+        <>
+          {/* Privacy Guarantee Header: Mineral Card with Gold Security Highlight */}
+          <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] text-slate-900 dark:text-white p-6 sm:p-8 border border-slate-200/90 dark:border-[#202836] shadow-sm">
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
@@ -461,6 +496,27 @@ export const SettingsView: React.FC = () => {
               </button>
             </div>
           </div>
+
+          {/* Bank & Credit Card Statement Import */}
+          <div className="sm:col-span-2 p-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div>
+              <h4 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                <UploadCloud className="w-4 h-4 text-amber-500 dark:text-[#F5B742]" />
+                <span>Bank &amp; Credit Card Statement Import</span>
+              </h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Auto-parse and categorize statements from HDFC, SBI, ICICI, Axis &amp; UPI (CSV or PDF).
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setActiveTab('import')}
+              className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 rounded-xl text-xs font-bold transition-all active:scale-95 shadow-xs shrink-0"
+            >
+              <span>Open Statement Importer</span>
+              <UploadCloud className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
 
         {/* Reset / Demo options */}
@@ -500,6 +556,8 @@ export const SettingsView: React.FC = () => {
         isOpen={isSetupModalOpen}
         onClose={() => setIsSetupModalOpen(false)}
       />
+        </>
+      )}
     </div>
   );
 };

@@ -9,7 +9,6 @@ import {
   TrendingUp,
   Target,
   Sparkles,
-  UploadCloud,
   Settings,
   Moon,
   Sun,
@@ -25,7 +24,6 @@ interface NavItem {
   id: AppView;
   label: string;
   icon: React.ElementType;
-  badge?: string | number;
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -40,7 +38,6 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'dreams', label: 'Goals & Dreams', icon: Target },
   { id: 'badges', label: 'Achievements', icon: Trophy },
   { id: 'ai', label: 'AI Health Summary', icon: Sparkles },
-  { id: 'import', label: 'Import Statement', icon: UploadCloud },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
@@ -73,7 +70,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTx }) => {
         {/* Quick Balance Preview */}
         <div className="mt-4 p-3.5 bg-slate-50 dark:bg-[#171E2A]/70 rounded-2xl border border-slate-100 dark:border-[#202836]">
           <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-            Total net worth
+            Bank &amp; Cash (Liquid)
           </p>
           <p className="text-base font-bold font-numeric text-slate-900 dark:text-white mt-0.5">
             {formatINR(totalBalance)}

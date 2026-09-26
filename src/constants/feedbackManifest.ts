@@ -102,6 +102,12 @@ export function mapFinanceEventToFeedback(event: FinanceEvent): ToastPayload | n
         message: event.badge.description,
         triggerConfetti: () => goldShower(),
       };
+    case 'recurring_overdue_detected':
+      return {
+        variant: 'warning',
+        title: event.count === 1 ? `Payment Overdue: ${event.paymentName || 'Bill'}` : `${event.count} Bills Overdue`,
+        message: event.count === 1 ? 'Please review your recurring commitments' : 'You have overdue recurring commitments requiring attention',
+      };
     default:
       return null;
   }

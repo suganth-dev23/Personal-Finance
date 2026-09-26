@@ -34,10 +34,10 @@ export const ViewTransition: React.FC<ViewTransitionProps> = ({ viewKey, childre
   return (
     <div
       key={displayKey}
-      className={`transition-opacity duration-200 ease-out ${
+      className={`transition-all duration-200 ease-out transform ${
         isTransitioning
-          ? 'opacity-0'
-          : 'opacity-100'
+          ? 'opacity-0 translate-y-2 scale-[0.995]'
+          : 'opacity-100 translate-y-0 scale-100'
       }`}
     >
       {children}

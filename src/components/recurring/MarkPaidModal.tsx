@@ -105,6 +105,7 @@ export const MarkPaidModal: React.FC<MarkPaidModalProps> = ({
             <input
               type="number"
               step="any"
+              inputMode="decimal"
               required
               value={amountStr}
               onChange={e => setAmountStr(e.target.value)}

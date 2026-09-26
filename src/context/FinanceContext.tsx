@@ -70,7 +70,8 @@ export type FinanceEvent =
   | { type: 'investment_updated'; totalValue: number }
   | { type: 'streak_continued'; days: number }
   | { type: 'streak_broken' }
-  | { type: 'badge_earned'; badge: { id: string; name: string; description: string; icon: string } };
+  | { type: 'badge_earned'; badge: { id: string; name: string; description: string; icon: string } }
+  | { type: 'recurring_overdue_detected'; count: number; paymentName?: string };
 
 export type FinanceEventListener = (event: FinanceEvent) => void;
 
@@ -99,7 +100,7 @@ interface FinanceContextType {
   aiSettings: AISettings;
   aiReports: AIHealthReport[];
   notRecurringTxIds: Set<string>;
-  toggleNotRecurring: (txId: string) => void;
+  toggleNotRecurring: (txId: string | string[]) => void;
 
   // Google Drive Cross-Device Sync
   syncStatus: SyncStatus;
@@ -200,6 +201,14 @@ interface FinanceContextType {
 
   // Calculated Metrics
   totalBalance: number;
+  totalNetWorth: number;
+  netSharedBalance: number;
+  peerBalanceSummary: {
+    totalOwedToMe: number;
+    totalIOwe: number;
+    net: number;
+    displayText: string;
+  };
   currentMonthIncome: number;
   currentMonthExpense: number;
   currentMonthNet: number;
@@ -643,13 +652,15 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, [darkMode, notRecurringTxIds, isInitialized]);
 
-  const toggleNotRecurring = (txId: string) => {
+  const toggleNotRecurring = (txId: string | string[]) => {
     setNotRecurringTxIds(prev => {
       const next = new Set(prev);
-      if (next.has(txId)) {
-        next.delete(txId);
+      const ids = Array.isArray(txId) ? txId : [txId];
+      const allPresent = ids.every(id => next.has(id));
+      if (allPresent) {
+        ids.forEach(id => next.delete(id));
       } else {
-        next.add(txId);
+        ids.forEach(id => next.add(id));
       }
       return next;
     });
@@ -702,17 +713,55 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     addTombstone('transactions', id);
     transactionsRef.current = transactionsRef.current.filter(t => t.id !== id);
     setTransactions(prev => prev.filter(t => t.id !== id));
-    // Clean up any auto-settlements tied to this transaction & tombstone them for Drive sync
-    const tiedSettlements = settlementsRef.current.filter(s => s.sourceTransactionId === id);
-    tiedSettlements.forEach(s => addTombstone('settlements', s.id));
-    settlementsRef.current = settlementsRef.current
-      .filter(s => s.sourceTransactionId !== id)
-      .map(s => s.linkedTransactionId === id ? { ...s, linkedTransactionId: undefined } : s);
-    setSettlements(prev =>
-      prev
-        .filter(s => s.sourceTransactionId !== id)
-        .map(s => s.linkedTransactionId === id ? { ...s, linkedTransactionId: undefined } : s)
-    );
+
+    // Clean up or detach settlements tied to this transaction
+    const now = new Date().toISOString();
+    const updatedSettlements: SettlementRecord[] = [];
+
+    settlementsRef.current.forEach(s => {
+      const linkedTxId = s.linkedTransactionId === id ? undefined : s.linkedTransactionId;
+
+      // Check multi-split reconciliation
+      if (s.reconciledSplits && s.reconciledSplits.length > 0) {
+        const remainingSplits = s.reconciledSplits.filter(r => r.transactionId !== id);
+        if (remainingSplits.length === 0 && (s.sourceTransactionId === id || !s.sourceTransactionId)) {
+          // All reconciled splits belonged to this deleted transaction -> delete settlement
+          addTombstone('settlements', s.id);
+          return;
+        }
+        // Partial removal: some splits remain on other transactions!
+        const nextSourceTx = s.sourceTransactionId === id
+          ? (remainingSplits[0]?.transactionId || undefined)
+          : s.sourceTransactionId;
+        const nextSourceSplit = s.sourceTransactionId === id
+          ? (remainingSplits[0]?.splitEntryId || undefined)
+          : s.sourceSplitEntryId;
+
+        updatedSettlements.push({
+          ...s,
+          sourceTransactionId: nextSourceTx,
+          sourceSplitEntryId: nextSourceSplit,
+          linkedTransactionId: linkedTxId,
+          reconciledSplits: remainingSplits.length > 0 ? remainingSplits : undefined,
+          updatedAt: now,
+        });
+        return;
+      }
+
+      // Legacy single-split settlement
+      if (s.sourceTransactionId === id) {
+        addTombstone('settlements', s.id);
+        return;
+      }
+
+      updatedSettlements.push({
+        ...s,
+        linkedTransactionId: linkedTxId,
+      });
+    });
+
+    settlementsRef.current = updatedSettlements;
+    setSettlements(updatedSettlements);
     emitFinanceEvent({ type: 'transaction_deleted', count: 1 });
   };
 
@@ -721,18 +770,50 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const set = new Set(ids);
     transactionsRef.current = transactionsRef.current.filter(t => !set.has(t.id));
     setTransactions(prev => prev.filter(t => !set.has(t.id)));
-    const tiedSettlements = settlementsRef.current.filter(
-      s => s.sourceTransactionId && set.has(s.sourceTransactionId)
-    );
-    tiedSettlements.forEach(s => addTombstone('settlements', s.id));
-    settlementsRef.current = settlementsRef.current
-      .filter(s => !s.sourceTransactionId || !set.has(s.sourceTransactionId))
-      .map(s => s.linkedTransactionId && set.has(s.linkedTransactionId) ? { ...s, linkedTransactionId: undefined } : s);
-    setSettlements(prev =>
-      prev
-        .filter(s => !s.sourceTransactionId || !set.has(s.sourceTransactionId))
-        .map(s => s.linkedTransactionId && set.has(s.linkedTransactionId) ? { ...s, linkedTransactionId: undefined } : s)
-    );
+
+    const now = new Date().toISOString();
+    const updatedSettlements: SettlementRecord[] = [];
+
+    settlementsRef.current.forEach(s => {
+      const linkedTxId = s.linkedTransactionId && set.has(s.linkedTransactionId) ? undefined : s.linkedTransactionId;
+
+      if (s.reconciledSplits && s.reconciledSplits.length > 0) {
+        const remainingSplits = s.reconciledSplits.filter(r => !set.has(r.transactionId));
+        if (remainingSplits.length === 0 && (s.sourceTransactionId ? set.has(s.sourceTransactionId) : true)) {
+          addTombstone('settlements', s.id);
+          return;
+        }
+        const nextSourceTx = s.sourceTransactionId && set.has(s.sourceTransactionId)
+          ? (remainingSplits[0]?.transactionId || undefined)
+          : s.sourceTransactionId;
+        const nextSourceSplit = s.sourceTransactionId && set.has(s.sourceTransactionId)
+          ? (remainingSplits[0]?.splitEntryId || undefined)
+          : s.sourceSplitEntryId;
+
+        updatedSettlements.push({
+          ...s,
+          sourceTransactionId: nextSourceTx,
+          sourceSplitEntryId: nextSourceSplit,
+          linkedTransactionId: linkedTxId,
+          reconciledSplits: remainingSplits.length > 0 ? remainingSplits : undefined,
+          updatedAt: now,
+        });
+        return;
+      }
+
+      if (s.sourceTransactionId && set.has(s.sourceTransactionId)) {
+        addTombstone('settlements', s.id);
+        return;
+      }
+
+      updatedSettlements.push({
+        ...s,
+        linkedTransactionId: linkedTxId,
+      });
+    });
+
+    settlementsRef.current = updatedSettlements;
+    setSettlements(updatedSettlements);
     emitFinanceEvent({ type: 'transaction_deleted', count: ids.length });
   };
 
@@ -764,6 +845,9 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     addTombstone('contacts', id);
     contactsRef.current = contactsRef.current.filter(c => c.id !== id);
     setContacts(prev => prev.filter(c => c.id !== id));
+    // Tombstone and remove all settlements tied to this contact for sync integrity
+    const tiedSettlements = settlementsRef.current.filter(s => s.contactId === id);
+    tiedSettlements.forEach(s => addTombstone('settlements', s.id));
     settlementsRef.current = settlementsRef.current.filter(s => s.contactId !== id);
     setSettlements(prev => prev.filter(s => s.contactId !== id));
     const now = new Date().toISOString();
@@ -796,6 +880,66 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     direction?: OwedDirection
   ): SettlementRecord => {
     const now = new Date().toISOString();
+    const resolvedDirection: OwedDirection = direction || 'they_owe_me';
+
+    // If this is a contact-level settlement (no sourceTransactionId),
+    // automatically reconcile open splits for this contact in FIFO order!
+    const reconciledSplits: Array<{ transactionId: string; splitEntryId: string; amount: number }> = [];
+
+    if (!sourceTransactionId && amount > 0) {
+      let remainingToReconcile = amount;
+      let firstReconciledTxId: string | undefined = undefined;
+      let firstReconciledSplitId: string | undefined = undefined;
+
+      const updatedTxs = transactionsRef.current.map(t => {
+        if (!t.splitWith || !Array.isArray(t.splitWith) || remainingToReconcile <= 0) return t;
+        let txModified = false;
+        const updatedSplits = t.splitWith.map(entry => {
+          if (
+            entry.contactId === contactId &&
+            entry.direction === resolvedDirection &&
+            !entry.settled &&
+            remainingToReconcile > 0
+          ) {
+            const currentSettled = entry.settledAmount || 0;
+            const openAmt = Math.max(0, entry.amount - currentSettled);
+            if (openAmt > 0) {
+              const allocation = Math.min(openAmt, remainingToReconcile);
+              const newSettledAmt = currentSettled + allocation;
+              const isFull = newSettledAmt >= entry.amount - 0.01;
+              remainingToReconcile -= allocation;
+              txModified = true;
+              reconciledSplits.push({
+                transactionId: t.id,
+                splitEntryId: entry.id,
+                amount: allocation,
+              });
+              if (!firstReconciledTxId) {
+                firstReconciledTxId = t.id;
+                firstReconciledSplitId = entry.id;
+              }
+              return {
+                ...entry,
+                settled: isFull,
+                settledAmount: Number(newSettledAmt.toFixed(2)),
+                linkedTransactionId: linkedTransactionId || entry.linkedTransactionId,
+              };
+            }
+          }
+          return entry;
+        });
+
+        return txModified ? { ...t, splitWith: updatedSplits, updatedAt: now } : t;
+      });
+
+      if (firstReconciledTxId) {
+        transactionsRef.current = updatedTxs;
+        setTransactions(updatedTxs);
+        sourceTransactionId = firstReconciledTxId;
+        sourceSplitEntryId = firstReconciledSplitId;
+      }
+    }
+
     const newSettlement: SettlementRecord = {
       id: `set-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       contactId,
@@ -807,7 +951,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       sourceTransactionId,
       sourceSplitEntryId,
       linkedTransactionId,
-      direction,
+      direction: resolvedDirection,
+      reconciledSplits: reconciledSplits.length > 0 ? reconciledSplits : undefined,
     };
     settlementsRef.current = [newSettlement, ...settlementsRef.current];
     setSettlements(prev => [newSettlement, ...prev]);
@@ -823,8 +968,57 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const deleteSettlement = (id: string) => {
     addTombstone('settlements', id);
+    const target = settlementsRef.current.find(s => s.id === id);
     settlementsRef.current = settlementsRef.current.filter(s => s.id !== id);
     setSettlements(prev => prev.filter(s => s.id !== id));
+
+    const now = new Date().toISOString();
+
+    // 1. If this settlement tracked multi-split reconciliations, restore all of them
+    if (target?.reconciledSplits && target.reconciledSplits.length > 0) {
+      const splitLookup = new Map<string, number>();
+      target.reconciledSplits.forEach(r => {
+        splitLookup.set(`${r.transactionId}:${r.splitEntryId}`, r.amount);
+      });
+
+      const updatedTxs = transactionsRef.current.map(t => {
+        if (!t.splitWith || !Array.isArray(t.splitWith)) return t;
+        let txModified = false;
+        const updatedSplits = t.splitWith.map(s => {
+          const key = `${t.id}:${s.id}`;
+          if (splitLookup.has(key)) {
+            txModified = true;
+            const reconciledAmt = splitLookup.get(key) || 0;
+            const currentSettled = s.settledAmount !== undefined ? s.settledAmount : s.amount;
+            const newSettledAmt = Math.max(0, currentSettled - reconciledAmt);
+            if (newSettledAmt <= 0.01) {
+              return { ...s, settled: false, settledAmount: undefined, linkedTransactionId: undefined };
+            } else {
+              return { ...s, settled: false, settledAmount: Number(newSettledAmt.toFixed(2)) };
+            }
+          }
+          return s;
+        });
+        return txModified ? { ...t, splitWith: updatedSplits, updatedAt: now } : t;
+      });
+
+      transactionsRef.current = updatedTxs;
+      setTransactions(updatedTxs);
+    } else if (target?.sourceTransactionId) {
+      // 2. Legacy fallback for single-split settlements
+      const updatedTxs = transactionsRef.current.map(t => {
+        if (t.id !== target.sourceTransactionId || !t.splitWith) return t;
+        const updatedSplits = t.splitWith.map(s => {
+          if (target.sourceSplitEntryId ? s.id === target.sourceSplitEntryId : true) {
+            return { ...s, settled: false, settledAmount: undefined, linkedTransactionId: undefined };
+          }
+          return s;
+        });
+        return { ...t, splitWith: updatedSplits, updatedAt: now };
+      });
+      transactionsRef.current = updatedTxs;
+      setTransactions(updatedTxs);
+    }
   };
 
   const updateSettlement = (id: string, updated: Partial<SettlementRecord>) => {
@@ -909,31 +1103,17 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       );
       updateTransaction(transactionId, { splitWith: updatedSplits, updatedAt: now });
 
-      // 2. Remove the auto-created settlement record
+      // 2. Remove the auto-created settlement record strictly matching this split entry
       const toDelete = settlements.find(
         s =>
           s.sourceTransactionId === transactionId &&
-          (s.sourceSplitEntryId === targetEntryId || !s.sourceSplitEntryId)
+          s.sourceSplitEntryId === targetEntryId
       );
       if (toDelete) {
         addTombstone('settlements', toDelete.id);
+        settlementsRef.current = settlementsRef.current.filter(s => s.id !== toDelete.id);
+        setSettlements(prev => prev.filter(s => s.id !== toDelete.id));
       }
-      settlementsRef.current = settlementsRef.current.filter(
-        s =>
-          !(
-            s.sourceTransactionId === transactionId &&
-            (s.sourceSplitEntryId === targetEntryId || !s.sourceSplitEntryId)
-          )
-      );
-      setSettlements(prev =>
-        prev.filter(
-          s =>
-            !(
-              s.sourceTransactionId === transactionId &&
-              (s.sourceSplitEntryId === targetEntryId || !s.sourceSplitEntryId)
-            )
-        )
-      );
       return undefined;
     }
   };
@@ -979,8 +1159,11 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const now = new Date().toISOString();
 
     if (options.settled) {
-      const finalSettledAmount =
+      const inputAmount =
         typeof options.settledAmount === 'number' ? options.settledAmount : targetEntry.amount;
+      if (inputAmount <= 0) return undefined;
+
+      const finalSettledAmount = Math.min(inputAmount, targetEntry.amount);
       const isFullSettlement = finalSettledAmount >= targetEntry.amount - 0.01;
 
       // 1. Update splitEntry on transaction
@@ -1057,31 +1240,17 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       );
       updateTransaction(transactionId, { splitWith: updatedSplits, updatedAt: now });
 
-      // Remove auto-created settlement record
+      // Remove auto-created settlement record strictly matching this splitEntryId
       const toDelete = settlements.find(
         s =>
           s.sourceTransactionId === transactionId &&
-          (s.sourceSplitEntryId === splitEntryId || !s.sourceSplitEntryId)
+          s.sourceSplitEntryId === splitEntryId
       );
       if (toDelete) {
         addTombstone('settlements', toDelete.id);
+        settlementsRef.current = settlementsRef.current.filter(s => s.id !== toDelete.id);
+        setSettlements(prev => prev.filter(s => s.id !== toDelete.id));
       }
-      settlementsRef.current = settlementsRef.current.filter(
-        s =>
-          !(
-            s.sourceTransactionId === transactionId &&
-            (s.sourceSplitEntryId === splitEntryId || !s.sourceSplitEntryId)
-          )
-      );
-      setSettlements(prev =>
-        prev.filter(
-          s =>
-            !(
-              s.sourceTransactionId === transactionId &&
-              (s.sourceSplitEntryId === splitEntryId || !s.sourceSplitEntryId)
-            )
-        )
-      );
       return undefined;
     }
   };
@@ -1674,40 +1843,62 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
       });
 
-      // Generic settlements for this contact (where !sourceTransactionId)
-      // These reduce open debts without overflowing into false negative balances
-      const genericSettlements = settlements.filter(
-        s => s.contactId === contact.id && !s.sourceTransactionId
-      );
-      genericSettlements.forEach(s => {
-        if (s.direction === 'they_owe_me') {
-          // Contact repaid user: reduce owedToMe
-          owedToMe = Math.max(0, owedToMe - s.amount);
-        } else if (s.direction === 'i_owe_them') {
-          // User repaid contact: reduce iOweThem
-          iOweThem = Math.max(0, iOweThem - s.amount);
-        } else {
-          // Fallback if direction was not stored (legacy records):
-          if (owedToMe >= iOweThem) {
-            const deduction = Math.min(owedToMe, s.amount);
+      // Process generic settlements and overpayment amounts for this contact
+      settlements
+        .filter(s => s.contactId === contact.id)
+        .forEach(s => {
+          let settlementApplicableAmount = 0;
+          if (!s.sourceTransactionId) {
+            settlementApplicableAmount = s.amount;
+          } else if (s.reconciledSplits && s.reconciledSplits.length > 0) {
+            const totalReconciled = s.reconciledSplits.reduce((sum, r) => sum + r.amount, 0);
+            const excess = Math.max(0, s.amount - totalReconciled);
+            settlementApplicableAmount = excess;
+          }
+
+          if (settlementApplicableAmount <= 0) {
+            if (s.date > lastUpdated) lastUpdated = s.date;
+            return;
+          }
+
+          if (s.direction === 'they_owe_me') {
+            // Contact repaid user: reduce owedToMe, excess overpayment becomes user owes contact
+            const deduction = Math.min(owedToMe, settlementApplicableAmount);
             owedToMe -= deduction;
-            const leftover = s.amount - deduction;
-            if (leftover > 0) {
-              iOweThem = Math.max(0, iOweThem - leftover);
+            const excess = settlementApplicableAmount - deduction;
+            if (excess > 0) {
+              iOweThem += excess;
+            }
+          } else if (s.direction === 'i_owe_them') {
+            // User repaid contact: reduce iOweThem, excess overpayment becomes contact owes user
+            const deduction = Math.min(iOweThem, settlementApplicableAmount);
+            iOweThem -= deduction;
+            const excess = settlementApplicableAmount - deduction;
+            if (excess > 0) {
+              owedToMe += excess;
             }
           } else {
-            const deduction = Math.min(iOweThem, s.amount);
-            iOweThem -= deduction;
-            const leftover = s.amount - deduction;
-            if (leftover > 0) {
-              owedToMe = Math.max(0, owedToMe - leftover);
+            // Fallback if direction was not stored (legacy records):
+            if (owedToMe >= iOweThem) {
+              const deduction = Math.min(owedToMe, settlementApplicableAmount);
+              owedToMe -= deduction;
+              const leftover = settlementApplicableAmount - deduction;
+              if (leftover > 0) {
+                iOweThem += leftover;
+              }
+            } else {
+              const deduction = Math.min(iOweThem, settlementApplicableAmount);
+              iOweThem -= deduction;
+              const leftover = settlementApplicableAmount - deduction;
+              if (leftover > 0) {
+                owedToMe += leftover;
+              }
             }
           }
-        }
-        if (s.date > lastUpdated) {
-          lastUpdated = s.date;
-        }
-      });
+          if (s.date > lastUpdated) {
+            lastUpdated = s.date;
+          }
+        });
 
       // True net balance: positive = they owe user; negative = user owes them
       const netAmount = owedToMe - iOweThem;
@@ -1767,6 +1958,35 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     return Number((namedIOwe + unnamedIOwe).toFixed(2));
   }, [contactBalances, transactions]);
+
+  const netSharedBalance = useMemo(() => {
+    return Number((totalOwedToMe - totalIOwe).toFixed(2));
+  }, [totalOwedToMe, totalIOwe]);
+
+  const totalNetWorth = useMemo(() => {
+    // Note: emergencyFund.currentSaved and totalGoalsSaved are held in bank/cash accounts
+    // and are already accounted for within totalBalance (credits - debits).
+    // Adding them here would double-count liquid savings.
+    const net = totalBalance + totalInvestmentValue + netSharedBalance;
+    return Number(net.toFixed(2));
+  }, [totalBalance, totalInvestmentValue, netSharedBalance]);
+
+  const peerBalanceSummary = useMemo(() => {
+    let displayText = 'Split accounts settled';
+    if (totalOwedToMe > 0 && totalIOwe > 0) {
+      displayText = `Friends owe ₹${totalOwedToMe.toLocaleString('en-IN')} · You owe ₹${totalIOwe.toLocaleString('en-IN')}`;
+    } else if (totalOwedToMe > 0) {
+      displayText = `Friends owe ₹${totalOwedToMe.toLocaleString('en-IN')}`;
+    } else if (totalIOwe > 0) {
+      displayText = `You owe ₹${totalIOwe.toLocaleString('en-IN')}`;
+    }
+    return {
+      totalOwedToMe,
+      totalIOwe,
+      net: netSharedBalance,
+      displayText,
+    };
+  }, [totalOwedToMe, totalIOwe, netSharedBalance]);
 
   const categorySpendingThisMonth = useMemo(() => {
     const spendMap: Record<string, number> = {};
@@ -1876,6 +2096,21 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     return { upcomingRecurringPayments: upcoming, overdueRecurringPayments: overdue };
   }, [recurringPayments, recurringPaymentLogs]);
+
+  // Overdue recurring payments alert on app load
+  const hasAlertedOverdueRef = useRef(false);
+  useEffect(() => {
+    if (!isInitialized || hasAlertedOverdueRef.current) return;
+    if (overdueRecurringPayments.length > 0) {
+      hasAlertedOverdueRef.current = true;
+      const first = overdueRecurringPayments[0];
+      emitFinanceEvent({
+        type: 'recurring_overdue_detected',
+        count: overdueRecurringPayments.length,
+        paymentName: first ? first.name : undefined,
+      });
+    }
+  }, [isInitialized, overdueRecurringPayments, emitFinanceEvent]);
 
   const getAggregatesForAI = (): FinancialAggregates => {
     const invBreakdownMap: Record<string, number> = {};
@@ -1997,6 +2232,9 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         exportBackupJSON,
         importBackupJSON,
         totalBalance,
+        totalNetWorth,
+        netSharedBalance,
+        peerBalanceSummary,
         currentMonthIncome,
         currentMonthExpense,
         currentMonthNet,

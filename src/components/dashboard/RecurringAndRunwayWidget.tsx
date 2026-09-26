@@ -17,7 +17,7 @@ export const CashFlowRunwayCard: React.FC = () => {
   const runway = useCashFlowRunway(transactions, totalBalance);
 
   return (
-    <div className="bg-white dark:bg-[#131822] rounded-3xl p-6 border border-slate-200/90 dark:border-[#202836] shadow-xs flex flex-col justify-between h-full space-y-4">
+    <div className="bg-white dark:bg-[#131822] rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-[#202836] shadow-xs flex flex-col justify-between h-full space-y-4">
       <div>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2.5">
@@ -104,7 +104,7 @@ export const RecurringBillsCard: React.FC = () => {
   const totalStreamCount = recurringExpenses.length + recurringIncomes.length;
 
   return (
-    <div className="bg-white dark:bg-[#131822] rounded-3xl p-6 border border-slate-200/90 dark:border-[#202836] shadow-xs flex flex-col justify-between h-full space-y-4">
+    <div className="bg-white dark:bg-[#131822] rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-[#202836] shadow-xs flex flex-col justify-between h-full space-y-4">
       <div>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2.5">
@@ -177,12 +177,13 @@ export const RecurringBillsCard: React.FC = () => {
                   </span>
                   <button
                     onClick={() => {
-                      if (item.transactionIds[0]) {
-                        toggleNotRecurring(item.transactionIds[0]);
+                      if (item.transactionIds && item.transactionIds.length > 0) {
+                        toggleNotRecurring(item.transactionIds);
                       }
                     }}
-                    className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-[10px] font-medium flex items-center gap-0.5"
+                    className="p-2 -m-1 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-[10px] font-medium gap-0.5 transition-colors"
                     title="Mark this transaction as not recurring"
+                    aria-label="Mark this transaction as not recurring"
                   >
                     <X className="w-3.5 h-3.5" />
                     <span className="hidden sm:inline">Not recurring</span>
@@ -220,12 +221,13 @@ export const RecurringBillsCard: React.FC = () => {
                   </span>
                   <button
                     onClick={() => {
-                      if (item.transactionIds[0]) {
-                        toggleNotRecurring(item.transactionIds[0]);
+                      if (item.transactionIds && item.transactionIds.length > 0) {
+                        toggleNotRecurring(item.transactionIds);
                       }
                     }}
-                    className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-[10px] font-medium flex items-center gap-0.5"
+                    className="p-2 -m-1 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-[10px] font-medium gap-0.5 transition-colors"
                     title="Mark this transaction as not recurring"
+                    aria-label="Mark this transaction as not recurring"
                   >
                     <X className="w-3.5 h-3.5" />
                     <span className="hidden sm:inline">Not recurring</span>

@@ -163,6 +163,7 @@ export const InvestmentModal: React.FC<InvestmentModalProps> = ({
             <input
               type="number"
               step="0.01"
+              inputMode="decimal"
               required
               value={investedAmount}
               onChange={e => setInvestedAmount(e.target.value)}
@@ -178,6 +179,7 @@ export const InvestmentModal: React.FC<InvestmentModalProps> = ({
             <input
               type="number"
               step="0.01"
+              inputMode="decimal"
               required
               value={currentValue}
               onChange={e => setCurrentValue(e.target.value)}
@@ -213,6 +215,7 @@ export const InvestmentModal: React.FC<InvestmentModalProps> = ({
             </label>
             <input
               type="number"
+              inputMode="decimal"
               value={sipAmount}
               onChange={e => setSipAmount(e.target.value)}
               placeholder="e.g. 5000"
@@ -226,6 +229,7 @@ export const InvestmentModal: React.FC<InvestmentModalProps> = ({
             </label>
             <input
               type="number"
+              inputMode="numeric"
               min="1"
               max="28"
               value={sipDay}

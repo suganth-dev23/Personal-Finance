@@ -3,14 +3,15 @@ import {
   X,
   Tags,
   ShieldCheck,
-  UploadCloud,
   Settings,
   Sparkles,
   Sun,
   Moon,
-  Users,
   CalendarClock,
   Trophy,
+  PieChart,
+  TrendingUp,
+  Target,
 } from 'lucide-react';
 import { useFinance, AppView } from '../../context/FinanceContext';
 
@@ -54,15 +55,16 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ isOpen, onCl
 
   if (!shouldRender) return null;
 
-  const ALL_SECTIONS: { id: AppView; label: string; icon: React.ElementType }[] = [
-    { id: 'badges', label: 'Achievements & Badges', icon: Trophy },
-    { id: 'recurring', label: 'Recurring Payments', icon: CalendarClock },
-    { id: 'people', label: 'People / Splits & IOUs', icon: Users },
-    { id: 'categories', label: 'Spending Categories', icon: Tags },
-    { id: 'emergency', label: 'Emergency Fund (6-Mo)', icon: ShieldCheck },
-    { id: 'import', label: 'Import Statement (CSV/PDF)', icon: UploadCloud },
-    { id: 'ai', label: 'AI Health Summary (BYOK)', icon: Sparkles },
-    { id: 'settings', label: 'Settings & Data Backup', icon: Settings },
+  const ALL_SECTIONS: { id: AppView; label: string; desc: string; icon: React.ElementType; fullWidth?: boolean }[] = [
+    { id: 'budgets', label: 'Budgets', desc: 'Category limits', icon: PieChart },
+    { id: 'investments', label: 'Investments', desc: 'Portfolio & assets', icon: TrendingUp },
+    { id: 'dreams', label: 'Goals', desc: 'Target milestones', icon: Target },
+    { id: 'emergency', label: 'Emergency', desc: 'Safety runway', icon: ShieldCheck },
+    { id: 'recurring', label: 'Recurring', desc: 'Bills & EMIs', icon: CalendarClock },
+    { id: 'categories', label: 'Categories', desc: 'Tags & colors', icon: Tags },
+    { id: 'ai', label: 'AI Health', desc: 'Smart advisor', icon: Sparkles },
+    { id: 'badges', label: 'Badges', desc: 'Milestones & XP', icon: Trophy },
+    { id: 'settings', label: 'Settings & Import', desc: 'Drive Sync, Backup & Statement Import', icon: Settings, fullWidth: true },
   ];
 
   const handleSelect = (view: AppView) => {
@@ -82,23 +84,31 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ isOpen, onCl
 
       {/* Drawer with slide-up transition */}
       <div
-        className={`relative bg-white dark:bg-[#131822] rounded-t-3xl p-6 border-t border-slate-200/90 dark:border-[#202836] shadow-2xl space-y-4 max-h-[80vh] overflow-y-auto transition-transform duration-250 ease-out transform ${
+        className={`relative bg-white dark:bg-[#131822] rounded-t-3xl p-4 pt-2.5 pb-[max(1.25rem,env(safe-area-inset-bottom))] border-t border-slate-200/90 dark:border-[#202836] shadow-2xl space-y-3 max-h-[85vh] overflow-y-auto transition-transform duration-250 ease-out transform ${
           isAnimatingIn ? 'translate-y-0' : 'translate-y-full'
         }`}
       >
-        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-[#202836]">
-          <h3 className="font-bold text-slate-900 dark:text-white text-base">
-            All DhanVeda Features
-          </h3>
+        {/* Drag Pill */}
+        <div className="w-10 h-1 rounded-full bg-slate-300 dark:bg-[#202836] mx-auto mb-1" />
+
+        <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-[#202836]">
+          <div>
+            <h3 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base">
+              Explore &amp; Planning
+            </h3>
+            <p className="text-[11px] text-slate-400">All wealth, budgeting and configuration tools</p>
+          </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#171E2A] transition-colors"
+            aria-label="Close drawer"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#171E2A] transition-colors active:scale-95"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="space-y-1">
+        {/* Compact 2-column Tile Grid */}
+        <div className="grid grid-cols-2 gap-2">
           {ALL_SECTIONS.map(item => {
             const Icon = item.icon;
             const isActive = currentView === item.id;
@@ -107,15 +117,24 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ isOpen, onCl
               <button
                 key={item.id}
                 onClick={() => handleSelect(item.id)}
-                className={`w-full flex items-center justify-between p-3.5 rounded-2xl text-sm font-semibold transition-all ${
+                className={`flex items-center gap-2.5 p-2.5 rounded-2xl text-left transition-all active:scale-[0.97] ${
+                  item.fullWidth ? 'col-span-2' : ''
+                } ${
                   isActive
-                    ? 'bg-slate-100 text-slate-900 dark:bg-[#171E2A] dark:text-[#F5B742]'
-                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#171E2A]/70'
+                    ? 'bg-amber-500/10 text-amber-700 dark:bg-amber-400/10 dark:text-[#F5B742] border border-amber-500/30'
+                    : 'bg-slate-50/80 dark:bg-[#171E2A] text-slate-800 dark:text-slate-200 border border-slate-200/60 dark:border-[#202836] hover:bg-slate-100 dark:hover:bg-[#1C2433]'
                 }`}
               >
-                <div className="flex items-center gap-3">
-                  <Icon className={`w-5 h-5 ${isActive ? 'text-slate-900 dark:text-[#F5B742]' : 'text-slate-400 dark:text-slate-500'}`} />
-                  <span>{item.label}</span>
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                  isActive
+                    ? 'bg-amber-500/20 text-[#F5B742]'
+                    : 'bg-white dark:bg-[#202836] text-slate-600 dark:text-slate-300 shadow-2xs'
+                }`}>
+                  <Icon className="w-4 h-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <span className="block text-xs font-bold leading-tight truncate">{item.label}</span>
+                  <span className="block text-[10px] text-slate-400 leading-tight truncate mt-0.5">{item.desc}</span>
                 </div>
               </button>
             );

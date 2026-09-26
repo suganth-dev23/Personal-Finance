@@ -202,6 +202,7 @@ export const EditSplitModal: React.FC<EditSplitModalProps> = ({
           <input
             type="number"
             step="0.01"
+            inputMode="decimal"
             required
             value={amount}
             onChange={e => setAmount(e.target.value)}

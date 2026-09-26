@@ -17,7 +17,7 @@ export const BudgetHealthWidget: React.FC = () => {
   const overallPct = totalBudget > 0 ? Math.min(100, Math.round((totalSpent / totalBudget) * 100)) : 0;
 
   return (
-    <div className="bg-white dark:bg-[#131822] rounded-3xl p-6 shadow-xs border border-slate-200/90 dark:border-[#202836] flex flex-col justify-between h-full">
+    <div className="bg-white dark:bg-[#131822] rounded-3xl p-4 sm:p-6 shadow-xs border border-slate-200/90 dark:border-[#202836] flex flex-col justify-between h-full">
       <div>
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -39,29 +39,31 @@ export const BudgetHealthWidget: React.FC = () => {
         </div>
 
         {/* Alerts if any */}
-        {overBudgetCategories.length > 0 ? (
-          <div className="mb-4 p-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 rounded-xl flex items-start gap-2.5 animate-shake-x animate-pulse-danger">
-            <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
-            <div className="text-xs text-rose-700 dark:text-rose-300">
-              <span className="font-semibold">{overBudgetCategories.length} category exceeded: </span>
-              {overBudgetCategories.map(c => c.category).join(', ')}
+        {budgetedCategories.length > 0 && (
+          overBudgetCategories.length > 0 ? (
+            <div className="mb-4 p-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 rounded-xl flex items-start gap-2.5 animate-shake-x animate-pulse-danger">
+              <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+              <div className="text-xs text-rose-700 dark:text-rose-300">
+                <span className="font-semibold">{overBudgetCategories.length} category exceeded: </span>
+                {overBudgetCategories.map(c => c.category).join(', ')}
+              </div>
             </div>
-          </div>
-        ) : nearBudgetCategories.length > 0 ? (
-          <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 rounded-xl flex items-start gap-2.5">
-            <AlertCircle className="w-4 h-4 text-amber-600 dark:text-[#F5B742] shrink-0 mt-0.5" />
-            <div className="text-xs text-amber-800 dark:text-amber-200">
-              <span className="font-semibold">{nearBudgetCategories.length} categories near ceiling: </span>
-              {nearBudgetCategories.map(c => c.category).join(', ')}
+          ) : nearBudgetCategories.length > 0 ? (
+            <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 rounded-xl flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 text-amber-600 dark:text-[#F5B742] shrink-0 mt-0.5" />
+              <div className="text-xs text-amber-800 dark:text-amber-200">
+                <span className="font-semibold">{nearBudgetCategories.length} categories near ceiling: </span>
+                {nearBudgetCategories.map(c => c.category).join(', ')}
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="mb-4 p-3 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/40 rounded-xl flex items-center gap-2">
-            <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span className="text-xs font-medium text-emerald-700 dark:text-emerald-300">
-              All categories within healthy limits
-            </span>
-          </div>
+          ) : (
+            <div className="mb-4 p-3 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/40 rounded-xl flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <span className="text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                All categories within healthy limits
+              </span>
+            </div>
+          )
         )}
 
         {/* Budget Progress items */}

@@ -86,7 +86,7 @@ export const InvestmentsView: React.FC = () => {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
       {/* Portfolio Hero Card: Mineral Card with Gold Valuation Highlight */}
-      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] text-slate-900 dark:text-white p-6 sm:p-8 border border-slate-200/90 dark:border-[#202836] shadow-sm">
+      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] text-slate-900 dark:text-white p-4 sm:p-8 border border-slate-200/90 dark:border-[#202836] shadow-sm">
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
@@ -132,33 +132,33 @@ export const InvestmentsView: React.FC = () => {
         </div>
 
         {/* 4-column summary strip */}
-        <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-slate-200/80 dark:border-[#202836]">
-          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
-            <span className="text-xs text-slate-500 dark:text-slate-400">Invested Capital</span>
-            <p className="text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">
+        <div className="mt-4 sm:mt-6 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 pt-4 sm:pt-6 border-t border-slate-200/80 dark:border-[#202836]">
+          <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+            <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">Invested Capital</span>
+            <p className="text-sm sm:text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">
               {formatINR(totalInvestedAmount)}
             </p>
           </div>
 
-          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
-            <span className="text-xs text-slate-500 dark:text-slate-400">Total Returns</span>
-            <p className={`text-lg font-bold font-numeric mt-0.5 ${
+          <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+            <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">Total Returns</span>
+            <p className={`text-sm sm:text-lg font-bold font-numeric mt-0.5 ${
               totalInvestmentGainLoss >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
             }`}>
               {totalInvestmentGainLoss >= 0 ? '+' : ''}{formatINR(totalInvestmentGainLoss)}
             </p>
           </div>
 
-          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
-            <span className="text-xs text-slate-500 dark:text-slate-400">Monthly SIPs</span>
-            <p className="text-lg font-bold font-numeric text-[#C28834] dark:text-[#F5B742] mt-0.5">
+          <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+            <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">Monthly SIPs</span>
+            <p className="text-sm sm:text-lg font-bold font-numeric text-[#C28834] dark:text-[#F5B742] mt-0.5">
               {formatINR(totalMonthlySIP)}
             </p>
           </div>
 
-          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
-            <span className="text-xs text-slate-500 dark:text-slate-400">Total Holdings</span>
-            <p className="text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">
+          <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+            <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">Total Holdings</span>
+            <p className="text-sm sm:text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">
               {investments.length}
             </p>
           </div>

@@ -19,6 +19,7 @@ import { AIProvider } from '../../types/finance';
 import { DEFAULT_AI_MODELS, generateFinancialSummary } from '../../services/aiService';
 import { formatDateTime } from '../../utils/date';
 import { formatINR } from '../../utils/currency';
+import { copyToClipboard } from '../../utils/clipboard';
 
 const PROVIDER_INFO: Record<AIProvider, { name: string; tag: string; link: string; defaultModel: string; note: string }> = {
   gemini: {
@@ -124,10 +125,12 @@ export const AIHealthSummaryView: React.FC = () => {
 
   const activeReport = aiReports[0];
 
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopy = async (text: string) => {
+    const success = await copyToClipboard(text);
+    if (success) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   const handleDownload = (text: string) => {

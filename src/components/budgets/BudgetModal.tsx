@@ -84,6 +84,7 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
             <input
               type="number"
               step="100"
+              inputMode="decimal"
               required
               value={limitAmount}
               onChange={e => setLimitAmount(e.target.value)}

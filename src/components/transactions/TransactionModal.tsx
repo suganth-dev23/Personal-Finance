@@ -567,6 +567,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
             <input
               type="number"
               step="0.01"
+              inputMode="decimal"
               required
               value={amount}
               onChange={e => handleAmountChange(e.target.value)}

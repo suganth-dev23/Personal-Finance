@@ -80,7 +80,7 @@ export interface DhanVedaDBSchema extends DBSchema {
   };
   tombstones: {
     key: string;
-    value: TombstoneRecord;
+    value: TombstoneRecord & { compositeId?: string };
     indexes: {
       'by-store': string;
       'by-deletedAt': string;
@@ -105,14 +105,14 @@ export interface DhanVedaDBSchema extends DBSchema {
 }
 
 const DB_NAME = 'dhanveda_db';
-const DB_VERSION = 5;
+const DB_VERSION = 6;
 
 let dbPromise: Promise<IDBPDatabase<DhanVedaDBSchema>> | null = null;
 
 export function getDB(): Promise<IDBPDatabase<DhanVedaDBSchema>> {
   if (!dbPromise) {
     dbPromise = openDB<DhanVedaDBSchema>(DB_NAME, DB_VERSION, {
-      upgrade(db) {
+      upgrade(db, oldVersion) {
         // Transactions store
         if (!db.objectStoreNames.contains('transactions')) {
           const txStore = db.createObjectStore('transactions', { keyPath: 'id' });
@@ -173,9 +173,12 @@ export function getDB(): Promise<IDBPDatabase<DhanVedaDBSchema>> {
           setStore.createIndex('by-date', 'date');
         }
 
-        // Tombstones store (version 3)
+        // Tombstones store (version 6 uses compositeId: `${store}:${id}`)
+        if (oldVersion < 6 && db.objectStoreNames.contains('tombstones')) {
+          db.deleteObjectStore('tombstones');
+        }
         if (!db.objectStoreNames.contains('tombstones')) {
-          const tombStore = db.createObjectStore('tombstones', { keyPath: 'id' });
+          const tombStore = db.createObjectStore('tombstones', { keyPath: 'compositeId' });
           tombStore.createIndex('by-store', 'store');
           tombStore.createIndex('by-deletedAt', 'deletedAt');
         }
@@ -465,13 +468,13 @@ export async function saveAllToStore<T extends { id: string }>(
   storeName: 'transactions' | 'categories' | 'budgets' | 'investments' | 'dreams' | 'aiReports' | 'contacts' | 'settlements' | 'recurringPayments' | 'recurringPaymentLogs',
   items: T[]
 ): Promise<void> {
+  if (!Array.isArray(items)) return;
+  const validItems = items.filter(item => item && typeof item.id === 'string' && item.id.length > 0);
   const db = await getDB();
   const tx = db.transaction(storeName, 'readwrite');
   await tx.store.clear();
-  for (const item of items) {
-    if (item && item.id) {
-      await tx.store.put(item as any);
-    }
+  for (const item of validItems) {
+    await tx.store.put(item as any);
   }
   await tx.done;
 }
@@ -505,15 +508,19 @@ export async function clearAllStores(): Promise<void> {
   const db = await getDB();
   await Promise.all([
     db.clear('transactions'),
+    db.clear('categories'),
     db.clear('budgets'),
     db.clear('investments'),
     db.clear('dreams'),
     db.clear('aiReports'),
+    db.clear('aiSettings'),
+    db.clear('userPreferences'),
     db.clear('contacts'),
     db.clear('settlements'),
     db.clear('recurringPayments'),
     db.clear('recurringPaymentLogs'),
     db.clear('gamification'),
+    db.clear('tombstones'),
     db.put('emergencyFund', {
       id: 'current',
       targetMonths: 6,
@@ -530,12 +537,13 @@ export async function clearAllStores(): Promise<void> {
 export async function addTombstone(store: SyncableStoreName, id: string): Promise<void> {
   try {
     const db = await getDB();
-    const tombstone: TombstoneRecord = {
+    const tombstone: TombstoneRecord & { compositeId: string } = {
+      compositeId: `${store}:${id}`,
       id,
       store,
       deletedAt: new Date().toISOString(),
     };
-    await db.put('tombstones', tombstone);
+    await db.put('tombstones', tombstone as any);
   } catch (err) {
     console.error('[DB] Error recording tombstone:', err);
   }
@@ -563,7 +571,11 @@ export async function saveTombstones(records: TombstoneRecord[]): Promise<void> 
     const tx = db.transaction('tombstones', 'readwrite');
     for (const record of records) {
       if (record && record.id) {
-        await tx.store.put(record);
+        const item = {
+          ...record,
+          compositeId: `${record.store}:${record.id}`,
+        };
+        await tx.store.put(item as any);
       }
     }
     await tx.done;
