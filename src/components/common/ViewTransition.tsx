@@ -24,29 +24,59 @@ const VIEW_ORDER: Record<string, number> = {
 
 // Feature flag for instant bisect or fallback if needed
 const ENABLE_VIEW_TRANSITION = true;
+const EXIT_DURATION_MS = 140;
+const ENTER_SETTLE_MS = 160;
+const CEILING_TIMEOUT_MS = 600;
 
 /**
  * High-performance, zero-flicker view transition orchestrator.
- * Keeps previous view snapshotted during exit to allow incoming lazy chunks to resolve,
- * eliminates double-mount DOM node destruction, restores scroll positions, and respects prefers-reduced-motion.
+ * - Renders live children when idle (so prop updates from App are never frozen)
+ * - Snapshots previous view during exit to allow incoming lazy chunks to resolve
+ * - Directional enter and exit transitions driven by VIEW_ORDER
+ * - Restores per-view scroll position and moves focus to view heading on enter
+ * - Hard ceiling timer and single unified cleanup preventing hung transitions
  */
 export const ViewTransition: React.FC<ViewTransitionProps> = ({ viewKey, children }) => {
   const reducedMotion = useReducedMotion();
   const [phase, setPhase] = useState<'idle' | 'exit' | 'enter'>('idle');
-  const [displayedChildren, setDisplayedChildren] = useState<React.ReactNode>(children);
   const [activeKey, setActiveKey] = useState<string>(viewKey);
+  const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
 
   const pendingChildrenRef = useRef<React.ReactNode>(children);
   pendingChildrenRef.current = children;
 
+  const snapshottedChildrenRef = useRef<React.ReactNode>(children);
   const scrollMapRef = useRef<Record<string, number>>({});
-  const timerRef = useRef<number | null>(null);
+  const transitionTimerRef = useRef<number | null>(null);
+  const ceilingTimerRef = useRef<number | null>(null);
+  const rafRef = useRef<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const isFirstMount = useRef(true);
 
+  const clearAllTimers = () => {
+    if (transitionTimerRef.current !== null) {
+      clearTimeout(transitionTimerRef.current);
+      transitionTimerRef.current = null;
+    }
+    if (ceilingTimerRef.current !== null) {
+      clearTimeout(ceilingTimerRef.current);
+      ceilingTimerRef.current = null;
+    }
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      clearAllTimers();
+    };
+  }, []);
+
   useEffect(() => {
     if (!ENABLE_VIEW_TRANSITION || reducedMotion) {
-      setDisplayedChildren(children);
+      clearAllTimers();
       setActiveKey(viewKey);
       setPhase('idle');
       return;
@@ -54,8 +84,8 @@ export const ViewTransition: React.FC<ViewTransitionProps> = ({ viewKey, childre
 
     if (isFirstMount.current) {
       isFirstMount.current = false;
-      setDisplayedChildren(children);
       setActiveKey(viewKey);
+      setPhase('idle');
       return;
     }
 
@@ -65,63 +95,90 @@ export const ViewTransition: React.FC<ViewTransitionProps> = ({ viewKey, childre
         scrollMapRef.current[activeKey] = window.scrollY;
       }
 
-      // 2. Clear any pending transition timer
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
+      // 2. Determine slide direction from VIEW_ORDER (captured at exit start)
+      const fromIdx = VIEW_ORDER[activeKey] ?? 0;
+      const toIdx = VIEW_ORDER[viewKey] ?? 0;
+      const navDirection = toIdx >= fromIdx ? 'forward' : 'backward';
+      setDirection(navDirection);
 
-      // 3. Begin exit phase while keeping old snapshot painted
+      // 3. Snapshot exiting view to display while incoming chunk loads
+      snapshottedChildrenRef.current = pendingChildrenRef.current;
+
+      // 4. Clear any active transition timers
+      clearAllTimers();
+
+      // 5. Begin exit phase
       setPhase('exit');
 
-      // Exit transition duration is 140ms
-      timerRef.current = window.setTimeout(() => {
-        // 4. Commit incoming view
+      // Hard ceiling timeout: force idle state if transition hangs
+      ceilingTimerRef.current = window.setTimeout(() => {
         setActiveKey(viewKey);
-        setDisplayedChildren(pendingChildrenRef.current);
+        setPhase('idle');
+      }, CEILING_TIMEOUT_MS);
+
+      // 6. Settle exit and commit incoming view
+      transitionTimerRef.current = window.setTimeout(() => {
+        setActiveKey(viewKey);
         setPhase('enter');
 
-        // 5. Restore saved scroll position
-        requestAnimationFrame(() => {
+        // Restore scroll position and focus view heading
+        rafRef.current = requestAnimationFrame(() => {
           if (typeof window !== 'undefined') {
             const savedScroll = scrollMapRef.current[viewKey] ?? 0;
             window.scrollTo({ top: savedScroll, behavior: 'instant' });
           }
 
-          // 6. Settle to idle state
-          timerRef.current = window.setTimeout(() => {
+          // Move focus to view heading for screen readers & keyboard navigation
+          const heading = containerRef.current?.querySelector<HTMLElement>(
+            'h1, h2, [data-view-heading]'
+          );
+          if (heading) {
+            if (!heading.hasAttribute('tabindex')) {
+              heading.setAttribute('tabindex', '-1');
+            }
+            heading.focus({ preventScroll: true });
+          }
+
+          // Complete enter phase to idle
+          transitionTimerRef.current = window.setTimeout(() => {
             setPhase('idle');
-          }, 160);
+            if (ceilingTimerRef.current !== null) {
+              clearTimeout(ceilingTimerRef.current);
+              ceilingTimerRef.current = null;
+            }
+          }, ENTER_SETTLE_MS);
         });
-      }, 140);
+      }, EXIT_DURATION_MS);
 
       return () => {
-        if (timerRef.current) {
-          clearTimeout(timerRef.current);
-          timerRef.current = null;
-        }
+        clearAllTimers();
       };
     }
-  }, [viewKey, activeKey, children, reducedMotion]);
+  }, [viewKey, activeKey, reducedMotion]);
 
   if (!ENABLE_VIEW_TRANSITION || reducedMotion) {
     return <div className="w-full">{children}</div>;
   }
 
-  // Derive transition classes based on active state machine phase
-  let phaseClasses = 'opacity-100 translate-y-0 scale-100';
+  // Derive transition classes based on active state machine phase & direction
+  let phaseClasses = 'opacity-100 translate-x-0 scale-100';
   if (phase === 'exit') {
-    phaseClasses = 'opacity-0 translate-y-1.5 scale-[0.995] pointer-events-none';
+    const exitOffset = direction === 'forward' ? '-translate-x-2.5' : 'translate-x-2.5';
+    phaseClasses = `opacity-0 ${exitOffset} scale-[0.995] pointer-events-none`;
   } else if (phase === 'enter') {
-    phaseClasses = 'opacity-100 translate-y-0 scale-100';
+    phaseClasses = 'opacity-100 translate-x-0 scale-100';
   }
+
+  // When idle, render live children directly so parent re-renders and prop changes are never blocked.
+  // Snapshot is only rendered during exit.
+  const contentToRender = phase === 'exit' ? snapshottedChildrenRef.current : children;
 
   return (
     <div
       ref={containerRef}
       className={`w-full transition-all duration-150 ease-out transform will-change-transform-opacity ${phaseClasses}`}
     >
-      {displayedChildren}
+      {contentToRender}
     </div>
   );
 };

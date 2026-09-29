@@ -2,6 +2,7 @@ import React from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { useOverlayTransition } from '../../hooks/useOverlayTransition';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 interface ModalProps {
   isOpen: boolean;
@@ -24,6 +25,11 @@ export const Modal: React.FC<ModalProps> = ({
     isOpen,
     onClose,
     duration: 200,
+  });
+
+  const focusTrapRef = useFocusTrap<HTMLDivElement>({
+    isActive: Boolean(shouldRender && isAnimatingIn),
+    onEscape: onClose,
   });
 
   if (!shouldRender || typeof document === 'undefined') return null;
@@ -49,6 +55,7 @@ export const Modal: React.FC<ModalProps> = ({
 
       {/* Modal Dialog: Bottom-sheet on mobile, centered modal on desktop */}
       <div
+        ref={focusTrapRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"

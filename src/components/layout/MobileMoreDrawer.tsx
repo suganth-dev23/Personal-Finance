@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useFinance, AppView } from '../../context/FinanceContext';
 import { useOverlayTransition } from '../../hooks/useOverlayTransition';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 interface MobileMoreDrawerProps {
   isOpen: boolean;
@@ -28,6 +29,11 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ isOpen, onCl
     isOpen,
     onClose,
     duration: 250,
+  });
+
+  const focusTrapRef = useFocusTrap<HTMLDivElement>({
+    isActive: Boolean(shouldRender && isAnimatingIn),
+    onEscape: onClose,
   });
 
   if (!shouldRender || typeof document === 'undefined') return null;
@@ -61,6 +67,7 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ isOpen, onCl
 
       {/* Drawer with slide-up transition */}
       <div
+        ref={focusTrapRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="drawer-title"

@@ -6,6 +6,7 @@ import { Badge, BadgeTier } from '../../types/finance';
 import { IconRenderer } from '../common/IconRenderer';
 import { dualSideCannons } from '../../utils/confetti';
 import { useScrollLock } from '../../hooks/useScrollLock';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 const TIER_CONFIG: Record<BadgeTier, { label: string; border: string; bg: string; text: string; glow: string }> = {
   bronze: {
@@ -97,17 +98,10 @@ export const BadgePopup: React.FC = () => {
     setCurrentView('badges');
   }, [handleDismiss, setCurrentView]);
 
-  // Escape key listener
-  useEffect(() => {
-    if (!currentBadge) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        handleDismiss();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentBadge, handleDismiss]);
+  const focusTrapRef = useFocusTrap<HTMLDivElement>({
+    isActive: Boolean(currentBadge && !isExiting),
+    onEscape: handleDismiss,
+  });
 
   if (!currentBadge || typeof document === 'undefined') {
     return null;
@@ -118,6 +112,7 @@ export const BadgePopup: React.FC = () => {
 
   return createPortal(
     <div
+      ref={focusTrapRef}
       role="dialog"
       aria-modal="true"
       aria-labelledby="badge-title"
