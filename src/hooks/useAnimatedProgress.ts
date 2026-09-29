@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useReducedMotion } from './useReducedMotion';
+import { rafTicker } from '../utils/rafTicker';
 
 export interface UseAnimatedProgressResult {
   displayPercent: number;
@@ -31,14 +32,12 @@ export function useAnimatedProgress(
   const [displayPercent, setDisplayPercent] = useState(initialValue);
   const [isAnimating, setIsAnimating] = useState(false);
   const prevRef = useRef(initialValue);
-  const rafRef = useRef<number>(0);
 
   useEffect(() => {
     if (reducedMotion) {
       setDisplayPercent(clamped);
       prevRef.current = clamped;
       setIsAnimating(false);
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
       return;
     }
 
@@ -70,7 +69,7 @@ export function useAnimatedProgress(
     const startTime = performance.now();
     setIsAnimating(true);
 
-    const step = (now: number) => {
+    const unsub = rafTicker.subscribe((now) => {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
       
@@ -88,20 +87,16 @@ export function useAnimatedProgress(
       setDisplayPercent(current);
       prevRef.current = current; // Keep in sync for interrupted transitions
 
-      if (progress < 1) {
-        rafRef.current = requestAnimationFrame(step);
-      } else {
+      if (progress >= 1) {
+        unsub();
         setDisplayPercent(clamped);
         prevRef.current = clamped;
         setIsAnimating(false);
       }
-    };
+    });
 
-    rafRef.current = requestAnimationFrame(step);
     return () => {
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
-      }
+      unsub();
     };
   }, [clamped, reducedMotion, animateOnMount]);
 

@@ -122,8 +122,8 @@ export const ToastCard: React.FC<ToastCardProps> = ({ toast, onDismiss }) => {
       onMouseLeave={() => setIsPaused(false)}
       onFocus={() => setIsPaused(true)}
       onBlur={() => setIsPaused(false)}
-      className={`pointer-events-auto relative overflow-hidden w-full max-w-sm rounded-2xl bg-white dark:bg-[#131822] border border-slate-200/90 dark:border-[#202836] p-3.5 sm:p-4 shadow-xl shadow-slate-900/10 dark:shadow-black/40 flex items-start gap-3 will-change-transform-opacity ${
-        isExiting ? 'animate-slide-out-right opacity-0' : 'animate-slide-in-right'
+      className={`pointer-events-auto relative overflow-hidden w-full max-w-sm rounded-2xl bg-white dark:bg-[#131822] border border-slate-200/90 dark:border-[#202836] p-3.5 sm:p-4 shadow-xl shadow-slate-900/10 dark:shadow-black/40 flex items-start gap-3 will-change-transform-opacity transition-all duration-200 ${
+        isExiting ? 'animate-slide-out-right opacity-0 max-h-0 py-0 -my-1 border-transparent' : 'animate-slide-in-right max-h-40'
       }`}
     >
       {/* Top accent hairline */}

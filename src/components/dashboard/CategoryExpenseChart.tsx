@@ -109,7 +109,7 @@ export const CategoryExpenseChart: React.FC = () => {
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
               <span className="text-[10px] uppercase font-medium text-slate-400">Total</span>
               <span className="font-numeric text-xs font-bold text-slate-900 dark:text-slate-100">
-                <AnimatedNumber value={currentMonthExpense} formatter={formatCompactINR} />
+                <AnimatedNumber value={currentMonthExpense} formatter={formatCompactINR} animateOnMount={true} />
               </span>
             </div>
           </div>

@@ -39,6 +39,21 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
 
   // Highlight newly added transaction
   const [highlightedTxId, setHighlightedTxId] = useState<string | null>(null);
+  const [deletingTxIds, setDeletingTxIds] = useState<Set<string>>(new Set());
+
+  const handleDeleteTransaction = (txId: string, desc: string) => {
+    if (window.confirm(`Delete transaction "${desc}"?`)) {
+      setDeletingTxIds(prev => new Set(prev).add(txId));
+      window.setTimeout(() => {
+        deleteTransaction(txId);
+        setDeletingTxIds(prev => {
+          const next = new Set(prev);
+          next.delete(txId);
+          return next;
+        });
+      }, 200);
+    }
+  };
 
   useEffect(() => {
     if (!subscribeFinanceEvent) return;
@@ -692,13 +707,16 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
                   const isCredit = tx.type === 'credit';
                   const isSelected = selectedTxIds.has(tx.id);
                   const isHighlighted = highlightedTxId === tx.id;
+                  const isDeleting = deletingTxIds.has(tx.id);
                   const catInfo = categoryMap.get(tx.category.toLowerCase());
 
                   return (
                     <div
                       key={tx.id}
                       style={getChildStyle(Math.min(idx, 15))}
-                      className="animate-slide-up"
+                      className={`animate-slide-up transition-all duration-200 overflow-hidden ${
+                        isDeleting ? 'opacity-0 -translate-x-4 max-h-0' : 'max-h-36'
+                      }`}
                     >
                       <div
                         className={`p-4 flex items-center justify-between gap-3 transition-all duration-300 ${
@@ -776,12 +794,8 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
                           <button
-                            onClick={() => {
-                              if (window.confirm(`Delete transaction "${tx.description}"?`)) {
-                                deleteTransaction(tx.id);
-                              }
-                            }}
-                            className="p-1 rounded-lg text-slate-400 hover:text-rose-600"
+                            onClick={() => handleDeleteTransaction(tx.id, tx.description)}
+                            className="p-1 rounded-lg text-slate-400 hover:text-rose-600 press"
                             title="Delete"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -822,14 +836,17 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
                       const isCredit = tx.type === 'credit';
                       const isSelected = selectedTxIds.has(tx.id);
                       const isHighlighted = highlightedTxId === tx.id;
+                      const isDeleting = deletingTxIds.has(tx.id);
                       const catInfo = categoryMap.get(tx.category.toLowerCase());
 
                       return (
                         <tr
                           key={tx.id}
                           style={getChildStyle(Math.min(idx, 15))}
-                          className={`hover:bg-slate-50/70 dark:hover:bg-[#171E2A]/40 transition-all duration-300 animate-slide-up ${
-                            isHighlighted
+                          className={`hover:bg-slate-50/70 dark:hover:bg-[#171E2A]/40 transition-all duration-200 animate-slide-up ${
+                            isDeleting
+                              ? 'opacity-0 -translate-x-4 pointer-events-none'
+                              : isHighlighted
                               ? 'ring-2 ring-emerald-500/50 bg-emerald-500/10 dark:bg-emerald-500/15'
                               : isSelected
                               ? 'bg-emerald-50/40 dark:bg-emerald-950/20'
@@ -988,12 +1005,8 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
                                 <Edit2 className="w-3.5 h-3.5" />
                               </button>
                               <button
-                                onClick={() => {
-                                  if (window.confirm(`Delete transaction "${tx.description}"?`)) {
-                                    deleteTransaction(tx.id);
-                                  }
-                                }}
-                                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                                onClick={() => handleDeleteTransaction(tx.id, tx.description)}
+                                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors press"
                                 title="Delete"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />

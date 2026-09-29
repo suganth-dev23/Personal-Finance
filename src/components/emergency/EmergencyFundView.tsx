@@ -52,7 +52,7 @@ export const EmergencyFundView: React.FC = () => {
             </p>
             <div className="flex items-baseline gap-3">
               <h2 className="text-3xl sm:text-4xl font-black font-numeric tracking-tight text-slate-900 dark:text-white">
-                <AnimatedNumber value={emergencyFund.currentSaved} />
+                <AnimatedNumber value={emergencyFund.currentSaved} animateOnMount={true} />
               </h2>
               <span className={`text-sm font-semibold ${
                 percentFunded >= 100

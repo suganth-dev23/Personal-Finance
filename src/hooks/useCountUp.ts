@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useReducedMotion } from './useReducedMotion';
+import { rafTicker } from '../utils/rafTicker';
 
 export interface UseCountUpOptions {
   duration?: number;
@@ -9,7 +10,7 @@ export interface UseCountUpOptions {
 }
 
 /**
- * High-performance 60fps number counter hook using requestAnimationFrame
+ * High-performance 60fps number counter hook using shared rafTicker
  * with an ease-out expo deceleration curve. Supports reduced motion and animateOnMount.
  */
 export function useCountUp(target: number, duration?: number): number;
@@ -29,13 +30,11 @@ export function useCountUp(target: number, arg?: number | UseCountUpOptions): nu
 
   const [value, setValue] = useState(initialValue);
   const prevRef = useRef(initialValue);
-  const rafRef = useRef<number>(0);
 
   useEffect(() => {
     if (reducedMotion) {
       setValue(target);
       prevRef.current = target;
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
       onCompleteRef.current?.();
       return;
     }
@@ -62,7 +61,7 @@ export function useCountUp(target: number, arg?: number | UseCountUpOptions): nu
     const safeDuration = Math.max(duration, 1);
     const startTime = performance.now();
 
-    const step = (now: number) => {
+    const unsub = rafTicker.subscribe((now) => {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / safeDuration, 1);
       
@@ -73,21 +72,16 @@ export function useCountUp(target: number, arg?: number | UseCountUpOptions): nu
       setValue(current);
       prevRef.current = current; // Keep in sync for interrupted transitions
 
-      if (progress < 1) {
-        rafRef.current = requestAnimationFrame(step);
-      } else {
+      if (progress >= 1) {
+        unsub();
         setValue(target);
         prevRef.current = target;
         onCompleteRef.current?.();
       }
-    };
-
-    rafRef.current = requestAnimationFrame(step);
+    });
 
     return () => {
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
-      }
+      unsub();
     };
   }, [target, duration, reducedMotion, animateOnMount]);
 

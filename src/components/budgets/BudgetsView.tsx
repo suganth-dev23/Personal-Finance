@@ -4,6 +4,7 @@ import { useFinance } from '../../context/FinanceContext';
 import { Budget } from '../../types/finance';
 import { formatINR, formatCompactINR } from '../../utils/currency';
 import { ProgressBar } from '../common/ProgressBar';
+import { AnimatedNumber } from '../common/AnimatedNumber';
 import { IconRenderer } from '../common/IconRenderer';
 import { BudgetModal } from './BudgetModal';
 import { useStaggerChildren } from '../../hooks/useStaggerChildren';
@@ -73,7 +74,7 @@ export const BudgetsView: React.FC = () => {
             </p>
             <div className="flex items-baseline gap-3">
               <h2 className="text-3xl sm:text-4xl font-black font-numeric tracking-tight text-slate-900 dark:text-white">
-                {formatINR(Math.abs(remainingBudget))}
+                <AnimatedNumber value={Math.abs(remainingBudget)} animateOnMount={true} />
               </h2>
               <span
                 className={`text-sm font-semibold ${

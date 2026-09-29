@@ -10,6 +10,8 @@ interface ProgressBarProps {
   alertThresholds?: boolean; // Changes color automatically (green < 80%, amber 80-100%, rose > 100%)
   showMilestones?: boolean; // Subtle 25/50/75% notches
   glowOnMilestone?: boolean; // Pulse glow when crossing 50% or 100%
+  animateOnMount?: boolean;
+  ariaLabel?: string;
   className?: string;
 }
 
@@ -22,12 +24,14 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   alertThresholds = false,
   showMilestones = false,
   glowOnMilestone = false,
+  animateOnMount = true,
+  ariaLabel,
   className = '',
 }) => {
   const safeMax = max > 0 ? max : 1;
   const rawPercentage = (value / safeMax) * 100;
   const clampedPercentage = Math.min(Math.max(rawPercentage, 0), 100);
-  const { displayPercent } = useAnimatedProgress(clampedPercentage);
+  const { displayPercent } = useAnimatedProgress(clampedPercentage, { animateOnMount });
 
   const firedMilestones = useRef<Set<number>>(new Set());
   const [glowClass, setGlowClass] = useState('');
@@ -89,7 +93,14 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
           )}
         </div>
       )}
-      <div className={`relative w-full bg-slate-100 dark:bg-[#171E2A] border border-transparent dark:border-[#202836] rounded-full overflow-hidden contain-paint ${heightClasses} ${glowClass}`}>
+      <div
+        role="progressbar"
+        aria-valuenow={Math.round(clampedPercentage)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={ariaLabel || 'Progress'}
+        className={`relative w-full bg-slate-100 dark:bg-[#171E2A] border border-transparent dark:border-[#202836] rounded-full overflow-hidden contain-paint ${heightClasses} ${glowClass}`}
+      >
         {showMilestones && (
           <>
             <div className="absolute top-0 bottom-0 w-[1px] bg-slate-300/50 dark:bg-slate-700/50 pointer-events-none z-10" style={{ left: '25%' }} />

@@ -21,6 +21,7 @@ import { useFinance } from '../../context/FinanceContext';
 import { Contact, Transaction, SplitEntry, SettlementRecord } from '../../types/finance';
 import { formatINR } from '../../utils/currency';
 import { formatDate } from '../../utils/date';
+import { AnimatedNumber } from '../common/AnimatedNumber';
 import { SettleUpModal } from './SettleUpModal';
 import { EditSplitModal } from './EditSplitModal';
 import { AddContactModal } from './AddContactModal';
@@ -264,7 +265,7 @@ export const PeopleView: React.FC = () => {
             </p>
             <div className="flex items-baseline gap-3">
               <h2 className="text-3xl sm:text-4xl font-black font-numeric tracking-tight text-slate-900 dark:text-white">
-                {netOverall >= 0 ? '+' : ''}{formatINR(netOverall)}
+                {netOverall >= 0 ? '+' : ''}<AnimatedNumber value={netOverall} animateOnMount={true} />
               </h2>
               <span
                 className={`text-sm font-semibold ${
@@ -331,14 +332,14 @@ export const PeopleView: React.FC = () => {
           <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
             <span className="text-xs text-slate-500 dark:text-slate-400">You Are Owed</span>
             <p className="text-lg font-bold font-numeric text-emerald-600 dark:text-emerald-400 mt-0.5">
-              +{formatINR(totalOwedToMe)}
+              +<AnimatedNumber value={totalOwedToMe} animateOnMount={true} />
             </p>
           </div>
 
           <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
             <span className="text-xs text-slate-500 dark:text-slate-400">You Owe</span>
             <p className="text-lg font-bold font-numeric text-rose-600 dark:text-rose-400 mt-0.5">
-              -{formatINR(totalIOwe)}
+              -<AnimatedNumber value={totalIOwe} animateOnMount={true} />
             </p>
           </div>
 

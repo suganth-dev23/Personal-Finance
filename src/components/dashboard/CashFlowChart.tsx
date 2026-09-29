@@ -112,7 +112,7 @@ export const CashFlowChart: React.FC = () => {
         </div>
       </div>
 
-      <div className="w-full h-[260px] sm:h-[300px]">
+      <div key={chartMode} className="w-full h-[260px] sm:h-[300px] animate-fade-in">
         <ResponsiveContainer width="100%" height="100%">
           {chartMode === 'wave' ? (
             <AreaChart data={chartData} margin={{ top: 15, right: 10, left: 0, bottom: 0 }}>

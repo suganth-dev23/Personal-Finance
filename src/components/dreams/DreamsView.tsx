@@ -13,6 +13,7 @@ import { formatINR, formatCompactINR } from '../../utils/currency';
 import { formatDate, calculateMonthsDiff } from '../../utils/date';
 import { IconRenderer } from '../common/IconRenderer';
 import { ProgressBar } from '../common/ProgressBar';
+import { AnimatedNumber } from '../common/AnimatedNumber';
 import { DreamModal } from './DreamModal';
 import { DreamContributionModal } from './DreamContributionModal';
 import { useStaggerChildren } from '../../hooks/useStaggerChildren';
@@ -65,7 +66,7 @@ export const DreamsView: React.FC = () => {
             </p>
             <div className="flex items-baseline gap-3">
               <h2 className="text-3xl sm:text-4xl font-black font-numeric tracking-tight text-slate-900 dark:text-white">
-                {formatINR(totalGoalsSaved)}
+                <AnimatedNumber value={totalGoalsSaved} animateOnMount={true} />
               </h2>
               <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
                 {overallPercent}% reached
@@ -268,7 +269,7 @@ export const DreamsView: React.FC = () => {
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-xs font-semibold">
                         <span className="text-slate-500 dark:text-slate-400 font-numeric">{percent}% Complete</span>
-                        <span className={isCompleted ? 'text-emerald-500 font-bold' : 'text-slate-400'}>
+                        <span className={isCompleted ? 'text-emerald-500 font-bold animate-pulse-success-infinite inline-block' : 'text-slate-400'}>
                           {isCompleted ? 'Accomplished 🎉' : <span className="font-numeric">{formatINR(remaining)} left</span>}
                         </span>
                       </div>

@@ -194,7 +194,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx, onEdi
               <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold">Liquid</span>
             </div>
             <p className="font-numeric text-base sm:text-xl font-bold text-slate-900 dark:text-white mt-1">
-              <AnimatedNumber value={totalBalance} />
+              <AnimatedNumber value={totalBalance} animateOnMount={true} />
             </p>
             <span className="text-[11px] text-slate-400 mt-0.5 block truncate">
               +{formatINR(currentMonthIncome)} in this mo
@@ -213,7 +213,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx, onEdi
               <span className="text-xs text-rose-600 dark:text-rose-400 font-bold">↓</span>
             </div>
             <p className="font-numeric text-base sm:text-xl font-bold text-rose-600 dark:text-rose-400 mt-1">
-              -<AnimatedNumber value={currentMonthExpense} />
+              -<AnimatedNumber value={currentMonthExpense} animateOnMount={true} />
             </p>
             <span className="text-[11px] text-slate-400 mt-0.5 block truncate">
               Debits &amp; UPI
@@ -235,7 +235,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx, onEdi
               </span>
             </div>
             <p className="font-numeric text-base sm:text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">
-              <AnimatedNumber value={totalInvestmentValue} />
+              <AnimatedNumber value={totalInvestmentValue} animateOnMount={true} />
             </p>
             <span className="text-[11px] text-slate-400 mt-0.5 block truncate">
               MF, Stocks, Gold, FDs
@@ -259,7 +259,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx, onEdi
               {emergencyFundRunwayMonths.toFixed(1)} mos
             </p>
             <span className="text-[11px] text-slate-400 mt-0.5 block truncate font-numeric">
-              <AnimatedNumber value={emergencyFund.currentSaved} /> saved
+              <AnimatedNumber value={emergencyFund.currentSaved} animateOnMount={true} /> saved
             </span>
           </div>
         </div>

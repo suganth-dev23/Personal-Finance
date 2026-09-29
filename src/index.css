@@ -62,10 +62,6 @@
     from { transform: translateY(0); }
     to { transform: translateY(100%); }
   }
-  @keyframes count-tick {
-    from { opacity: 0; transform: translateY(4px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
 
   /* ── Animation Utilities ── */
   --animate-shimmer: shimmer 1.8s infinite;
@@ -77,7 +73,6 @@
   --animate-slide-down: slide-down 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-slide-up-drawer: slide-up-drawer 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-slide-down-drawer: slide-down-drawer 0.2s ease-in both;
-  --animate-count-tick: count-tick 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
 
   /* ── Motion Design Tokens (Phase 1) ── */
   --duration-instant: 100ms;
@@ -95,10 +90,6 @@
     0% { transform: scale(0); opacity: 0; }
     60% { transform: scale(1.12); }
     100% { transform: scale(1); opacity: 1; }
-  }
-  @keyframes pop-out {
-    0% { transform: scale(1); opacity: 1; }
-    100% { transform: scale(0.8); opacity: 0; }
   }
   @keyframes number-bump {
     0% { transform: translateY(0); }
@@ -141,10 +132,6 @@
     75% { transform: scale(0.98) rotate(-1deg); }
     100% { transform: scale(1) rotate(0deg); opacity: 1; filter: brightness(1); }
   }
-  @keyframes gauge-sweep {
-    0% { stroke-dashoffset: 220; opacity: 0.7; }
-    100% { stroke-dashoffset: var(--gauge-offset, 0); opacity: 1; }
-  }
   @keyframes shrink-progress {
     from { transform: scaleX(1); }
     to { transform: scaleX(0); }
@@ -183,7 +170,6 @@
   }
 
   --animate-pop-in: pop-in 0.3s var(--ease-bounce) both;
-  --animate-pop-out: pop-out 0.15s ease-in both;
   --animate-number-bump: number-bump 0.3s var(--ease-spring) both;
   --animate-pulse-success: pulse-success 1s var(--ease-sharp);
   --animate-pulse-danger: pulse-danger 1s var(--ease-sharp);
@@ -202,7 +188,6 @@
   --animate-xp-float: xp-float 1.2s ease-out both;
   --animate-shine-sweep: shine-sweep 1.5s ease-in-out infinite;
   --animate-flame-flicker: flame-flicker 1.8s ease-in-out infinite;
-  --animate-gauge-sweep: gauge-sweep 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @custom-variant dark (&:where(.dark, .dark *));

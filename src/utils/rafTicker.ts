@@ -33,7 +33,7 @@ class RaFTicker {
       const delta = now - this.lastTime;
       this.lastTime = now;
 
-      for (const cb of this.subscribers) {
+      for (const cb of [...this.subscribers]) {
         cb(now, delta);
       }
 

@@ -13,6 +13,7 @@ import {
 import { useFinance } from '../../context/FinanceContext';
 import { Investment } from '../../types/finance';
 import { formatINR } from '../../utils/currency';
+import { AnimatedNumber } from '../common/AnimatedNumber';
 import { InvestmentModal } from './InvestmentModal';
 import { PortfolioAllocationChart } from './PortfolioAllocationChart';
 import { INDIAN_WEALTH_PALETTE } from '../../constants/theme';
@@ -103,7 +104,7 @@ export const InvestmentsView: React.FC = () => {
             </p>
             <div className="flex flex-wrap items-baseline gap-3">
               <h2 className="text-3xl sm:text-4xl font-black font-numeric tracking-tight text-slate-900 dark:text-white">
-                {formatINR(totalInvestmentValue)}
+                <AnimatedNumber value={totalInvestmentValue} animateOnMount={true} />
               </h2>
               <span
                 className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold font-numeric ${
@@ -112,11 +113,11 @@ export const InvestmentsView: React.FC = () => {
                     : 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400 border border-rose-500/20'
                 }`}
               >
-                {totalInvestmentGainLoss >= 0 ? '+' : ''}{formatINR(totalInvestmentGainLoss)} ({totalInvestmentGainLossPct >= 0 ? '+' : ''}{totalInvestmentGainLossPct.toFixed(1)}%)
+                {totalInvestmentGainLoss >= 0 ? '+' : ''}<AnimatedNumber value={totalInvestmentGainLoss} animateOnMount={true} /> ({totalInvestmentGainLossPct >= 0 ? '+' : ''}{totalInvestmentGainLossPct.toFixed(1)}%)
               </span>
             </div>
             <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-              Invested: <span className="font-semibold font-numeric text-slate-800 dark:text-slate-200">{formatINR(totalInvestedAmount)}</span> • Monthly SIPs: <span className="font-semibold font-numeric text-[#C28834] dark:text-[#F5B742]">{formatINR(totalMonthlySIP)}</span>
+              Invested: <span className="font-semibold font-numeric text-slate-800 dark:text-slate-200"><AnimatedNumber value={totalInvestedAmount} animateOnMount={true} /></span> • Monthly SIPs: <span className="font-semibold font-numeric text-[#C28834] dark:text-[#F5B742]"><AnimatedNumber value={totalMonthlySIP} animateOnMount={true} /></span>
             </p>
           </div>
 
@@ -136,7 +137,7 @@ export const InvestmentsView: React.FC = () => {
           <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
             <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">Invested Capital</span>
             <p className="text-sm sm:text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">
-              {formatINR(totalInvestedAmount)}
+              <AnimatedNumber value={totalInvestedAmount} animateOnMount={true} />
             </p>
           </div>
 
@@ -145,14 +146,14 @@ export const InvestmentsView: React.FC = () => {
             <p className={`text-sm sm:text-lg font-bold font-numeric mt-0.5 ${
               totalInvestmentGainLoss >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
             }`}>
-              {totalInvestmentGainLoss >= 0 ? '+' : ''}{formatINR(totalInvestmentGainLoss)}
+              {totalInvestmentGainLoss >= 0 ? '+' : ''}<AnimatedNumber value={totalInvestmentGainLoss} animateOnMount={true} />
             </p>
           </div>
 
           <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
             <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">Monthly SIPs</span>
             <p className="text-sm sm:text-lg font-bold font-numeric text-[#C28834] dark:text-[#F5B742] mt-0.5">
-              {formatINR(totalMonthlySIP)}
+              <AnimatedNumber value={totalMonthlySIP} animateOnMount={true} />
             </p>
           </div>
 
