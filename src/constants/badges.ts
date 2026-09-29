@@ -1,4 +1,4 @@
-import { Badge, BadgeCategory, BadgeTier, Transaction, Budget, DreamGoal, EmergencyFund, Investment, RecurringPaymentLog, SettlementRecord, StreakData } from '../types/finance';
+import { Badge, Transaction, Budget, DreamGoal, EmergencyFund, Investment, RecurringPaymentLog, SettlementRecord, StreakData } from '../types/finance';
 
 export interface BadgeEvaluationContext {
   transactions: Transaction[];

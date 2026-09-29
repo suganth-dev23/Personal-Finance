@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, TrendingUp, TrendingDown, Minus, ArrowRight, Award, HelpCircle } from 'lucide-react';
+import { ShieldCheck, TrendingUp, TrendingDown, Minus, ArrowRight, Award } from 'lucide-react';
 import { useGamification } from '../../context/GamificationContext';
 import { useFinance } from '../../context/FinanceContext';
 import { AnimatedNumber } from '../common/AnimatedNumber';

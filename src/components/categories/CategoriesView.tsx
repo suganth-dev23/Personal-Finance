@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Edit3, Trash2, Tag, PieChart, Sparkles, Layers } from 'lucide-react';
+import { Plus, Edit3, Trash2, Layers } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { Category } from '../../types/finance';
 import { formatINR } from '../../utils/currency';

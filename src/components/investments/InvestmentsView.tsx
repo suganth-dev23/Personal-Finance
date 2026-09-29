@@ -4,11 +4,6 @@ import {
   TrendingUp,
   Edit3,
   Trash2,
-  Calendar,
-  Layers,
-  ArrowUpRight,
-  ArrowDownRight,
-  Sparkles,
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { Investment } from '../../types/finance';

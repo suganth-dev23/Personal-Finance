@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShieldCheck, Plus, ArrowDownLeft, ArrowUpRight, AlertTriangle, CheckCircle2, Sliders, Calendar, Sparkles, Shield } from 'lucide-react';
+import { ShieldCheck, Plus, ArrowDownLeft, ArrowUpRight, Sliders, Calendar, Shield } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { formatINR, formatCompactINR } from '../../utils/currency';
 import { formatDate } from '../../utils/date';

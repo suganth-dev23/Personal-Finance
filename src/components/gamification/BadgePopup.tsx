@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Trophy, X, Sparkles, Award, Star, CheckCircle2 } from 'lucide-react';
+import { X, Sparkles, Star, CheckCircle2 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { Badge, BadgeTier } from '../../types/finance';
 import { IconRenderer } from '../common/IconRenderer';

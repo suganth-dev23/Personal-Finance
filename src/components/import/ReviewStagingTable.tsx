@@ -3,14 +3,9 @@ import {
   CheckSquare,
   Square,
   AlertTriangle,
-  Sparkles,
   Trash2,
-  ArrowDownLeft,
-  ArrowUpRight,
 } from 'lucide-react';
 import { StagedTransaction, Category, PaymentMethod } from '../../types/finance';
-import { formatINR } from '../../utils/currency';
-import { IconRenderer } from '../common/IconRenderer';
 
 interface ReviewStagingTableProps {
   stagedList: StagedTransaction[];
@@ -44,8 +39,6 @@ export const ReviewStagingTable: React.FC<ReviewStagingTableProps> = ({
 }) => {
   const selectedCount = stagedList.filter(t => t.selected).length;
   const duplicateCount = stagedList.filter(t => t.isDuplicate).length;
-
-  const categoryMap = new Map(categories.map(c => [c.name.toLowerCase(), c]));
 
   return (
     <div className="space-y-4">
@@ -110,8 +103,6 @@ export const ReviewStagingTable: React.FC<ReviewStagingTableProps> = ({
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-[#202836] text-xs">
             {stagedList.map(row => {
-              const catInfo = categoryMap.get(row.category.toLowerCase());
-
               return (
                 <tr
                   key={row.tempId}

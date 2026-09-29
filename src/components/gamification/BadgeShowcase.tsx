@@ -1,10 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import {
   Trophy,
-  Award,
   Lock,
   CheckCircle2,
-  Filter,
   Search,
   Sparkles,
   Zap,
@@ -13,11 +11,9 @@ import {
   ShieldCheck,
   TrendingUp,
   Star,
-  Clock,
 } from 'lucide-react';
 import { useGamification } from '../../context/GamificationContext';
-import { useFinance } from '../../context/FinanceContext';
-import { Badge, BadgeCategory, BadgeTier } from '../../types/finance';
+import { BadgeCategory, BadgeTier } from '../../types/finance';
 import { ProgressBar } from '../common/ProgressBar';
 import { EmptyState } from '../common/EmptyState';
 import { IconRenderer } from '../common/IconRenderer';
@@ -64,8 +60,7 @@ const TIER_STYLES: Record<BadgeTier, { border: string; bg: string; text: string;
 
 export const BadgeShowcase: React.FC = () => {
   const { containerRef: badgeGridRef, getChildStyle } = useStaggerChildren(40);
-  const { badges, unlockedBadges, unlockedCount, totalXP, levelInfo, streak, healthScore } = useGamification();
-  const { setCurrentView } = useFinance();
+  const { badges, unlockedCount, totalXP, levelInfo, streak, healthScore } = useGamification();
 
   const [selectedCategory, setSelectedCategory] = useState<FilterCategory>('all');
   const [selectedStatus, setSelectedStatus] = useState<FilterStatus>('all');
