@@ -25,7 +25,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({ onOpenMore, onOpenAddTx })
       <button
         type="button"
         onClick={() => setCurrentView('dashboard')}
-        className={`flex-1 flex flex-col items-center justify-center py-1 rounded-2xl transition-all duration-150 press ${
+        className={`flex-1 flex flex-col items-center justify-center py-1 min-h-[48px] rounded-2xl transition-all duration-150 press ${
           currentView === 'dashboard'
             ? 'text-[#C28834] dark:text-[#F5B742] font-bold'
             : 'text-slate-400 dark:text-slate-500 font-medium hover:text-slate-700 dark:hover:text-slate-300'
@@ -43,7 +43,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({ onOpenMore, onOpenAddTx })
       <button
         type="button"
         onClick={() => setCurrentView('transactions')}
-        className={`flex-1 flex flex-col items-center justify-center py-1 rounded-2xl transition-all duration-150 press ${
+        className={`flex-1 flex flex-col items-center justify-center py-1 min-h-[48px] rounded-2xl transition-all duration-150 press ${
           currentView === 'transactions'
             ? 'text-[#C28834] dark:text-[#F5B742] font-bold'
             : 'text-slate-400 dark:text-slate-500 font-medium hover:text-slate-700 dark:hover:text-slate-300'
@@ -73,7 +73,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({ onOpenMore, onOpenAddTx })
       <button
         type="button"
         onClick={() => setCurrentView('people')}
-        className={`flex-1 flex flex-col items-center justify-center py-1 rounded-2xl transition-all duration-150 press ${
+        className={`flex-1 flex flex-col items-center justify-center py-1 min-h-[48px] rounded-2xl transition-all duration-150 press ${
           currentView === 'people'
             ? 'text-[#C28834] dark:text-[#F5B742] font-bold'
             : 'text-slate-400 dark:text-slate-500 font-medium hover:text-slate-700 dark:hover:text-slate-300'
@@ -91,7 +91,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({ onOpenMore, onOpenAddTx })
       <button
         type="button"
         onClick={onOpenMore}
-        className="flex-1 flex flex-col items-center justify-center py-1 rounded-2xl text-slate-400 dark:text-slate-500 font-medium hover:text-slate-700 dark:hover:text-slate-300 press transition-all duration-150"
+        className="flex-1 flex flex-col items-center justify-center py-1 min-h-[48px] rounded-2xl text-slate-400 dark:text-slate-500 font-medium hover:text-slate-700 dark:hover:text-slate-300 press transition-all duration-150"
       >
         <MoreHorizontal className="w-5 h-5" />
         <span className="text-[11px] mt-0.5 tracking-tight font-medium">More</span>

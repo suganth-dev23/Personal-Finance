@@ -19,6 +19,7 @@ import { useGamification } from '../../context/GamificationContext';
 import { useFinance } from '../../context/FinanceContext';
 import { Badge, BadgeCategory, BadgeTier } from '../../types/finance';
 import { ProgressBar } from '../common/ProgressBar';
+import { EmptyState } from '../common/EmptyState';
 import { IconRenderer } from '../common/IconRenderer';
 import { useStaggerChildren } from '../../hooks/useStaggerChildren';
 
@@ -247,25 +248,17 @@ export const BadgeShowcase: React.FC = () => {
 
       {/* Badges Grid */}
       {filteredBadges.length === 0 ? (
-        <div className="text-center py-16 bg-white dark:bg-[#131822] rounded-3xl border border-dashed border-slate-200/90 dark:border-[#202836] p-8 shadow-sm">
-          <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-[#F5B742] flex items-center justify-center mx-auto mb-4">
-            <Trophy className="w-7 h-7" />
-          </div>
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white">No achievements match filter</h3>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
-            Try resetting your category or status filters to view your trophy collection.
-          </p>
-          <button
-            onClick={() => {
-              setSelectedCategory('all');
-              setSelectedStatus('all');
-              setSearchQuery('');
-            }}
-            className="mt-4 px-4 py-2 rounded-xl bg-slate-100 dark:bg-[#171E2A] text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#202836] transition-colors"
-          >
-            Clear Filters
-          </button>
-        </div>
+        <EmptyState
+          icon={Trophy}
+          title="No achievements match filter"
+          description="Try resetting your category or status filters to view your trophy collection."
+          actionLabel="Clear Filters"
+          onAction={() => {
+            setSelectedCategory('all');
+            setSelectedStatus('all');
+            setSearchQuery('');
+          }}
+        />
       ) : (
         <div ref={badgeGridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredBadges.map((badge, idx) => {

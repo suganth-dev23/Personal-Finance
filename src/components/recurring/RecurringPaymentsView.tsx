@@ -19,6 +19,8 @@ import { formatINR } from '../../utils/currency';
 import { formatDate, getCurrentMonthYear } from '../../utils/date';
 import { calculateMonthlyEquivalent, getPaymentSchedule } from '../../utils/recurringDates';
 import { IconRenderer } from '../common/IconRenderer';
+import { AnimatedNumber } from '../common/AnimatedNumber';
+import { EmptyState } from '../common/EmptyState';
 import { RecurringPaymentModal } from './RecurringPaymentModal';
 import { MarkPaidModal } from './MarkPaidModal';
 
@@ -154,7 +156,7 @@ export const RecurringPaymentsView: React.FC = () => {
             </p>
             <div className="flex items-baseline gap-3">
               <h2 className="text-3xl sm:text-4xl font-black font-numeric tracking-tight text-slate-900 dark:text-white">
-                {formatINR(totalMonthlyRecurringCommitment)}
+                <AnimatedNumber value={totalMonthlyRecurringCommitment} animateOnMount={true} />
               </h2>
               <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">
                 / month
@@ -464,7 +466,15 @@ export const RecurringPaymentsView: React.FC = () => {
         </div>
 
         {/* Payments List */}
-        {filteredPayments.length === 0 ? (
+        {recurringPayments.length === 0 ? (
+          <EmptyState
+            icon={CalendarClock}
+            title="No recurring bills or subscriptions"
+            description="Track your monthly SIPs, rent, Netflix, insurance EMIs and utility bills with automatic cycle projections."
+            actionLabel="Add Recurring Bill"
+            onAction={handleOpenAdd}
+          />
+        ) : filteredPayments.length === 0 ? (
           <div className="p-8 text-center text-slate-400 text-xs">
             No recurring commitments match the selected filters.
           </div>

@@ -5,6 +5,7 @@ import { Budget } from '../../types/finance';
 import { formatINR, formatCompactINR } from '../../utils/currency';
 import { ProgressBar } from '../common/ProgressBar';
 import { AnimatedNumber } from '../common/AnimatedNumber';
+import { EmptyState } from '../common/EmptyState';
 import { IconRenderer } from '../common/IconRenderer';
 import { BudgetModal } from './BudgetModal';
 import { useStaggerChildren } from '../../hooks/useStaggerChildren';
@@ -156,21 +157,13 @@ export const BudgetsView: React.FC = () => {
 
       {/* Categories Budgets Grid */}
       {budgets.length === 0 ? (
-        <div className="text-center py-16 bg-white dark:bg-[#131822] rounded-3xl border border-dashed border-slate-200/90 dark:border-[#202836] p-8 shadow-sm">
-          <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-[#F5B742] flex items-center justify-center mx-auto mb-4">
-            <PieChart className="w-7 h-7" />
-          </div>
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white">No category budgets defined</h3>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
-            Set spending caps for categories like Dining, Groceries, Shopping or Fuel to stay in total control.
-          </p>
-          <button
-            onClick={handleOpenAdd}
-            className="press mt-5 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 rounded-2xl text-xs sm:text-sm font-bold shadow-sm transition-all"
-          >
-            Create Your First Budget
-          </button>
-        </div>
+        <EmptyState
+          icon={PieChart}
+          title="No category budgets defined"
+          description="Set spending caps for categories like Dining, Groceries, Shopping or Fuel to stay in total control."
+          actionLabel="Create Your First Budget"
+          onAction={handleOpenAdd}
+        />
       ) : (
         <div ref={budgetGridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {budgets.map((b, idx) => {

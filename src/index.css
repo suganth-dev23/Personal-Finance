@@ -278,6 +278,26 @@ html.theme-anim *::after {
   outline: none;
   box-shadow: 0 0 0 2px var(--color-canvas, #F8F9FA), 0 0 0 4px var(--color-gold, #F5B742);
 }
+:where(.dark, .dark *) .press:focus-visible {
+  box-shadow: 0 0 0 2px var(--color-canvas-dark, #0B0E14), 0 0 0 4px var(--color-gold, #F5B742);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-canvas, #F8F9FA), 0 0 0 4px var(--color-gold, #F5B742);
+}
+
+:where(.dark, .dark *) button:focus-visible,
+:where(.dark, .dark *) a:focus-visible,
+:where(.dark, .dark *) input:focus-visible,
+:where(.dark, .dark *) select:focus-visible,
+:where(.dark, .dark *) textarea:focus-visible {
+  box-shadow: 0 0 0 2px var(--color-canvas-dark, #0B0E14), 0 0 0 4px var(--color-gold, #F5B742);
+}
 
 .lift {
   transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 150ms cubic-bezier(0.16, 1, 0.3, 1);

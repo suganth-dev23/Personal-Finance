@@ -14,6 +14,7 @@ import { formatDate, calculateMonthsDiff } from '../../utils/date';
 import { IconRenderer } from '../common/IconRenderer';
 import { ProgressBar } from '../common/ProgressBar';
 import { AnimatedNumber } from '../common/AnimatedNumber';
+import { EmptyState } from '../common/EmptyState';
 import { DreamModal } from './DreamModal';
 import { DreamContributionModal } from './DreamContributionModal';
 import { useStaggerChildren } from '../../hooks/useStaggerChildren';
@@ -143,21 +144,13 @@ export const DreamsView: React.FC = () => {
 
       {/* Goals Grid */}
       {dreams.length === 0 ? (
-        <div className="text-center py-16 bg-white dark:bg-[#131822] rounded-3xl border border-dashed border-slate-200/90 dark:border-[#202836] p-8 shadow-sm">
-          <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-[#F5B742] flex items-center justify-center mx-auto mb-4">
-            <Target className="w-7 h-7" />
-          </div>
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white">No active goals yet</h3>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
-            Add a dream like a vacation, gadget, vehicle, or down payment to build an automatic monthly savings plan.
-          </p>
-          <button
-            onClick={handleOpenAdd}
-            className="mt-5 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 rounded-2xl text-xs sm:text-sm font-bold shadow-sm transition-all"
-          >
-            Create Your First Goal
-          </button>
-        </div>
+        <EmptyState
+          icon={Target}
+          title="No active goals yet"
+          description="Add a dream like a vacation, gadget, vehicle, or down payment to build an automatic monthly savings plan."
+          actionLabel="Create Your First Goal"
+          onAction={handleOpenAdd}
+        />
       ) : (
         <div ref={dreamGridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {dreams.map((dream, idx) => {

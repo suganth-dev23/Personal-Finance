@@ -14,6 +14,7 @@ import { useFinance } from '../../context/FinanceContext';
 import { Investment } from '../../types/finance';
 import { formatINR } from '../../utils/currency';
 import { AnimatedNumber } from '../common/AnimatedNumber';
+import { EmptyState } from '../common/EmptyState';
 import { InvestmentModal } from './InvestmentModal';
 import { PortfolioAllocationChart } from './PortfolioAllocationChart';
 import { INDIAN_WEALTH_PALETTE } from '../../constants/theme';
@@ -203,7 +204,17 @@ export const InvestmentsView: React.FC = () => {
         )}
       </div>
 
-      {/* Asset Category Cards Grid */}
+      {investments.length === 0 ? (
+        <EmptyState
+          icon={TrendingUp}
+          title="No investment holdings recorded"
+          description="Track your Indian mutual funds, equities, fixed deposits, gold, and PPF assets in one consolidated ledger."
+          actionLabel="Add First Holding"
+          onAction={handleOpenAdd}
+        />
+      ) : (
+        <>
+          {/* Asset Category Cards Grid */}
       {assetSegments.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
@@ -408,6 +419,8 @@ export const InvestmentsView: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+      </>
       )}
 
       <InvestmentModal

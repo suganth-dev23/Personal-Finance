@@ -22,6 +22,7 @@ import { Contact, Transaction, SplitEntry, SettlementRecord } from '../../types/
 import { formatINR } from '../../utils/currency';
 import { formatDate } from '../../utils/date';
 import { AnimatedNumber } from '../common/AnimatedNumber';
+import { EmptyState } from '../common/EmptyState';
 import { SettleUpModal } from './SettleUpModal';
 import { EditSplitModal } from './EditSplitModal';
 import { AddContactModal } from './AddContactModal';
@@ -647,23 +648,13 @@ export const PeopleView: React.FC = () => {
             )}
 
             {filteredActiveContacts.length === 0 && filteredUnassignedSplits.length === 0 && (
-              <div className="text-center py-12 bg-white dark:bg-[#131822] rounded-3xl border border-dashed border-slate-200/90 dark:border-[#202836] p-8">
-                <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-[#171E2A] flex items-center justify-center mx-auto text-slate-400">
-                  <Users className="w-6 h-6" />
-                </div>
-                <h3 className="mt-3 text-base font-bold text-slate-800 dark:text-slate-200">
-                  {contacts.length === 0 ? 'No contacts added yet' : 'No active debts matching filter'}
-                </h3>
-                <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
-                  Split dinner, grocery, or rent bills with friends when adding any transaction, or add a person here.
-                </p>
-                <button
-                  onClick={() => setIsAddContactOpen(true)}
-                  className="mt-4 px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 rounded-xl text-xs font-bold shadow-sm"
-                >
-                  Add First Person
-                </button>
-              </div>
+              <EmptyState
+                icon={Users}
+                title={contacts.length === 0 ? 'No contacts added yet' : 'No active debts matching filter'}
+                description="Split dinner, grocery, or rent bills with friends when adding any transaction, or add a person here."
+                actionLabel="Add First Person"
+                onAction={() => setIsAddContactOpen(true)}
+              />
             )}
 
             {filteredActiveContacts.map(contact => {
