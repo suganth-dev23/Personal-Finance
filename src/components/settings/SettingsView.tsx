@@ -13,6 +13,7 @@ import {
   Cloud,
   CloudOff,
   UploadCloud,
+  Activity,
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { AIProvider } from '../../types/finance';
@@ -56,6 +57,38 @@ export const SettingsView: React.FC = () => {
   const [importStatus, setImportStatus] = useState<string | null>(null);
   const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
   const [isManualSyncing, setIsManualSyncing] = useState(false);
+  const [motionPref, setMotionPref] = useState<'system' | 'standard' | 'reduced'>(() => {
+    if (typeof window === 'undefined') return 'system';
+    try {
+      const stored = localStorage.getItem('dhanveda_motion');
+      if (stored === 'off') return 'reduced';
+      if (stored === 'on') return 'standard';
+    } catch {}
+    const attr = document.documentElement.dataset.motion;
+    if (attr === 'off') return 'reduced';
+    if (attr === 'on') return 'standard';
+    return 'system';
+  });
+
+  const handleMotionChange = (pref: 'system' | 'standard' | 'reduced') => {
+    setMotionPref(pref);
+    if (typeof window === 'undefined') return;
+    try {
+      if (pref === 'system') {
+        delete document.documentElement.dataset.motion;
+        localStorage.removeItem('dhanveda_motion');
+      } else if (pref === 'standard') {
+        document.documentElement.dataset.motion = 'on';
+        localStorage.setItem('dhanveda_motion', 'on');
+      } else if (pref === 'reduced') {
+        document.documentElement.dataset.motion = 'off';
+        localStorage.setItem('dhanveda_motion', 'off');
+      }
+      window.dispatchEvent(new CustomEvent('dhanveda-motion-change'));
+    } catch (err) {
+      console.error('Failed to update motion preference:', err);
+    }
+  };
 
   const handleSaveAI = (e: React.FormEvent) => {
     e.preventDefault();
@@ -306,7 +339,7 @@ export const SettingsView: React.FC = () => {
                     type="button"
                     onClick={handleManualSync}
                     disabled={syncStatus === 'syncing' || isManualSyncing}
-                    className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 rounded-xl text-xs font-bold transition-all disabled:opacity-50 active:scale-95 shadow-sm"
+                    className="press flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 rounded-xl text-xs font-bold transition-all disabled:opacity-50 shadow-sm"
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${syncStatus === 'syncing' || isManualSyncing ? 'animate-spin' : ''}`} />
                     <span>{syncStatus === 'syncing' || isManualSyncing ? 'Syncing...' : 'Sync Now'}</span>
@@ -318,7 +351,7 @@ export const SettingsView: React.FC = () => {
                         disconnectDrive();
                       }
                     }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-200 dark:bg-[#202836] hover:bg-rose-100 dark:hover:bg-rose-950/50 hover:text-rose-600 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition-all active:scale-95"
+                    className="press flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-200 dark:bg-[#202836] hover:bg-rose-100 dark:hover:bg-rose-950/50 hover:text-rose-600 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition-all"
                   >
                     <CloudOff className="w-3.5 h-3.5" />
                     <span>Disconnect</span>
@@ -334,7 +367,7 @@ export const SettingsView: React.FC = () => {
                       connectDrive();
                     }
                   }}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 rounded-xl text-xs font-bold transition-all active:scale-95 shadow-sm"
+                  className="press flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 rounded-xl text-xs font-bold transition-all shadow-sm"
                 >
                   <Cloud className="w-3.5 h-3.5" />
                   <span>{googleAuthService.hasClientId() ? 'Connect Google Drive' : 'Configure Client ID'}</span>
@@ -342,6 +375,99 @@ export const SettingsView: React.FC = () => {
               )}
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Appearance & Motion Preferences (Task E.5) */}
+      <div className="bg-white dark:bg-[#131822] rounded-3xl p-6 shadow-sm border border-slate-200/90 dark:border-[#202836] space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-500 dark:text-[#F5B742] shrink-0">
+              <Activity className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                Appearance &amp; Motion
+              </h3>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Control UI animation speed, count-up tweens, chart transitions, and celebration effects.
+              </p>
+            </div>
+          </div>
+          <span className="text-xs font-semibold text-amber-600 dark:text-[#F5B742] px-3 py-1 rounded-full bg-amber-500/10 self-start sm:self-auto">
+            {motionPref === 'system' ? 'System Driven' : motionPref === 'standard' ? 'Full Dynamic Motion' : 'Calm / Reduced'}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+          <button
+            type="button"
+            onClick={() => handleMotionChange('system')}
+            className={`p-4 rounded-2xl border text-left transition-all press ${
+              motionPref === 'system'
+                ? 'border-amber-500/70 bg-amber-500/10 ring-1 ring-amber-500/30 shadow-xs'
+                : 'border-slate-200/80 dark:border-[#202836] bg-slate-50 dark:bg-[#171E2A] hover:border-slate-300 dark:hover:border-slate-700'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-1.5">
+              <span className={`text-[11px] font-bold uppercase tracking-wider ${
+                motionPref === 'system' ? 'text-amber-600 dark:text-[#F5B742]' : 'text-slate-500 dark:text-slate-400'
+              }`}>
+                Auto
+              </span>
+              {motionPref === 'system' && <CheckCircle className="w-4 h-4 text-amber-500 dark:text-[#F5B742]" />}
+            </div>
+            <p className="text-sm font-bold text-slate-900 dark:text-white">System Default</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Synchronizes automatically with your device operating system accessibility settings.
+            </p>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleMotionChange('standard')}
+            className={`p-4 rounded-2xl border text-left transition-all press ${
+              motionPref === 'standard'
+                ? 'border-amber-500/70 bg-amber-500/10 ring-1 ring-amber-500/30 shadow-xs'
+                : 'border-slate-200/80 dark:border-[#202836] bg-slate-50 dark:bg-[#171E2A] hover:border-slate-300 dark:hover:border-slate-700'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-1.5">
+              <span className={`text-[11px] font-bold uppercase tracking-wider ${
+                motionPref === 'standard' ? 'text-amber-600 dark:text-[#F5B742]' : 'text-slate-500 dark:text-slate-400'
+              }`}>
+                Rich
+              </span>
+              {motionPref === 'standard' && <CheckCircle className="w-4 h-4 text-amber-500 dark:text-[#F5B742]" />}
+            </div>
+            <p className="text-sm font-bold text-slate-900 dark:text-white">Standard Motion</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Fluid count-ups, staggered list entries, celebration confetti, and smooth card lifts.
+            </p>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleMotionChange('reduced')}
+            className={`p-4 rounded-2xl border text-left transition-all press ${
+              motionPref === 'reduced'
+                ? 'border-amber-500/70 bg-amber-500/10 ring-1 ring-amber-500/30 shadow-xs'
+                : 'border-slate-200/80 dark:border-[#202836] bg-slate-50 dark:bg-[#171E2A] hover:border-slate-300 dark:hover:border-slate-700'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-1.5">
+              <span className={`text-[11px] font-bold uppercase tracking-wider ${
+                motionPref === 'reduced' ? 'text-amber-600 dark:text-[#F5B742]' : 'text-slate-500 dark:text-slate-400'
+              }`}>
+                Calm
+              </span>
+              {motionPref === 'reduced' && <CheckCircle className="w-4 h-4 text-amber-500 dark:text-[#F5B742]" />}
+            </div>
+            <p className="text-sm font-bold text-slate-900 dark:text-white">Reduced Motion</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Instant view transitions, static chart renders, zero looped animations for calm focus.
+            </p>
+          </button>
         </div>
       </div>
 
@@ -424,7 +550,7 @@ export const SettingsView: React.FC = () => {
           <div className="flex justify-end">
             <button
               type="submit"
-              className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95"
+              className="press px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 rounded-xl text-xs font-bold transition-all shadow-sm"
             >
               Update AI Key
             </button>
@@ -461,7 +587,7 @@ export const SettingsView: React.FC = () => {
             <button
               type="button"
               onClick={handleExportBackup}
-              className="mt-4 flex items-center justify-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 rounded-xl text-xs font-bold transition-all active:scale-95 shadow-sm"
+              className="press mt-4 flex items-center justify-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 rounded-xl text-xs font-bold transition-all shadow-sm"
             >
               <Download className="w-3.5 h-3.5" />
               <span>Download JSON Backup</span>
@@ -489,7 +615,7 @@ export const SettingsView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="mt-4 w-full flex items-center justify-center gap-1.5 px-4 py-2.5 bg-slate-200 dark:bg-[#202836] hover:bg-slate-300 dark:hover:bg-[#202836]/80 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-bold transition-all active:scale-95"
+                className="press mt-4 w-full flex items-center justify-center gap-1.5 px-4 py-2.5 bg-slate-200 dark:bg-[#202836] hover:bg-slate-300 dark:hover:bg-[#202836]/80 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-bold transition-all"
               >
                 <Upload className="w-3.5 h-3.5" />
                 <span>Select Backup File</span>
@@ -511,7 +637,7 @@ export const SettingsView: React.FC = () => {
             <button
               type="button"
               onClick={() => setActiveTab('import')}
-              className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 rounded-xl text-xs font-bold transition-all active:scale-95 shadow-xs shrink-0"
+              className="press flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 rounded-xl text-xs font-bold transition-all shadow-xs shrink-0"
             >
               <span>Open Statement Importer</span>
               <UploadCloud className="w-3.5 h-3.5" />

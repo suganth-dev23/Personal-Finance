@@ -47,7 +47,7 @@ export const StreakBanner: React.FC<StreakBannerProps> = ({ compact = false }) =
             isStreakBroken
               ? 'text-slate-400 dark:text-slate-500 animate-desaturate-pulse opacity-60'
               : isTitan
-              ? 'text-amber-500 animate-pulse-gold fill-amber-500'
+              ? 'text-amber-500 animate-pulse-gold-infinite fill-amber-500'
               : isHabit
               ? 'text-amber-500 fill-amber-500/60'
               : 'text-amber-600 dark:text-amber-400'
@@ -98,7 +98,7 @@ export const StreakBanner: React.FC<StreakBannerProps> = ({ compact = false }) =
                 isStreakBroken
                   ? 'text-slate-400 dark:text-slate-500 fill-slate-300 dark:fill-slate-600 animate-desaturate-pulse opacity-60'
                   : isTitan
-                  ? 'fill-slate-950 animate-pulse-gold'
+                  ? 'fill-slate-950 animate-pulse-gold-infinite'
                   : isHabit
                   ? 'fill-amber-500/40'
                   : ''

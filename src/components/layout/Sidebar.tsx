@@ -19,6 +19,7 @@ import {
 import { useFinance, AppView } from '../../context/FinanceContext';
 import { useGamification } from '../../context/GamificationContext';
 import { formatINR } from '../../utils/currency';
+import { useAnimatedProgress } from '../../hooks/useAnimatedProgress';
 
 interface NavItem {
   id: AppView;
@@ -48,6 +49,21 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTx }) => {
   const { currentView, setCurrentView, darkMode, setDarkMode, totalBalance } = useFinance();
   const { levelInfo, totalXP } = useGamification();
+  const { displayPercent: progressPercent } = useAnimatedProgress(levelInfo.progress);
+
+  const prevXPRef = React.useRef(totalXP);
+  const [xpDelta, setXpDelta] = React.useState<number | null>(null);
+
+  React.useEffect(() => {
+    if (totalXP > prevXPRef.current) {
+      const delta = totalXP - prevXPRef.current;
+      setXpDelta(delta);
+      const timer = setTimeout(() => setXpDelta(null), 1200);
+      prevXPRef.current = totalXP;
+      return () => clearTimeout(timer);
+    }
+    prevXPRef.current = totalXP;
+  }, [totalXP]);
 
   return (
     <aside className="hidden lg:flex flex-col w-64 border-r border-slate-200/90 dark:border-[#202836] bg-white dark:bg-[#131822] h-screen sticky top-0 z-30 select-none">
@@ -80,9 +96,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTx }) => {
         {/* Gamification Level Status */}
         <div
           onClick={() => setCurrentView('badges')}
-          className="mt-2.5 p-2.5 bg-amber-500/5 hover:bg-amber-500/10 dark:bg-amber-500/10 dark:hover:bg-amber-500/15 rounded-2xl border border-amber-500/20 transition-all cursor-pointer group"
+          className="relative mt-2.5 p-2.5 bg-amber-500/5 hover:bg-amber-500/10 dark:bg-amber-500/10 dark:hover:bg-amber-500/15 rounded-2xl border border-amber-500/20 transition-all cursor-pointer group press"
           title={`Level ${levelInfo.level} Wealth Architect. ${levelInfo.xpToNext} XP to Level ${levelInfo.level + 1}. Click to view Achievements.`}
         >
+          {xpDelta !== null && (
+            <span className="absolute -top-3 right-3 font-numeric font-black text-xs text-amber-500 animate-xp-float pointer-events-none drop-shadow-sm">
+              +{xpDelta} XP
+            </span>
+          )}
           <div className="flex items-center justify-between text-xs mb-1">
             <span className="font-extrabold uppercase tracking-wider text-[11px] text-amber-700 dark:text-[#F5B742] flex items-center gap-1">
               <Trophy className="w-3 h-3 text-[#F5B742]" /> Level {levelInfo.level}
@@ -91,10 +112,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTx }) => {
               {totalXP} XP
             </span>
           </div>
-          <div className="h-1.5 w-full bg-slate-200/70 dark:bg-[#202836] rounded-full overflow-hidden">
+          <div className="h-1.5 w-full bg-slate-200/70 dark:bg-[#202836] rounded-full overflow-hidden contain-paint">
             <div
-              className="h-full bg-gradient-to-r from-amber-500 to-amber-600 rounded-full transition-all duration-500"
-              style={{ width: `${levelInfo.progress}%` }}
+              className="h-full w-full bg-gradient-to-r from-amber-500 to-amber-600 rounded-full origin-left will-change-transform"
+              style={{ transform: `scaleX(${progressPercent / 100})` }}
             />
           </div>
         </div>
@@ -104,7 +125,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTx }) => {
       <div className="px-4 pt-4 pb-2">
         <button
           onClick={onOpenAddTx}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold text-sm shadow-sm transition-all duration-150 transform active:scale-[0.98]"
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold text-sm shadow-sm transition-all press"
         >
           <Plus className="w-4 h-4" />
           <span>Add Transaction</span>
@@ -122,7 +143,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTx }) => {
             <button
               key={item.id}
               onClick={() => setCurrentView(item.id)}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 ${
+              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 press ${
                 isActive
                   ? 'bg-slate-100 text-slate-900 dark:bg-[#171E2A] dark:text-[#F5B742] shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100/70 dark:hover:bg-[#171E2A]/60 hover:text-slate-900 dark:hover:text-slate-200'

@@ -4,11 +4,7 @@ import {
   Target,
   Edit3,
   Trash2,
-  Calendar,
-  Sparkles,
-  CheckCircle2,
   Clock,
-  ArrowUpRight,
   Zap,
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
@@ -83,7 +79,7 @@ export const DreamsView: React.FC = () => {
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={handleOpenAdd}
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-3 text-sm font-bold text-slate-950 shadow-sm hover:from-amber-400 hover:to-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 dark:focus:ring-offset-slate-900 transition-all active:scale-[0.98]"
+              className="press inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-3 text-sm font-bold text-slate-950 shadow-sm hover:from-amber-400 hover:to-amber-500 transition-all"
             >
               <Plus className="h-4 w-4 stroke-[2.5]" />
               <span>New Milestone</span>
@@ -183,7 +179,7 @@ export const DreamsView: React.FC = () => {
               <div
                 key={dream.id}
                 style={getChildStyle(idx)}
-                className={`group bg-white dark:bg-[#131822] rounded-3xl p-6 border transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between relative overflow-hidden animate-slide-up ${
+                className={`group lift bg-white dark:bg-[#131822] rounded-3xl p-6 border transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between relative overflow-hidden animate-slide-up ${
                   isCompleted
                     ? 'border-amber-400/60 dark:border-amber-400/40 ring-1 ring-amber-400/20'
                     : 'border-slate-200/90 dark:border-[#202836] hover:border-emerald-500/40'
@@ -228,7 +224,7 @@ export const DreamsView: React.FC = () => {
                     <div className="flex items-center gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => handleEdit(dream)}
-                        className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200/90 dark:border-[#202836] text-slate-400 hover:bg-slate-50 dark:hover:bg-[#171E2A] hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+                        className="press flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200/90 dark:border-[#202836] text-slate-400 hover:bg-slate-50 dark:hover:bg-[#171E2A] hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
                         title="Edit Goal"
                       >
                         <Edit3 className="w-3.5 h-3.5" />
@@ -239,7 +235,7 @@ export const DreamsView: React.FC = () => {
                             deleteDream(dream.id);
                           }
                         }}
-                        className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200/90 dark:border-[#202836] text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                        className="press flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200/90 dark:border-[#202836] text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
                         title="Delete Goal"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -316,7 +312,7 @@ export const DreamsView: React.FC = () => {
                   </span>
                   <button
                     onClick={() => handleOpenContribution(dream)}
-                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-[#171E2A] hover:bg-amber-500 hover:text-slate-950 dark:hover:bg-[#F5B742] dark:hover:text-slate-950 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all duration-200 active:scale-95 border border-slate-200/60 dark:border-[#202836]"
+                    className="press flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-[#171E2A] hover:bg-amber-500 hover:text-slate-950 dark:hover:bg-[#F5B742] dark:hover:text-slate-950 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all duration-200 border border-slate-200/60 dark:border-[#202836]"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>Log Savings</span>

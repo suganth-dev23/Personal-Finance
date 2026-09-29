@@ -81,7 +81,7 @@ const MainContent: React.FC = () => {
 
         {/* Dynamic Lazy-Loaded View Router */}
         <main className="flex-1 px-4 sm:px-8 py-6 w-full">
-          <Suspense fallback={<ViewSkeleton />}>
+          <Suspense fallback={<ViewSkeleton view={currentView} />}>
             <ViewTransition viewKey={currentView}>
               {currentView === 'dashboard' && (
                 <DashboardView

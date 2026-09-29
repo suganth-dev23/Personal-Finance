@@ -39,7 +39,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx, onEdi
     transactions,
     totalBalance,
     totalNetWorth,
-    netSharedBalance,
     peerBalanceSummary,
     totalInvestmentValue,
     totalInvestmentGainLoss,
@@ -56,35 +55,36 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx, onEdi
 
   return (
     <div className="space-y-6">
-      {/* Welcome Banner when starting fresh */}
+      {/* Welcome Banner when starting fresh (Mineral Card with Gold Accent) */}
       {transactions.length === 0 && (
-        <div className="bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-800 rounded-3xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden">
+        <div className="relative overflow-hidden rounded-3xl bg-slate-900 dark:bg-[#131822] border border-amber-500/30 p-6 sm:p-8 text-white shadow-md">
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
           <div className="max-w-2xl space-y-3 relative z-10">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-extrabold uppercase tracking-wider text-emerald-100">
-              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-xs font-extrabold uppercase tracking-wider text-amber-400">
+              <Sparkles className="w-3.5 h-3.5 text-[#F5B742]" />
               <span>Clean Slate Ready</span>
             </span>
-            <h2 className="text-2xl sm:text-3xl font-black tracking-tight leading-tight">
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight leading-tight text-white">
               Welcome to your personal INR Wealth Tracker
             </h2>
-            <p className="text-sm text-emerald-100 leading-relaxed">
-              Start building your financial ledger. Log your monthly income, set category budgets, track investments, or import your bank & UPI statement.
+            <p className="text-sm text-slate-300 leading-relaxed">
+              Start building your financial ledger. Log your monthly income, set category budgets, track investments, or import your bank &amp; UPI statement.
             </p>
 
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <button
                 onClick={onOpenAddTx}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-slate-900 font-bold text-xs sm:text-sm hover:bg-white/90 transition-all shadow-md active:scale-95"
+                className="press flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs sm:text-sm transition-all shadow-sm"
               >
-                <Plus className="w-4 h-4 text-amber-500" />
+                <Plus className="w-4 h-4 stroke-[2.5]" />
                 <span>Add First Transaction</span>
               </button>
 
               <button
                 onClick={() => setCurrentView('import')}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm border border-white/20 transition-all"
+                className="press flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs sm:text-sm border border-slate-700 transition-all shadow-xs"
               >
-                <UploadCloud className="w-4 h-4" />
+                <UploadCloud className="w-4 h-4 text-amber-400" />
                 <span>Import Statement (CSV/PDF)</span>
               </button>
 
@@ -94,7 +94,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx, onEdi
                     resetToDemoData();
                   }
                 }}
-                className="px-3.5 py-2.5 rounded-xl text-xs font-semibold text-emerald-100 hover:text-white hover:bg-white/10 transition-colors"
+                className="press px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
               >
                 Load Demo Dataset
               </button>
@@ -130,7 +130,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx, onEdi
             <div className="mt-1">
               <div className="flex flex-wrap items-baseline gap-3 mt-0.5">
                 <h2 className="font-numeric text-2xl sm:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50">
-                  <AnimatedNumber value={totalNetWorth} showDirection={false} />
+                  <AnimatedNumber value={totalNetWorth} showDirection={false} animateOnMount={true} />
                 </h2>
                 <span
                   className={`font-numeric text-xs font-semibold px-2.5 py-1 rounded-md ${

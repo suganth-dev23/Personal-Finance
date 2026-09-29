@@ -7,7 +7,7 @@ interface ProgressBarProps {
   color?: string;
   size?: 'sm' | 'md' | 'lg';
   showPercentage?: boolean;
-  alertThresholds?: boolean; // Changes color automatically (green < 75%, amber 75-100%, rose > 100%)
+  alertThresholds?: boolean; // Changes color automatically (green < 80%, amber 80-100%, rose > 100%)
   showMilestones?: boolean; // Subtle 25/50/75% notches
   glowOnMilestone?: boolean; // Pulse glow when crossing 50% or 100%
   className?: string;
@@ -33,6 +33,14 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   const [glowClass, setGlowClass] = useState('');
 
   useEffect(() => {
+    // Reset milestones when progress drops back below thresholds (Finding 25)
+    if (displayPercent < 50) {
+      firedMilestones.current.delete(50);
+      firedMilestones.current.delete(100);
+    } else if (displayPercent < 100) {
+      firedMilestones.current.delete(100);
+    }
+
     if (!glowOnMilestone) return;
 
     if (displayPercent >= 100 && !firedMilestones.current.has(100)) {
@@ -81,7 +89,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
           )}
         </div>
       )}
-      <div className={`relative w-full bg-slate-100 dark:bg-[#171E2A] border border-transparent dark:border-[#202836] rounded-full overflow-hidden ${heightClasses} ${glowClass}`}>
+      <div className={`relative w-full bg-slate-100 dark:bg-[#171E2A] border border-transparent dark:border-[#202836] rounded-full overflow-hidden contain-paint ${heightClasses} ${glowClass}`}>
         {showMilestones && (
           <>
             <div className="absolute top-0 bottom-0 w-[1px] bg-slate-300/50 dark:bg-slate-700/50 pointer-events-none z-10" style={{ left: '25%' }} />
@@ -89,10 +97,11 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
             <div className="absolute top-0 bottom-0 w-[1px] bg-slate-300/50 dark:bg-slate-700/50 pointer-events-none z-10" style={{ left: '75%' }} />
           </>
         )}
+        {/* Compositor-driven scaleX eliminates per-frame layout recalculation (D.3 / Finding 9) */}
         <div
-          className={`${heightClasses} rounded-full ${barColorClass}`}
+          className={`${heightClasses} rounded-full ${barColorClass} w-full origin-left will-change-transform`}
           style={{
-            width: `${displayPercent}%`,
+            transform: `scaleX(${displayPercent / 100})`,
             ...(color && !alertThresholds ? { backgroundColor: color } : {}),
           }}
         />

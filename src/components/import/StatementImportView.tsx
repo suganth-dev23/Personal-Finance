@@ -5,12 +5,10 @@ import {
   FileText,
   AlertCircle,
   CheckCircle2,
-  Sparkles,
   ArrowRight,
   Download,
   RefreshCw,
   FileCheck,
-  ShieldCheck,
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { StagedTransaction } from '../../types/finance';
@@ -35,7 +33,6 @@ export const StatementImportView: React.FC = () => {
   const [parseError, setParseError] = useState<string | null>(null);
   const [stagedList, setStagedList] = useState<StagedTransaction[] | null>(null);
   const [fileName, setFileName] = useState<string>('');
-  const [fileType, setFileType] = useState<'csv' | 'pdf' | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const handleFileProcess = async (file: File) => {
@@ -52,7 +49,6 @@ export const StatementImportView: React.FC = () => {
     setPdfProgress(null);
     setParseError(null);
     setFileName(file.name);
-    setFileType(isCsv ? 'csv' : 'pdf');
 
     try {
       let rawParsed: StagedTransaction[] = [];

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useReducedMotion } from './useReducedMotion';
 
 export interface UseNumberPopResult {
   popClass: string;
@@ -8,23 +9,54 @@ export interface UseNumberPopResult {
 /**
  * Detects increases/decreases in a numeric value across renders and
  * returns a Tailwind animation class to apply for ~300ms.
+ * Supports rapid re-triggering and respects prefers-reduced-motion.
  */
 export function useNumberPop(value: number): UseNumberPopResult {
+  const reducedMotion = useReducedMotion();
   const prevRef = useRef(value);
   const [direction, setDirection] = useState<'up' | 'down' | null>(null);
+  const [active, setActive] = useState(false);
+  const timerRef = useRef<number | null>(null);
 
   useEffect(() => {
+    if (reducedMotion) {
+      prevRef.current = value;
+      return;
+    }
+
     let dir: 'up' | 'down' | null = null;
     if (value > prevRef.current) dir = 'up';
     else if (value < prevRef.current) dir = 'down';
     prevRef.current = value;
 
     if (dir !== null) {
-      setDirection(dir);
-      const t = setTimeout(() => setDirection(null), 300);
-      return () => clearTimeout(t);
-    }
-  }, [value]);
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+      // Momentarily toggle active state if already active to force keyframe restart
+      setActive(false);
+      const raf = requestAnimationFrame(() => {
+        setDirection(dir);
+        setActive(true);
+        timerRef.current = window.setTimeout(() => {
+          setActive(false);
+          setDirection(null);
+        }, 300);
+      });
 
-  return { popClass: direction ? 'animate-number-bump' : '', direction };
+      return () => {
+        cancelAnimationFrame(raf);
+        if (timerRef.current) clearTimeout(timerRef.current);
+      };
+    }
+  }, [value, reducedMotion]);
+
+  if (reducedMotion) {
+    return { popClass: '', direction: null };
+  }
+
+  return {
+    popClass: active && direction ? 'animate-number-bump' : '',
+    direction,
+  };
 }

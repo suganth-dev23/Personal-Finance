@@ -635,6 +635,12 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [aiReports, isInitialized]);
 
   useEffect(() => {
+    // Apply temporary .theme-anim class for smooth transition only during toggle (E.4)
+    document.documentElement.classList.add('theme-anim');
+    const timer = setTimeout(() => {
+      document.documentElement.classList.remove('theme-anim');
+    }, 350);
+
     if (darkMode) {
       document.documentElement.classList.add('dark');
       localStorage.setItem('dhanveda_dark_mode', 'true');
@@ -650,6 +656,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         updatedAt: new Date().toISOString(),
       }).catch(e => console.error('Error saving user preferences:', e));
     }
+    return () => clearTimeout(timer);
   }, [darkMode, notRecurringTxIds, isInitialized]);
 
   const toggleNotRecurring = (txId: string | string[]) => {

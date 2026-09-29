@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Edit3, Trash2, AlertCircle, CheckCircle, PieChart, ShieldAlert, Sparkles, TrendingDown } from 'lucide-react';
+import { Plus, Edit3, Trash2, AlertCircle, CheckCircle, PieChart, ShieldAlert } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { Budget } from '../../types/finance';
 import { formatINR, formatCompactINR } from '../../utils/currency';
@@ -84,14 +84,14 @@ export const BudgetsView: React.FC = () => {
               </span>
             </div>
             <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-              {overallPercent}% used of {formatINR(totalBudgeted)} monthly limit • {budgets.length} active category limits
+              <span className="font-numeric font-semibold">{overallPercent}%</span> used of <span className="font-numeric font-semibold">{formatINR(totalBudgeted)}</span> monthly limit • <span className="font-numeric font-semibold">{budgets.length}</span> active category limits
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={handleOpenAdd}
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-3 text-sm font-bold text-slate-950 shadow-sm hover:from-amber-400 hover:to-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 dark:focus:ring-offset-slate-900 transition-all active:scale-[0.98]"
+              className="press inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-3 text-sm font-bold text-slate-950 shadow-sm hover:from-amber-400 hover:to-amber-500 transition-all"
             >
               <Plus className="h-4 w-4 stroke-[2.5]" />
               <span>Set New Budget</span>
@@ -165,7 +165,7 @@ export const BudgetsView: React.FC = () => {
           </p>
           <button
             onClick={handleOpenAdd}
-            className="mt-5 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 rounded-2xl text-xs sm:text-sm font-bold shadow-sm transition-all"
+            className="press mt-5 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 rounded-2xl text-xs sm:text-sm font-bold shadow-sm transition-all"
           >
             Create Your First Budget
           </button>
@@ -184,14 +184,17 @@ export const BudgetsView: React.FC = () => {
               <div
                 key={b.id}
                 style={getChildStyle(idx)}
-                className={`group bg-white dark:bg-[#131822] rounded-3xl p-4 sm:p-5 border transition-all duration-300 shadow-sm hover:shadow-md animate-slide-up ${
-                  isOver
-                    ? 'border-rose-400 dark:border-rose-600/70 ring-2 ring-rose-500/30 animate-shake-x animate-pulse-danger'
-                    : isNear
-                    ? 'border-amber-300 dark:border-amber-900/60'
-                    : 'border-slate-200/90 dark:border-[#202836] hover:border-emerald-500/40'
-                }`}
+                className="animate-slide-up"
               >
+                <div
+                  className={`group lift bg-white dark:bg-[#131822] rounded-3xl p-4 sm:p-5 border transition-all duration-300 shadow-sm hover:shadow-md ${
+                    isOver
+                      ? 'border-rose-400 dark:border-rose-600/70 ring-2 ring-rose-500/30 animate-shake-then-flash'
+                      : isNear
+                      ? 'border-amber-300 dark:border-amber-900/60'
+                      : 'border-slate-200/90 dark:border-[#202836] hover:border-emerald-500/40'
+                  }`}
+                >
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
                     <div
@@ -216,7 +219,7 @@ export const BudgetsView: React.FC = () => {
                   <div className="flex items-center gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => handleEdit(b)}
-                      className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200/90 dark:border-[#202836] text-slate-400 hover:bg-slate-50 dark:hover:bg-[#171E2A] hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+                      className="press flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200/90 dark:border-[#202836] text-slate-400 hover:bg-slate-50 dark:hover:bg-[#171E2A] hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
                       title="Edit Limit"
                     >
                       <Edit3 className="w-3.5 h-3.5" />
@@ -227,7 +230,7 @@ export const BudgetsView: React.FC = () => {
                           deleteBudget(b.id);
                         }
                       }}
-                      className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200/90 dark:border-[#202836] text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                      className="press flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200/90 dark:border-[#202836] text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
                       title="Delete Budget"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -284,6 +287,7 @@ export const BudgetsView: React.FC = () => {
                   </div>
                 </div>
               </div>
+            </div>
             );
           })}
         </div>

@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+import { useOverlayTransition } from '../../hooks/useOverlayTransition';
 
 interface ModalProps {
   isOpen: boolean;
@@ -19,44 +20,11 @@ export const Modal: React.FC<ModalProps> = ({
   children,
   maxWidth = 'lg',
 }) => {
-  const [shouldRender, setShouldRender] = useState(isOpen);
-  const [isAnimatingIn, setIsAnimatingIn] = useState(false);
-  const closeTimerRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-
-    if (isOpen) {
-      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-      setShouldRender(true);
-      document.body.style.overflow = 'hidden';
-      window.addEventListener('keydown', handleKeyDown);
-
-      // Trigger enter transition in the next microtask/frame
-      const frameId = requestAnimationFrame(() => {
-        setIsAnimatingIn(true);
-      });
-
-      return () => {
-        cancelAnimationFrame(frameId);
-        document.body.style.overflow = 'unset';
-        window.removeEventListener('keydown', handleKeyDown);
-      };
-    } else {
-      setIsAnimatingIn(false);
-      closeTimerRef.current = window.setTimeout(() => {
-        setShouldRender(false);
-      }, 180);
-
-      return () => {
-        if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-        document.body.style.overflow = 'unset';
-        window.removeEventListener('keydown', handleKeyDown);
-      };
-    }
-  }, [isOpen, onClose]);
+  const { shouldRender, isAnimatingIn } = useOverlayTransition({
+    isOpen,
+    onClose,
+    duration: 200,
+  });
 
   if (!shouldRender || typeof document === 'undefined') return null;
 
@@ -81,7 +49,10 @@ export const Modal: React.FC<ModalProps> = ({
 
       {/* Modal Dialog: Bottom-sheet on mobile, centered modal on desktop */}
       <div
-        className={`relative w-full ${maxWidthClasses} bg-white dark:bg-[#131822] rounded-t-3xl sm:rounded-3xl shadow-2xl border-t sm:border border-slate-200/90 dark:border-[#202836] flex flex-col max-h-[92dvh] sm:max-h-[calc(100dvh-3.5rem)] overflow-hidden z-10 transition-all duration-250 ease-out transform ${
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+        className={`relative w-full ${maxWidthClasses} bg-white dark:bg-[#131822] rounded-t-3xl sm:rounded-3xl shadow-2xl border-t sm:border border-slate-200/90 dark:border-[#202836] flex flex-col max-h-[92dvh] sm:max-h-[calc(100dvh-3.5rem)] overflow-hidden z-10 transition-all duration-200 ease-out transform will-change-transform-opacity ${
           isAnimatingIn
             ? 'opacity-100 scale-100 translate-y-0'
             : 'opacity-0 sm:scale-95 translate-y-12 sm:translate-y-2'
@@ -93,7 +64,9 @@ export const Modal: React.FC<ModalProps> = ({
         {/* Header */}
         <div className="shrink-0 flex items-start justify-between p-4 sm:p-6 border-b border-slate-100 dark:border-[#202836]">
           <div>
-            <h3 className="text-base sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-tight">{title}</h3>
+            <h3 id="modal-title" className="text-base sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-tight">
+              {title}
+            </h3>
             {subtitle && (
               <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-slate-500 dark:text-slate-400">{subtitle}</p>
             )}
@@ -101,7 +74,7 @@ export const Modal: React.FC<ModalProps> = ({
           <button
             onClick={onClose}
             aria-label="Close modal"
-            className="p-1.5 sm:p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#171E2A] transition-colors active:scale-95 shrink-0"
+            className="p-1.5 sm:p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#171E2A] transition-colors press shrink-0"
           >
             <X className="w-5 h-5" />
           </button>

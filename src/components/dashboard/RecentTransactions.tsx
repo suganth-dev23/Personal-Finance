@@ -6,6 +6,7 @@ import { formatDate } from '../../utils/date';
 import { IconRenderer } from '../common/IconRenderer';
 
 import { Transaction } from '../../types/finance';
+import { useStaggerChildren } from '../../hooks/useStaggerChildren';
 
 interface RecentTransactionsProps {
   onEditTransaction?: (tx: Transaction) => void;
@@ -13,6 +14,7 @@ interface RecentTransactionsProps {
 
 export const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEditTransaction }) => {
   const { transactions, categories, contacts, setCurrentView } = useFinance();
+  const { containerRef, getChildStyle } = useStaggerChildren(40);
 
   // Sort descending (newest transaction first)
   const recentList = useMemo(() => {
@@ -50,8 +52,8 @@ export const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEditTr
         {recentList.length === 0 ? (
           <p className="text-xs text-slate-500 dark:text-slate-400 py-6 text-center">No transactions found.</p>
         ) : (
-          <div className="divide-y divide-slate-100 dark:divide-[#202836]">
-            {recentList.map(tx => {
+          <div ref={containerRef} className="divide-y divide-slate-100 dark:divide-[#202836]">
+            {recentList.map((tx, idx) => {
               const isCredit = tx.type === 'credit';
               const catInfo = categoryMap.get(tx.category.toLowerCase());
               const hasSplits = Array.isArray(tx.splitWith) && tx.splitWith.length > 0;
@@ -94,10 +96,11 @@ export const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEditTr
               return (
                 <div
                   key={tx.id}
+                  style={getChildStyle(idx)}
                   onClick={() => onEditTransaction?.(tx)}
-                  className={`py-3 flex items-center justify-between gap-3 rounded-2xl px-2 -mx-2 transition-all ${
+                  className={`py-3 flex items-center justify-between gap-3 rounded-2xl px-2 -mx-2 transition-all animate-slide-up ${
                     onEditTransaction
-                      ? 'cursor-pointer hover:bg-slate-50/80 dark:hover:bg-[#1A2130]/60 active:scale-[0.99]'
+                      ? 'cursor-pointer hover:bg-slate-50/80 dark:hover:bg-[#1A2130]/60 press'
                       : ''
                   }`}
                   role={onEditTransaction ? 'button' : undefined}

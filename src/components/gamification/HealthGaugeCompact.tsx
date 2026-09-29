@@ -43,7 +43,7 @@ export const HealthGaugeCompact: React.FC = () => {
       type="button"
       aria-label={`Financial Health Score: ${Math.round(overallScore)} out of 100, Grade ${grade}. Tap to view badges.`}
       onClick={() => setCurrentView('badges')}
-      className="w-full text-left relative overflow-hidden rounded-2xl bg-white dark:bg-[#131822] border border-slate-200/90 dark:border-[#202836] p-3.5 shadow-xs active:scale-[0.99] transition-transform cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-amber-500/50"
+      className="press w-full text-left relative overflow-hidden rounded-2xl bg-white dark:bg-[#131822] border border-slate-200/90 dark:border-[#202836] p-3.5 shadow-xs cursor-pointer"
     >
       {/* Gold hairline */}
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
@@ -66,10 +66,10 @@ export const HealthGaugeCompact: React.FC = () => {
 
       {/* Row 2: Horizontal Score Bar + Number + Trend */}
       <div className="flex items-center gap-3 mb-3">
-        {/* Horizontal gradient bar (replaces the SVG arc) */}
+        {/* Horizontal gradient bar matching HealthGauge gold terminus */}
         <div className="flex-1 h-2.5 bg-slate-100 dark:bg-[#171E2A] rounded-full overflow-hidden">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-rose-500 via-amber-500 to-emerald-500 transition-all duration-700 ease-out"
+            className="h-full rounded-full bg-gradient-to-r from-rose-500 via-amber-500 via-emerald-500 to-[#F5B742] transition-all duration-700 ease-out"
             style={{ width: `${clampedScore}%` }}
           />
         </div>
@@ -85,7 +85,7 @@ export const HealthGaugeCompact: React.FC = () => {
           title={`Trend: ${trend === 'up' ? 'Improving' : trend === 'down' ? 'Softening' : 'Stable'}`}
         >
           {trend === 'up' && <TrendingUp className="w-3.5 h-3.5 text-emerald-500" aria-label="Improving" />}
-          {trend === 'down' && <TrendingDown className="w-3.5 h-3.5 text-rose-500 animate-pulse-danger" aria-label="Softening" />}
+          {trend === 'down' && <TrendingDown className="w-3.5 h-3.5 text-rose-500 animate-pulse-danger-infinite" aria-label="Softening" />}
           {trend === 'neutral' && <Minus className="w-3.5 h-3.5 text-slate-400" aria-label="Stable" />}
         </div>
       </div>

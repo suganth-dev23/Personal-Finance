@@ -16,9 +16,11 @@ import { Waves, BarChart3 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { formatINR, formatCompactINR } from '../../utils/currency';
 import { getRelativeMonthsList } from '../../utils/date';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
 
 export const CashFlowChart: React.FC = () => {
-  const { transactions } = useFinance();
+  const { transactions, darkMode } = useFinance();
+  const reducedMotion = useReducedMotion();
   const [chartMode, setChartMode] = useState<'wave' | 'bars'>('wave');
 
   const chartData = useMemo(() => {
@@ -43,8 +45,8 @@ export const CashFlowChart: React.FC = () => {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-slate-900/95 backdrop-blur-md p-3.5 rounded-xl shadow-xl border border-slate-700 text-xs space-y-1.5">
-          <p className="font-bold text-white border-b border-slate-800 pb-1">
+        <div className="bg-white/95 dark:bg-[#131822]/95 backdrop-blur-md p-3.5 rounded-xl shadow-xl border border-slate-200 dark:border-[#202836] text-xs space-y-1.5">
+          <p className="font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-[#202836] pb-1">
             {label}
           </p>
           {payload.map((item: any) => (
@@ -53,7 +55,7 @@ export const CashFlowChart: React.FC = () => {
                 <span className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
                 <span>{item.name}:</span>
               </span>
-              <span className="font-bold text-white">
+              <span className="font-bold font-numeric text-slate-900 dark:text-white">
                 {formatINR(item.value)}
               </span>
             </div>
@@ -147,8 +149,10 @@ export const CashFlowChart: React.FC = () => {
                 strokeWidth={2.5}
                 fillOpacity={1}
                 fill="url(#emeraldCashFlow)"
-                dot={{ r: 3.5, fill: '#10b981', strokeWidth: 2, stroke: '#0B0E14' }}
+                dot={{ r: 3.5, fill: '#10b981', strokeWidth: 2, stroke: darkMode ? '#0B0E14' : '#FFFFFF' }}
                 activeDot={{ r: 5, fill: '#10B981' }}
+                isAnimationActive={!reducedMotion}
+                animationBegin={0}
                 animationDuration={600}
                 animationEasing="ease-out"
               />
@@ -160,6 +164,8 @@ export const CashFlowChart: React.FC = () => {
                 strokeWidth={1.5}
                 strokeDasharray="4 4"
                 dot={false}
+                isAnimationActive={!reducedMotion}
+                animationBegin={120}
                 animationDuration={600}
                 animationEasing="ease-out"
               />
@@ -171,6 +177,8 @@ export const CashFlowChart: React.FC = () => {
                 strokeWidth={1.5}
                 strokeDasharray="4 4"
                 dot={false}
+                isAnimationActive={!reducedMotion}
+                animationBegin={240}
                 animationDuration={600}
                 animationEasing="ease-out"
               />
@@ -196,8 +204,26 @@ export const CashFlowChart: React.FC = () => {
                 wrapperStyle={{ fontSize: 11, paddingTop: 10 }}
                 formatter={value => <span className="text-slate-600 dark:text-slate-400 font-medium">{value}</span>}
               />
-              <Bar dataKey="Income" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={16} animationDuration={600} animationEasing="ease-out" />
-              <Bar dataKey="Expenses" fill="#f43f5e" radius={[4, 4, 0, 0]} maxBarSize={16} animationDuration={600} animationEasing="ease-out" />
+              <Bar
+                dataKey="Income"
+                fill="#10b981"
+                radius={[4, 4, 0, 0]}
+                maxBarSize={16}
+                isAnimationActive={!reducedMotion}
+                animationBegin={0}
+                animationDuration={600}
+                animationEasing="ease-out"
+              />
+              <Bar
+                dataKey="Expenses"
+                fill="#f43f5e"
+                radius={[4, 4, 0, 0]}
+                maxBarSize={16}
+                isAnimationActive={!reducedMotion}
+                animationBegin={120}
+                animationDuration={600}
+                animationEasing="ease-out"
+              />
               <Line
                 type="monotone"
                 dataKey="NetSavings"
@@ -205,6 +231,8 @@ export const CashFlowChart: React.FC = () => {
                 stroke="#F5B742"
                 strokeWidth={2.5}
                 dot={{ r: 3, fill: '#F5B742' }}
+                isAnimationActive={!reducedMotion}
+                animationBegin={240}
                 animationDuration={600}
                 animationEasing="ease-out"
               />

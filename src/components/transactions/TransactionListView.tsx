@@ -27,8 +27,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
   onOpenAddModal,
   onEditTransaction,
 }) => {
-  const { containerRef: mobileListRef, getChildStyle: getMobileStyle } = useStaggerChildren(25);
-  const { containerRef: desktopTableRef, getChildStyle: getDesktopStyle } = useStaggerChildren(25);
+  const { containerRef, getChildStyle } = useStaggerChildren(25);
   const {
     transactions,
     categories,
@@ -403,7 +402,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
               setSelectedType('all');
               setSelectedMethod('all');
             }}
-            className={`px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all ${
+            className={`px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all press ${
               selectedType === 'all' && selectedMethod === 'all'
                 ? 'bg-slate-900 text-white dark:bg-[#171E2A] dark:text-[#F5B742] dark:border dark:border-[#F5B742]/40 shadow-xs'
                 : 'bg-slate-100 text-slate-600 dark:bg-[#171E2A]/70 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#171E2A]'
@@ -414,7 +413,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
           <button
             type="button"
             onClick={() => setSelectedType('debit')}
-            className={`px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all ${
+            className={`px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all press ${
               selectedType === 'debit'
                 ? 'bg-[#F43F5E] text-white shadow-xs'
                 : 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 hover:bg-rose-100'
@@ -425,7 +424,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
           <button
             type="button"
             onClick={() => setSelectedType('credit')}
-            className={`px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all ${
+            className={`px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all press ${
               selectedType === 'credit'
                 ? 'bg-emerald-600 text-white shadow-xs'
                 : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 hover:bg-emerald-100'
@@ -436,7 +435,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
           <button
             type="button"
             onClick={() => setSelectedMethod(selectedMethod === 'UPI' ? 'all' : 'UPI')}
-            className={`px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all ${
+            className={`px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all press ${
               selectedMethod === 'UPI'
                 ? 'bg-slate-900 text-white dark:bg-[#171E2A] dark:text-[#F5B742] dark:border dark:border-[#F5B742]/40 shadow-xs'
                 : 'bg-slate-100 text-slate-600 dark:bg-[#171E2A]/70 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#171E2A]'
@@ -447,7 +446,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
           <button
             type="button"
             onClick={() => setSelectedMethod(selectedMethod.includes('Card') ? 'all' : 'Credit Card')}
-            className={`px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all ${
+            className={`px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all press ${
               selectedMethod.includes('Card')
                 ? 'bg-slate-900 text-white dark:bg-[#171E2A] dark:text-[#F5B742] dark:border dark:border-[#F5B742]/40 shadow-xs'
                 : 'bg-slate-100 text-slate-600 dark:bg-[#171E2A]/70 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#171E2A]'
@@ -458,7 +457,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
           <button
             type="button"
             onClick={() => setSelectedMethod(selectedMethod === 'Cash' ? 'all' : 'Cash')}
-            className={`px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all ${
+            className={`px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all press ${
               selectedMethod === 'Cash'
                 ? 'bg-slate-900 text-white dark:bg-[#171E2A] dark:text-[#F5B742] dark:border dark:border-[#F5B742]/40 shadow-xs'
                 : 'bg-slate-100 text-slate-600 dark:bg-[#171E2A]/70 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#171E2A]'
@@ -649,7 +648,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
       )}
 
       {/* Grouped or Flat Transaction Tables */}
-      <div className="space-y-6">
+      <div ref={containerRef} className="space-y-6">
         {groupedTransactions.map(group => {
           if (group.items.length === 0) {
             return (
@@ -688,7 +687,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
               )}
 
               {/* Mobile Cards Feed (matching minimalist mockup) */}
-              <div ref={mobileListRef} className="md:hidden divide-y divide-slate-100 dark:divide-slate-800/60">
+              <div className="md:hidden divide-y divide-slate-100 dark:divide-slate-800/60">
                 {group.items.map((tx, idx) => {
                   const isCredit = tx.type === 'credit';
                   const isSelected = selectedTxIds.has(tx.id);
@@ -698,15 +697,18 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
                   return (
                     <div
                       key={tx.id}
-                      style={getMobileStyle(Math.min(idx, 15))}
-                      className={`p-4 flex items-center justify-between gap-3 transition-all duration-300 animate-slide-up ${
-                        isHighlighted
-                          ? 'animate-pulse-success ring-2 ring-emerald-500/50 bg-emerald-500/10 dark:bg-emerald-500/15 rounded-2xl'
-                          : isSelected
-                          ? 'bg-emerald-50/40 dark:bg-emerald-950/20'
-                          : ''
-                      }`}
+                      style={getChildStyle(Math.min(idx, 15))}
+                      className="animate-slide-up"
                     >
+                      <div
+                        className={`p-4 flex items-center justify-between gap-3 transition-all duration-300 ${
+                          isHighlighted
+                            ? 'animate-pulse-success ring-2 ring-emerald-500/50 bg-emerald-500/10 dark:bg-emerald-500/15 rounded-2xl'
+                            : isSelected
+                            ? 'bg-emerald-50/40 dark:bg-emerald-950/20'
+                            : ''
+                        }`}
+                      >
                       <div className="flex items-center gap-3 min-w-0">
                         <button
                           onClick={() => toggleSelectOne(tx.id)}
@@ -787,12 +789,13 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
                         </div>
                       </div>
                     </div>
+                  </div>
                   );
                 })}
               </div>
 
               {/* Desktop Transactions Table */}
-              <div ref={desktopTableRef} className="hidden md:block overflow-x-auto">
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-slate-200/80 dark:border-[#202836] bg-slate-50/70 dark:bg-[#171E2A]/50 text-xs font-medium text-slate-500 dark:text-slate-400">
@@ -824,10 +827,10 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
                       return (
                         <tr
                           key={tx.id}
-                          style={getDesktopStyle(Math.min(idx, 15))}
+                          style={getChildStyle(Math.min(idx, 15))}
                           className={`hover:bg-slate-50/70 dark:hover:bg-[#171E2A]/40 transition-all duration-300 animate-slide-up ${
                             isHighlighted
-                              ? 'animate-pulse-success ring-2 ring-emerald-500/50 bg-emerald-500/10 dark:bg-emerald-500/15'
+                              ? 'ring-2 ring-emerald-500/50 bg-emerald-500/10 dark:bg-emerald-500/15'
                               : isSelected
                               ? 'bg-emerald-50/40 dark:bg-emerald-950/20'
                               : ''

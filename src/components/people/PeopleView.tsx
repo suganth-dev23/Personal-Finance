@@ -360,7 +360,7 @@ export const PeopleView: React.FC = () => {
 
       {/* Floating Link Suggestion Prompt if triggered */}
       {linkSuggestionPrompt && (
-        <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-indigo-500/10 border border-emerald-500/30 dark:border-emerald-500/40 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-indigo-500/10 border border-emerald-500/30 dark:border-emerald-500/40 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-slide-down">
           <div className="flex items-start gap-3 min-w-0">
             <div className="p-2 rounded-xl bg-emerald-600 text-white flex-shrink-0 mt-0.5">
               <LinkIcon className="w-4 h-4" />

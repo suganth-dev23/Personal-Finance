@@ -5,6 +5,7 @@ import { useFinance } from '../../context/FinanceContext';
 import { Badge, BadgeTier } from '../../types/finance';
 import { IconRenderer } from '../common/IconRenderer';
 import { dualSideCannons } from '../../utils/confetti';
+import { useScrollLock } from '../../hooks/useScrollLock';
 
 const TIER_CONFIG: Record<BadgeTier, { label: string; border: string; bg: string; text: string; glow: string }> = {
   bronze: {
@@ -41,7 +42,11 @@ export const BadgePopup: React.FC = () => {
   const { subscribeFinanceEvent, setCurrentView } = useFinance();
   const [badgeQueue, setBadgeQueue] = useState<Badge[]>([]);
   const [currentBadge, setCurrentBadge] = useState<Badge | null>(null);
+  const [isExiting, setIsExiting] = useState(false);
   const autoDismissTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const dismissTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useScrollLock(Boolean(currentBadge));
 
   // Subscribe to badge_earned finance event
   useEffect(() => {
@@ -62,13 +67,14 @@ export const BadgePopup: React.FC = () => {
       const nextBadge = badgeQueue[0];
       setBadgeQueue(prev => prev.slice(1));
       setCurrentBadge(nextBadge);
+      setIsExiting(false);
       dualSideCannons();
 
       if (autoDismissTimerRef.current) {
         clearTimeout(autoDismissTimerRef.current);
       }
       autoDismissTimerRef.current = setTimeout(() => {
-        setCurrentBadge(null);
+        handleDismiss();
       }, 5000);
     }
   }, [currentBadge, badgeQueue]);
@@ -76,14 +82,32 @@ export const BadgePopup: React.FC = () => {
   const handleDismiss = useCallback(() => {
     if (autoDismissTimerRef.current) {
       clearTimeout(autoDismissTimerRef.current);
+      autoDismissTimerRef.current = null;
     }
-    setCurrentBadge(null);
+    setIsExiting(true);
+    if (dismissTimeoutRef.current) clearTimeout(dismissTimeoutRef.current);
+    dismissTimeoutRef.current = setTimeout(() => {
+      setCurrentBadge(null);
+      setIsExiting(false);
+    }, 180);
   }, []);
 
   const handleViewVault = useCallback(() => {
     handleDismiss();
     setCurrentView('badges');
   }, [handleDismiss, setCurrentView]);
+
+  // Escape key listener
+  useEffect(() => {
+    if (!currentBadge) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleDismiss();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentBadge, handleDismiss]);
 
   if (!currentBadge || typeof document === 'undefined') {
     return null;
@@ -93,16 +117,28 @@ export const BadgePopup: React.FC = () => {
   const config = TIER_CONFIG[tier];
 
   return createPortal(
-    <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="badge-title"
+      aria-describedby="badge-desc"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+    >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity duration-300 animate-fade-in"
+        className={`fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity duration-200 ${
+          isExiting ? 'opacity-0' : 'animate-fade-in opacity-100'
+        }`}
         onClick={handleDismiss}
       />
 
       {/* Celebratory Modal Card */}
       <div
-        className={`relative z-10 max-w-md w-full rounded-3xl bg-white dark:bg-[#131822] border-2 ${config.border} p-7 text-center shadow-2xl animate-badge-unlock overflow-hidden`}
+        className={`relative z-10 max-w-md w-full rounded-3xl bg-white dark:bg-[#131822] border-2 ${config.border} p-7 text-center shadow-2xl overflow-hidden transition-all duration-200 transform will-change-transform-opacity ${
+          isExiting
+            ? 'opacity-0 scale-95 translate-y-2'
+            : 'animate-badge-unlock'
+        }`}
         style={{
           boxShadow: `0 20px 50px -10px ${config.glow}`,
         }}
@@ -116,13 +152,15 @@ export const BadgePopup: React.FC = () => {
         {/* Close Button */}
         <button
           onClick={handleDismiss}
-          className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#171E2A] transition-colors"
+          aria-label="Close notification"
+          className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#171E2A] transition-colors press"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Header Tier Pill */}
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-5 border border-current shadow-xs"
+        <div
+          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-5 border border-current shadow-xs"
           style={{ backgroundColor: `${config.glow}`, color: 'inherit' }}
         >
           <Sparkles className="w-3.5 h-3.5 text-amber-500" />
@@ -132,25 +170,25 @@ export const BadgePopup: React.FC = () => {
         {/* Center Badge Icon Container */}
         <div className="relative mx-auto w-24 h-24 mb-5 flex items-center justify-center">
           {/* Animated concentric rings */}
-          <div className="absolute inset-0 rounded-3xl border border-dashed border-amber-400/40 animate-spin-slow" />
+          <div className="absolute inset-0 rounded-3xl border border-dashed border-amber-400/40 animate-spin-slow pointer-events-none" />
           <div
-            className={`w-20 h-20 rounded-3xl flex items-center justify-center shadow-lg ${config.bg} border ${config.border}`}
+            className={`w-20 h-20 rounded-3xl flex items-center justify-center shadow-lg ${config.bg} border ${config.border} animate-badge-icon-pop`}
           >
             <IconRenderer
               name={currentBadge.icon || 'Award'}
               className={`w-10 h-10 ${config.text}`}
             />
           </div>
-          <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md">
+          <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md animate-scale-in">
             <CheckCircle2 className="w-4 h-4" />
           </div>
         </div>
 
         {/* Badge Title & XP */}
-        <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight mb-2">
+        <h3 id="badge-title" className="text-2xl font-black text-slate-900 dark:text-white tracking-tight mb-2">
           {currentBadge.name}
         </h3>
-        <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-xs mx-auto mb-5">
+        <p id="badge-desc" className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-xs mx-auto mb-5">
           {currentBadge.description}
         </p>
 
@@ -165,13 +203,13 @@ export const BadgePopup: React.FC = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={handleViewVault}
-            className="flex-1 py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#171E2A] dark:hover:bg-[#202836] text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-bold transition-colors"
+            className="flex-1 py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#171E2A] dark:hover:bg-[#202836] text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-bold transition-colors press"
           >
             View Trophy Vault
           </button>
           <button
             onClick={handleDismiss}
-            className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 text-xs sm:text-sm font-bold shadow-sm transition-all active:scale-95"
+            className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 text-xs sm:text-sm font-bold shadow-sm transition-all press"
           >
             Collect &amp; Continue
           </button>

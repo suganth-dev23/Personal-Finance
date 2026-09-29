@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Info } from 'lucide-react';
 import { Modal } from '../common/Modal';
 import { useFinance } from '../../context/FinanceContext';
 import { RecurringPayment, RecurrenceFrequency, PaymentMethod } from '../../types/finance';

@@ -254,12 +254,3 @@ export const RecurringBillsCard: React.FC = () => {
     </div>
   );
 };
-
-export const RecurringAndRunwayWidget: React.FC = () => {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <CashFlowRunwayCard />
-      <RecurringBillsCard />
-    </div>
-  );
-};

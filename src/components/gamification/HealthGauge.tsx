@@ -3,6 +3,7 @@ import { ShieldCheck, TrendingUp, TrendingDown, Minus, ArrowRight, Award, HelpCi
 import { useGamification } from '../../context/GamificationContext';
 import { useFinance } from '../../context/FinanceContext';
 import { AnimatedNumber } from '../common/AnimatedNumber';
+import { useAnimatedProgress } from '../../hooks/useAnimatedProgress';
 
 export const HealthGauge: React.FC = () => {
   const { healthScore, unlockedCount, badges } = useGamification();
@@ -22,7 +23,8 @@ export const HealthGauge: React.FC = () => {
   // Arc math: Radius = 85, Center = (120, 120)
   // Half-circle arc length = PI * 85 ~= 267.04
   const ARC_LENGTH = 267.04;
-  const clampedScore = Math.min(100, Math.max(0, overallScore));
+  const { displayPercent } = useAnimatedProgress(overallScore, { animateOnMount: true });
+  const clampedScore = Math.min(100, Math.max(0, displayPercent));
   const strokeOffset = ARC_LENGTH - (ARC_LENGTH * clampedScore) / 100;
 
   const statusColor =
@@ -148,9 +150,6 @@ export const HealthGauge: React.FC = () => {
                 strokeLinecap="round"
                 strokeDasharray={ARC_LENGTH}
                 strokeDashoffset={strokeOffset}
-                style={{
-                  transition: 'stroke-dashoffset 1s cubic-bezier(0.16, 1, 0.3, 1)',
-                }}
               />
 
               {/* Glowing Endpoint Indicator Bead on the Arc Track */}
@@ -160,17 +159,17 @@ export const HealthGauge: React.FC = () => {
                 const indX = 120 + 85 * Math.cos(rad);
                 const indY = 120 - 85 * Math.sin(rad);
                 return (
-                  <g className="transition-all duration-1000 ease-out">
+                  <g transform={`translate(${indX}, ${indY})`}>
                     <circle
-                      cx={indX}
-                      cy={indY}
+                      cx="0"
+                      cy="0"
                       r="8"
                       className="fill-white dark:fill-[#131822] stroke-[#F5B742]"
                       strokeWidth="2.5"
                     />
                     <circle
-                      cx={indX}
-                      cy={indY}
+                      cx="0"
+                      cy="0"
                       r="3.5"
                       className="fill-[#F5B742]"
                     />
@@ -209,7 +208,7 @@ export const HealthGauge: React.FC = () => {
                   <TrendingUp className="w-3 h-3 mr-0.5" /> Improving
                 </span>
               ) : trend === 'down' ? (
-                <span className="text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-md flex items-center font-bold animate-pulse-danger">
+                <span className="text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-md flex items-center font-bold animate-pulse-danger-infinite">
                   <TrendingDown className="w-3 h-3 mr-0.5" /> Softening
                 </span>
               ) : (

@@ -122,12 +122,12 @@ export const BadgeShowcase: React.FC = () => {
                   of {badges.length} Unlocked
                 </span>
               </h2>
-              <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-700 dark:text-[#F5B742] border border-amber-500/20">
+              <span className="text-xs font-bold font-numeric px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-700 dark:text-[#F5B742] border border-amber-500/20">
                 {percentComplete}% Completed
               </span>
             </div>
             <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-              Level {levelInfo.level} Wealth Architect • {totalXP} Total XP Earned • {badges.length - unlockedCount} Badges Awaiting Unlock
+              Level <span className="font-numeric font-semibold">{levelInfo.level}</span> Wealth Architect • <span className="font-numeric font-semibold">{totalXP}</span> Total XP Earned • <span className="font-numeric font-semibold">{badges.length - unlockedCount}</span> Badges Awaiting Unlock
             </p>
           </div>
 
@@ -135,14 +135,14 @@ export const BadgeShowcase: React.FC = () => {
           <div className="w-full md:w-80 bg-slate-50 dark:bg-[#171E2A] p-4 rounded-2xl border border-slate-200/70 dark:border-[#202836]">
             <div className="flex justify-between items-center text-xs mb-1.5 font-bold">
               <span className="text-amber-700 dark:text-[#F5B742]">
-                Level {levelInfo.level} Progress
+                Level <span className="font-numeric">{levelInfo.level}</span> Progress
               </span>
               <span className="font-numeric text-slate-600 dark:text-slate-300">
                 {levelInfo.progress}%
               </span>
             </div>
             <ProgressBar value={levelInfo.progress} max={100} size="sm" glowOnMilestone />
-            <div className="flex justify-between items-center text-[11px] text-slate-400 mt-2">
+            <div className="flex justify-between items-center text-[11px] text-slate-400 mt-2 font-numeric">
               <span>{totalXP} XP</span>
               <span>{levelInfo.xpToNext} XP to Level {levelInfo.level + 1}</span>
             </div>
@@ -189,7 +189,7 @@ export const BadgeShowcase: React.FC = () => {
               <button
                 key={tab.id}
                 onClick={() => setSelectedCategory(tab.id)}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                className={`press flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
                   isActive
                     ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs'
                     : 'bg-slate-100 dark:bg-[#171E2A] text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-[#202836]'
@@ -219,7 +219,7 @@ export const BadgeShowcase: React.FC = () => {
                 <button
                   key={status}
                   onClick={() => setSelectedStatus(status)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                  className={`press px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                     isActive
                       ? 'bg-amber-500/15 text-amber-700 dark:text-[#F5B742] border border-amber-500/30'
                       : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#171E2A]'
@@ -276,7 +276,7 @@ export const BadgeShowcase: React.FC = () => {
               <div
                 key={badge.id}
                 style={getChildStyle(idx)}
-                className={`group relative overflow-hidden rounded-3xl p-5 border transition-all duration-300 shadow-xs hover:shadow-md animate-slide-up ${
+                className={`group lift relative overflow-hidden rounded-3xl p-5 border transition-all duration-300 shadow-xs hover:shadow-md animate-slide-up ${
                   isUnlocked
                     ? `bg-white dark:bg-[#131822] ${tierStyle.border}`
                     : 'bg-slate-50/50 dark:bg-[#131822]/50 border-slate-200/70 dark:border-[#202836]/60 opacity-85'

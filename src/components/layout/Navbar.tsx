@@ -65,7 +65,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAddTx }) => {
           <button
             onClick={() => triggerSync(true)}
             title={syncStatus === 'syncing' ? 'Syncing with Google Drive...' : 'Google Drive Synced. Click to sync now.'}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#171E2A] dark:hover:bg-[#202836] text-xs font-medium transition-colors"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#171E2A] dark:hover:bg-[#202836] text-xs font-medium transition-colors press"
           >
             {syncStatus === 'syncing' ? (
               <RefreshCw className="w-3.5 h-3.5 text-indigo-500 animate-spin" />
@@ -100,18 +100,17 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAddTx }) => {
         {currentView !== 'ai' && (
           <button
             onClick={() => setCurrentView('ai')}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-[#C28834] dark:text-[#F5B742] bg-[#F5B742]/10 hover:bg-[#F5B742]/20 dark:bg-[#F5B742]/10 dark:hover:bg-[#F5B742]/20 border border-[#F5B742]/30 transition-colors"
+            className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-[#C28834] dark:text-[#F5B742] bg-[#F5B742]/10 hover:bg-[#F5B742]/20 dark:bg-[#F5B742]/10 dark:hover:bg-[#F5B742]/20 border border-[#F5B742]/30 transition-colors press"
           >
             <Sparkles className="w-3.5 h-3.5 text-[#C28834] dark:text-[#F5B742]" />
             <span>AI Health</span>
           </button>
         )}
 
-
         {/* Add Transaction Button (Desktop/Tablet) */}
         <button
           onClick={onOpenAddTx}
-          className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold text-xs sm:text-sm shadow-sm transition-all duration-150 transform active:scale-95"
+          className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold text-xs sm:text-sm shadow-sm transition-all press"
         >
           <Plus className="w-4 h-4" />
           <span>Add</span>
@@ -120,7 +119,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAddTx }) => {
         {/* Mobile Theme Toggle */}
         <button
           onClick={() => setDarkMode(prev => !prev)}
-          className="lg:hidden p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-[#171E2A] transition-colors"
+          className="lg:hidden p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-[#171E2A] transition-colors press"
           title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
           aria-label={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
         >

@@ -8,6 +8,8 @@ import {
 } from 'recharts';
 import { useFinance } from '../../context/FinanceContext';
 import { formatINR, formatCompactINR } from '../../utils/currency';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { AnimatedNumber } from '../common/AnimatedNumber';
 
 const PALETTE_FALLBACK = [
   '#10B981', // Emerald
@@ -22,6 +24,7 @@ const PALETTE_FALLBACK = [
 
 export const CategoryExpenseChart: React.FC = () => {
   const { categorySpendingThisMonth, currentMonthExpense } = useFinance();
+  const reducedMotion = useReducedMotion();
 
   const expenseCategories = categorySpendingThisMonth.filter(c => c.spent > 0);
   const otherCategories = expenseCategories.slice(5);
@@ -33,16 +36,16 @@ export const CategoryExpenseChart: React.FC = () => {
       const data = payload[0].payload;
       const pct = currentMonthExpense > 0 ? (data.spent / currentMonthExpense) * 100 : 0;
       return (
-        <div className="bg-slate-900/95 dark:bg-[#171E2A] p-3 rounded-xl shadow-xl border border-slate-700 dark:border-[#202836] text-xs">
-          <p className="font-bold text-white flex items-center gap-2">
+        <div className="bg-white/95 dark:bg-[#171E2A]/95 p-3 rounded-xl shadow-xl border border-slate-200 dark:border-[#202836] text-xs">
+          <p className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: data.color || '#F5B742' }} />
             {data.category}
           </p>
-          <p className="font-numeric text-slate-300 font-semibold mt-1">
+          <p className="font-numeric text-slate-700 dark:text-slate-300 font-semibold mt-1">
             {formatINR(data.spent)} ({pct.toFixed(1)}%)
           </p>
           {data.budget > 0 && (
-            <p className="font-numeric text-slate-400 text-xs mt-0.5">
+            <p className="font-numeric text-slate-500 dark:text-slate-400 text-xs mt-0.5">
               Budget: {formatINR(data.budget)} ({data.percentUsed.toFixed(0)}% used)
             </p>
           )}
@@ -88,6 +91,7 @@ export const CategoryExpenseChart: React.FC = () => {
                   outerRadius={80}
                   paddingAngle={3}
                   stroke="none"
+                  isAnimationActive={!reducedMotion}
                   animationDuration={500}
                   animationEasing="ease-out"
                 >
@@ -105,7 +109,7 @@ export const CategoryExpenseChart: React.FC = () => {
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
               <span className="text-[10px] uppercase font-medium text-slate-400">Total</span>
               <span className="font-numeric text-xs font-bold text-slate-900 dark:text-slate-100">
-                {formatCompactINR(currentMonthExpense)}
+                <AnimatedNumber value={currentMonthExpense} formatter={formatCompactINR} />
               </span>
             </div>
           </div>

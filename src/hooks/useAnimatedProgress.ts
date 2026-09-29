@@ -1,31 +1,72 @@
 import { useEffect, useRef, useState } from 'react';
+import { useReducedMotion } from './useReducedMotion';
 
 export interface UseAnimatedProgressResult {
   displayPercent: number;
   isAnimating: boolean;
 }
 
+export interface UseAnimatedProgressOptions {
+  animateOnMount?: boolean;
+  from?: number;
+}
+
 /**
  * Animates a percentage from its previous value to `targetPercent` with a
- * slight spring overshoot (target + 2%, settling back to target).
- * Duration scales with the distance travelled: small deltas finish in
- * fast-scale time, large fills take up to dramatic duration.
- * Rising phase uses ease-out expo curve for organic spring acceleration.
+ * slight spring overshoot (target + 2% on rise, target - 2% on drop, settling back).
+ * Duration scales with distance travelled. Supports reduced motion.
  */
-export function useAnimatedProgress(targetPercent: number): UseAnimatedProgressResult {
+export function useAnimatedProgress(
+  targetPercent: number,
+  options?: UseAnimatedProgressOptions
+): UseAnimatedProgressResult {
   const clamped = Math.min(Math.max(targetPercent, 0), 100);
-  const [displayPercent, setDisplayPercent] = useState(clamped);
+  const reducedMotion = useReducedMotion();
+  const animateOnMount = options?.animateOnMount ?? false;
+  const from = options?.from ?? 0;
+
+  const isFirstMount = useRef(true);
+  const initialValue = (!reducedMotion && animateOnMount) ? from : clamped;
+
+  const [displayPercent, setDisplayPercent] = useState(initialValue);
   const [isAnimating, setIsAnimating] = useState(false);
-  const prevRef = useRef(clamped);
+  const prevRef = useRef(initialValue);
   const rafRef = useRef<number>(0);
 
   useEffect(() => {
+    if (reducedMotion) {
+      setDisplayPercent(clamped);
+      prevRef.current = clamped;
+      setIsAnimating(false);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      return;
+    }
+
+    // On first mount without animateOnMount, sync directly
+    if (isFirstMount.current) {
+      isFirstMount.current = false;
+      if (!animateOnMount) {
+        setDisplayPercent(clamped);
+        prevRef.current = clamped;
+        return;
+      }
+    }
+
     const start = prevRef.current;
     const distance = Math.abs(clamped - start);
-    if (distance < 0.1) return;
+    if (distance < 0.1) {
+      setDisplayPercent(clamped);
+      prevRef.current = clamped;
+      setIsAnimating(false);
+      return;
+    }
 
     const duration = 250 + Math.min(distance, 100) * 3.5; // ~250ms-600ms
-    const overshoot = clamped + (clamped < 100 ? 2 : 0);
+    const isIncreasing = clamped >= start;
+    const overshoot = isIncreasing
+      ? clamped + (clamped < 100 ? 2 : 0)
+      : clamped - (clamped > 0 ? 2 : 0);
+
     const startTime = performance.now();
     setIsAnimating(true);
 
@@ -45,6 +86,7 @@ export function useAnimatedProgress(targetPercent: number): UseAnimatedProgressR
       }
 
       setDisplayPercent(current);
+      prevRef.current = current; // Keep in sync for interrupted transitions
 
       if (progress < 1) {
         rafRef.current = requestAnimationFrame(step);
@@ -61,7 +103,10 @@ export function useAnimatedProgress(targetPercent: number): UseAnimatedProgressR
         cancelAnimationFrame(rafRef.current);
       }
     };
-  }, [clamped]);
+  }, [clamped, reducedMotion, animateOnMount]);
 
-  return { displayPercent, isAnimating };
+  return {
+    displayPercent: reducedMotion ? clamped : displayPercent,
+    isAnimating: reducedMotion ? false : isAnimating,
+  };
 }

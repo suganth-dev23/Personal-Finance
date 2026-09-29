@@ -6,7 +6,6 @@ interface StatCardProps {
   amount: number;
   subtitle?: string;
   icon?: React.ReactNode;
-  iconBgColor?: string;
   trend?: {
     value: number | string;
     isPositive?: boolean;
@@ -28,8 +27,8 @@ export const StatCard: React.FC<StatCardProps> = ({
   return (
     <div
       onClick={onClick}
-      className={`group relative overflow-hidden rounded-2xl bg-white dark:bg-[#131822] p-5 shadow-xs border border-slate-200/80 dark:border-[#202836] transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 dark:hover:border-[#273243] hover:shadow-sm ${
-        onClick ? 'cursor-pointer active:scale-[0.99]' : ''
+      className={`group relative overflow-hidden rounded-2xl bg-white dark:bg-[#131822] p-5 shadow-xs border border-slate-200/80 dark:border-[#202836] transition-all duration-200 hover:border-slate-300 dark:hover:border-[#273243] lift ${
+        onClick ? 'cursor-pointer press' : ''
       }`}
     >
       {accentColor && (
@@ -60,22 +59,26 @@ export const StatCard: React.FC<StatCardProps> = ({
           </span>
         </div>
 
-        {(subtitle || trend) && (
-          <div className="mt-2.5 flex items-center justify-between text-xs pt-2 border-t border-slate-100 dark:border-[#171E2A]">
-            {subtitle && (
-              <span className="text-slate-500 dark:text-slate-400 truncate pr-2">
-                {subtitle}
-              </span>
-            )}
-            {trend && (
-              <span
-                className={`font-numeric text-xs font-semibold px-2 py-0.5 rounded-md shrink-0 ${
-                  trend.isPositive
-                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400'
-                    : 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400'
-                }`}
-              >
-                {trend.isPositive ? '+' : ''}{trend.value} {trend.label || ''}
+        {subtitle && (
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            {subtitle}
+          </p>
+        )}
+
+        {trend && (
+          <div className="mt-2.5 flex items-center gap-1.5 text-xs">
+            <span
+              className={`font-numeric font-semibold ${
+                trend.isPositive
+                  ? 'text-emerald-600 dark:text-emerald-400'
+                  : 'text-rose-600 dark:text-rose-400'
+              }`}
+            >
+              {trend.value}
+            </span>
+            {trend.label && (
+              <span className="text-slate-400 dark:text-slate-500">
+                {trend.label}
               </span>
             )}
           </div>

@@ -8,11 +8,9 @@ import {
   Copy,
   Download,
   Trash2,
-  Calendar,
   ExternalLink,
   ShieldCheck,
   RefreshCw,
-  Zap,
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { AIProvider } from '../../types/finance';
@@ -55,7 +53,6 @@ export const AIHealthSummaryView: React.FC = () => {
     getAggregatesForAI,
     currentMonthIncome,
     currentMonthExpense,
-    currentMonthNet,
     currentMonthSavingsRate,
     totalInvestmentValue,
     emergencyFundRunwayMonths,
@@ -265,7 +262,7 @@ export const AIHealthSummaryView: React.FC = () => {
                       setApiKey(aiSettings.apiKey || '');
                     }
                   }}
-                  className={`p-4 rounded-2xl text-left border transition-all duration-200 ${
+                  className={`press p-4 rounded-2xl text-left border transition-all duration-200 ${
                     isSelected
                       ? 'border-amber-500 bg-amber-500/10 ring-1 ring-amber-500/40'
                       : 'border-slate-200/90 dark:border-[#202836] bg-slate-50 dark:bg-[#171E2A] hover:border-slate-300 dark:hover:border-slate-700'

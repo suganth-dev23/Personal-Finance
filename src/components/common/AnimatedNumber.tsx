@@ -7,20 +7,25 @@ interface AnimatedNumberProps {
   value: number;
   duration?: number;
   format?: (n: number) => string;
+  formatter?: (n: number) => string;
   prefix?: string;
   className?: string;
   showDirection?: boolean;
+  animateOnMount?: boolean;
 }
 
 export const AnimatedNumber: React.FC<AnimatedNumberProps> = ({
   value,
   duration = 450,
-  format = formatINR,
+  format,
+  formatter,
   prefix = '',
   className = '',
   showDirection = false,
+  animateOnMount = false,
 }) => {
-  const animated = useCountUp(value, duration);
+  const formatFn = format || formatter || formatINR;
+  const animated = useCountUp(value, { duration, animateOnMount });
   const { popClass, direction } = useNumberPop(value);
 
   const directionClass = showDirection && direction
@@ -31,7 +36,7 @@ export const AnimatedNumber: React.FC<AnimatedNumberProps> = ({
 
   return (
     <span className={`font-numeric transition-colors duration-300 ${directionClass} ${popClass} ${className}`}>
-      {prefix}{format(animated)}
+      {prefix}{formatFn(animated)}
     </span>
   );
 };
