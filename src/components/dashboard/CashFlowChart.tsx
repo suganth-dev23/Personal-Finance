@@ -45,8 +45,8 @@ export const CashFlowChart: React.FC = () => {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white/95 dark:bg-[#131822]/95 backdrop-blur-md p-3.5 rounded-xl shadow-xl border border-slate-200 dark:border-[#202836] text-xs space-y-1.5">
-          <p className="font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-[#202836] pb-1">
+        <div className="bg-white/95 dark:bg-card-dark/95 backdrop-blur-md p-3.5 rounded-xl shadow-xl border border-slate-200 dark:border-border-dark text-xs space-y-1.5">
+          <p className="font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-border-dark pb-1">
             {label}
           </p>
           {payload.map((item: any) => (
@@ -67,7 +67,7 @@ export const CashFlowChart: React.FC = () => {
   };
 
   return (
-    <div className="bg-white dark:bg-[#131822] rounded-3xl p-4 sm:p-6 shadow-xs border border-slate-200/90 dark:border-[#202836] flex flex-col h-full">
+    <div className="bg-white dark:bg-card-dark rounded-3xl p-4 sm:p-6 shadow-xs border border-slate-200/90 dark:border-border-dark flex flex-col h-full">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
@@ -82,13 +82,13 @@ export const CashFlowChart: React.FC = () => {
         </div>
 
         {/* View mode toggle */}
-        <div className="flex items-center p-1 bg-slate-100 dark:bg-[#171E2A] rounded-xl border border-slate-200/80 dark:border-[#202836]">
+        <div className="flex items-center p-1 bg-slate-100 dark:bg-inset-dark rounded-xl border border-slate-200/80 dark:border-border-dark">
           <button
             type="button"
             onClick={() => setChartMode('wave')}
             className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
               chartMode === 'wave'
-                ? 'bg-white dark:bg-[#202836] text-emerald-600 dark:text-emerald-400 shadow-xs'
+                ? 'bg-white dark:bg-active-dark text-emerald-600 dark:text-emerald-400 shadow-xs'
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
             title="Minimalist Wave Flow"
@@ -101,7 +101,7 @@ export const CashFlowChart: React.FC = () => {
             onClick={() => setChartMode('bars')}
             className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
               chartMode === 'bars'
-                ? 'bg-white dark:bg-[#202836] text-emerald-600 dark:text-emerald-400 shadow-xs'
+                ? 'bg-white dark:bg-active-dark text-emerald-600 dark:text-emerald-400 shadow-xs'
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
             title="Comparison Bars"
@@ -113,7 +113,7 @@ export const CashFlowChart: React.FC = () => {
       </div>
 
       <div key={chartMode} className="w-full h-[260px] sm:h-[300px] animate-fade-in">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={100}>
           {chartMode === 'wave' ? (
             <AreaChart data={chartData} margin={{ top: 15, right: 10, left: 0, bottom: 0 }}>
               <defs>

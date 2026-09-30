@@ -50,7 +50,7 @@ export const DreamsView: React.FC = () => {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
       {/* Hero Overview: Mineral Card with Gold Milestone Highlight */}
-      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] text-slate-900 dark:text-white p-4 sm:p-8 border border-slate-200/90 dark:border-[#202836] shadow-sm">
+      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-card-dark text-slate-900 dark:text-white p-4 sm:p-8 border border-slate-200/90 dark:border-border-dark shadow-sm">
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
@@ -90,7 +90,7 @@ export const DreamsView: React.FC = () => {
         </div>
 
         {/* Global Progress Track */}
-        <div className="mt-6 pt-5 border-t border-slate-200/80 dark:border-[#202836]">
+        <div className="mt-6 pt-5 border-t border-slate-200/80 dark:border-border-dark">
           <div className="flex justify-between items-center text-xs text-slate-500 dark:text-slate-400 mb-2 font-medium">
             <span className="font-numeric">Overall Progress: {overallPercent}%</span>
             <span className="font-numeric">Target: {formatINR(totalGoalsTarget)}</span>
@@ -105,20 +105,20 @@ export const DreamsView: React.FC = () => {
         </div>
 
         {/* 4-column summary strip */}
-        <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-slate-200/80 dark:border-[#202836]">
-          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+        <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-slate-200/80 dark:border-border-dark">
+          <div className="rounded-2xl bg-slate-50 dark:bg-inset-dark p-3.5 border border-slate-200/60 dark:border-border-dark/60">
             <span className="text-xs text-slate-500 dark:text-slate-400">Total Target</span>
             <p className="text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">{formatCompactINR(totalGoalsTarget)}</p>
           </div>
-          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+          <div className="rounded-2xl bg-slate-50 dark:bg-inset-dark p-3.5 border border-slate-200/60 dark:border-border-dark/60">
             <span className="text-xs text-slate-500 dark:text-slate-400">Total Saved</span>
             <p className="text-lg font-bold font-numeric text-emerald-600 dark:text-emerald-400 mt-0.5">{formatCompactINR(totalGoalsSaved)}</p>
           </div>
-          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+          <div className="rounded-2xl bg-slate-50 dark:bg-inset-dark p-3.5 border border-slate-200/60 dark:border-border-dark/60">
             <span className="text-xs text-slate-500 dark:text-slate-400">Active Dreams</span>
             <p className="text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">{dreams.length} goals</p>
           </div>
-          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+          <div className="rounded-2xl bg-slate-50 dark:bg-inset-dark p-3.5 border border-slate-200/60 dark:border-border-dark/60">
             <span className="text-xs text-slate-500 dark:text-slate-400">Success Rate</span>
             <p className="text-lg font-bold font-numeric text-emerald-600 dark:text-emerald-400 mt-0.5">
               {dreams.length > 0 ? `${Math.round((completedGoalsCount / dreams.length) * 100)}%` : '0%'}
@@ -173,10 +173,10 @@ export const DreamsView: React.FC = () => {
               <div
                 key={dream.id}
                 style={getChildStyle(idx)}
-                className={`group lift bg-white dark:bg-[#131822] rounded-3xl p-6 border transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between relative overflow-hidden animate-slide-up ${
+                className={`group lift bg-white dark:bg-card-dark rounded-3xl p-6 border transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between relative overflow-hidden animate-slide-up ${
                   isCompleted
                     ? 'border-amber-400/60 dark:border-amber-400/40 ring-1 ring-amber-400/20'
-                    : 'border-slate-200/90 dark:border-[#202836] hover:border-emerald-500/40'
+                    : 'border-slate-200/90 dark:border-border-dark hover:border-emerald-500/40'
                 }`}
               >
                 {/* Accent top stripe glow */}
@@ -218,7 +218,7 @@ export const DreamsView: React.FC = () => {
                     <div className="flex items-center gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => handleEdit(dream)}
-                        className="press flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200/90 dark:border-[#202836] text-slate-400 hover:bg-slate-50 dark:hover:bg-[#171E2A] hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+                        className="press flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200/90 dark:border-border-dark text-slate-400 hover:bg-slate-50 dark:hover:bg-inset-dark hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
                         title="Edit Goal"
                       >
                         <Edit3 className="w-3.5 h-3.5" />
@@ -229,7 +229,7 @@ export const DreamsView: React.FC = () => {
                             deleteDream(dream.id);
                           }
                         }}
-                        className="press flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200/90 dark:border-[#202836] text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                        className="press flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200/90 dark:border-border-dark text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
                         title="Delete Goal"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -278,7 +278,7 @@ export const DreamsView: React.FC = () => {
 
                     {/* Deadline & Suggested Monthly Savings */}
                     {dream.targetDate && !isCompleted && monthsLeft !== null && (
-                      <div className="p-3.5 bg-slate-50 dark:bg-[#171E2A] rounded-2xl border border-slate-200/80 dark:border-[#202836] text-xs space-y-1.5">
+                      <div className="p-3.5 bg-slate-50 dark:bg-inset-dark rounded-2xl border border-slate-200/80 dark:border-border-dark text-xs space-y-1.5">
                         <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
                           <span className="flex items-center gap-1.5">
                             <Clock className="w-3.5 h-3.5" />
@@ -288,7 +288,7 @@ export const DreamsView: React.FC = () => {
                             {monthsLeft} mo. left
                           </span>
                         </div>
-                        <div className="flex items-center justify-between font-bold pt-1.5 border-t border-slate-200/60 dark:border-[#202836]">
+                        <div className="flex items-center justify-between font-bold pt-1.5 border-t border-slate-200/60 dark:border-border-dark">
                           <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                             <Zap className="w-3 h-3" /> Monthly Target:
                           </span>
@@ -300,13 +300,13 @@ export const DreamsView: React.FC = () => {
                 </div>
 
                 {/* Bottom Action */}
-                <div className="mt-5 pt-4 border-t border-slate-100 dark:border-[#202836] flex items-center justify-between">
+                <div className="mt-5 pt-4 border-t border-slate-100 dark:border-border-dark flex items-center justify-between">
                   <span className="text-xs text-slate-400 font-medium">
                     {dream.contributions?.length || 0} contributions
                   </span>
                   <button
                     onClick={() => handleOpenContribution(dream)}
-                    className="press flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-[#171E2A] hover:bg-amber-500 hover:text-slate-950 dark:hover:bg-[#F5B742] dark:hover:text-slate-950 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all duration-200 border border-slate-200/60 dark:border-[#202836]"
+                    className="press flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-inset-dark hover:bg-amber-500 hover:text-slate-950 dark:hover:bg-[#F5B742] dark:hover:text-slate-950 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all duration-200 border border-slate-200/60 dark:border-border-dark"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>Log Savings</span>

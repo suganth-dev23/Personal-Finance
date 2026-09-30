@@ -248,7 +248,7 @@ export const PeopleView: React.FC = () => {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
       {/* Hero Overview: Single Unified Master Mineral Card */}
-      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] text-slate-900 dark:text-white p-4 sm:p-8 border border-slate-200/90 dark:border-[#202836] shadow-sm">
+      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-card-dark text-slate-900 dark:text-white p-4 sm:p-8 border border-slate-200/90 dark:border-border-dark shadow-sm">
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -287,12 +287,12 @@ export const PeopleView: React.FC = () => {
 
           {/* Tab Switcher & CTA */}
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center bg-slate-100 dark:bg-[#171E2A] p-1 rounded-2xl text-xs font-bold border border-slate-200/60 dark:border-[#202836]">
+            <div className="flex items-center bg-slate-100 dark:bg-inset-dark p-1 rounded-2xl text-xs font-bold border border-slate-200/60 dark:border-border-dark">
               <button
                 onClick={() => setActiveTab('contacts')}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all ${
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-colors ${
                   activeTab === 'contacts'
-                    ? 'bg-white dark:bg-[#202836] text-slate-900 dark:text-white shadow-xs'
+                    ? 'bg-white dark:bg-active-dark text-slate-900 dark:text-white shadow-xs'
                     : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
@@ -302,9 +302,9 @@ export const PeopleView: React.FC = () => {
 
               <button
                 onClick={() => setActiveTab('history')}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all ${
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-colors ${
                   activeTab === 'history'
-                    ? 'bg-white dark:bg-[#202836] text-slate-900 dark:text-white shadow-xs'
+                    ? 'bg-white dark:bg-active-dark text-slate-900 dark:text-white shadow-xs'
                     : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
@@ -329,29 +329,29 @@ export const PeopleView: React.FC = () => {
         </div>
 
         {/* 4-column summary strip */}
-        <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-slate-200/80 dark:border-[#202836]">
-          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+        <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-slate-200/80 dark:border-border-dark">
+          <div className="rounded-2xl bg-slate-50 dark:bg-inset-dark p-3.5 border border-slate-200/60 dark:border-border-dark/60">
             <span className="text-xs text-slate-500 dark:text-slate-400">You Are Owed</span>
             <p className="text-lg font-bold font-numeric text-emerald-600 dark:text-emerald-400 mt-0.5">
               +<AnimatedNumber value={totalOwedToMe} animateOnMount={true} />
             </p>
           </div>
 
-          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+          <div className="rounded-2xl bg-slate-50 dark:bg-inset-dark p-3.5 border border-slate-200/60 dark:border-border-dark/60">
             <span className="text-xs text-slate-500 dark:text-slate-400">You Owe</span>
             <p className="text-lg font-bold font-numeric text-rose-600 dark:text-rose-400 mt-0.5">
               -<AnimatedNumber value={totalIOwe} animateOnMount={true} />
             </p>
           </div>
 
-          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+          <div className="rounded-2xl bg-slate-50 dark:bg-inset-dark p-3.5 border border-slate-200/60 dark:border-border-dark/60">
             <span className="text-xs text-slate-500 dark:text-slate-400">Active Contacts</span>
             <p className="text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">
               {activeContacts.length}
             </p>
           </div>
 
-          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+          <div className="rounded-2xl bg-slate-50 dark:bg-inset-dark p-3.5 border border-slate-200/60 dark:border-border-dark/60">
             <span className="text-xs text-slate-500 dark:text-slate-400">Settled All Square</span>
             <p className="text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">
               {settledContacts.length}
@@ -422,7 +422,7 @@ export const PeopleView: React.FC = () => {
           </div>
 
           {/* Action Bar & Filters */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-[#131822] p-4 sm:p-5 rounded-3xl border border-slate-200/90 dark:border-[#202836] shadow-sm">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-card-dark p-4 sm:p-5 rounded-3xl border border-slate-200/90 dark:border-border-dark shadow-sm">
             {/* Search */}
             <div className="relative w-full sm:w-80">
               <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -431,18 +431,18 @@ export const PeopleView: React.FC = () => {
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search by name or notes..."
-                className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-[#171E2A] border border-slate-200/90 dark:border-[#202836] rounded-xl text-xs font-medium text-slate-900 dark:text-white focus:outline-none"
+                className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-inset-dark border border-slate-200/90 dark:border-border-dark rounded-xl text-xs font-medium text-slate-900 dark:text-white focus:outline-none"
               />
             </div>
 
             {/* Filter Pills + Add Contact Button */}
             <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
-              <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#171E2A] p-1 rounded-xl text-xs border border-slate-200/60 dark:border-[#202836] overflow-x-auto no-scrollbar max-w-[calc(100%-80px)] sm:max-w-none">
+              <div className="flex items-center gap-1 bg-slate-100 dark:bg-inset-dark p-1 rounded-xl text-xs border border-slate-200/60 dark:border-border-dark overflow-x-auto no-scrollbar max-w-[calc(100%-80px)] sm:max-w-none">
                 <button
                   onClick={() => setFilterType('all')}
-                  className={`px-2.5 py-1 rounded-lg font-bold transition-all whitespace-nowrap ${
+                  className={`px-2.5 py-1 rounded-lg font-bold transition-colors whitespace-nowrap ${
                     filterType === 'all'
-                      ? 'bg-white dark:bg-[#202836] text-slate-900 dark:text-white shadow-xs'
+                      ? 'bg-white dark:bg-active-dark text-slate-900 dark:text-white shadow-xs'
                       : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
@@ -450,7 +450,7 @@ export const PeopleView: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setFilterType('they_owe_me')}
-                  className={`px-2.5 py-1 rounded-lg font-bold transition-all whitespace-nowrap ${
+                  className={`px-2.5 py-1 rounded-lg font-bold transition-colors whitespace-nowrap ${
                     filterType === 'they_owe_me'
                       ? 'bg-emerald-600 text-white shadow-xs'
                       : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
@@ -460,7 +460,7 @@ export const PeopleView: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setFilterType('i_owe_them')}
-                  className={`px-2.5 py-1 rounded-lg font-bold transition-all whitespace-nowrap ${
+                  className={`px-2.5 py-1 rounded-lg font-bold transition-colors whitespace-nowrap ${
                     filterType === 'i_owe_them'
                       ? 'bg-rose-600 text-white shadow-xs'
                       : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
@@ -470,7 +470,7 @@ export const PeopleView: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setFilterType('settled')}
-                  className={`px-2.5 py-1 rounded-lg font-bold transition-all whitespace-nowrap ${
+                  className={`px-2.5 py-1 rounded-lg font-bold transition-colors whitespace-nowrap ${
                     filterType === 'settled'
                       ? 'bg-indigo-600 text-white shadow-xs'
                       : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
@@ -495,13 +495,13 @@ export const PeopleView: React.FC = () => {
           <div className="space-y-4">
             {/* Unassigned & Ad-Hoc Splits Card */}
             {filteredUnassignedSplits.length > 0 && (
-              <div className="relative overflow-hidden bg-white dark:bg-[#131822] rounded-3xl border border-amber-500/30 dark:border-amber-500/40 shadow-sm transition-all">
+              <div className="relative overflow-hidden bg-white dark:bg-card-dark rounded-3xl border border-amber-500/30 dark:border-amber-500/40 shadow-sm transition-all">
                 {/* Gold Accent Hairline */}
                 <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
 
                 <div className="p-4 sm:p-6">
                   {/* Card Header */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-[#202836]">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-border-dark">
                     <div className="flex items-center gap-3.5">
                       <div className="w-11 h-11 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-[#F5B742] flex items-center justify-center border border-amber-500/20">
                         <Users className="w-5 h-5" />
@@ -555,8 +555,8 @@ export const PeopleView: React.FC = () => {
                           key={`${tx.id}-${split.id}`}
                           className={`p-3.5 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
                             split.settled
-                              ? 'bg-slate-50/50 dark:bg-[#171E2A]/40 border-slate-200/50 dark:border-[#202836]/50 opacity-70'
-                              : 'bg-slate-50 dark:bg-[#171E2A] border-slate-200/80 dark:border-[#202836]'
+                              ? 'bg-slate-50/50 dark:bg-inset-dark/40 border-slate-200/50 dark:border-border-dark/50 opacity-70'
+                              : 'bg-slate-50 dark:bg-inset-dark border-slate-200/80 dark:border-border-dark'
                           }`}
                         >
                           <div className="flex items-center gap-3 min-w-0">
@@ -567,7 +567,7 @@ export const PeopleView: React.FC = () => {
                               className={`p-1.5 rounded-xl transition-all ${
                                 split.settled
                                   ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25'
-                                  : 'bg-white dark:bg-[#131822] text-slate-400 hover:text-amber-500 border border-slate-200 dark:border-[#202836]'
+                                  : 'bg-white dark:bg-card-dark text-slate-400 hover:text-amber-500 border border-slate-200 dark:border-border-dark'
                               }`}
                               title={split.settled ? 'Mark Unsettled' : 'Mark Settled'}
                             >
@@ -584,7 +584,7 @@ export const PeopleView: React.FC = () => {
                                   {split.label || 'Unnamed Person'}
                                 </span>
                                 {split.settled ? (
-                                  <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-slate-200/70 dark:bg-[#202836] text-slate-600 dark:text-slate-400">
+                                  <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-slate-200/70 dark:bg-active-dark text-slate-600 dark:text-slate-400">
                                     Settled
                                   </span>
                                 ) : (
@@ -624,7 +624,7 @@ export const PeopleView: React.FC = () => {
                               onChange={e =>
                                 handleAssignSplit(tx.id, split.id, e.target.value, split.label)
                               }
-                              className="text-xs font-semibold rounded-xl border border-slate-200/90 dark:border-[#202836] bg-white dark:bg-[#131822] text-slate-700 dark:text-slate-300 px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500 cursor-pointer w-full sm:w-auto"
+                              className="text-xs font-semibold rounded-xl border border-slate-200/90 dark:border-border-dark bg-white dark:bg-card-dark text-slate-700 dark:text-slate-300 px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500 cursor-pointer w-full sm:w-auto"
                             >
                               <option value="" disabled>
                                 Assign to friend...
@@ -680,12 +680,12 @@ export const PeopleView: React.FC = () => {
               return (
                 <div
                   key={contact.id}
-                  className="bg-white dark:bg-[#131822] rounded-3xl border border-slate-200/90 dark:border-[#202836] shadow-sm overflow-hidden transition-all"
+                  className="bg-white dark:bg-card-dark rounded-3xl border border-slate-200/90 dark:border-border-dark shadow-sm overflow-hidden transition-all"
                 >
                   {/* Contact Card Header */}
                   <div
                     onClick={() => setExpandedContactId(isExpanded ? null : contact.id)}
-                    className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 cursor-pointer select-none hover:bg-slate-50/50 dark:hover:bg-[#171E2A]/30 transition-colors"
+                    className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 cursor-pointer select-none hover:bg-slate-50/50 dark:hover:bg-inset-dark/30 transition-colors"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-black text-base sm:text-lg flex items-center justify-center border border-emerald-500/20 flex-shrink-0">
@@ -701,7 +701,7 @@ export const PeopleView: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between sm:justify-end gap-2.5 sm:gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-[#202836]">
+                    <div className="flex items-center justify-between sm:justify-end gap-2.5 sm:gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-border-dark">
                       {/* Balance Badge */}
                       <div className="text-left sm:text-right">
                         <span
@@ -726,7 +726,7 @@ export const PeopleView: React.FC = () => {
                             e.stopPropagation();
                             setSplitModalContact(contact);
                           }}
-                          className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-slate-100 dark:bg-[#171E2A] text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-[#202836] rounded-xl text-xs font-bold transition-all border border-slate-200/80 dark:border-[#202836] active:scale-95"
+                          className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-slate-100 dark:bg-inset-dark text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-active-dark rounded-xl text-xs font-bold transition-all border border-slate-200/80 dark:border-border-dark active:scale-95"
                           title="Split a new bill or expense with this person"
                         >
                           <Plus className="w-3.5 h-3.5 text-amber-500" />
@@ -754,7 +754,7 @@ export const PeopleView: React.FC = () => {
 
                   {/* Expanded Breakdown */}
                   {isExpanded && (
-                    <div className="border-t border-slate-100 dark:border-[#202836] bg-slate-50/50 dark:bg-[#171E2A]/50 p-5 sm:p-6 space-y-5">
+                    <div className="border-t border-slate-100 dark:border-border-dark bg-slate-50/50 dark:bg-inset-dark/50 p-5 sm:p-6 space-y-5">
                       {/* Linked Transaction Splits */}
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
@@ -787,8 +787,8 @@ export const PeopleView: React.FC = () => {
                                   key={`${tx.id}-${split.id}`}
                                   className={`p-3.5 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
                                     isSettled
-                                      ? 'bg-slate-100/70 dark:bg-[#171E2A]/70 border-slate-200/60 dark:border-[#202836]/60'
-                                      : 'bg-white dark:bg-[#131822] border-slate-200/90 dark:border-[#202836] shadow-xs'
+                                      ? 'bg-slate-100/70 dark:bg-inset-dark/70 border-slate-200/60 dark:border-border-dark/60'
+                                      : 'bg-white dark:bg-card-dark border-slate-200/90 dark:border-border-dark shadow-xs'
                                   }`}
                                 >
                                   <div className="flex items-center gap-3 min-w-0">
@@ -798,7 +798,7 @@ export const PeopleView: React.FC = () => {
                                       className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all flex-shrink-0 ${
                                         isSettled
                                           ? 'bg-emerald-600 text-white shadow-xs'
-                                          : 'border border-slate-300 dark:border-[#202836] text-slate-400 hover:border-emerald-500 hover:text-emerald-600'
+                                          : 'border border-slate-300 dark:border-border-dark text-slate-400 hover:border-emerald-500 hover:text-emerald-600'
                                       }`}
                                       title={isSettled ? 'Mark as Unsettled' : 'One-tap Mark as Settled in Full'}
                                     >
@@ -873,7 +873,7 @@ export const PeopleView: React.FC = () => {
                                       className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs ${
                                         isSettled || linkedTx
                                           ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900 border border-emerald-500/20'
-                                          : 'bg-slate-100 dark:bg-[#171E2A] text-slate-700 dark:text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border border-slate-200 dark:border-[#202836]'
+                                          : 'bg-slate-100 dark:bg-inset-dark text-slate-700 dark:text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border border-slate-200 dark:border-border-dark'
                                       }`}
                                       title="Connect Repayment Bank Transaction"
                                     >
@@ -884,7 +884,7 @@ export const PeopleView: React.FC = () => {
                                     {/* Edit Split Pencil Icon */}
                                     <button
                                       onClick={() => setEditingSplitItem({ tx, split })}
-                                      className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#171E2A]"
+                                      className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-inset-dark"
                                       title="Edit Split Details"
                                     >
                                       <Edit3 className="w-3.5 h-3.5" />
@@ -899,7 +899,7 @@ export const PeopleView: React.FC = () => {
 
                       {/* Recent Settlement Records History */}
                       {contactSettlements.length > 0 && (
-                        <div className="space-y-2.5 pt-2 border-t border-slate-200/80 dark:border-[#202836]">
+                        <div className="space-y-2.5 pt-2 border-t border-slate-200/80 dark:border-border-dark">
                           <div className="flex items-center justify-between">
                             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
                               <History className="w-3.5 h-3.5 text-emerald-600" />
@@ -923,7 +923,7 @@ export const PeopleView: React.FC = () => {
                               return (
                                 <div
                                   key={set.id}
-                                  className="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 rounded-xl bg-white dark:bg-[#131822] border border-slate-200/80 dark:border-[#202836] text-xs gap-2"
+                                  className="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 rounded-xl bg-white dark:bg-card-dark border border-slate-200/80 dark:border-border-dark text-xs gap-2"
                                 >
                                   <div className="flex items-center gap-2 min-w-0 flex-wrap">
                                     <span className="text-emerald-600 dark:text-emerald-400 font-bold font-numeric">
@@ -993,10 +993,10 @@ export const PeopleView: React.FC = () => {
 
           {/* Settled / All Square Section (Collapsible) */}
           {filteredSettledContacts.length > 0 && (
-            <div className="pt-4 border-t border-slate-200/90 dark:border-[#202836]">
+            <div className="pt-4 border-t border-slate-200/90 dark:border-border-dark">
               <button
                 onClick={() => setIsSettledSectionOpen(!isSettledSectionOpen)}
-                className="flex items-center justify-between w-full p-4 rounded-2xl bg-white dark:bg-[#131822] border border-slate-200/90 dark:border-[#202836] text-xs font-bold text-slate-600 dark:text-slate-300"
+                className="flex items-center justify-between w-full p-4 rounded-2xl bg-white dark:bg-card-dark border border-slate-200/90 dark:border-border-dark text-xs font-bold text-slate-600 dark:text-slate-300"
               >
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
@@ -1010,10 +1010,10 @@ export const PeopleView: React.FC = () => {
                   {filteredSettledContacts.map(contact => (
                     <div
                       key={contact.id}
-                      className="p-4 rounded-2xl bg-white dark:bg-[#131822] border border-slate-200/90 dark:border-[#202836] flex items-center justify-between text-xs"
+                      className="p-4 rounded-2xl bg-white dark:bg-card-dark border border-slate-200/90 dark:border-border-dark flex items-center justify-between text-xs"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-[#171E2A] text-slate-500 font-bold flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-inset-dark text-slate-500 font-bold flex items-center justify-center">
                           {contact.name.charAt(0).toUpperCase()}
                         </div>
                         <div>

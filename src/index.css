@@ -34,17 +34,9 @@
     from { opacity: 0; }
     to { opacity: 1; }
   }
-  @keyframes fade-out {
-    from { opacity: 1; }
-    to { opacity: 0; }
-  }
   @keyframes scale-in {
     from { opacity: 0; transform: scale(0.95); }
     to { opacity: 1; transform: scale(1); }
-  }
-  @keyframes scale-out {
-    from { opacity: 1; transform: scale(1); }
-    to { opacity: 0; transform: scale(0.95); }
   }
   @keyframes slide-up {
     from { opacity: 0; transform: translateY(12px); }
@@ -54,25 +46,13 @@
     from { opacity: 0; transform: translateY(-8px); }
     to { opacity: 1; transform: translateY(0); }
   }
-  @keyframes slide-up-drawer {
-    from { transform: translateY(100%); }
-    to { transform: translateY(0); }
-  }
-  @keyframes slide-down-drawer {
-    from { transform: translateY(0); }
-    to { transform: translateY(100%); }
-  }
 
   /* ── Animation Utilities ── */
   --animate-shimmer: shimmer 1.8s infinite;
   --animate-fade-in: fade-in 0.2s ease-out both;
-  --animate-fade-out: fade-out 0.15s ease-in both;
   --animate-scale-in: scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
-  --animate-scale-out: scale-out 0.15s ease-in both;
   --animate-slide-up: slide-up 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-slide-down: slide-down 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
-  --animate-slide-up-drawer: slide-up-drawer 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
-  --animate-slide-down-drawer: slide-down-drawer 0.2s ease-in both;
 
   /* ── Motion Design Tokens (Phase 1) ── */
   --duration-instant: 100ms;
@@ -86,11 +66,6 @@
   --ease-decel: cubic-bezier(0, 0, 0.2, 1);
   --ease-sharp: cubic-bezier(0.4, 0, 0.6, 1);
 
-  @keyframes pop-in {
-    0% { transform: scale(0); opacity: 0; }
-    60% { transform: scale(1.12); }
-    100% { transform: scale(1); opacity: 1; }
-  }
   @keyframes number-bump {
     0% { transform: translateY(0); }
     30% { transform: translateY(-3px); }
@@ -151,10 +126,6 @@
     80% { opacity: 1; transform: translateY(-16px) scale(1.05); }
     100% { opacity: 0; transform: translateY(-24px) scale(1); }
   }
-  @keyframes shine-sweep {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(200%); }
-  }
   @keyframes flame-flicker {
     0%, 100% { transform: scale(1) rotate(0deg); }
     25% { transform: scale(1.08, 0.95) rotate(-2deg); }
@@ -169,14 +140,12 @@
     85% { box-shadow: 0 0 0 12px rgba(244, 63, 94, 0.1); }
   }
 
-  --animate-pop-in: pop-in 0.3s var(--ease-bounce) both;
   --animate-number-bump: number-bump 0.3s var(--ease-spring) both;
   --animate-pulse-success: pulse-success 1s var(--ease-sharp);
   --animate-pulse-danger: pulse-danger 1s var(--ease-sharp);
   --animate-pulse-gold: pulse-gold 1.2s var(--ease-sharp);
   --animate-pulse-success-infinite: pulse-success 1.5s var(--ease-sharp) infinite;
   --animate-pulse-danger-infinite: pulse-danger 1.5s var(--ease-sharp) infinite;
-  --animate-pulse-gold-infinite: pulse-gold 1.8s var(--ease-sharp) infinite;
   --animate-shake-x: shake-x 0.4s var(--ease-sharp);
   --animate-shake-then-flash: shake-then-flash 1s var(--ease-sharp);
   --animate-slide-in-right: slide-in-right 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -186,7 +155,6 @@
   --animate-badge-icon-pop: badge-icon-pop 0.5s var(--ease-spring) both;
   --animate-spin-slow: spin-slow 12s linear infinite;
   --animate-xp-float: xp-float 1.2s ease-out both;
-  --animate-shine-sweep: shine-sweep 1.5s ease-in-out infinite;
   --animate-flame-flicker: flame-flicker 1.8s ease-in-out infinite;
 }
 
@@ -353,4 +321,13 @@ textarea:focus-visible {
 [data-motion="off"] .animate-pulse-danger-infinite,
 [data-motion="off"] .animate-shake-then-flash {
   animation: fade-in 0.2s ease-out both !important;
+}
+
+@keyframes view-enter-forward {
+  from { opacity: 0; transform: translateX(10px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes view-enter-backward {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: none; }
 }

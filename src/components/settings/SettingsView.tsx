@@ -141,13 +141,13 @@ export const SettingsView: React.FC = () => {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
       {/* Settings vs Statement Import Tabs */}
-      <div className="flex items-center p-1 bg-slate-100 dark:bg-[#171E2A] rounded-2xl border border-slate-200/80 dark:border-[#202836] max-w-md shadow-xs">
+      <div className="flex items-center p-1 bg-slate-100 dark:bg-inset-dark rounded-2xl border border-slate-200/80 dark:border-border-dark max-w-md shadow-xs">
         <button
           type="button"
           onClick={() => setActiveTab('settings')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-colors ${
             activeTab === 'settings'
-              ? 'bg-white dark:bg-[#202836] text-slate-900 dark:text-[#F5B742] shadow-xs'
+              ? 'bg-white dark:bg-active-dark text-slate-900 dark:text-[#F5B742] shadow-xs'
               : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
           }`}
         >
@@ -157,9 +157,9 @@ export const SettingsView: React.FC = () => {
         <button
           type="button"
           onClick={() => setActiveTab('import')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-colors ${
             activeTab === 'import'
-              ? 'bg-white dark:bg-[#202836] text-slate-900 dark:text-[#F5B742] shadow-xs'
+              ? 'bg-white dark:bg-active-dark text-slate-900 dark:text-[#F5B742] shadow-xs'
               : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
           }`}
         >
@@ -173,7 +173,7 @@ export const SettingsView: React.FC = () => {
       ) : (
         <>
           {/* Privacy Guarantee Header: Mineral Card with Gold Security Highlight */}
-          <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] text-slate-900 dark:text-white p-6 sm:p-8 border border-slate-200/90 dark:border-[#202836] shadow-sm">
+          <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-card-dark text-slate-900 dark:text-white p-6 sm:p-8 border border-slate-200/90 dark:border-border-dark shadow-sm">
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
@@ -214,22 +214,22 @@ export const SettingsView: React.FC = () => {
         </div>
 
         {/* 4-column summary strip */}
-        <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-slate-200/80 dark:border-[#202836]">
-          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+        <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-slate-200/80 dark:border-border-dark">
+          <div className="rounded-2xl bg-slate-50 dark:bg-inset-dark p-3.5 border border-slate-200/60 dark:border-border-dark/60">
             <span className="text-xs text-slate-500 dark:text-slate-400">Local Engine</span>
             <p className="text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">IndexedDB v4</p>
           </div>
-          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+          <div className="rounded-2xl bg-slate-50 dark:bg-inset-dark p-3.5 border border-slate-200/60 dark:border-border-dark/60">
             <span className="text-xs text-slate-500 dark:text-slate-400">Cloud Sync</span>
             <p className={`text-lg font-bold mt-0.5 ${isDriveConnected ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500'}`}>
               {isDriveConnected ? 'Drive Connected' : 'Offline Mode'}
             </p>
           </div>
-          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+          <div className="rounded-2xl bg-slate-50 dark:bg-inset-dark p-3.5 border border-slate-200/60 dark:border-border-dark/60">
             <span className="text-xs text-slate-500 dark:text-slate-400">Ledger Count</span>
             <p className="text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">{transactions.length} records</p>
           </div>
-          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+          <div className="rounded-2xl bg-slate-50 dark:bg-inset-dark p-3.5 border border-slate-200/60 dark:border-border-dark/60">
             <span className="text-xs text-slate-500 dark:text-slate-400">Categories</span>
             <p className="text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">{categories.length} types</p>
           </div>
@@ -252,7 +252,7 @@ export const SettingsView: React.FC = () => {
       </div>
 
       {/* Google Drive Cross-Device Sync */}
-      <div className="bg-white dark:bg-[#131822] rounded-3xl p-6 shadow-sm border border-slate-200/90 dark:border-[#202836] space-y-4">
+      <div className="bg-white dark:bg-card-dark rounded-3xl p-6 shadow-sm border border-slate-200/90 dark:border-border-dark space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-500 dark:text-[#F5B742] shrink-0">
@@ -267,7 +267,7 @@ export const SettingsView: React.FC = () => {
                     Connected
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600 dark:bg-[#171E2A] dark:text-slate-400 dark:border dark:border-[#202836]">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600 dark:bg-inset-dark dark:text-slate-400 dark:border dark:border-border-dark">
                     Not Connected
                   </span>
                 )}
@@ -281,7 +281,7 @@ export const SettingsView: React.FC = () => {
           <button
             type="button"
             onClick={() => setIsSetupModalOpen(true)}
-            className="self-start sm:self-auto flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-[#171E2A] hover:bg-slate-200 dark:hover:bg-[#202836] text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-[#202836] rounded-xl text-xs font-bold transition-colors shrink-0"
+            className="self-start sm:self-auto flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-inset-dark hover:bg-slate-200 dark:hover:bg-active-dark text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-border-dark rounded-xl text-xs font-bold transition-colors shrink-0"
           >
             <Key className="w-3.5 h-3.5" />
             <span>Setup Guide / Client ID</span>
@@ -289,7 +289,7 @@ export const SettingsView: React.FC = () => {
         </div>
 
         {/* Sync Info Banner */}
-        <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-[#202836] bg-slate-50 dark:bg-[#171E2A] space-y-3">
+        <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-border-dark bg-slate-50 dark:bg-inset-dark space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
             <div>
               <span className="text-slate-400 font-semibold block">Google Account</span>
@@ -326,7 +326,7 @@ export const SettingsView: React.FC = () => {
             </div>
           )}
 
-          <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200/60 dark:border-[#202836]">
+          <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200/60 dark:border-border-dark">
             <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
               <Shield className="w-3.5 h-3.5 text-emerald-500" />
               <span>Drive folder: <code>appDataFolder</code>. AI API keys are stored locally &amp; never synced.</span>
@@ -351,7 +351,7 @@ export const SettingsView: React.FC = () => {
                         disconnectDrive();
                       }
                     }}
-                    className="press flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-200 dark:bg-[#202836] hover:bg-rose-100 dark:hover:bg-rose-950/50 hover:text-rose-600 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition-all"
+                    className="press flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-200 dark:bg-active-dark hover:bg-rose-100 dark:hover:bg-rose-950/50 hover:text-rose-600 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition-all"
                   >
                     <CloudOff className="w-3.5 h-3.5" />
                     <span>Disconnect</span>
@@ -379,7 +379,7 @@ export const SettingsView: React.FC = () => {
       </div>
 
       {/* Appearance & Motion Preferences (Task E.5) */}
-      <div className="bg-white dark:bg-[#131822] rounded-3xl p-6 shadow-sm border border-slate-200/90 dark:border-[#202836] space-y-4">
+      <div className="bg-white dark:bg-card-dark rounded-3xl p-6 shadow-sm border border-slate-200/90 dark:border-border-dark space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-500 dark:text-[#F5B742] shrink-0">
@@ -403,10 +403,10 @@ export const SettingsView: React.FC = () => {
           <button
             type="button"
             onClick={() => handleMotionChange('system')}
-            className={`p-4 rounded-2xl border text-left transition-all press ${
+            className={`p-4 rounded-2xl border text-left transition-[color,background-color,border-color,box-shadow] press ${
               motionPref === 'system'
                 ? 'border-amber-500/70 bg-amber-500/10 ring-1 ring-amber-500/30 shadow-xs'
-                : 'border-slate-200/80 dark:border-[#202836] bg-slate-50 dark:bg-[#171E2A] hover:border-slate-300 dark:hover:border-slate-700'
+                : 'border-slate-200/80 dark:border-border-dark bg-slate-50 dark:bg-inset-dark hover:border-slate-300 dark:hover:border-slate-700'
             }`}
           >
             <div className="flex items-center justify-between mb-1.5">
@@ -426,10 +426,10 @@ export const SettingsView: React.FC = () => {
           <button
             type="button"
             onClick={() => handleMotionChange('standard')}
-            className={`p-4 rounded-2xl border text-left transition-all press ${
+            className={`p-4 rounded-2xl border text-left transition-[color,background-color,border-color,box-shadow] press ${
               motionPref === 'standard'
                 ? 'border-amber-500/70 bg-amber-500/10 ring-1 ring-amber-500/30 shadow-xs'
-                : 'border-slate-200/80 dark:border-[#202836] bg-slate-50 dark:bg-[#171E2A] hover:border-slate-300 dark:hover:border-slate-700'
+                : 'border-slate-200/80 dark:border-border-dark bg-slate-50 dark:bg-inset-dark hover:border-slate-300 dark:hover:border-slate-700'
             }`}
           >
             <div className="flex items-center justify-between mb-1.5">
@@ -449,10 +449,10 @@ export const SettingsView: React.FC = () => {
           <button
             type="button"
             onClick={() => handleMotionChange('reduced')}
-            className={`p-4 rounded-2xl border text-left transition-all press ${
+            className={`p-4 rounded-2xl border text-left transition-[color,background-color,border-color,box-shadow] press ${
               motionPref === 'reduced'
                 ? 'border-amber-500/70 bg-amber-500/10 ring-1 ring-amber-500/30 shadow-xs'
-                : 'border-slate-200/80 dark:border-[#202836] bg-slate-50 dark:bg-[#171E2A] hover:border-slate-300 dark:hover:border-slate-700'
+                : 'border-slate-200/80 dark:border-border-dark bg-slate-50 dark:bg-inset-dark hover:border-slate-300 dark:hover:border-slate-700'
             }`}
           >
             <div className="flex items-center justify-between mb-1.5">
@@ -472,27 +472,27 @@ export const SettingsView: React.FC = () => {
       </div>
 
       {/* Currency & Locale Preferences */}
-      <div className="bg-white dark:bg-[#131822] rounded-3xl p-6 shadow-sm border border-slate-200/90 dark:border-[#202836] space-y-4">
+      <div className="bg-white dark:bg-card-dark rounded-3xl p-6 shadow-sm border border-slate-200/90 dark:border-border-dark space-y-4">
         <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
           <span>Currency & Regional Formats</span>
         </h3>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-          <div className="p-4 bg-slate-50 dark:bg-[#171E2A] rounded-2xl border border-slate-200/80 dark:border-[#202836]">
+          <div className="p-4 bg-slate-50 dark:bg-inset-dark rounded-2xl border border-slate-200/80 dark:border-border-dark">
             <span className="text-slate-400 font-semibold block">Currency Symbol</span>
             <span className="text-base font-extrabold text-slate-900 dark:text-white mt-1 block font-numeric">
               ₹ (INR - Indian Rupee)
             </span>
           </div>
 
-          <div className="p-4 bg-slate-50 dark:bg-[#171E2A] rounded-2xl border border-slate-200/80 dark:border-[#202836]">
+          <div className="p-4 bg-slate-50 dark:bg-inset-dark rounded-2xl border border-slate-200/80 dark:border-border-dark">
             <span className="text-slate-400 font-semibold block">Numbering Standard</span>
             <span className="text-base font-extrabold text-slate-900 dark:text-white mt-1 block font-numeric">
               Indian Comma (1,25,000)
             </span>
           </div>
 
-          <div className="p-4 bg-slate-50 dark:bg-[#171E2A] rounded-2xl border border-slate-200/80 dark:border-[#202836]">
+          <div className="p-4 bg-slate-50 dark:bg-inset-dark rounded-2xl border border-slate-200/80 dark:border-border-dark">
             <span className="text-slate-400 font-semibold block">Compact Units</span>
             <span className="text-base font-extrabold text-slate-900 dark:text-white mt-1 block">
               L (Lakhs) & Cr (Crores)
@@ -502,7 +502,7 @@ export const SettingsView: React.FC = () => {
       </div>
 
       {/* AI Key Settings */}
-      <div className="bg-white dark:bg-[#131822] rounded-3xl p-6 shadow-sm border border-slate-200/90 dark:border-[#202836] space-y-4">
+      <div className="bg-white dark:bg-card-dark rounded-3xl p-6 shadow-sm border border-slate-200/90 dark:border-border-dark space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-amber-500 dark:text-[#F5B742]" />
@@ -525,7 +525,7 @@ export const SettingsView: React.FC = () => {
               <select
                 value={provider}
                 onChange={e => setProvider(e.target.value as AIProvider)}
-                className="w-full py-2.5 px-3 bg-slate-50 dark:bg-[#171E2A] border border-slate-200/90 dark:border-[#202836] rounded-xl text-sm font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                className="w-full py-2.5 px-3 bg-slate-50 dark:bg-inset-dark border border-slate-200/90 dark:border-border-dark rounded-xl text-sm font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-amber-500"
               >
                 <option value="gemini">Google Gemini (Recommended Free Tier)</option>
                 <option value="openai">OpenAI (ChatGPT)</option>
@@ -542,7 +542,7 @@ export const SettingsView: React.FC = () => {
                 value={apiKey}
                 onChange={e => setApiKey(e.target.value)}
                 placeholder="Paste API Key..."
-                className="w-full py-2.5 px-3 bg-slate-50 dark:bg-[#171E2A] border border-slate-200/90 dark:border-[#202836] rounded-xl text-sm font-mono text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                className="w-full py-2.5 px-3 bg-slate-50 dark:bg-inset-dark border border-slate-200/90 dark:border-border-dark rounded-xl text-sm font-mono text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-amber-500"
               />
             </div>
           </div>
@@ -559,7 +559,7 @@ export const SettingsView: React.FC = () => {
       </div>
 
       {/* Data Backup, Restore & Demo Reset */}
-      <div className="bg-white dark:bg-[#131822] rounded-3xl p-6 shadow-sm border border-slate-200/90 dark:border-[#202836] space-y-4">
+      <div className="bg-white dark:bg-card-dark rounded-3xl p-6 shadow-sm border border-slate-200/90 dark:border-border-dark space-y-4">
         <h3 className="text-base font-bold text-slate-900 dark:text-white">
           Data Backup & Management
         </h3>
@@ -568,14 +568,14 @@ export const SettingsView: React.FC = () => {
         </p>
 
         {importStatus && (
-          <div className="p-3 bg-slate-100 dark:bg-[#171E2A] border border-slate-200/80 dark:border-[#202836] rounded-2xl text-xs font-semibold text-slate-800 dark:text-slate-200">
+          <div className="p-3 bg-slate-100 dark:bg-inset-dark border border-slate-200/80 dark:border-border-dark rounded-2xl text-xs font-semibold text-slate-800 dark:text-slate-200">
             {importStatus}
           </div>
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
           {/* Export JSON */}
-          <div className="p-5 rounded-2xl border border-slate-200/80 dark:border-[#202836] bg-slate-50 dark:bg-[#171E2A] flex flex-col justify-between">
+          <div className="p-5 rounded-2xl border border-slate-200/80 dark:border-border-dark bg-slate-50 dark:bg-inset-dark flex flex-col justify-between">
             <div>
               <h4 className="font-bold text-sm text-slate-900 dark:text-white">
                 Export Full Backup (JSON)
@@ -595,7 +595,7 @@ export const SettingsView: React.FC = () => {
           </div>
 
           {/* Import JSON */}
-          <div className="p-5 rounded-2xl border border-slate-200/80 dark:border-[#202836] bg-slate-50 dark:bg-[#171E2A] flex flex-col justify-between">
+          <div className="p-5 rounded-2xl border border-slate-200/80 dark:border-border-dark bg-slate-50 dark:bg-inset-dark flex flex-col justify-between">
             <div>
               <h4 className="font-bold text-sm text-slate-900 dark:text-white">
                 Restore From Backup (JSON)
@@ -615,7 +615,7 @@ export const SettingsView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="press mt-4 w-full flex items-center justify-center gap-1.5 px-4 py-2.5 bg-slate-200 dark:bg-[#202836] hover:bg-slate-300 dark:hover:bg-[#202836]/80 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-bold transition-all"
+                className="press mt-4 w-full flex items-center justify-center gap-1.5 px-4 py-2.5 bg-slate-200 dark:bg-active-dark hover:bg-slate-300 dark:hover:bg-active-dark/80 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-bold transition-all"
               >
                 <Upload className="w-3.5 h-3.5" />
                 <span>Select Backup File</span>
@@ -646,7 +646,7 @@ export const SettingsView: React.FC = () => {
         </div>
 
         {/* Reset / Demo options */}
-        <div className="pt-4 border-t border-slate-100 dark:border-[#202836] flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="pt-4 border-t border-slate-100 dark:border-border-dark flex flex-col sm:flex-row items-center justify-between gap-3">
           <button
             type="button"
             onClick={() => {

@@ -287,7 +287,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
       {/* Hero Overview: Mineral Card with Gold Ledger Highlight */}
-      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] text-slate-900 dark:text-white p-4 sm:p-8 border border-slate-200/90 dark:border-[#202836] shadow-sm">
+      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-card-dark text-slate-900 dark:text-white p-4 sm:p-8 border border-slate-200/90 dark:border-border-dark shadow-sm">
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
@@ -322,7 +322,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={exportToCSV}
-              className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-3 bg-slate-100 dark:bg-[#171E2A] hover:bg-slate-200 dark:hover:bg-[#202836] text-slate-700 dark:text-slate-300 rounded-xl text-xs sm:text-sm font-bold transition-colors border border-slate-200/80 dark:border-[#202836]"
+              className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-3 bg-slate-100 dark:bg-inset-dark hover:bg-slate-200 dark:hover:bg-active-dark text-slate-700 dark:text-slate-300 rounded-xl text-xs sm:text-sm font-bold transition-colors border border-slate-200/80 dark:border-border-dark"
               title="Export filtered transactions to CSV"
             >
               <Download className="h-4 w-4" />
@@ -339,29 +339,29 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
         </div>
 
         {/* 4-column summary strip */}
-        <div className="mt-4 sm:mt-6 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 pt-4 sm:pt-6 border-t border-slate-200/80 dark:border-[#202836]">
-          <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+        <div className="mt-4 sm:mt-6 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 pt-4 sm:pt-6 border-t border-slate-200/80 dark:border-border-dark">
+          <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-inset-dark p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-border-dark/60">
             <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">Total Inflow</span>
             <p className="text-sm sm:text-lg font-bold font-numeric text-emerald-600 dark:text-emerald-400 mt-0.5">
               +{formatINR(filteredIncome)}
             </p>
           </div>
 
-          <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+          <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-inset-dark p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-border-dark/60">
             <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">Total Outflow</span>
             <p className="text-sm sm:text-lg font-bold font-numeric text-rose-600 dark:text-rose-400 mt-0.5">
               -{formatINR(filteredExpense)}
             </p>
           </div>
 
-          <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+          <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-inset-dark p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-border-dark/60">
             <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">Entries Shown</span>
             <p className="text-sm sm:text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">
               {filteredTransactions.length}
             </p>
           </div>
 
-          <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+          <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-inset-dark p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-border-dark/60">
             <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">Ledger Velocity</span>
             <p className={`text-sm sm:text-lg font-bold font-numeric mt-0.5 ${
               filteredNet >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
@@ -388,7 +388,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
       </div>
 
       {/* Filter & Search Bar */}
-      <div className="bg-white dark:bg-[#131822] rounded-3xl p-3.5 sm:p-6 shadow-sm border border-slate-200/90 dark:border-[#202836] space-y-3 sm:space-y-4">
+      <div className="bg-white dark:bg-card-dark rounded-3xl p-3.5 sm:p-6 shadow-sm border border-slate-200/90 dark:border-border-dark space-y-3 sm:space-y-4">
         {/* Search */}
         <div className="relative">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -397,7 +397,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             placeholder="Search by note, person, merchant, category, or amount..."
-            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-[#171E2A] border border-slate-200/90 dark:border-[#202836] rounded-2xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-amber-500"
+            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-inset-dark border border-slate-200/90 dark:border-border-dark rounded-2xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-amber-500"
           />
           {searchTerm && (
             <button
@@ -417,10 +417,10 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
               setSelectedType('all');
               setSelectedMethod('all');
             }}
-            className={`px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all press ${
+            className={`px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-colors press ${
               selectedType === 'all' && selectedMethod === 'all'
-                ? 'bg-slate-900 text-white dark:bg-[#171E2A] dark:text-[#F5B742] dark:border dark:border-[#F5B742]/40 shadow-xs'
-                : 'bg-slate-100 text-slate-600 dark:bg-[#171E2A]/70 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#171E2A]'
+                ? 'bg-slate-900 text-white dark:bg-inset-dark dark:text-[#F5B742] dark:border dark:border-[#F5B742]/40 shadow-xs'
+                : 'bg-slate-100 text-slate-600 dark:bg-inset-dark/70 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-inset-dark'
             }`}
           >
             All ({transactions.length})
@@ -428,7 +428,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
           <button
             type="button"
             onClick={() => setSelectedType('debit')}
-            className={`px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all press ${
+            className={`px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-colors press ${
               selectedType === 'debit'
                 ? 'bg-[#F43F5E] text-white shadow-xs'
                 : 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 hover:bg-rose-100'
@@ -439,7 +439,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
           <button
             type="button"
             onClick={() => setSelectedType('credit')}
-            className={`px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all press ${
+            className={`px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-colors press ${
               selectedType === 'credit'
                 ? 'bg-emerald-600 text-white shadow-xs'
                 : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 hover:bg-emerald-100'
@@ -450,10 +450,10 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
           <button
             type="button"
             onClick={() => setSelectedMethod(selectedMethod === 'UPI' ? 'all' : 'UPI')}
-            className={`px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all press ${
+            className={`px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-colors press ${
               selectedMethod === 'UPI'
-                ? 'bg-slate-900 text-white dark:bg-[#171E2A] dark:text-[#F5B742] dark:border dark:border-[#F5B742]/40 shadow-xs'
-                : 'bg-slate-100 text-slate-600 dark:bg-[#171E2A]/70 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#171E2A]'
+                ? 'bg-slate-900 text-white dark:bg-inset-dark dark:text-[#F5B742] dark:border dark:border-[#F5B742]/40 shadow-xs'
+                : 'bg-slate-100 text-slate-600 dark:bg-inset-dark/70 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-inset-dark'
             }`}
           >
             UPI
@@ -461,10 +461,10 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
           <button
             type="button"
             onClick={() => setSelectedMethod(selectedMethod.includes('Card') ? 'all' : 'Credit Card')}
-            className={`px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all press ${
+            className={`px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-colors press ${
               selectedMethod.includes('Card')
-                ? 'bg-slate-900 text-white dark:bg-[#171E2A] dark:text-[#F5B742] dark:border dark:border-[#F5B742]/40 shadow-xs'
-                : 'bg-slate-100 text-slate-600 dark:bg-[#171E2A]/70 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#171E2A]'
+                ? 'bg-slate-900 text-white dark:bg-inset-dark dark:text-[#F5B742] dark:border dark:border-[#F5B742]/40 shadow-xs'
+                : 'bg-slate-100 text-slate-600 dark:bg-inset-dark/70 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-inset-dark'
             }`}
           >
             Cards
@@ -472,10 +472,10 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
           <button
             type="button"
             onClick={() => setSelectedMethod(selectedMethod === 'Cash' ? 'all' : 'Cash')}
-            className={`px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all press ${
+            className={`px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-colors press ${
               selectedMethod === 'Cash'
-                ? 'bg-slate-900 text-white dark:bg-[#171E2A] dark:text-[#F5B742] dark:border dark:border-[#F5B742]/40 shadow-xs'
-                : 'bg-slate-100 text-slate-600 dark:bg-[#171E2A]/70 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#171E2A]'
+                ? 'bg-slate-900 text-white dark:bg-inset-dark dark:text-[#F5B742] dark:border dark:border-[#F5B742]/40 shadow-xs'
+                : 'bg-slate-100 text-slate-600 dark:bg-inset-dark/70 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-inset-dark'
             }`}
           >
             Cash
@@ -483,7 +483,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
         </div>
 
         {/* Filter Dropdowns */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2.5 pt-2 border-t border-slate-100 dark:border-[#202836]">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2.5 pt-2 border-t border-slate-100 dark:border-border-dark">
           {/* Date Range */}
           <div>
             <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
@@ -492,7 +492,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
             <select
               value={dateRange}
               onChange={e => setDateRange(e.target.value as any)}
-              className="w-full py-1.5 px-2.5 bg-slate-50 dark:bg-[#171E2A] border border-slate-200/90 dark:border-[#202836] rounded-xl text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none"
+              className="w-full py-1.5 px-2.5 bg-slate-50 dark:bg-inset-dark border border-slate-200/90 dark:border-border-dark rounded-xl text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none"
             >
               <option value="all">All Time</option>
               <option value="this_month">This Month</option>
@@ -510,7 +510,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
             <select
               value={selectedPerson}
               onChange={e => setSelectedPerson(e.target.value)}
-              className="w-full py-1.5 px-2.5 bg-slate-50 dark:bg-[#171E2A] border border-slate-200/90 dark:border-[#202836] rounded-xl text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none"
+              className="w-full py-1.5 px-2.5 bg-slate-50 dark:bg-inset-dark border border-slate-200/90 dark:border-border-dark rounded-xl text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none"
             >
               <option value="all">All People</option>
               {distinctPersons.map(p => (
@@ -530,7 +530,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
             <select
               value={selectedCategory}
               onChange={e => setSelectedCategory(e.target.value)}
-              className="w-full py-1.5 px-2.5 bg-slate-50 dark:bg-[#171E2A] border border-slate-200/90 dark:border-[#202836] rounded-xl text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none"
+              className="w-full py-1.5 px-2.5 bg-slate-50 dark:bg-inset-dark border border-slate-200/90 dark:border-border-dark rounded-xl text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none"
             >
               <option value="all">All Categories</option>
               {categories.map(c => (
@@ -549,7 +549,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
             <select
               value={selectedType}
               onChange={e => setSelectedType(e.target.value as any)}
-              className="w-full py-1.5 px-2.5 bg-slate-50 dark:bg-[#171E2A] border border-slate-200/90 dark:border-[#202836] rounded-xl text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none"
+              className="w-full py-1.5 px-2.5 bg-slate-50 dark:bg-inset-dark border border-slate-200/90 dark:border-border-dark rounded-xl text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none"
             >
               <option value="all">All Types</option>
               <option value="debit">Expenses Only</option>
@@ -565,7 +565,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
             <select
               value={selectedMethod}
               onChange={e => setSelectedMethod(e.target.value)}
-              className="w-full py-1.5 px-2.5 bg-slate-50 dark:bg-[#171E2A] border border-slate-200/90 dark:border-[#202836] rounded-xl text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none"
+              className="w-full py-1.5 px-2.5 bg-slate-50 dark:bg-inset-dark border border-slate-200/90 dark:border-border-dark rounded-xl text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none"
             >
               <option value="all">All Methods</option>
               <option value="UPI">UPI</option>
@@ -588,7 +588,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
             <select
               value={selectedSource}
               onChange={e => setSelectedSource(e.target.value)}
-              className="w-full py-1.5 px-2.5 bg-slate-50 dark:bg-[#171E2A] border border-slate-200/90 dark:border-[#202836] rounded-xl text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none"
+              className="w-full py-1.5 px-2.5 bg-slate-50 dark:bg-inset-dark border border-slate-200/90 dark:border-border-dark rounded-xl text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none"
             >
               <option value="all">All Sources</option>
               <option value="manual">Manual Entry</option>
@@ -605,7 +605,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
             <select
               value={groupBy}
               onChange={e => setGroupBy(e.target.value as GroupByMode)}
-              className="w-full py-1.5 px-2.5 bg-slate-50 dark:bg-[#171E2A] border border-slate-200/90 dark:border-[#202836] rounded-xl text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none"
+              className="w-full py-1.5 px-2.5 bg-slate-50 dark:bg-inset-dark border border-slate-200/90 dark:border-border-dark rounded-xl text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none"
             >
               <option value="none">Flat List</option>
               <option value="month">Group by Month</option>
@@ -616,20 +616,20 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
 
         {/* Custom Date Range Picker when active */}
         {dateRange === 'custom' && (
-          <div className="flex items-center gap-3 pt-2 border-t border-slate-100 dark:border-[#202836] text-xs">
+          <div className="flex items-center gap-3 pt-2 border-t border-slate-100 dark:border-border-dark text-xs">
             <span className="text-slate-400 font-medium">Custom Range:</span>
             <input
               type="date"
               value={customStartDate}
               onChange={e => setCustomStartDate(e.target.value)}
-              className="px-2.5 py-1 bg-slate-50 dark:bg-[#171E2A] border border-slate-200/90 dark:border-[#202836] rounded-lg text-slate-800 dark:text-slate-200 text-xs"
+              className="px-2.5 py-1 bg-slate-50 dark:bg-inset-dark border border-slate-200/90 dark:border-border-dark rounded-lg text-slate-800 dark:text-slate-200 text-xs"
             />
             <span className="text-slate-400">to</span>
             <input
               type="date"
               value={customEndDate}
               onChange={e => setCustomEndDate(e.target.value)}
-              className="px-2.5 py-1 bg-slate-50 dark:bg-[#171E2A] border border-slate-200/90 dark:border-[#202836] rounded-lg text-slate-800 dark:text-slate-200 text-xs"
+              className="px-2.5 py-1 bg-slate-50 dark:bg-inset-dark border border-slate-200/90 dark:border-border-dark rounded-lg text-slate-800 dark:text-slate-200 text-xs"
             />
           </div>
         )}
@@ -637,7 +637,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
 
       {/* Bulk Action Bar when items selected */}
       {selectedTxIds.size > 0 && (
-        <div className="bg-slate-900 dark:bg-[#131822] text-white rounded-2xl p-4 flex items-center justify-between border border-slate-800 dark:border-[#202836] shadow-xl shadow-black/20 transition-all">
+        <div className="bg-slate-900 dark:bg-card-dark text-white rounded-2xl p-4 flex items-center justify-between border border-slate-800 dark:border-border-dark shadow-xl shadow-black/20 transition-all">
           <div className="flex items-center gap-3">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-[#F5B742] border border-amber-500/20">
               {selectedTxIds.size} transaction{selectedTxIds.size > 1 ? 's' : ''} selected
@@ -647,7 +647,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={() => setSelectedTxIds(new Set())}
-              className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 dark:bg-[#171E2A] dark:hover:bg-[#202836] text-xs font-semibold text-slate-300 border border-slate-700/60 dark:border-[#202836] transition-colors"
+              className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 dark:bg-inset-dark dark:hover:bg-active-dark text-xs font-semibold text-slate-300 border border-slate-700/60 dark:border-border-dark transition-colors"
             >
               Deselect All
             </button>
@@ -669,9 +669,9 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
             return (
               <div
                 key={group.groupKey}
-                className="bg-white dark:bg-[#131822] rounded-3xl p-12 text-center border border-slate-200/90 dark:border-[#202836] shadow-xs"
+                className="bg-white dark:bg-card-dark rounded-3xl p-12 text-center border border-slate-200/90 dark:border-border-dark shadow-xs"
               >
-                <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-[#171E2A] flex items-center justify-center mx-auto text-slate-400">
+                <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-inset-dark flex items-center justify-center mx-auto text-slate-400">
                   <Search className="w-5 h-5" />
                 </div>
                 <h3 className="mt-3 text-sm font-bold text-slate-900 dark:text-white">
@@ -687,11 +687,11 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
           return (
             <div
               key={group.groupKey}
-              className="bg-white dark:bg-[#131822] rounded-3xl shadow-sm border border-slate-200/90 dark:border-[#202836] overflow-hidden"
+              className="bg-white dark:bg-card-dark rounded-3xl shadow-sm border border-slate-200/90 dark:border-border-dark overflow-hidden"
             >
               {/* Group Header (if grouped) */}
               {groupBy !== 'none' && (
-                <div className="bg-slate-50 dark:bg-[#171E2A]/80 px-5 py-3 border-b border-slate-200/90 dark:border-[#202836] flex items-center justify-between text-xs font-semibold">
+                <div className="bg-slate-50 dark:bg-inset-dark/80 px-5 py-3 border-b border-slate-200/90 dark:border-border-dark flex items-center justify-between text-xs font-semibold">
                   <span className="text-slate-800 dark:text-slate-200">{group.title} ({group.items.length})</span>
                   <div className="flex items-center gap-3 font-numeric font-semibold">
                     <span className="text-emerald-600 dark:text-emerald-400">+{formatINR(group.groupIn)}</span>
@@ -764,7 +764,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
                               {tx.category}
                             </span>
                             {tx.person && (
-                              <span className="px-1.5 py-0.2 rounded-md bg-slate-100 dark:bg-[#171E2A] border border-transparent dark:border-[#202836] text-[10px] text-slate-600 dark:text-slate-400 font-medium">
+                              <span className="px-1.5 py-0.2 rounded-md bg-slate-100 dark:bg-inset-dark border border-transparent dark:border-border-dark text-[10px] text-slate-600 dark:text-slate-400 font-medium">
                                 {tx.person}
                               </span>
                             )}
@@ -812,7 +812,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
               <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-slate-200/80 dark:border-[#202836] bg-slate-50/70 dark:bg-[#171E2A]/50 text-xs font-medium text-slate-500 dark:text-slate-400">
+                    <tr className="border-b border-slate-200/80 dark:border-border-dark bg-slate-50/70 dark:bg-inset-dark/50 text-xs font-medium text-slate-500 dark:text-slate-400">
                       <th className="py-3 px-4 w-10 text-center">
                         <button onClick={toggleSelectAll} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
                           {selectedTxIds.size === filteredTransactions.length && filteredTransactions.length > 0 ? (
@@ -831,7 +831,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
                       <th className="py-3 px-4 text-center w-20">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-[#202836] text-sm">
+                  <tbody className="divide-y divide-slate-100 dark:divide-border-dark text-sm">
                     {group.items.map((tx, idx) => {
                       const isCredit = tx.type === 'credit';
                       const isSelected = selectedTxIds.has(tx.id);
@@ -843,7 +843,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
                         <tr
                           key={tx.id}
                           style={getChildStyle(Math.min(idx, 15))}
-                          className={`hover:bg-slate-50/70 dark:hover:bg-[#171E2A]/40 transition-all duration-200 animate-slide-up ${
+                          className={`hover:bg-slate-50/70 dark:hover:bg-inset-dark/40 transition-all duration-200 animate-slide-up ${
                             isDeleting
                               ? 'opacity-0 -translate-x-4 pointer-events-none'
                               : isHighlighted
@@ -907,7 +907,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
                                         <span
                                           className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-medium font-numeric ${
                                             isSettled
-                                              ? 'bg-slate-100 text-slate-500 dark:bg-[#171E2A] dark:text-slate-400 line-through'
+                                              ? 'bg-slate-100 text-slate-500 dark:bg-inset-dark dark:text-slate-400 line-through'
                                               : isTheyOweMe
                                               ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
                                               : 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300'
@@ -937,7 +937,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
                                           title={tooltip}
                                           className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-medium font-numeric ${
                                             isSettled
-                                              ? 'bg-slate-100 text-slate-500 dark:bg-[#171E2A] dark:text-slate-400 line-through'
+                                              ? 'bg-slate-100 text-slate-500 dark:bg-inset-dark dark:text-slate-400 line-through'
                                               : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
                                           }`}
                                         >
@@ -976,7 +976,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
 
                           {/* Payment Method */}
                           <td className="py-3.5 px-4 whitespace-nowrap text-xs text-slate-600 dark:text-slate-400 font-medium">
-                            <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#171E2A] text-slate-700 dark:text-slate-300 font-medium">
+                            <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-inset-dark text-slate-700 dark:text-slate-300 font-medium">
                               {tx.paymentMethod}
                             </span>
                           </td>
@@ -999,7 +999,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = ({
                             <div className="flex items-center justify-center gap-1">
                               <button
                                 onClick={() => onEditTransaction(tx)}
-                                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#171E2A] transition-colors"
+                                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-inset-dark transition-colors"
                                 title="Edit transaction"
                               >
                                 <Edit2 className="w-3.5 h-3.5" />

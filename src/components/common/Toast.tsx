@@ -105,7 +105,7 @@ export const ToastCard: React.FC<ToastCardProps> = ({ toast, onDismiss }) => {
       default:
         return {
           icon: <Info className="w-5 h-5 text-slate-500 dark:text-slate-400" />,
-          iconBg: 'bg-slate-100 dark:bg-[#171E2A] border border-slate-200 dark:border-[#202836]',
+          iconBg: 'bg-slate-100 dark:bg-inset-dark border border-slate-200 dark:border-border-dark',
           hairline: 'bg-gradient-to-r from-transparent via-slate-400 to-transparent opacity-40',
           barColor: 'bg-slate-400',
         };
@@ -122,7 +122,7 @@ export const ToastCard: React.FC<ToastCardProps> = ({ toast, onDismiss }) => {
       onMouseLeave={() => setIsPaused(false)}
       onFocus={() => setIsPaused(true)}
       onBlur={() => setIsPaused(false)}
-      className={`pointer-events-auto relative overflow-hidden w-full max-w-sm rounded-2xl bg-white dark:bg-[#131822] border border-slate-200/90 dark:border-[#202836] p-3.5 sm:p-4 shadow-xl shadow-slate-900/10 dark:shadow-black/40 flex items-start gap-3 will-change-transform-opacity transition-all duration-200 ${
+      className={`pointer-events-auto relative overflow-hidden w-full max-w-sm rounded-2xl bg-white dark:bg-card-dark border border-slate-200/90 dark:border-border-dark p-3.5 sm:p-4 shadow-xl shadow-slate-900/10 dark:shadow-black/40 flex items-start gap-3 will-change-transform-opacity transition-all duration-200 ${
         isExiting ? 'animate-slide-out-right opacity-0 max-h-0 py-0 -my-1 border-transparent' : 'animate-slide-in-right max-h-40'
       }`}
     >
@@ -149,14 +149,14 @@ export const ToastCard: React.FC<ToastCardProps> = ({ toast, onDismiss }) => {
       {/* Dismiss Button */}
       <button
         onClick={handleManualDismiss}
-        className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#171E2A] transition-colors press shrink-0"
+        className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-inset-dark transition-colors press shrink-0"
         aria-label="Close notification"
       >
         <X className="w-3.5 h-3.5" />
       </button>
 
       {/* Bottom auto-dismiss progress countdown indicator */}
-      <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-slate-100 dark:bg-[#171E2A]">
+      <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-slate-100 dark:bg-inset-dark">
         <div
           className={`h-full ${barColor} opacity-70 origin-left`}
           style={{

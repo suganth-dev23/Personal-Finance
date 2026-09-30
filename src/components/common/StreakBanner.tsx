@@ -35,10 +35,10 @@ export const StreakBanner: React.FC<StreakBannerProps> = ({ compact = false }) =
         onClick={() => setCurrentView('badges')}
         className={`group flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all duration-200 cursor-pointer ${
           isStreakBroken
-            ? 'bg-slate-50/60 dark:bg-[#171E2A]/60 border-slate-200/80 dark:border-[#202836] text-slate-500 hover:bg-slate-100 dark:hover:bg-[#202836]'
+            ? 'bg-slate-50/60 dark:bg-inset-dark/60 border-slate-200/80 dark:border-border-dark text-slate-500 hover:bg-slate-100 dark:hover:bg-active-dark'
             : isHabit
             ? 'bg-amber-500/10 dark:bg-amber-500/15 border-amber-500/30 text-amber-700 dark:text-[#F5B742] hover:bg-amber-500/20'
-            : 'bg-slate-50 dark:bg-[#171E2A] border-slate-200/90 dark:border-[#202836] text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#202836]'
+            : 'bg-slate-50 dark:bg-inset-dark border-slate-200/90 dark:border-border-dark text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-active-dark'
         }`}
         title={`Current streak: ${streak.currentStreak} days. Best: ${streak.longestStreak} days. Click to view Achievements.`}
       >
@@ -68,12 +68,12 @@ export const StreakBanner: React.FC<StreakBannerProps> = ({ compact = false }) =
       onClick={() => setCurrentView('badges')}
       className={`group relative overflow-hidden rounded-2xl p-4 sm:p-5 border transition-all duration-300 cursor-pointer shadow-xs hover:shadow-md ${
         isStreakBroken
-          ? 'bg-slate-50/50 dark:bg-[#131822] border-slate-200/90 dark:border-[#202836] hover:border-amber-500/30'
+          ? 'bg-slate-50/50 dark:bg-card-dark border-slate-200/90 dark:border-border-dark hover:border-amber-500/30'
           : isTitan
           ? 'bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent border-amber-500/40 ring-1 ring-amber-500/20'
           : isHabit
           ? 'bg-gradient-to-br from-amber-500/10 to-transparent border-amber-500/30'
-          : 'bg-slate-50/70 dark:bg-[#171E2A]/70 border-slate-200/90 dark:border-[#202836] hover:border-amber-500/30'
+          : 'bg-slate-50/70 dark:bg-inset-dark/70 border-slate-200/90 dark:border-border-dark hover:border-amber-500/30'
       }`}
     >
       {/* Background glow decoration */}
@@ -85,7 +85,7 @@ export const StreakBanner: React.FC<StreakBannerProps> = ({ compact = false }) =
           <div
             className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-inner transition-transform group-hover:scale-105 ${
               isStreakBroken
-                ? 'bg-slate-100 dark:bg-[#171E2A] text-slate-400 border border-slate-200/80 dark:border-[#202836]'
+                ? 'bg-slate-100 dark:bg-inset-dark text-slate-400 border border-slate-200/80 dark:border-border-dark'
                 : isTitan
                 ? 'bg-gradient-to-br from-amber-500 to-amber-600 text-slate-950 shadow-amber-500/25'
                 : isHabit
@@ -113,7 +113,7 @@ export const StreakBanner: React.FC<StreakBannerProps> = ({ compact = false }) =
               }`}>
                 {streakTierLabel}
               </span>
-              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-200/70 dark:bg-[#202836] text-slate-600 dark:text-slate-300">
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-200/70 dark:bg-active-dark text-slate-600 dark:text-slate-300">
                 <Trophy className="w-2.5 h-2.5 text-amber-500" />
                 Best: {streak.longestStreak}d
               </span>
@@ -159,7 +159,7 @@ export const StreakBanner: React.FC<StreakBannerProps> = ({ compact = false }) =
             </p>
           </div>
 
-          <div className="hidden xs:flex h-9 w-9 rounded-xl bg-slate-100 dark:bg-[#202836] items-center justify-center text-slate-400 group-hover:text-[#F5B742] transition-colors">
+          <div className="hidden xs:flex h-9 w-9 rounded-xl bg-slate-100 dark:bg-active-dark items-center justify-center text-slate-400 group-hover:text-[#F5B742] transition-colors">
             <Sparkles className="w-4 h-4" />
           </div>
         </div>

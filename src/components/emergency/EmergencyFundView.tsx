@@ -35,7 +35,7 @@ export const EmergencyFundView: React.FC = () => {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
       {/* Top Banner & Runway Meter: Mineral Card with Gold Reserve Highlight */}
-      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] text-slate-900 dark:text-white p-4 sm:p-8 border border-slate-200/90 dark:border-[#202836] shadow-sm">
+      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-card-dark text-slate-900 dark:text-white p-4 sm:p-8 border border-slate-200/90 dark:border-border-dark shadow-sm">
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
@@ -72,7 +72,7 @@ export const EmergencyFundView: React.FC = () => {
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-              className="inline-flex items-center gap-2 px-4 py-3 bg-slate-100 dark:bg-[#171E2A] hover:bg-slate-200 dark:hover:bg-[#202836] text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-[#202836] rounded-xl text-xs sm:text-sm font-bold transition-all active:scale-95"
+              className="inline-flex items-center gap-2 px-4 py-3 bg-slate-100 dark:bg-inset-dark hover:bg-slate-200 dark:hover:bg-active-dark text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-border-dark rounded-xl text-xs sm:text-sm font-bold transition-all active:scale-95"
             >
               <Sliders className="w-4 h-4 text-slate-400" />
               <span>Adjust Target</span>
@@ -89,7 +89,7 @@ export const EmergencyFundView: React.FC = () => {
 
         {/* Settings Panel if toggled */}
         {isSettingsOpen && (
-          <form onSubmit={handleSaveSettings} className="mt-6 p-5 bg-slate-50 dark:bg-[#171E2A] rounded-2xl border border-slate-200/80 dark:border-[#202836] space-y-4">
+          <form onSubmit={handleSaveSettings} className="mt-6 p-5 bg-slate-50 dark:bg-inset-dark rounded-2xl border border-slate-200/80 dark:border-border-dark space-y-4">
             <h4 className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
               <Sliders className="w-3.5 h-3.5" /> Customize Emergency Target
             </h4>
@@ -101,7 +101,7 @@ export const EmergencyFundView: React.FC = () => {
                 <select
                   value={targetMonths}
                   onChange={e => setTargetMonths(parseInt(e.target.value))}
-                  className="w-full py-2.5 px-3.5 bg-white dark:bg-[#131822] border border-slate-200/90 dark:border-[#202836] rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:border-amber-500"
+                  className="w-full py-2.5 px-3.5 bg-white dark:bg-card-dark border border-slate-200/90 dark:border-border-dark rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:border-amber-500"
                 >
                   <option value={3}>3 Months (Aggressive / High Job Security)</option>
                   <option value={6}>6 Months (Standard Recommended)</option>
@@ -120,7 +120,7 @@ export const EmergencyFundView: React.FC = () => {
                   value={manualTarget}
                   onChange={e => setManualTarget(e.target.value)}
                   placeholder="e.g. 360000"
-                  className="w-full py-2.5 px-3.5 bg-white dark:bg-[#131822] border border-slate-200/90 dark:border-[#202836] rounded-xl text-sm text-slate-900 dark:text-white font-numeric focus:outline-none focus:border-amber-500"
+                  className="w-full py-2.5 px-3.5 bg-white dark:bg-card-dark border border-slate-200/90 dark:border-border-dark rounded-xl text-sm text-slate-900 dark:text-white font-numeric focus:outline-none focus:border-amber-500"
                 />
               </div>
             </div>
@@ -144,7 +144,7 @@ export const EmergencyFundView: React.FC = () => {
         )}
 
         {/* Progress Track */}
-        <div className="mt-6 pt-5 border-t border-slate-200/80 dark:border-[#202836]">
+        <div className="mt-6 pt-5 border-t border-slate-200/80 dark:border-border-dark">
           <div className="flex justify-between items-center text-xs text-slate-500 dark:text-slate-400 mb-2 font-medium">
             <span className="font-numeric">{percentFunded}% Funded</span>
             <span>{deficit > 0 ? <span className="font-numeric">{formatINR(deficit)} to reach goal</span> : '100% Fully Funded 🎉'}</span>
@@ -159,20 +159,20 @@ export const EmergencyFundView: React.FC = () => {
         </div>
 
         {/* 4 Metric Pillars */}
-        <div ref={metricPillarsRef} className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-slate-200/80 dark:border-[#202836]">
-          <div style={getChildStyle(0)} className="animate-slide-up bg-slate-50 dark:bg-[#171E2A] border border-slate-200/60 dark:border-[#202836]/60 rounded-2xl p-3.5">
+        <div ref={metricPillarsRef} className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-slate-200/80 dark:border-border-dark">
+          <div style={getChildStyle(0)} className="animate-slide-up bg-slate-50 dark:bg-inset-dark border border-slate-200/60 dark:border-border-dark/60 rounded-2xl p-3.5">
             <span className="text-xs text-slate-500 dark:text-slate-400">Current Saved</span>
             <p className="text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">{formatCompactINR(emergencyFund.currentSaved)}</p>
           </div>
-          <div style={getChildStyle(1)} className="animate-slide-up bg-slate-50 dark:bg-[#171E2A] border border-slate-200/60 dark:border-[#202836]/60 rounded-2xl p-3.5">
+          <div style={getChildStyle(1)} className="animate-slide-up bg-slate-50 dark:bg-inset-dark border border-slate-200/60 dark:border-border-dark/60 rounded-2xl p-3.5">
             <span className="text-xs text-slate-500 dark:text-slate-400">Target Fund</span>
             <p className="text-lg font-bold font-numeric text-emerald-600 dark:text-emerald-400 mt-0.5">{formatCompactINR(effectiveTarget)}</p>
           </div>
-          <div style={getChildStyle(2)} className="animate-slide-up bg-slate-50 dark:bg-[#171E2A] border border-slate-200/60 dark:border-[#202836]/60 rounded-2xl p-3.5">
+          <div style={getChildStyle(2)} className="animate-slide-up bg-slate-50 dark:bg-inset-dark border border-slate-200/60 dark:border-border-dark/60 rounded-2xl p-3.5">
             <span className="text-xs text-slate-500 dark:text-slate-400">Runway Secured</span>
             <p className="text-lg font-bold font-numeric text-teal-600 dark:text-teal-400 mt-0.5">{emergencyFundRunwayMonths.toFixed(1)} Months</p>
           </div>
-          <div style={getChildStyle(3)} className="animate-slide-up bg-slate-50 dark:bg-[#171E2A] border border-slate-200/60 dark:border-[#202836]/60 rounded-2xl p-3.5">
+          <div style={getChildStyle(3)} className="animate-slide-up bg-slate-50 dark:bg-inset-dark border border-slate-200/60 dark:border-border-dark/60 rounded-2xl p-3.5">
             <span className="text-xs text-slate-500 dark:text-slate-400">Shield Status</span>
             <p className={`text-lg font-bold mt-0.5 ${
               percentFunded >= 100
@@ -203,7 +203,7 @@ export const EmergencyFundView: React.FC = () => {
       </div>
 
       {/* Contribution & Withdrawal History */}
-      <div className="bg-white dark:bg-[#131822] rounded-3xl p-5 sm:p-7 shadow-sm border border-slate-200/90 dark:border-[#202836]">
+      <div className="bg-white dark:bg-card-dark rounded-3xl p-5 sm:p-7 shadow-sm border border-slate-200/90 dark:border-border-dark">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
@@ -213,13 +213,13 @@ export const EmergencyFundView: React.FC = () => {
               Historical ledger of safety deposits and emergency withdrawals
             </p>
           </div>
-          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-[#171E2A] text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-[#202836]">
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-inset-dark text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-border-dark">
             {emergencyFund.contributions.length} records
           </span>
         </div>
 
         {emergencyFund.contributions.length === 0 ? (
-          <div className="text-center py-12 border border-dashed border-slate-200/90 dark:border-[#202836] rounded-2xl">
+          <div className="text-center py-12 border border-dashed border-slate-200/90 dark:border-border-dark rounded-2xl">
             <Shield className="w-10 h-10 text-slate-300 dark:text-slate-700 mx-auto mb-2" />
             <p className="text-xs text-slate-400">
               No contributions logged yet. Click "Log Contribution" to record your first reserve deposit.
@@ -233,7 +233,7 @@ export const EmergencyFundView: React.FC = () => {
               return (
                 <div
                   key={item.id}
-                  className="p-4 rounded-2xl bg-slate-50 dark:bg-[#171E2A]/60 hover:bg-slate-100 dark:hover:bg-[#171E2A] border border-slate-100 dark:border-[#202836] flex items-center justify-between gap-4 transition-colors"
+                  className="p-4 rounded-2xl bg-slate-50 dark:bg-inset-dark/60 hover:bg-slate-100 dark:hover:bg-inset-dark border border-slate-100 dark:border-border-dark flex items-center justify-between gap-4 transition-colors"
                 >
                   <div className="flex items-center gap-3.5">
                     <div

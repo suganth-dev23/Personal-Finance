@@ -27,7 +27,7 @@ export const StatCard: React.FC<StatCardProps> = ({
   return (
     <div
       onClick={onClick}
-      className={`group relative overflow-hidden rounded-2xl bg-white dark:bg-[#131822] p-5 shadow-xs border border-slate-200/80 dark:border-[#202836] transition-all duration-200 hover:border-slate-300 dark:hover:border-[#273243] lift ${
+      className={`group relative overflow-hidden rounded-2xl bg-white dark:bg-card-dark p-5 shadow-xs border border-slate-200/80 dark:border-border-dark transition-all duration-200 hover:border-slate-300 dark:hover:border-[#273243] lift ${
         onClick ? 'cursor-pointer press' : ''
       }`}
     >

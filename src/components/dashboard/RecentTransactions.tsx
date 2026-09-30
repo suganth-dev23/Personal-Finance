@@ -31,7 +31,7 @@ export const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEditTr
   const contactMap = new Map(contacts.map(c => [c.id, c]));
 
   return (
-    <div className="bg-white dark:bg-[#131822] rounded-3xl p-4 sm:p-6 shadow-xs border border-slate-200/90 dark:border-[#202836] flex flex-col justify-between h-full">
+    <div className="bg-white dark:bg-card-dark rounded-3xl p-4 sm:p-6 shadow-xs border border-slate-200/90 dark:border-border-dark flex flex-col justify-between h-full">
       <div>
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -52,7 +52,7 @@ export const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEditTr
         {recentList.length === 0 ? (
           <p className="text-xs text-slate-500 dark:text-slate-400 py-6 text-center">No transactions found.</p>
         ) : (
-          <div ref={containerRef} className="divide-y divide-slate-100 dark:divide-[#202836]">
+          <div ref={containerRef} className="divide-y divide-slate-100 dark:divide-border-dark">
             {recentList.map((tx, idx) => {
               const isCredit = tx.type === 'credit';
               const catInfo = categoryMap.get(tx.category.toLowerCase());
@@ -136,7 +136,7 @@ export const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEditTr
                             title={splitTooltip || undefined}
                             className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-medium font-numeric ${
                               isSplitSettled
-                                ? 'bg-slate-100 text-slate-500 dark:bg-[#171E2A] dark:text-slate-400 line-through'
+                                ? 'bg-slate-100 text-slate-500 dark:bg-inset-dark dark:text-slate-400 line-through'
                                 : isTheyOweMe
                                 ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300'
                                 : 'bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300'

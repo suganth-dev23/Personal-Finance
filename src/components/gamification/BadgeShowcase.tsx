@@ -40,7 +40,7 @@ const TIER_STYLES: Record<BadgeTier, { border: string; bg: string; text: string;
   },
   silver: {
     border: 'border-slate-300 dark:border-slate-700 hover:border-slate-400',
-    bg: 'bg-slate-100 dark:bg-[#171E2A] text-slate-700 dark:text-slate-300',
+    bg: 'bg-slate-100 dark:bg-inset-dark text-slate-700 dark:text-slate-300',
     text: 'text-slate-600 dark:text-slate-300',
     label: 'Silver',
   },
@@ -95,7 +95,7 @@ export const BadgeShowcase: React.FC = () => {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
       {/* Hero Overview: Mineral Card with Suvarna Gold Accent */}
-      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] text-slate-900 dark:text-white p-6 sm:p-8 border border-slate-200/90 dark:border-[#202836] shadow-sm">
+      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-card-dark text-slate-900 dark:text-white p-6 sm:p-8 border border-slate-200/90 dark:border-border-dark shadow-sm">
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -128,7 +128,7 @@ export const BadgeShowcase: React.FC = () => {
           </div>
 
           {/* Level Progress Widget in Hero */}
-          <div className="w-full md:w-80 bg-slate-50 dark:bg-[#171E2A] p-4 rounded-2xl border border-slate-200/70 dark:border-[#202836]">
+          <div className="w-full md:w-80 bg-slate-50 dark:bg-inset-dark p-4 rounded-2xl border border-slate-200/70 dark:border-border-dark">
             <div className="flex justify-between items-center text-xs mb-1.5 font-bold">
               <span className="text-amber-700 dark:text-[#F5B742]">
                 Level <span className="font-numeric">{levelInfo.level}</span> Progress
@@ -146,26 +146,26 @@ export const BadgeShowcase: React.FC = () => {
         </div>
 
         {/* 4-column summary strip */}
-        <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-slate-200/80 dark:border-[#202836]">
-          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+        <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-slate-200/80 dark:border-border-dark">
+          <div className="rounded-2xl bg-slate-50 dark:bg-inset-dark p-3.5 border border-slate-200/60 dark:border-border-dark/60">
             <span className="text-xs text-slate-500 dark:text-slate-400">Badges Earned</span>
             <p className="text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">
               {unlockedCount} / {badges.length}
             </p>
           </div>
-          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+          <div className="rounded-2xl bg-slate-50 dark:bg-inset-dark p-3.5 border border-slate-200/60 dark:border-border-dark/60">
             <span className="text-xs text-slate-500 dark:text-slate-400">Total XP</span>
             <p className="text-lg font-bold font-numeric text-[#F5B742] mt-0.5">
               {totalXP} XP
             </p>
           </div>
-          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+          <div className="rounded-2xl bg-slate-50 dark:bg-inset-dark p-3.5 border border-slate-200/60 dark:border-border-dark/60">
             <span className="text-xs text-slate-500 dark:text-slate-400">Logging Streak</span>
             <p className="text-lg font-bold font-numeric text-emerald-600 dark:text-emerald-400 mt-0.5">
               {streak.currentStreak} Days
             </p>
           </div>
-          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+          <div className="rounded-2xl bg-slate-50 dark:bg-inset-dark p-3.5 border border-slate-200/60 dark:border-border-dark/60">
             <span className="text-xs text-slate-500 dark:text-slate-400">Health Rating</span>
             <p className="text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">
               Grade {healthScore.grade} ({healthScore.overallScore} pts)
@@ -175,7 +175,7 @@ export const BadgeShowcase: React.FC = () => {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white dark:bg-[#131822] rounded-3xl p-5 border border-slate-200/90 dark:border-[#202836] shadow-xs space-y-4">
+      <div className="bg-white dark:bg-card-dark rounded-3xl p-5 border border-slate-200/90 dark:border-border-dark shadow-xs space-y-4">
         {/* Category Tabs */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
           {CATEGORY_TABS.map(tab => {
@@ -188,7 +188,7 @@ export const BadgeShowcase: React.FC = () => {
                 className={`press flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
                   isActive
                     ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs'
-                    : 'bg-slate-100 dark:bg-[#171E2A] text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-[#202836]'
+                    : 'bg-slate-100 dark:bg-inset-dark text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-active-dark'
                 }`}
               >
                 <Icon className="w-3.5 h-3.5" />
@@ -199,7 +199,7 @@ export const BadgeShowcase: React.FC = () => {
         </div>
 
         {/* Secondary Filters: Status & Search */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-slate-100 dark:border-[#202836]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-slate-100 dark:border-border-dark">
           {/* Status Buttons */}
           <div className="flex items-center gap-1.5">
             {(['all', 'unlocked', 'locked'] as FilterStatus[]).map(status => {
@@ -218,7 +218,7 @@ export const BadgeShowcase: React.FC = () => {
                   className={`press px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                     isActive
                       ? 'bg-amber-500/15 text-amber-700 dark:text-[#F5B742] border border-amber-500/30'
-                      : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#171E2A]'
+                      : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-inset-dark'
                   }`}
                 >
                   {label}
@@ -235,7 +235,7 @@ export const BadgeShowcase: React.FC = () => {
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Search achievements..."
-              className="w-full pl-9 pr-3.5 py-1.5 rounded-xl bg-slate-50 dark:bg-[#171E2A] border border-slate-200/80 dark:border-[#202836] text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400"
+              className="w-full pl-9 pr-3.5 py-1.5 rounded-xl bg-slate-50 dark:bg-inset-dark border border-slate-200/80 dark:border-border-dark text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400"
             />
           </div>
         </div>
@@ -266,8 +266,8 @@ export const BadgeShowcase: React.FC = () => {
                 style={getChildStyle(idx)}
                 className={`group lift relative overflow-hidden rounded-3xl p-5 border transition-all duration-300 shadow-xs hover:shadow-md animate-slide-up ${
                   isUnlocked
-                    ? `bg-white dark:bg-[#131822] ${tierStyle.border}`
-                    : 'bg-slate-50/50 dark:bg-[#131822]/50 border-slate-200/70 dark:border-[#202836]/60 opacity-85'
+                    ? `bg-white dark:bg-card-dark ${tierStyle.border}`
+                    : 'bg-slate-50/50 dark:bg-card-dark/50 border-slate-200/70 dark:border-border-dark/60 opacity-85'
                 }`}
               >
                 {/* Header: Icon Box and Badges */}
@@ -277,7 +277,7 @@ export const BadgeShowcase: React.FC = () => {
                       className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner transition-transform group-hover:scale-105 ${
                         isUnlocked
                           ? tierStyle.bg
-                          : 'bg-slate-100 dark:bg-[#171E2A] text-slate-400'
+                          : 'bg-slate-100 dark:bg-inset-dark text-slate-400'
                       }`}
                     >
                       <IconRenderer
@@ -292,7 +292,7 @@ export const BadgeShowcase: React.FC = () => {
                           className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
                             isUnlocked
                               ? `${tierStyle.bg} border-current`
-                              : 'bg-slate-100 dark:bg-[#171E2A] text-slate-400 border-slate-200 dark:border-[#202836]'
+                              : 'bg-slate-100 dark:bg-inset-dark text-slate-400 border-slate-200 dark:border-border-dark'
                           }`}
                         >
                           {tierStyle.label}
@@ -314,7 +314,7 @@ export const BadgeShowcase: React.FC = () => {
                         <CheckCircle2 className="w-4 h-4" />
                       </span>
                     ) : (
-                      <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-slate-100 dark:bg-[#171E2A] text-slate-400">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-slate-100 dark:bg-inset-dark text-slate-400">
                         <Lock className="w-3.5 h-3.5" />
                       </span>
                     )}
@@ -327,7 +327,7 @@ export const BadgeShowcase: React.FC = () => {
                 </p>
 
                 {/* Footer Progress & XP */}
-                <div className="mt-4 pt-3.5 border-t border-slate-100 dark:border-[#202836] flex items-center justify-between text-xs">
+                <div className="mt-4 pt-3.5 border-t border-slate-100 dark:border-border-dark flex items-center justify-between text-xs">
                   <div className="flex items-center gap-1 text-[11px] font-semibold">
                     <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
                     <span className="font-numeric text-slate-800 dark:text-slate-200 font-bold">
@@ -357,14 +357,19 @@ export const BadgeShowcase: React.FC = () => {
 
                 {/* Progress bar for locked badges */}
                 {!isUnlocked && (badge.progress ?? 0) > 0 && (
-                  <div className="mt-2">
-                    <div className="h-1 w-full bg-slate-100 dark:bg-[#171E2A] rounded-full overflow-hidden">
+                    <div
+                      className="h-1 w-full bg-slate-100 dark:bg-inset-dark rounded-full overflow-hidden"
+                      role="progressbar"
+                      aria-valuenow={Math.round(badge.progress ?? 0)}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-label={`${badge.name} unlock progress`}
+                    >
                       <div
-                        className="h-full bg-amber-500/70 rounded-full transition-all duration-500"
+                        className="h-full bg-amber-500/70 rounded-full transition-[width] duration-500"
                         style={{ width: `${badge.progress}%` }}
                       />
                     </div>
-                  </div>
                 )}
               </div>
             );

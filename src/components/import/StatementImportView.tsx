@@ -179,7 +179,7 @@ export const StatementImportView: React.FC = () => {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
       {/* Hero Overview: Mineral Card with Gold Import Highlight */}
-      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] text-slate-900 dark:text-white p-6 sm:p-8 border border-slate-200/90 dark:border-[#202836] shadow-sm">
+      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-card-dark text-slate-900 dark:text-white p-6 sm:p-8 border border-slate-200/90 dark:border-border-dark shadow-sm">
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
@@ -210,7 +210,7 @@ export const StatementImportView: React.FC = () => {
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={handleDownloadSampleCSV}
-              className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-slate-100 dark:bg-[#171E2A] hover:bg-slate-200 dark:hover:bg-[#202836] text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-[#202836] text-xs sm:text-sm font-bold transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-slate-100 dark:bg-inset-dark hover:bg-slate-200 dark:hover:bg-active-dark text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-border-dark text-xs sm:text-sm font-bold transition-colors"
               title="Download a test CSV statement to verify parsing"
             >
               <Download className="w-4 h-4 text-amber-500" />
@@ -220,20 +220,20 @@ export const StatementImportView: React.FC = () => {
         </div>
 
         {/* 4-column summary strip */}
-        <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-slate-200/80 dark:border-[#202836]">
-          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+        <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-slate-200/80 dark:border-border-dark">
+          <div className="rounded-2xl bg-slate-50 dark:bg-inset-dark p-3.5 border border-slate-200/60 dark:border-border-dark/60">
             <span className="text-xs text-slate-500 dark:text-slate-400">Formats Supported</span>
             <p className="text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">CSV &amp; PDF</p>
           </div>
-          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+          <div className="rounded-2xl bg-slate-50 dark:bg-inset-dark p-3.5 border border-slate-200/60 dark:border-border-dark/60">
             <span className="text-xs text-slate-500 dark:text-slate-400">Privacy Architecture</span>
             <p className="text-lg font-bold font-numeric text-emerald-600 dark:text-emerald-400 mt-0.5">100% Client-Side</p>
           </div>
-          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+          <div className="rounded-2xl bg-slate-50 dark:bg-inset-dark p-3.5 border border-slate-200/60 dark:border-border-dark/60">
             <span className="text-xs text-slate-500 dark:text-slate-400">Parser Pipeline</span>
             <p className="text-lg font-bold font-numeric text-teal-600 dark:text-teal-400 mt-0.5">Web Worker</p>
           </div>
-          <div className="rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+          <div className="rounded-2xl bg-slate-50 dark:bg-inset-dark p-3.5 border border-slate-200/60 dark:border-border-dark/60">
             <span className="text-xs text-slate-500 dark:text-slate-400">Duplicate Check</span>
             <p className="text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">Active Hash</p>
           </div>
@@ -287,7 +287,7 @@ export const StatementImportView: React.FC = () => {
           className={`border-2 border-dashed rounded-3xl p-10 sm:p-14 text-center cursor-pointer transition-all duration-200 ${
             isDragging
               ? 'border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/20 scale-[1.01]'
-              : 'border-slate-200/90 dark:border-[#202836] bg-white dark:bg-[#131822] hover:border-emerald-500 dark:hover:border-emerald-500 shadow-sm'
+              : 'border-slate-200/90 dark:border-border-dark bg-white dark:bg-card-dark hover:border-emerald-500 dark:hover:border-emerald-500 shadow-sm'
           }`}
         >
           <input
@@ -320,9 +320,16 @@ export const StatementImportView: React.FC = () => {
                 <span>Progress</span>
                 <span>{Math.round((pdfProgress.page / pdfProgress.totalPages) * 100)}%</span>
               </div>
-              <div className="w-full bg-slate-200 dark:bg-[#171E2A] h-2 rounded-full overflow-hidden p-0.5">
+              <div
+                className="w-full bg-slate-200 dark:bg-inset-dark h-2 rounded-full overflow-hidden p-0.5"
+                role="progressbar"
+                aria-valuenow={Math.round((pdfProgress.page / pdfProgress.totalPages) * 100)}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label="PDF statement parsing progress"
+              >
                 <div
-                  className="bg-emerald-500 h-full rounded-full transition-all duration-200"
+                  className="bg-emerald-500 h-full rounded-full transition-[width] duration-200"
                   style={{ width: `${(pdfProgress.page / pdfProgress.totalPages) * 100}%` }}
                 />
               </div>
@@ -334,11 +341,11 @@ export const StatementImportView: React.FC = () => {
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
-            <span className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-[#171E2A] text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-[#202836]">
+            <span className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-inset-dark text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-border-dark">
               <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               <span>CSV Statements</span>
             </span>
-            <span className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-[#171E2A] text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-[#202836]">
+            <span className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-inset-dark text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-border-dark">
               <FileText className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
               <span>PDF Statements (Web Worker)</span>
             </span>
@@ -349,7 +356,7 @@ export const StatementImportView: React.FC = () => {
       {/* Review & Fix Staging Screen */}
       {stagedList && (
         <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#131822] p-6 rounded-3xl border border-slate-200/90 dark:border-[#202836] shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-card-dark p-6 rounded-3xl border border-slate-200/90 dark:border-border-dark shadow-sm">
             <div className="flex items-center gap-3.5">
               <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                 <FileCheck className="w-6 h-6" />
@@ -368,7 +375,7 @@ export const StatementImportView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setStagedList(null)}
-                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#171E2A] transition-colors"
+                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-inset-dark transition-colors"
               >
                 Cancel / Upload Another
               </button>

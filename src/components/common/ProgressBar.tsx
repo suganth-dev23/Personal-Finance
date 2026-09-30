@@ -99,7 +99,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
         aria-valuemin={0}
         aria-valuemax={100}
         aria-label={ariaLabel || 'Progress'}
-        className={`relative w-full bg-slate-100 dark:bg-[#171E2A] border border-transparent dark:border-[#202836] rounded-full overflow-hidden contain-paint ${heightClasses} ${glowClass}`}
+        className={`relative w-full bg-slate-100 dark:bg-inset-dark border border-transparent dark:border-border-dark rounded-full overflow-hidden contain-paint ${heightClasses} ${glowClass}`}
       >
         {showMilestones && (
           <>

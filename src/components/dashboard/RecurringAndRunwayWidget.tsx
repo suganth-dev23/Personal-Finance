@@ -17,7 +17,7 @@ export const CashFlowRunwayCard: React.FC = () => {
   const runway = useCashFlowRunway(transactions, totalBalance);
 
   return (
-    <div className="bg-white dark:bg-[#131822] rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-[#202836] shadow-xs flex flex-col justify-between h-full space-y-4">
+    <div className="bg-white dark:bg-card-dark rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-border-dark shadow-xs flex flex-col justify-between h-full space-y-4">
       <div>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2.5">
@@ -48,7 +48,7 @@ export const CashFlowRunwayCard: React.FC = () => {
         </div>
 
         {/* Big Metric Display */}
-        <div className="bg-slate-50 dark:bg-[#171E2A]/70 rounded-2xl p-4 border border-slate-100 dark:border-[#202836]">
+        <div className="bg-slate-50 dark:bg-inset-dark/70 rounded-2xl p-4 border border-slate-100 dark:border-border-dark">
           <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
             Estimated liquid longevity
           </span>
@@ -74,7 +74,7 @@ export const CashFlowRunwayCard: React.FC = () => {
       </div>
 
       {/* Burn Rate Sub-Stats */}
-      <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100 dark:border-[#202836]">
+      <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100 dark:border-border-dark">
         <div>
           <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Avg monthly spend</span>
           <p className="text-sm font-semibold font-numeric text-slate-800 dark:text-slate-200 mt-0.5">
@@ -104,11 +104,11 @@ export const RecurringBillsCard: React.FC = () => {
   const totalStreamCount = recurringExpenses.length + recurringIncomes.length;
 
   return (
-    <div className="bg-white dark:bg-[#131822] rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-[#202836] shadow-xs flex flex-col justify-between h-full space-y-4">
+    <div className="bg-white dark:bg-card-dark rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-border-dark shadow-xs flex flex-col justify-between h-full space-y-4">
       <div>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-[#171E2A] flex items-center justify-center text-slate-600 dark:text-slate-300">
+            <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-inset-dark flex items-center justify-center text-slate-600 dark:text-slate-300">
               <Repeat className="w-4 h-4" />
             </div>
             <div>
@@ -130,7 +130,7 @@ export const RecurringBillsCard: React.FC = () => {
         </div>
 
         {totalStreamCount === 0 ? (
-          <div className="text-center py-7 bg-slate-50 dark:bg-[#171E2A]/40 rounded-2xl border border-dashed border-slate-200 dark:border-[#202836] p-4">
+          <div className="text-center py-7 bg-slate-50 dark:bg-inset-dark/40 rounded-2xl border border-dashed border-slate-200 dark:border-border-dark p-4">
             <Sparkles className="w-5 h-5 text-slate-400 mx-auto mb-2" />
             <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">
               No repeating monthly subscriptions detected yet
@@ -151,10 +151,10 @@ export const RecurringBillsCard: React.FC = () => {
             {recurringExpenses.map(item => (
               <div
                 key={item.clusterId}
-                className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-[#171E2A]/70 border border-slate-100 dark:border-[#202836] hover:border-slate-200 dark:hover:border-[#273243] transition-all"
+                className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-inset-dark/70 border border-slate-100 dark:border-border-dark hover:border-slate-200 dark:hover:border-[#273243] transition-all"
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-[#202836] text-slate-600 dark:text-slate-300 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-active-dark text-slate-600 dark:text-slate-300 flex items-center justify-center font-bold text-xs flex-shrink-0">
                     <Repeat className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
@@ -240,7 +240,7 @@ export const RecurringBillsCard: React.FC = () => {
       </div>
 
       {totalStreamCount > 0 && (
-        <div className="pt-3 border-t border-slate-100 dark:border-[#202836] flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+        <div className="pt-3 border-t border-slate-100 dark:border-border-dark flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
           <span>{totalStreamCount} {totalStreamCount === 1 ? 'stream' : 'streams'} detected</span>
           <button
             onClick={() => setCurrentView('recurring')}

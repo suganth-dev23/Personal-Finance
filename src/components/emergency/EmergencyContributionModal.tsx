@@ -48,7 +48,7 @@ export const EmergencyContributionModal: React.FC<EmergencyContributionModalProp
           <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
             Action Type
           </label>
-          <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-[#171E2A] rounded-xl border border-slate-200/60 dark:border-[#202836]">
+          <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-inset-dark rounded-xl border border-slate-200/60 dark:border-border-dark">
             <button
               type="button"
               onClick={() => setType('deposit')}
@@ -91,7 +91,7 @@ export const EmergencyContributionModal: React.FC<EmergencyContributionModalProp
               value={amount}
               onChange={e => setAmount(e.target.value)}
               placeholder="0.00"
-              className="w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-white dark:bg-[#171E2A] pl-8 pr-4 py-2.5 text-slate-900 dark:text-white font-bold text-lg font-numeric focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+              className="w-full rounded-xl border border-slate-200/90 dark:border-border-dark bg-white dark:bg-inset-dark pl-8 pr-4 py-2.5 text-slate-900 dark:text-white font-bold text-lg font-numeric focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
             />
           </div>
           {parsedAmount > 0 && (
@@ -111,7 +111,7 @@ export const EmergencyContributionModal: React.FC<EmergencyContributionModalProp
             required
             value={date}
             onChange={e => setDate(e.target.value)}
-            className="w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-white dark:bg-[#171E2A] px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+            className="w-full rounded-xl border border-slate-200/90 dark:border-border-dark bg-white dark:bg-inset-dark px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
           />
         </div>
 
@@ -125,16 +125,16 @@ export const EmergencyContributionModal: React.FC<EmergencyContributionModalProp
             value={note}
             onChange={e => setNote(e.target.value)}
             placeholder="e.g. Monthly allocation, medical urgent expense, bonus transfer"
-            className="w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-white dark:bg-[#171E2A] px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+            className="w-full rounded-xl border border-slate-200/90 dark:border-border-dark bg-white dark:bg-inset-dark px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
           />
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-[#202836]">
+        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-border-dark">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#171E2A] transition-colors"
+            className="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-inset-dark transition-colors"
           >
             Cancel
           </button>

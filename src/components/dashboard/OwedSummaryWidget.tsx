@@ -47,11 +47,11 @@ export const OwedSummaryWidget: React.FC = () => {
   const netBalance = totalOwedToMe - totalIOwe;
 
   return (
-    <div className="bg-white dark:bg-[#131822] rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-[#202836] shadow-xs flex flex-col justify-between h-full space-y-4">
+    <div className="bg-white dark:bg-card-dark rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-border-dark shadow-xs flex flex-col justify-between h-full space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-[#171E2A] flex items-center justify-center text-slate-600 dark:text-slate-300">
+          <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-inset-dark flex items-center justify-center text-slate-600 dark:text-slate-300">
             <Users className="w-4 h-4" />
           </div>
           <div>
@@ -72,7 +72,7 @@ export const OwedSummaryWidget: React.FC = () => {
       </div>
 
       {/* Summary Grid */}
-      <div className="grid grid-cols-2 gap-3 p-3.5 bg-slate-50 dark:bg-[#171E2A]/70 rounded-2xl border border-slate-100 dark:border-[#202836]">
+      <div className="grid grid-cols-2 gap-3 p-3.5 bg-slate-50 dark:bg-inset-dark/70 rounded-2xl border border-slate-100 dark:border-border-dark">
         <div>
           <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
             <ArrowDownLeft className="w-3.5 h-3.5 text-emerald-500" />
@@ -83,7 +83,7 @@ export const OwedSummaryWidget: React.FC = () => {
           </p>
         </div>
 
-        <div className="border-l border-slate-200 dark:border-[#202836] pl-3.5">
+        <div className="border-l border-slate-200 dark:border-border-dark pl-3.5">
           <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
             <ArrowUpRight className="w-3.5 h-3.5 text-[#F43F5E]" />
             <span>You owe</span>
@@ -113,7 +113,7 @@ export const OwedSummaryWidget: React.FC = () => {
 
       {/* Top People List */}
       {topDebts.length > 0 ? (
-        <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-[#202836]">
+        <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-border-dark">
           <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
             Top open balances
           </span>
@@ -124,10 +124,10 @@ export const OwedSummaryWidget: React.FC = () => {
                 <div
                   key={contact.id}
                   onClick={() => setCurrentView('people')}
-                  className="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-[#171E2A]/70 hover:bg-slate-50 dark:hover:bg-[#1C2433] border border-slate-100 dark:border-[#202836] cursor-pointer transition-colors text-xs"
+                  className="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-inset-dark/70 hover:bg-slate-50 dark:hover:bg-[#1C2433] border border-slate-100 dark:border-border-dark cursor-pointer transition-colors text-xs"
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-[#202836] text-slate-700 dark:text-slate-200 flex items-center justify-center font-semibold text-xs">
+                    <div className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-active-dark text-slate-700 dark:text-slate-200 flex items-center justify-center font-semibold text-xs">
                       {contact.name.charAt(0).toUpperCase()}
                     </div>
                     <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">
@@ -150,7 +150,7 @@ export const OwedSummaryWidget: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="text-center py-4 bg-slate-50 dark:bg-[#171E2A]/40 rounded-2xl border border-dashed border-slate-200 dark:border-[#202836]">
+        <div className="text-center py-4 bg-slate-50 dark:bg-inset-dark/40 rounded-2xl border border-dashed border-slate-200 dark:border-border-dark">
           <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">All debts and IOUs are square!</p>
         </div>
       )}
@@ -159,7 +159,7 @@ export const OwedSummaryWidget: React.FC = () => {
       {latestSettlement && (
         <div
           onClick={() => setCurrentView('people')}
-          className="pt-2.5 border-t border-slate-100 dark:border-[#202836] flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+          className="pt-2.5 border-t border-slate-100 dark:border-border-dark flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
         >
           <div className="flex items-center gap-1.5 min-w-0 truncate">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />

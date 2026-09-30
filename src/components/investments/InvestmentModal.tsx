@@ -132,7 +132,7 @@ export const InvestmentModal: React.FC<InvestmentModalProps> = ({
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="e.g. Parag Parikh Flexi Cap, HDFC Bank, SGB 2024"
-              className="w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-slate-50 dark:bg-[#171E2A] px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+              className="w-full rounded-xl border border-slate-200/90 dark:border-border-dark bg-slate-50 dark:bg-inset-dark px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
             />
           </div>
 
@@ -143,7 +143,7 @@ export const InvestmentModal: React.FC<InvestmentModalProps> = ({
             <select
               value={type}
               onChange={e => setType(e.target.value as InvestmentType)}
-              className="w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-slate-50 dark:bg-[#171E2A] px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+              className="w-full rounded-xl border border-slate-200/90 dark:border-border-dark bg-slate-50 dark:bg-inset-dark px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
             >
               {INVESTMENT_TYPES.map(t => (
                 <option key={t} value={t}>
@@ -168,7 +168,7 @@ export const InvestmentModal: React.FC<InvestmentModalProps> = ({
               value={investedAmount}
               onChange={e => setInvestedAmount(e.target.value)}
               placeholder="0.00"
-              className="font-numeric tabular-nums w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-slate-50 dark:bg-[#171E2A] px-3.5 py-2.5 text-sm font-bold text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+              className="font-numeric tabular-nums w-full rounded-xl border border-slate-200/90 dark:border-border-dark bg-slate-50 dark:bg-inset-dark px-3.5 py-2.5 text-sm font-bold text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
             />
           </div>
 
@@ -184,7 +184,7 @@ export const InvestmentModal: React.FC<InvestmentModalProps> = ({
               value={currentValue}
               onChange={e => setCurrentValue(e.target.value)}
               placeholder="0.00"
-              className="font-numeric tabular-nums w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-slate-50 dark:bg-[#171E2A] px-3.5 py-2.5 text-sm font-bold text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+              className="font-numeric tabular-nums w-full rounded-xl border border-slate-200/90 dark:border-border-dark bg-slate-50 dark:bg-inset-dark px-3.5 py-2.5 text-sm font-bold text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
             />
           </div>
         </div>
@@ -205,7 +205,7 @@ export const InvestmentModal: React.FC<InvestmentModalProps> = ({
               value={platform}
               onChange={e => setPlatform(e.target.value)}
               placeholder="e.g. Zerodha, Groww, Kuvera, HDFC"
-              className="w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-slate-50 dark:bg-[#171E2A] px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+              className="w-full rounded-xl border border-slate-200/90 dark:border-border-dark bg-slate-50 dark:bg-inset-dark px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
             />
           </div>
 
@@ -219,7 +219,7 @@ export const InvestmentModal: React.FC<InvestmentModalProps> = ({
               value={sipAmount}
               onChange={e => setSipAmount(e.target.value)}
               placeholder="e.g. 5000"
-              className="font-numeric tabular-nums w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-slate-50 dark:bg-[#171E2A] px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+              className="font-numeric tabular-nums w-full rounded-xl border border-slate-200/90 dark:border-border-dark bg-slate-50 dark:bg-inset-dark px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
             />
           </div>
 
@@ -235,7 +235,7 @@ export const InvestmentModal: React.FC<InvestmentModalProps> = ({
               value={sipDay}
               onChange={e => setSipDay(e.target.value)}
               placeholder="e.g. 5"
-              className="font-numeric tabular-nums w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-slate-50 dark:bg-[#171E2A] px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+              className="font-numeric tabular-nums w-full rounded-xl border border-slate-200/90 dark:border-border-dark bg-slate-50 dark:bg-inset-dark px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
             />
           </div>
         </div>
@@ -250,16 +250,16 @@ export const InvestmentModal: React.FC<InvestmentModalProps> = ({
             value={notes}
             onChange={e => setNotes(e.target.value)}
             placeholder="e.g. Long term retirement core equity compounding"
-            className="w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-slate-50 dark:bg-[#171E2A] px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+            className="w-full rounded-xl border border-slate-200/90 dark:border-border-dark bg-slate-50 dark:bg-inset-dark px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
           />
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-[#202836]">
+        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-border-dark">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#171E2A] transition-colors"
+            className="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-inset-dark transition-colors"
           >
             Cancel
           </button>

@@ -17,7 +17,7 @@ export const BudgetHealthWidget: React.FC = () => {
   const overallPct = totalBudget > 0 ? Math.min(100, Math.round((totalSpent / totalBudget) * 100)) : 0;
 
   return (
-    <div className="bg-white dark:bg-[#131822] rounded-3xl p-4 sm:p-6 shadow-xs border border-slate-200/90 dark:border-[#202836] flex flex-col justify-between h-full">
+    <div className="bg-white dark:bg-card-dark rounded-3xl p-4 sm:p-6 shadow-xs border border-slate-200/90 dark:border-border-dark flex flex-col justify-between h-full">
       <div>
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -102,7 +102,7 @@ export const BudgetHealthWidget: React.FC = () => {
       </div>
 
       {totalBudget > 0 && (
-        <div className="pt-3.5 mt-4 border-t border-slate-100 dark:border-[#202836] flex items-center justify-between text-xs">
+        <div className="pt-3.5 mt-4 border-t border-slate-100 dark:border-border-dark flex items-center justify-between text-xs">
           <span className="text-slate-500 dark:text-slate-400">Monthly budget total</span>
           <span className="font-numeric font-semibold text-slate-800 dark:text-slate-200">
             {formatINR(totalSpent)} <span className="text-slate-400 dark:text-slate-500 font-normal">/ {formatINR(totalBudget)} ({overallPct}%)</span>

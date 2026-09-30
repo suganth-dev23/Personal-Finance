@@ -47,17 +47,21 @@ export function formatCompactINR(amount: number): string {
   const abs = Math.abs(amount);
   const sign = amount < 0 ? '-' : '';
 
+  const formatNum = (val: number, maxDecimals: number): string => {
+    return parseFloat(val.toFixed(maxDecimals)).toString();
+  };
+
   if (abs >= 10000000) {
     const cr = abs / 10000000;
-    return `${sign}${cr.toFixed(cr < 10 ? 2 : 1)} Cr`;
+    return `${sign}${formatNum(cr, cr < 10 ? 2 : 1)} Cr`;
   }
   if (abs >= 100000) {
     const lk = abs / 100000;
-    return `${sign}${lk.toFixed(lk < 10 ? 2 : 1)} L`;
+    return `${sign}${formatNum(lk, lk < 10 ? 2 : 1)} L`;
   }
   if (abs >= 1000) {
     const k = abs / 1000;
-    return `${sign}${k.toFixed(k < 10 ? 1 : 0)} K`;
+    return `${sign}${formatNum(k, k < 10 ? 1 : 0)} K`;
   }
   return `${sign}${abs.toFixed(0)}`;
 }

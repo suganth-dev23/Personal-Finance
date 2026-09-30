@@ -529,7 +529,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
           <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
             Transaction Type
           </label>
-          <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-[#171E2A] rounded-xl border border-transparent dark:border-[#202836]">
+          <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-inset-dark rounded-xl border border-transparent dark:border-border-dark">
             <button
               type="button"
               onClick={() => setType('debit')}
@@ -572,7 +572,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
               value={amount}
               onChange={e => handleAmountChange(e.target.value)}
               placeholder="0.00"
-              className="font-numeric tabular-nums w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-slate-50 dark:bg-[#171E2A] pl-8 pr-4 py-2.5 text-slate-900 dark:text-slate-100 font-bold text-lg focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+              className="font-numeric tabular-nums w-full rounded-xl border border-slate-200/90 dark:border-border-dark bg-slate-50 dark:bg-inset-dark pl-8 pr-4 py-2.5 text-slate-900 dark:text-slate-100 font-bold text-lg focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
             />
           </div>
           {words && (
@@ -606,7 +606,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
             onChange={e => setDescription(e.target.value)}
             onBlur={handleDescriptionBlur}
             placeholder="e.g. Swiggy, Zepto, HDFC Salary, Rent, Uber"
-            className="w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-slate-50 dark:bg-[#171E2A] px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+            className="w-full rounded-xl border border-slate-200/90 dark:border-border-dark bg-slate-50 dark:bg-inset-dark px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
           />
         </div>
 
@@ -628,7 +628,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
             value={person}
             onChange={e => setPerson(e.target.value)}
             placeholder="e.g. Amit, Landlord, Zomato, Mom"
-            className="w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-slate-50 dark:bg-[#171E2A] px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+            className="w-full rounded-xl border border-slate-200/90 dark:border-border-dark bg-slate-50 dark:bg-inset-dark px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
           />
           <datalist id="person-suggestions-list">
             {personSuggestions.map(p => (
@@ -646,7 +646,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
             <select
               value={category}
               onChange={e => setCategory(e.target.value)}
-              className="w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-slate-50 dark:bg-[#171E2A] px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+              className="w-full rounded-xl border border-slate-200/90 dark:border-border-dark bg-slate-50 dark:bg-inset-dark px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
             >
               {categories.map(c => (
                 <option key={c.id} value={c.name}>
@@ -665,7 +665,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
               required
               value={date}
               onChange={e => setDate(e.target.value)}
-              className="font-numeric tabular-nums w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-slate-50 dark:bg-[#171E2A] px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+              className="font-numeric tabular-nums w-full rounded-xl border border-slate-200/90 dark:border-border-dark bg-slate-50 dark:bg-inset-dark px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
             />
           </div>
         </div>
@@ -679,7 +679,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
             <select
               value={paymentMethod}
               onChange={e => setPaymentMethod(e.target.value as PaymentMethod)}
-              className="w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-slate-50 dark:bg-[#171E2A] px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+              className="w-full rounded-xl border border-slate-200/90 dark:border-border-dark bg-slate-50 dark:bg-inset-dark px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
             >
               {PAYMENT_METHODS.map(m => (
                 <option key={m} value={m}>
@@ -698,13 +698,13 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
               value={referenceId}
               onChange={e => setReferenceId(e.target.value)}
               placeholder="e.g. UPI-19827361"
-              className="w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-slate-50 dark:bg-[#171E2A] px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+              className="w-full rounded-xl border border-slate-200/90 dark:border-border-dark bg-slate-50 dark:bg-inset-dark px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
             />
           </div>
         </div>
 
         {/* Multi-Person Split Expense / IOU Section */}
-        <div className="pt-2 border-t border-slate-100 dark:border-[#202836]">
+        <div className="pt-2 border-t border-slate-100 dark:border-border-dark">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Users className="w-4 h-4 text-amber-600 dark:text-[#F5B742]" />
@@ -735,20 +735,20 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                 }}
                 className="sr-only peer"
               />
-              <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-[#202836] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-[#202836] peer-checked:bg-amber-500"></div>
+              <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-active-dark peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-border-dark peer-checked:bg-amber-500"></div>
             </label>
           </div>
 
           {isSplitEnabled && (
-            <div className="mt-3 p-3.5 bg-slate-50 dark:bg-[#171E2A] rounded-2xl border border-slate-200/80 dark:border-[#202836] space-y-3">
+            <div className="mt-3 p-3.5 bg-slate-50 dark:bg-inset-dark rounded-2xl border border-slate-200/80 dark:border-border-dark space-y-3">
               {/* Auto Split Toggle & Add Controls */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-200/60 dark:border-[#202836]">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-200/60 dark:border-border-dark">
                 <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700 dark:text-slate-300">
                   <input
                     type="checkbox"
                     checked={autoSplitRemaining}
                     onChange={e => handleToggleAutoSplit(e.target.checked)}
-                    className="w-4 h-4 rounded text-amber-500 focus:ring-amber-500 border-slate-300 dark:border-[#202836]"
+                    className="w-4 h-4 rounded text-amber-500 focus:ring-amber-500 border-slate-300 dark:border-border-dark"
                   />
                   <span>Split remaining amount equally</span>
                 </label>
@@ -763,7 +763,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                     <span>Add Person</span>
                   </button>
 
-                  <div className="flex items-center bg-white dark:bg-[#131822] rounded-xl border border-slate-200/90 dark:border-[#202836] overflow-hidden">
+                  <div className="flex items-center bg-white dark:bg-card-dark rounded-xl border border-slate-200/90 dark:border-border-dark overflow-hidden">
                     <input
                       type="number"
                       min="1"
@@ -775,7 +775,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                     <button
                       type="button"
                       onClick={() => handleAddUnnamedRows(unnamedCountToAdd)}
-                      className="px-2 py-1.5 bg-slate-100 dark:bg-[#171E2A] hover:bg-slate-200 dark:hover:bg-[#202836] text-slate-700 dark:text-slate-300 text-xs font-bold transition-colors border-l border-slate-200/90 dark:border-[#202836]"
+                      className="px-2 py-1.5 bg-slate-100 dark:bg-inset-dark hover:bg-slate-200 dark:hover:bg-active-dark text-slate-700 dark:text-slate-300 text-xs font-bold transition-colors border-l border-slate-200/90 dark:border-border-dark"
                     >
                       + Add unnamed
                     </button>
@@ -785,7 +785,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 
               {/* Inline New Person Modal/Bar if triggered */}
               {isCreatingContact && (
-                <div className="flex items-center gap-2 p-2 bg-white dark:bg-[#131822] rounded-xl border border-amber-400 dark:border-amber-500/60">
+                <div className="flex items-center gap-2 p-2 bg-white dark:bg-card-dark rounded-xl border border-amber-400 dark:border-amber-500/60">
                   <input
                     type="text"
                     placeholder="Enter new person's name..."
@@ -809,7 +809,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                       setNewPersonName('');
                       setCreatingContactForRowId(null);
                     }}
-                    className="p-1.5 rounded-lg bg-slate-200 dark:bg-[#202836] text-slate-600 dark:text-slate-300 hover:bg-slate-300"
+                    className="p-1.5 rounded-lg bg-slate-200 dark:bg-active-dark text-slate-600 dark:text-slate-300 hover:bg-slate-300"
                     title="Cancel"
                   >
                     <X className="w-3.5 h-3.5" />
@@ -825,8 +825,8 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                       key={row.id}
                       className={`p-2.5 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 ${
                         row.isPinned
-                          ? 'bg-white dark:bg-[#131822] border-amber-400 dark:border-amber-500/60 shadow-xs'
-                          : 'bg-white/80 dark:bg-[#131822] border-slate-200/90 dark:border-[#202836]'
+                          ? 'bg-white dark:bg-card-dark border-amber-400 dark:border-amber-500/60 shadow-xs'
+                          : 'bg-white/80 dark:bg-card-dark border-slate-200/90 dark:border-border-dark'
                       }`}
                     >
                       {/* Contact Picker / Unnamed Label */}
@@ -847,7 +847,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                               handleRowChange(row.id, { contactId: val });
                             }
                           }}
-                          className="flex-1 rounded-lg border border-slate-200/90 dark:border-[#202836] bg-slate-50 dark:bg-[#171E2A] px-2.5 py-1.5 text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                          className="flex-1 rounded-lg border border-slate-200/90 dark:border-border-dark bg-slate-50 dark:bg-inset-dark px-2.5 py-1.5 text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-amber-500"
                         >
                           <option value="">{row.label || `Person ${index + 1} (unnamed)`}</option>
                           {contacts.map(c => (
@@ -894,7 +894,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                               })
                             }
                             placeholder="0.00"
-                            className="font-numeric tabular-nums w-full pl-5 pr-2 py-1 rounded-lg border border-slate-200/90 dark:border-[#202836] bg-slate-50 dark:bg-[#171E2A] text-xs font-black text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-amber-500 text-right"
+                            className="font-numeric tabular-nums w-full pl-5 pr-2 py-1 rounded-lg border border-slate-200/90 dark:border-border-dark bg-slate-50 dark:bg-inset-dark text-xs font-black text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-amber-500 text-right"
                           />
                         </div>
 
@@ -952,7 +952,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                 className={`p-2.5 rounded-xl text-xs flex items-center justify-between font-bold border ${
                   isOverAllocated
                     ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-400'
-                    : 'bg-white dark:bg-[#131822] border-slate-200/90 dark:border-[#202836] text-slate-700 dark:text-slate-300'
+                    : 'bg-white dark:bg-card-dark border-slate-200/90 dark:border-border-dark text-slate-700 dark:text-slate-300'
                 }`}
               >
                 <span className="font-numeric">
@@ -972,7 +972,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 
         {/* Inline Suggestion for Repayment Settlement */}
         {matchingRepaymentContact && (
-          <div className="p-3.5 rounded-2xl bg-amber-50/60 dark:bg-[#171E2A] border border-amber-200/80 dark:border-[#202836] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div className="p-3.5 rounded-2xl bg-amber-50/60 dark:bg-inset-dark border border-amber-200/80 dark:border-border-dark flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
             <div className="flex items-center gap-2 min-w-0">
               <span className="text-base flex-shrink-0">💡</span>
               <p className="text-slate-900 dark:text-slate-100 font-medium">
@@ -1001,11 +1001,11 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
         )}
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-[#202836]">
+        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-border-dark">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#171E2A] transition-colors"
+            className="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-inset-dark transition-colors"
           >
             Cancel
           </button>

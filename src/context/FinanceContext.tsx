@@ -71,7 +71,8 @@ export type FinanceEvent =
   | { type: 'streak_continued'; days: number }
   | { type: 'streak_broken' }
   | { type: 'badge_earned'; badge: { id: string; name: string; description: string; icon: string } }
-  | { type: 'recurring_overdue_detected'; count: number; paymentName?: string };
+  | { type: 'recurring_overdue_detected'; count: number; paymentName?: string }
+  | { type: 'bulk_data_loaded' };
 
 export type FinanceEventListener = (event: FinanceEvent) => void;
 
@@ -1669,6 +1670,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Reset & Backup
   const resetToDemoData = () => {
+    emitFinanceEvent({ type: 'bulk_data_loaded' });
     setTransactions(INITIAL_TRANSACTIONS);
     setCategories(DEFAULT_CATEGORIES);
     setBudgets(INITIAL_BUDGETS);
@@ -1723,6 +1725,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const importBackupJSON = (jsonStr: string): boolean => {
     try {
+      emitFinanceEvent({ type: 'bulk_data_loaded' });
       const data = JSON.parse(jsonStr);
       if (Array.isArray(data.transactions)) setTransactions(data.transactions);
       if (Array.isArray(data.categories)) setCategories(data.categories);

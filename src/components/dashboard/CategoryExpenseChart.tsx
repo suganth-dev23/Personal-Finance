@@ -36,7 +36,7 @@ export const CategoryExpenseChart: React.FC = () => {
       const data = payload[0].payload;
       const pct = currentMonthExpense > 0 ? (data.spent / currentMonthExpense) * 100 : 0;
       return (
-        <div className="bg-white/95 dark:bg-[#171E2A]/95 p-3 rounded-xl shadow-xl border border-slate-200 dark:border-[#202836] text-xs">
+        <div className="bg-white/95 dark:bg-inset-dark/95 p-3 rounded-xl shadow-xl border border-slate-200 dark:border-border-dark text-xs">
           <p className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: data.color || '#F5B742' }} />
             {data.category}
@@ -56,7 +56,7 @@ export const CategoryExpenseChart: React.FC = () => {
   };
 
   return (
-    <div className="bg-white dark:bg-[#131822] rounded-3xl p-4 sm:p-6 shadow-xs border border-slate-200/90 dark:border-[#202836] flex flex-col h-full">
+    <div className="bg-white dark:bg-card-dark rounded-3xl p-4 sm:p-6 shadow-xs border border-slate-200/90 dark:border-border-dark flex flex-col h-full">
       <div className="flex items-center justify-between mb-2">
         <div>
           <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
@@ -66,7 +66,7 @@ export const CategoryExpenseChart: React.FC = () => {
             This month's debits breakdown
           </p>
         </div>
-        <span className="font-numeric text-xs font-bold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-[#171E2A] px-2.5 py-1 rounded-lg border border-slate-200/60 dark:border-[#202836]">
+        <span className="font-numeric text-xs font-bold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-inset-dark px-2.5 py-1 rounded-lg border border-slate-200/60 dark:border-border-dark">
           {formatINR(currentMonthExpense)}
         </span>
       </div>
@@ -79,7 +79,7 @@ export const CategoryExpenseChart: React.FC = () => {
         <div className="flex flex-col sm:flex-row items-center gap-4 flex-1">
           {/* Donut Chart */}
           <div className="w-full sm:w-1/2 h-[200px] relative flex items-center justify-center">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={100}>
               <PieChart>
                 <Pie
                   data={expenseCategories}
@@ -140,7 +140,7 @@ export const CategoryExpenseChart: React.FC = () => {
             })}
 
             {otherCategories.length > 0 && (
-              <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-100 dark:border-[#202836]">
+              <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-100 dark:border-border-dark">
                 <div className="flex items-center gap-2 truncate">
                   <span className="w-2.5 h-2.5 rounded-full flex-shrink-0 bg-slate-400 dark:bg-slate-500" />
                   <span className="font-medium text-slate-500 dark:text-slate-400 truncate">

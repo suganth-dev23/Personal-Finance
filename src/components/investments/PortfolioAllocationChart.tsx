@@ -41,7 +41,7 @@ export const PortfolioAllocationChart: React.FC<PortfolioAllocationChartProps> =
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-slate-900/95 dark:bg-[#171E2A] p-3 rounded-xl shadow-xl border border-slate-700 dark:border-[#202836] text-xs font-numeric">
+        <div className="bg-slate-900/95 dark:bg-inset-dark p-3 rounded-xl shadow-xl border border-slate-700 dark:border-border-dark text-xs font-numeric">
           <p className="font-bold text-white flex items-center gap-2 font-sans">
             <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: data.color }} />
             {data.name}
@@ -59,7 +59,7 @@ export const PortfolioAllocationChart: React.FC<PortfolioAllocationChartProps> =
   };
 
   return (
-    <div className="bg-white dark:bg-[#131822] rounded-3xl p-6 shadow-xs border border-slate-200/90 dark:border-[#202836] flex flex-col justify-between">
+    <div className="bg-white dark:bg-card-dark rounded-3xl p-6 shadow-xs border border-slate-200/90 dark:border-border-dark flex flex-col justify-between">
       <div className="flex items-center justify-between mb-2">
         <div>
           <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
@@ -74,7 +74,7 @@ export const PortfolioAllocationChart: React.FC<PortfolioAllocationChartProps> =
       ) : (
         <div className="flex flex-col sm:flex-row items-center gap-6 mt-4">
           <div className="w-full sm:w-1/2 h-[210px] relative flex items-center justify-center">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={100}>
               <PieChart>
                 <Pie
                   data={allocationData}

@@ -8,7 +8,7 @@ export const AIInsightsWidget: React.FC = () => {
   const latestReport = aiReports[0];
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] border border-slate-200/90 dark:border-[#202836] p-4 sm:p-6 shadow-xs">
+    <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-card-dark border border-slate-200/90 dark:border-border-dark p-4 sm:p-6 shadow-xs">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
         {/* Left identity cluster */}
         <div className="flex items-start gap-3.5 max-w-sm shrink-0">
@@ -20,7 +20,7 @@ export const AIInsightsWidget: React.FC = () => {
               <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                 AI Financial Health Assistant
               </h3>
-              <span className="text-[10px] font-semibold bg-slate-100 dark:bg-[#171E2A] text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-full border border-slate-200 dark:border-[#202836]">
+              <span className="text-[10px] font-semibold bg-slate-100 dark:bg-inset-dark text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-full border border-slate-200 dark:border-border-dark">
                 BYOK
               </span>
             </div>
@@ -33,7 +33,7 @@ export const AIInsightsWidget: React.FC = () => {
         {/* Center / Summary Content */}
         <div className="flex-1 min-w-0">
           {latestReport ? (
-            <div className="bg-slate-50 dark:bg-[#171E2A]/70 rounded-2xl p-3.5 border border-slate-100 dark:border-[#202836]">
+            <div className="bg-slate-50 dark:bg-inset-dark/70 rounded-2xl p-3.5 border border-slate-100 dark:border-border-dark">
               <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 mb-1">
                 <span className="font-semibold text-slate-700 dark:text-slate-300">Latest Intelligence Report</span>
                 <span>{formatDateTime(latestReport.createdAt)}</span>
@@ -43,7 +43,7 @@ export const AIInsightsWidget: React.FC = () => {
               </p>
             </div>
           ) : (
-            <div className="bg-slate-50 dark:bg-[#171E2A]/40 rounded-2xl p-3.5 border border-dashed border-slate-200 dark:border-[#202836]">
+            <div className="bg-slate-50 dark:bg-inset-dark/40 rounded-2xl p-3.5 border border-dashed border-slate-200 dark:border-border-dark">
               <p className="text-xs text-slate-600 dark:text-slate-300">
                 Actionable wealth guidance, risk alerts, and tax optimization recommendations tailored to your INR accounts.
               </p>

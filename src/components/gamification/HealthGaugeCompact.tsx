@@ -43,7 +43,7 @@ export const HealthGaugeCompact: React.FC = () => {
       type="button"
       aria-label={`Financial Health Score: ${Math.round(overallScore)} out of 100, Grade ${grade}. Tap to view badges.`}
       onClick={() => setCurrentView('badges')}
-      className="press w-full text-left relative overflow-hidden rounded-2xl bg-white dark:bg-[#131822] border border-slate-200/90 dark:border-[#202836] p-3.5 shadow-xs cursor-pointer"
+      className="press w-full text-left relative overflow-hidden rounded-2xl bg-white dark:bg-card-dark border border-slate-200/90 dark:border-border-dark p-3.5 shadow-xs cursor-pointer"
     >
       {/* Gold hairline */}
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
@@ -67,9 +67,16 @@ export const HealthGaugeCompact: React.FC = () => {
       {/* Row 2: Horizontal Score Bar + Number + Trend */}
       <div className="flex items-center gap-3 mb-3">
         {/* Horizontal gradient bar matching HealthGauge gold terminus */}
-        <div className="flex-1 h-2.5 bg-slate-100 dark:bg-[#171E2A] rounded-full overflow-hidden">
+        <div
+          className="flex-1 h-2.5 bg-slate-100 dark:bg-inset-dark rounded-full overflow-hidden"
+          role="progressbar"
+          aria-valuenow={Math.round(overallScore)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label="Overall financial health score"
+        >
           <div
-            className="h-full rounded-full bg-gradient-to-r from-rose-500 via-amber-500 via-emerald-500 to-[#F5B742] transition-all duration-700 ease-out"
+            className="h-full rounded-full bg-gradient-to-r from-rose-500 via-amber-500 via-emerald-500 to-[#F5B742] transition-[width] duration-700 ease-out"
             style={{ width: `${clampedScore}%` }}
           />
         </div>
@@ -97,9 +104,16 @@ export const HealthGaugeCompact: React.FC = () => {
             <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 w-12 shrink-0 truncate">
               {p.label}
             </span>
-            <div className="flex-1 h-1 bg-slate-100 dark:bg-[#171E2A] rounded-full overflow-hidden">
+            <div
+              className="flex-1 h-1 bg-slate-100 dark:bg-inset-dark rounded-full overflow-hidden"
+              role="progressbar"
+              aria-valuenow={p.score}
+              aria-valuemin={0}
+              aria-valuemax={p.max}
+              aria-label={`${p.label} score: ${p.score} out of ${p.max}`}
+            >
               <div
-                className={`h-full rounded-full transition-all duration-500 ease-out ${p.color}`}
+                className={`h-full rounded-full transition-[width] duration-500 ease-out ${p.color}`}
                 style={{ width: `${Math.max(0, Math.min(100, Math.round(((p.score ?? 0) / (p.max || 1)) * 100)))}%` }}
               />
             </div>

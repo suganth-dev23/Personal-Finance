@@ -58,7 +58,7 @@ export const BudgetsView: React.FC = () => {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
       {/* Hero Overview: Mineral Card with Gold Budget Highlight */}
-      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] text-slate-900 dark:text-white p-4 sm:p-8 border border-slate-200/90 dark:border-[#202836] shadow-sm">
+      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-card-dark text-slate-900 dark:text-white p-4 sm:p-8 border border-slate-200/90 dark:border-border-dark shadow-sm">
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
@@ -102,7 +102,7 @@ export const BudgetsView: React.FC = () => {
         </div>
 
         {/* Dynamic Progress Bar */}
-        <div className="mt-6 pt-5 border-t border-slate-200/80 dark:border-[#202836]">
+        <div className="mt-6 pt-5 border-t border-slate-200/80 dark:border-border-dark">
           <div className="flex justify-between items-center text-xs text-slate-500 dark:text-slate-400 mb-2 font-medium">
             <span className="font-numeric">Spent: {formatINR(totalSpentInBudgeted)}</span>
             <span className="font-numeric">Limit: {formatINR(totalBudgeted)}</span>
@@ -118,20 +118,20 @@ export const BudgetsView: React.FC = () => {
         </div>
 
         {/* 4-column summary strip */}
-        <div className="mt-4 sm:mt-6 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 pt-4 sm:pt-6 border-t border-slate-200/80 dark:border-[#202836]">
-          <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+        <div className="mt-4 sm:mt-6 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 pt-4 sm:pt-6 border-t border-slate-200/80 dark:border-border-dark">
+          <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-inset-dark p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-border-dark/60">
             <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">Total Allowed</span>
             <p className="text-sm sm:text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">{formatCompactINR(totalBudgeted)}</p>
           </div>
-          <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+          <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-inset-dark p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-border-dark/60">
             <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">Actual Spent</span>
             <p className="text-sm sm:text-lg font-bold font-numeric text-rose-600 dark:text-rose-400 mt-0.5">{formatCompactINR(totalSpentInBudgeted)}</p>
           </div>
-          <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+          <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-inset-dark p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-border-dark/60">
             <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">Active Caps</span>
             <p className="text-sm sm:text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">{budgets.length}</p>
           </div>
-          <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+          <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-inset-dark p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-border-dark/60">
             <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">Velocity Status</span>
             <p className={`text-sm sm:text-lg font-bold font-numeric mt-0.5 ${isOverTotal ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
               {isOverTotal ? 'Over Budget' : overallPercent >= 85 ? 'Near Ceiling' : 'Safe Velocity'}
@@ -181,12 +181,12 @@ export const BudgetsView: React.FC = () => {
                 className="animate-slide-up"
               >
                 <div
-                  className={`group lift bg-white dark:bg-[#131822] rounded-3xl p-4 sm:p-5 border transition-all duration-300 shadow-sm hover:shadow-md ${
+                  className={`group lift bg-white dark:bg-card-dark rounded-3xl p-4 sm:p-5 border transition-all duration-300 shadow-sm hover:shadow-md ${
                     isOver
                       ? 'border-rose-400 dark:border-rose-600/70 ring-2 ring-rose-500/30 animate-shake-then-flash'
                       : isNear
                       ? 'border-amber-300 dark:border-amber-900/60'
-                      : 'border-slate-200/90 dark:border-[#202836] hover:border-emerald-500/40'
+                      : 'border-slate-200/90 dark:border-border-dark hover:border-emerald-500/40'
                   }`}
                 >
                 <div className="flex items-start justify-between">
@@ -213,7 +213,7 @@ export const BudgetsView: React.FC = () => {
                   <div className="flex items-center gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => handleEdit(b)}
-                      className="press flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200/90 dark:border-[#202836] text-slate-400 hover:bg-slate-50 dark:hover:bg-[#171E2A] hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+                      className="press flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200/90 dark:border-border-dark text-slate-400 hover:bg-slate-50 dark:hover:bg-inset-dark hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
                       title="Edit Limit"
                     >
                       <Edit3 className="w-3.5 h-3.5" />
@@ -224,7 +224,7 @@ export const BudgetsView: React.FC = () => {
                           deleteBudget(b.id);
                         }
                       }}
-                      className="press flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200/90 dark:border-[#202836] text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                      className="press flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200/90 dark:border-border-dark text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
                       title="Delete Budget"
                     >
                       <Trash2 className="w-3.5 h-3.5" />

@@ -59,17 +59,17 @@ export const Modal: React.FC<ModalProps> = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
-        className={`relative w-full ${maxWidthClasses} bg-white dark:bg-[#131822] rounded-t-3xl sm:rounded-3xl shadow-2xl border-t sm:border border-slate-200/90 dark:border-[#202836] flex flex-col max-h-[92dvh] sm:max-h-[calc(100dvh-3.5rem)] overflow-hidden z-10 transition-all duration-200 ease-out transform will-change-transform-opacity ${
+        className={`relative w-full ${maxWidthClasses} bg-white dark:bg-card-dark rounded-t-3xl sm:rounded-3xl shadow-2xl border-t sm:border border-slate-200/90 dark:border-border-dark flex flex-col max-h-[92dvh] sm:max-h-[calc(100dvh-3.5rem)] overflow-hidden z-10 transition-all duration-200 ease-out transform will-change-transform-opacity ${
           isAnimatingIn
             ? 'opacity-100 scale-100 translate-y-0'
             : 'opacity-0 sm:scale-95 translate-y-12 sm:translate-y-2'
         }`}
       >
         {/* Mobile Drag Indicator */}
-        <div className="sm:hidden w-10 h-1 rounded-full bg-slate-300 dark:bg-[#202836] mx-auto mt-2.5 -mb-2 shrink-0" />
+        <div className="sm:hidden w-10 h-1 rounded-full bg-slate-300 dark:bg-active-dark mx-auto mt-2.5 -mb-2 shrink-0" />
 
         {/* Header */}
-        <div className="shrink-0 flex items-start justify-between p-4 sm:p-6 border-b border-slate-100 dark:border-[#202836]">
+        <div className="shrink-0 flex items-start justify-between p-4 sm:p-6 border-b border-slate-100 dark:border-border-dark">
           <div>
             <h3 id="modal-title" className="text-base sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-tight">
               {title}
@@ -81,7 +81,7 @@ export const Modal: React.FC<ModalProps> = ({
           <button
             onClick={onClose}
             aria-label="Close modal"
-            className="p-1.5 sm:p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#171E2A] transition-colors press shrink-0"
+            className="p-1.5 sm:p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-inset-dark transition-colors press shrink-0"
           >
             <X className="w-5 h-5" />
           </button>

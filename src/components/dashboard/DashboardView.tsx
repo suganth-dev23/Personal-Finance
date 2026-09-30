@@ -57,7 +57,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx, onEdi
     <div className="space-y-6">
       {/* Welcome Banner when starting fresh (Mineral Card with Gold Accent) */}
       {transactions.length === 0 && (
-        <div className="relative overflow-hidden rounded-3xl bg-slate-900 dark:bg-[#131822] border border-amber-500/30 p-6 sm:p-8 text-white shadow-md">
+        <div className="relative overflow-hidden rounded-3xl bg-slate-900 dark:bg-card-dark border border-amber-500/30 p-6 sm:p-8 text-white shadow-md">
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
           <div className="max-w-2xl space-y-3 relative z-10">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-xs font-extrabold uppercase tracking-wider text-amber-400">
@@ -105,7 +105,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx, onEdi
 
       {/* LEVEL 1: THE MASTER WEALTH LEDGER ANCHOR */}
       <div
-        className={`relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] border border-slate-200/90 dark:border-[#202836] p-4 sm:p-8 shadow-xs ${
+        className={`relative overflow-hidden rounded-3xl bg-white dark:bg-card-dark border border-slate-200/90 dark:border-border-dark p-4 sm:p-8 shadow-xs ${
           mobileTab !== 'overview' ? 'hidden sm:block' : ''
         }`}
       >
@@ -171,7 +171,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx, onEdi
 
             <button
               onClick={() => setCurrentView('people')}
-              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#171E2A] dark:hover:bg-[#1C2433] text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-[#202836] text-xs sm:text-sm font-medium transition-all active:scale-95"
+              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-inset-dark dark:hover:bg-[#1C2433] text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-border-dark text-xs sm:text-sm font-medium transition-all active:scale-95"
             >
               <Users className="w-4 h-4 text-indigo-500" />
               <span>Split bill</span>
@@ -181,11 +181,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx, onEdi
 
 
         {/* Integrated Flow & Asset Shelves */}
-        <div ref={summaryStripRef} className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mt-6 pt-5 sm:mt-7 sm:pt-6 border-t border-slate-100 dark:border-[#202836]">
+        <div ref={summaryStripRef} className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mt-6 pt-5 sm:mt-7 sm:pt-6 border-t border-slate-100 dark:border-border-dark">
           <div
             style={getSummaryStyle(0)}
             onClick={() => setCurrentView('transactions')}
-            className="animate-slide-up cursor-pointer p-3 sm:p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#171E2A] hover:bg-slate-100 dark:hover:bg-[#1C2433] border border-slate-100 dark:border-[#202836] transition-all hover:-translate-y-0.5 hover:shadow-sm"
+            className="animate-slide-up cursor-pointer p-3 sm:p-3.5 rounded-2xl bg-slate-50/70 dark:bg-inset-dark hover:bg-slate-100 dark:hover:bg-[#1C2433] border border-slate-100 dark:border-border-dark transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:shadow-sm"
           >
             <div className="flex items-center justify-between">
               <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
@@ -204,7 +204,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx, onEdi
           <div
             style={getSummaryStyle(1)}
             onClick={() => setCurrentView('transactions')}
-            className="animate-slide-up cursor-pointer p-3 sm:p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#171E2A] hover:bg-slate-100 dark:hover:bg-[#1C2433] border border-slate-100 dark:border-[#202836] transition-all hover:-translate-y-0.5 hover:shadow-sm"
+            className="animate-slide-up cursor-pointer p-3 sm:p-3.5 rounded-2xl bg-slate-50/70 dark:bg-inset-dark hover:bg-slate-100 dark:hover:bg-[#1C2433] border border-slate-100 dark:border-border-dark transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:shadow-sm"
           >
             <div className="flex items-center justify-between">
               <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
@@ -223,7 +223,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx, onEdi
           <div
             style={getSummaryStyle(2)}
             onClick={() => setCurrentView('investments')}
-            className="animate-slide-up cursor-pointer p-3 sm:p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#171E2A] hover:bg-slate-100 dark:hover:bg-[#1C2433] border border-slate-100 dark:border-[#202836] transition-all hover:-translate-y-0.5 hover:shadow-sm"
+            className="animate-slide-up cursor-pointer p-3 sm:p-3.5 rounded-2xl bg-slate-50/70 dark:bg-inset-dark hover:bg-slate-100 dark:hover:bg-[#1C2433] border border-slate-100 dark:border-border-dark transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:shadow-sm"
           >
             <div className="flex items-center justify-between">
               <span className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">
@@ -245,7 +245,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx, onEdi
           <div
             style={getSummaryStyle(3)}
             onClick={() => setCurrentView('emergency')}
-            className="animate-slide-up cursor-pointer p-3 sm:p-3.5 rounded-2xl bg-slate-50/70 dark:bg-[#171E2A] hover:bg-slate-100 dark:hover:bg-[#1C2433] border border-slate-100 dark:border-[#202836] transition-all hover:-translate-y-0.5 hover:shadow-sm"
+            className="animate-slide-up cursor-pointer p-3 sm:p-3.5 rounded-2xl bg-slate-50/70 dark:bg-inset-dark hover:bg-slate-100 dark:hover:bg-[#1C2433] border border-slate-100 dark:border-border-dark transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:shadow-sm"
           >
             <div className="flex items-center justify-between">
               <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
@@ -267,13 +267,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx, onEdi
 
       {/* MOBILE SEGMENTED VIEW SWITCHER (sm:hidden) - Sticky beneath top navbar */}
       <div className="sm:hidden sticky top-14 z-20 -mx-4 px-4 py-2 bg-[#F8F9FA]/95 dark:bg-[#0B0E14]/95 backdrop-blur-md transition-all">
-        <div className="flex items-center p-1 rounded-2xl bg-slate-100 dark:bg-[#171E2A] border border-slate-200/80 dark:border-[#202836] text-xs font-bold shadow-xs">
+        <div className="flex items-center p-1 rounded-2xl bg-slate-100 dark:bg-inset-dark border border-slate-200/80 dark:border-border-dark text-xs font-bold shadow-xs">
           <button
             type="button"
             onClick={() => handleTabChange('overview')}
             className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl transition-all ${
               mobileTab === 'overview'
-                ? 'bg-white dark:bg-[#202836] text-slate-900 dark:text-[#F5B742] shadow-xs'
+                ? 'bg-white dark:bg-active-dark text-slate-900 dark:text-[#F5B742] shadow-xs'
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
@@ -285,7 +285,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx, onEdi
             onClick={() => handleTabChange('commitments')}
             className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl transition-all ${
               mobileTab === 'commitments'
-                ? 'bg-white dark:bg-[#202836] text-slate-900 dark:text-[#F5B742] shadow-xs'
+                ? 'bg-white dark:bg-active-dark text-slate-900 dark:text-[#F5B742] shadow-xs'
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >

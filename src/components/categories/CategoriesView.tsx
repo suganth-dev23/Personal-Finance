@@ -36,7 +36,7 @@ export const CategoriesView: React.FC = () => {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
       {/* Top Banner: Mineral Card with Gold Taxonomy Highlight */}
-      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] text-slate-900 dark:text-white p-6 sm:p-8 border border-slate-200/90 dark:border-[#202836] shadow-sm">
+      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-card-dark text-slate-900 dark:text-white p-6 sm:p-8 border border-slate-200/90 dark:border-border-dark shadow-sm">
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
@@ -76,20 +76,20 @@ export const CategoriesView: React.FC = () => {
         </div>
 
         {/* 4-column summary strip */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-slate-200/80 dark:border-[#202836]">
-          <div className="bg-slate-50 dark:bg-[#171E2A] border border-slate-200/60 dark:border-[#202836]/60 rounded-2xl p-3.5">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-slate-200/80 dark:border-border-dark">
+          <div className="bg-slate-50 dark:bg-inset-dark border border-slate-200/60 dark:border-border-dark/60 rounded-2xl p-3.5">
             <span className="text-xs text-slate-500 dark:text-slate-400">Total System</span>
             <p className="text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">{categories.length} types</p>
           </div>
-          <div className="bg-slate-50 dark:bg-[#171E2A] border border-slate-200/60 dark:border-[#202836]/60 rounded-2xl p-3.5">
+          <div className="bg-slate-50 dark:bg-inset-dark border border-slate-200/60 dark:border-border-dark/60 rounded-2xl p-3.5">
             <span className="text-xs text-slate-500 dark:text-slate-400">Custom User</span>
             <p className="text-lg font-bold font-numeric text-emerald-600 dark:text-emerald-400 mt-0.5">{customCount} custom</p>
           </div>
-          <div className="bg-slate-50 dark:bg-[#171E2A] border border-slate-200/60 dark:border-[#202836]/60 rounded-2xl p-3.5">
+          <div className="bg-slate-50 dark:bg-inset-dark border border-slate-200/60 dark:border-border-dark/60 rounded-2xl p-3.5">
             <span className="text-xs text-slate-500 dark:text-slate-400">Active Spends</span>
             <p className="text-lg font-bold font-numeric text-teal-600 dark:text-teal-400 mt-0.5">{categorySpendingThisMonth.length} channels</p>
           </div>
-          <div className="bg-slate-50 dark:bg-[#171E2A] border border-slate-200/60 dark:border-[#202836]/60 rounded-2xl p-3.5">
+          <div className="bg-slate-50 dark:bg-inset-dark border border-slate-200/60 dark:border-border-dark/60 rounded-2xl p-3.5">
             <span className="text-xs text-slate-500 dark:text-slate-400">Top Spend</span>
             <p className="text-lg font-bold text-rose-600 dark:text-rose-400 mt-0.5 truncate">
               {topSpentCat ? `${topSpentCat.category}` : 'None'}
@@ -122,7 +122,7 @@ export const CategoriesView: React.FC = () => {
             <div
               key={cat.id}
               style={getChildStyle(idx)}
-              className="group bg-white dark:bg-[#131822] rounded-3xl p-5 border border-slate-200/90 dark:border-[#202836] hover:border-amber-400/50 dark:hover:border-amber-500/30 transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between animate-slide-up"
+              className="group bg-white dark:bg-card-dark rounded-3xl p-5 border border-slate-200/90 dark:border-border-dark hover:border-amber-400/50 dark:hover:border-amber-500/30 transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between animate-slide-up"
             >
               <div>
                 <div className="flex items-start justify-between">
@@ -139,7 +139,7 @@ export const CategoriesView: React.FC = () => {
                   <div className="flex items-center gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => handleEdit(cat)}
-                      className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200/90 dark:border-[#202836] text-slate-400 hover:bg-slate-50 dark:hover:bg-[#171E2A] hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+                      className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200/90 dark:border-border-dark text-slate-400 hover:bg-slate-50 dark:hover:bg-inset-dark hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
                       title="Edit Category"
                     >
                       <Edit3 className="w-3.5 h-3.5" />
@@ -151,7 +151,7 @@ export const CategoriesView: React.FC = () => {
                             deleteCategory(cat.id);
                           }
                         }}
-                        className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200/90 dark:border-[#202836] text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                        className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200/90 dark:border-border-dark text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
                         title="Delete Category"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -178,7 +178,7 @@ export const CategoriesView: React.FC = () => {
               </div>
 
               {/* Monthly Spend Snapshot */}
-              <div className="mt-4 pt-3.5 border-t border-slate-100 dark:border-[#202836] flex items-center justify-between text-xs">
+              <div className="mt-4 pt-3.5 border-t border-slate-100 dark:border-border-dark flex items-center justify-between text-xs">
                 <span className="text-slate-400 font-medium">This Month:</span>
                 <span className="font-extrabold text-slate-900 dark:text-white font-numeric">
                   {spentThisMonth > 0 ? formatINR(spentThisMonth) : '₹0'}

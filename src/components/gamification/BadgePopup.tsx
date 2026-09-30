@@ -129,7 +129,7 @@ export const BadgePopup: React.FC = () => {
 
       {/* Celebratory Modal Card */}
       <div
-        className={`relative z-10 max-w-md w-full rounded-3xl bg-white dark:bg-[#131822] border-2 ${config.border} p-7 text-center shadow-2xl overflow-hidden transition-all duration-200 transform will-change-transform-opacity ${
+        className={`relative z-10 max-w-md w-full rounded-3xl bg-white dark:bg-card-dark border-2 ${config.border} p-7 text-center shadow-2xl overflow-hidden transition-all duration-200 transform will-change-transform-opacity ${
           isExiting
             ? 'opacity-0 scale-95 translate-y-2'
             : 'animate-badge-unlock'
@@ -148,7 +148,7 @@ export const BadgePopup: React.FC = () => {
         <button
           onClick={handleDismiss}
           aria-label="Close notification"
-          className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#171E2A] transition-colors press"
+          className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-inset-dark transition-colors press"
         >
           <X className="w-5 h-5" />
         </button>
@@ -198,7 +198,7 @@ export const BadgePopup: React.FC = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={handleViewVault}
-            className="flex-1 py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#171E2A] dark:hover:bg-[#202836] text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-bold transition-colors press"
+            className="flex-1 py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-inset-dark dark:hover:bg-active-dark text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-bold transition-colors press"
           >
             View Trophy Vault
           </button>

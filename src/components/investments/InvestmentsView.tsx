@@ -83,7 +83,7 @@ export const InvestmentsView: React.FC = () => {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
       {/* Portfolio Hero Card: Mineral Card with Gold Valuation Highlight */}
-      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] text-slate-900 dark:text-white p-4 sm:p-8 border border-slate-200/90 dark:border-[#202836] shadow-sm">
+      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-card-dark text-slate-900 dark:text-white p-4 sm:p-8 border border-slate-200/90 dark:border-border-dark shadow-sm">
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
@@ -129,15 +129,15 @@ export const InvestmentsView: React.FC = () => {
         </div>
 
         {/* 4-column summary strip */}
-        <div className="mt-4 sm:mt-6 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 pt-4 sm:pt-6 border-t border-slate-200/80 dark:border-[#202836]">
-          <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+        <div className="mt-4 sm:mt-6 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 pt-4 sm:pt-6 border-t border-slate-200/80 dark:border-border-dark">
+          <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-inset-dark p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-border-dark/60">
             <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">Invested Capital</span>
             <p className="text-sm sm:text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">
               <AnimatedNumber value={totalInvestedAmount} animateOnMount={true} />
             </p>
           </div>
 
-          <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+          <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-inset-dark p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-border-dark/60">
             <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">Total Returns</span>
             <p className={`text-sm sm:text-lg font-bold font-numeric mt-0.5 ${
               totalInvestmentGainLoss >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
@@ -146,14 +146,14 @@ export const InvestmentsView: React.FC = () => {
             </p>
           </div>
 
-          <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+          <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-inset-dark p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-border-dark/60">
             <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">Monthly SIPs</span>
             <p className="text-sm sm:text-lg font-bold font-numeric text-[#C28834] dark:text-[#F5B742] mt-0.5">
               <AnimatedNumber value={totalMonthlySIP} animateOnMount={true} />
             </p>
           </div>
 
-          <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-[#171E2A] p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-[#202836]/60">
+          <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-inset-dark p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-border-dark/60">
             <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">Total Holdings</span>
             <p className="text-sm sm:text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">
               {investments.length}
@@ -163,19 +163,26 @@ export const InvestmentsView: React.FC = () => {
 
         {/* Horizontal Asset Allocation Bar */}
         {investments.length > 0 && (
-          <div className="mt-6 pt-5 border-t border-slate-100 dark:border-[#202836] relative z-10">
+          <div className="mt-6 pt-5 border-t border-slate-100 dark:border-border-dark relative z-10">
             <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-2.5 font-medium">
               <span>Asset Allocation Breakdown</span>
               <span>{investments.length} Total Holdings</span>
             </div>
 
             {/* Segmented bar */}
-            <div className="h-3 w-full rounded-full bg-slate-100 dark:bg-[#171E2A] overflow-hidden flex gap-0.5 p-0.5 border border-slate-200/60 dark:border-[#202836]">
+            <div
+              className="h-3 w-full rounded-full bg-slate-100 dark:bg-inset-dark overflow-hidden flex gap-0.5 p-0.5 border border-slate-200/60 dark:border-border-dark"
+              role="progressbar"
+              aria-label="Portfolio asset allocation breakdown"
+              aria-valuenow={100}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            >
               {assetSegments.map(seg => (
                 <div
                   key={seg.type}
                   style={{ width: `${Math.max(seg.percentage, 2)}%`, backgroundColor: seg.color }}
-                  className="h-full rounded-full transition-all duration-500"
+                  className="h-full rounded-full transition-[width] duration-500"
                   title={`${seg.type}: ${seg.percentage.toFixed(1)}%`}
                 />
               ))}
@@ -232,10 +239,10 @@ export const InvestmentsView: React.FC = () => {
                 key={seg.type}
                 style={getChildStyle(idx)}
                 onClick={() => setFilterType(filterType === seg.type ? 'all' : seg.type)}
-                className={`cursor-pointer bg-white dark:bg-[#131822] rounded-3xl p-5 border transition-all hover:shadow-md animate-slide-up ${
+                className={`cursor-pointer bg-white dark:bg-card-dark rounded-3xl p-5 border transition-all hover:shadow-md animate-slide-up ${
                   filterType === seg.type
                     ? 'border-[#F5B742] dark:border-[#F5B742] shadow-sm ring-1 ring-[#F5B742]/40'
-                    : 'border-slate-200/90 dark:border-[#202836] shadow-xs'
+                    : 'border-slate-200/90 dark:border-border-dark shadow-xs'
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -252,7 +259,7 @@ export const InvestmentsView: React.FC = () => {
                   {formatINR(seg.value)}
                 </p>
 
-                <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 dark:border-[#202836] text-xs">
+                <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 dark:border-border-dark text-xs">
                   <span className="text-slate-500 dark:text-slate-400 font-medium">
                     {seg.count} {seg.count === 1 ? 'holding' : 'holdings'}
                   </span>
@@ -275,7 +282,7 @@ export const InvestmentsView: React.FC = () => {
 
       {/* Holdings List with Filters */}
       {investments.length === 0 ? (
-        <div className="text-center py-16 bg-white dark:bg-[#131822] rounded-3xl border border-dashed border-slate-200 dark:border-[#202836] p-8">
+        <div className="text-center py-16 bg-white dark:bg-card-dark rounded-3xl border border-dashed border-slate-200 dark:border-border-dark p-8">
           <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto text-[#F5B742]">
             <TrendingUp className="w-6 h-6" />
           </div>
@@ -306,7 +313,7 @@ export const InvestmentsView: React.FC = () => {
               <select
                 value={filterType}
                 onChange={e => setFilterType(e.target.value)}
-                className="py-1.5 px-3 bg-slate-100 dark:bg-[#171E2A] border border-slate-200/90 dark:border-[#202836] rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none"
+                className="py-1.5 px-3 bg-slate-100 dark:bg-inset-dark border border-slate-200/90 dark:border-border-dark rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none"
               >
                 <option value="all">All Asset Classes</option>
                 <option value="Mutual Funds">Mutual Funds</option>
@@ -319,13 +326,13 @@ export const InvestmentsView: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-[#131822] rounded-3xl shadow-sm border border-slate-200/90 dark:border-[#202836] p-5 sm:p-6 overflow-hidden">
+          <div className="bg-white dark:bg-card-dark rounded-3xl shadow-sm border border-slate-200/90 dark:border-border-dark p-5 sm:p-6 overflow-hidden">
 
           {/* Table */}
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-slate-200/80 dark:border-[#202836] text-xs font-medium text-slate-500 dark:text-slate-400">
+                <tr className="border-b border-slate-200/80 dark:border-border-dark text-xs font-medium text-slate-500 dark:text-slate-400">
                   <th className="py-3 px-4">Scheme / Asset</th>
                   <th className="py-3 px-4">Asset Class</th>
                   <th className="py-3 px-4">Platform</th>
@@ -335,14 +342,14 @@ export const InvestmentsView: React.FC = () => {
                   <th className="py-3 px-4 text-center">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-[#202836] text-sm">
+              <tbody className="divide-y divide-slate-100 dark:divide-border-dark text-sm">
                 {filteredList.map(inv => {
                   const gain = inv.currentValue - inv.investedAmount;
                   const gainPct = inv.investedAmount > 0 ? (gain / inv.investedAmount) * 100 : 0;
                   const isProfitable = gain >= 0;
 
                   return (
-                    <tr key={inv.id} className="hover:bg-slate-50/60 dark:hover:bg-[#171E2A]/40 transition-colors">
+                    <tr key={inv.id} className="hover:bg-slate-50/60 dark:hover:bg-inset-dark/40 transition-colors">
                       <td className="py-3.5 px-4 font-semibold text-slate-900 dark:text-white">
                         <div>
                           <p>{inv.name}</p>
@@ -355,7 +362,7 @@ export const InvestmentsView: React.FC = () => {
                       </td>
 
                       <td className="py-3.5 px-4 whitespace-nowrap text-xs font-medium text-slate-600 dark:text-slate-400">
-                        <span className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-[#171E2A] text-slate-700 dark:text-slate-300">
+                        <span className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-inset-dark text-slate-700 dark:text-slate-300">
                           {inv.type}
                         </span>
                       </td>
@@ -388,7 +395,7 @@ export const InvestmentsView: React.FC = () => {
                           <div className="flex items-center justify-center gap-1.5">
                             <button
                               onClick={() => handleEdit(inv)}
-                              className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200/90 dark:border-[#202836] text-slate-400 hover:bg-slate-50 dark:hover:bg-[#171E2A] hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+                              className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200/90 dark:border-border-dark text-slate-400 hover:bg-slate-50 dark:hover:bg-inset-dark hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
                               title="Edit Valuation"
                             >
                               <Edit3 className="w-3.5 h-3.5" />
@@ -399,7 +406,7 @@ export const InvestmentsView: React.FC = () => {
                                   deleteInvestment(inv.id);
                                 }
                               }}
-                              className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200/90 dark:border-[#202836] text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                              className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200/90 dark:border-border-dark text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
                               title="Delete Holding"
                             >
                               <Trash2 className="w-3.5 h-3.5" />

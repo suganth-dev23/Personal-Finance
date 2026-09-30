@@ -66,9 +66,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTx }) => {
   }, [totalXP]);
 
   return (
-    <aside className="hidden lg:flex flex-col w-64 border-r border-slate-200/90 dark:border-[#202836] bg-white dark:bg-[#131822] h-screen sticky top-0 z-30 select-none">
+    <aside className="hidden lg:flex flex-col w-64 border-r border-slate-200/90 dark:border-border-dark bg-white dark:bg-card-dark h-screen sticky top-0 z-30 select-none">
       {/* Brand Header */}
-      <div className="p-6 border-b border-slate-100 dark:border-[#202836]">
+      <div className="p-6 border-b border-slate-100 dark:border-border-dark">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#F5B742] to-[#C28834] flex items-center justify-center text-[#0B0E14] font-black text-xl shadow-md shadow-[#F5B742]/20 border border-[#F5B742]/30">
             ₹
@@ -84,7 +84,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTx }) => {
         </div>
 
         {/* Quick Balance Preview */}
-        <div className="mt-4 p-3.5 bg-slate-50 dark:bg-[#171E2A]/70 rounded-2xl border border-slate-100 dark:border-[#202836]">
+        <div className="mt-4 p-3.5 bg-slate-50 dark:bg-inset-dark/70 rounded-2xl border border-slate-100 dark:border-border-dark">
           <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
             Bank &amp; Cash (Liquid)
           </p>
@@ -112,7 +112,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTx }) => {
               {totalXP} XP
             </span>
           </div>
-          <div className="h-1.5 w-full bg-slate-200/70 dark:bg-[#202836] rounded-full overflow-hidden contain-paint">
+          <div className="h-1.5 w-full bg-slate-200/70 dark:bg-active-dark rounded-full overflow-hidden contain-paint">
             <div
               className="h-full w-full bg-gradient-to-r from-amber-500 to-amber-600 rounded-full origin-left will-change-transform"
               style={{ transform: `scaleX(${progressPercent / 100})` }}
@@ -145,8 +145,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTx }) => {
               onClick={() => setCurrentView(item.id)}
               className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 press ${
                 isActive
-                  ? 'bg-slate-100 text-slate-900 dark:bg-[#171E2A] dark:text-[#F5B742] shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100/70 dark:hover:bg-[#171E2A]/60 hover:text-slate-900 dark:hover:text-slate-200'
+                  ? 'bg-slate-100 text-slate-900 dark:bg-inset-dark dark:text-[#F5B742] shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100/70 dark:hover:bg-inset-dark/60 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
               <div className="flex items-center gap-3">
@@ -172,14 +172,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTx }) => {
       </nav>
 
       {/* Footer / Theme Toggle */}
-      <div className="p-4 border-t border-slate-100 dark:border-[#202836] flex items-center justify-between">
+      <div className="p-4 border-t border-slate-100 dark:border-border-dark flex items-center justify-between">
         <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
           <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
           <span>100% Local Storage</span>
         </div>
         <button
           onClick={() => setDarkMode(prev => !prev)}
-          className="p-2 rounded-xl text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#171E2A] transition-colors"
+          className="p-2 rounded-xl text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-inset-dark transition-colors"
           title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
         >
           {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}

@@ -66,7 +66,7 @@ export const GoogleSyncSetupModal: React.FC<GoogleSyncSetupModalProps> = ({
 
           <div className="space-y-3">
             {/* Step 1 */}
-            <div className="p-3 bg-slate-50 dark:bg-[#171E2A] rounded-xl border border-slate-200/80 dark:border-[#202836] space-y-1">
+            <div className="p-3 bg-slate-50 dark:bg-inset-dark rounded-xl border border-slate-200/80 dark:border-border-dark space-y-1">
               <div className="flex items-center justify-between">
                 <span className="font-bold text-xs text-slate-900 dark:text-slate-100">
                   1. Create a Google Cloud Project & Enable Drive API
@@ -87,7 +87,7 @@ export const GoogleSyncSetupModal: React.FC<GoogleSyncSetupModalProps> = ({
             </div>
 
             {/* Step 2 */}
-            <div className="p-3 bg-slate-50 dark:bg-[#171E2A] rounded-xl border border-slate-200/80 dark:border-[#202836] space-y-1">
+            <div className="p-3 bg-slate-50 dark:bg-inset-dark rounded-xl border border-slate-200/80 dark:border-border-dark space-y-1">
               <div className="flex items-center justify-between">
                 <span className="font-bold text-xs text-slate-900 dark:text-slate-100">
                   2. Configure OAuth Consent Screen
@@ -108,7 +108,7 @@ export const GoogleSyncSetupModal: React.FC<GoogleSyncSetupModalProps> = ({
             </div>
 
             {/* Step 3 */}
-            <div className="p-3 bg-slate-50 dark:bg-[#171E2A] rounded-xl border border-slate-200/80 dark:border-[#202836] space-y-2">
+            <div className="p-3 bg-slate-50 dark:bg-inset-dark rounded-xl border border-slate-200/80 dark:border-border-dark space-y-2">
               <div className="flex items-center justify-between">
                 <span className="font-bold text-xs text-slate-900 dark:text-slate-100">
                   3. Create Web OAuth 2.0 Client ID
@@ -126,12 +126,12 @@ export const GoogleSyncSetupModal: React.FC<GoogleSyncSetupModalProps> = ({
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 Create Credentials &gt; OAuth client ID &gt; Application type: <strong>Web application</strong>. Under <strong>Authorized JavaScript origins</strong>, add:
               </p>
-              <div className="flex items-center justify-between gap-2 p-2 bg-slate-100 dark:bg-[#131822] rounded-lg border border-slate-200/80 dark:border-[#202836] font-mono text-xs">
+              <div className="flex items-center justify-between gap-2 p-2 bg-slate-100 dark:bg-card-dark rounded-lg border border-slate-200/80 dark:border-border-dark font-mono text-xs">
                 <span className="truncate">{currentOrigin}</span>
                 <button
                   type="button"
                   onClick={handleCopyOrigin}
-                  className="flex items-center gap-1 px-2 py-1 bg-white dark:bg-[#171E2A] hover:bg-slate-200 dark:hover:bg-[#202836] text-slate-700 dark:text-slate-300 rounded text-[11px] font-sans font-bold shrink-0 transition-colors border border-slate-200/60 dark:border-[#202836]"
+                  className="flex items-center gap-1 px-2 py-1 bg-white dark:bg-inset-dark hover:bg-slate-200 dark:hover:bg-active-dark text-slate-700 dark:text-slate-300 rounded text-[11px] font-sans font-bold shrink-0 transition-colors border border-slate-200/60 dark:border-border-dark"
                 >
                   {copiedOrigin ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
                   <span>{copiedOrigin ? 'Copied' : 'Copy'}</span>
@@ -142,7 +142,7 @@ export const GoogleSyncSetupModal: React.FC<GoogleSyncSetupModalProps> = ({
         </div>
 
         {/* Step 4: Paste Client ID */}
-        <form onSubmit={handleSave} className="space-y-3 pt-1 border-t border-slate-200/80 dark:border-[#202836]">
+        <form onSubmit={handleSave} className="space-y-3 pt-1 border-t border-slate-200/80 dark:border-border-dark">
           <label className="block text-xs font-bold uppercase tracking-wider text-slate-400">
             4. Paste Your Google OAuth Client ID
           </label>
@@ -152,13 +152,13 @@ export const GoogleSyncSetupModal: React.FC<GoogleSyncSetupModalProps> = ({
               value={clientIdInput}
               onChange={e => setClientIdInput(e.target.value)}
               placeholder="e.g. 123456789-abcdef.apps.googleusercontent.com"
-              className="w-full py-2.5 px-3 pr-10 bg-slate-50 dark:bg-[#171E2A] border border-slate-200/90 dark:border-[#202836] rounded-xl text-xs font-mono text-slate-900 dark:text-slate-100 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+              className="w-full py-2.5 px-3 pr-10 bg-slate-50 dark:bg-inset-dark border border-slate-200/90 dark:border-border-dark rounded-xl text-xs font-mono text-slate-900 dark:text-slate-100 focus:ring-1 focus:ring-amber-500 focus:outline-none"
             />
             <Key className="w-4 h-4 text-slate-400 absolute right-3 top-3" />
           </div>
 
           <p className="text-[11px] text-slate-400">
-            Alternatively, you can place <code className="font-mono bg-slate-100 dark:bg-[#171E2A] border border-slate-200/60 dark:border-[#202836] px-1 py-0.5 rounded">VITE_GOOGLE_CLIENT_ID="..."</code> in your <code className="font-mono">.env.local</code> file.
+            Alternatively, you can place <code className="font-mono bg-slate-100 dark:bg-inset-dark border border-slate-200/60 dark:border-border-dark px-1 py-0.5 rounded">VITE_GOOGLE_CLIENT_ID="..."</code> in your <code className="font-mono">.env.local</code> file.
           </p>
 
           <div className="flex items-center justify-between pt-2">

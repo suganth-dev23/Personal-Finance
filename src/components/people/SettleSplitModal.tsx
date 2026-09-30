@@ -175,7 +175,7 @@ export const SettleSplitModal: React.FC<SettleSplitModalProps> = ({
     >
       <form onSubmit={handleSave} className="space-y-4">
         {/* Original Split Expense Summary Card */}
-        <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#171E2A] border border-slate-200/80 dark:border-[#202836] flex items-center justify-between gap-3 text-xs">
+        <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-inset-dark border border-slate-200/80 dark:border-border-dark flex items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500 dark:text-[#F5B742] flex-shrink-0">
               <Receipt className="w-4 h-4" />
@@ -227,12 +227,12 @@ export const SettleSplitModal: React.FC<SettleSplitModalProps> = ({
               value={settledAmount}
               onChange={e => setSettledAmount(e.target.value)}
               placeholder="0.00"
-              className="font-numeric tabular-nums w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-slate-50 dark:bg-[#171E2A] pl-8 pr-4 py-2.5 text-slate-900 dark:text-slate-100 font-bold text-lg focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+              className="font-numeric tabular-nums w-full rounded-xl border border-slate-200/90 dark:border-border-dark bg-slate-50 dark:bg-inset-dark pl-8 pr-4 py-2.5 text-slate-900 dark:text-slate-100 font-bold text-lg focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
             />
           </div>
 
           {remainingAfterSettlement > 0.01 && (
-            <div className="mt-2 p-2.5 rounded-xl bg-amber-50/50 dark:bg-[#171E2A] border border-amber-200/80 dark:border-[#202836] flex items-center gap-2 text-xs text-amber-900 dark:text-amber-300 font-numeric">
+            <div className="mt-2 p-2.5 rounded-xl bg-amber-50/50 dark:bg-inset-dark border border-amber-200/80 dark:border-border-dark flex items-center gap-2 text-xs text-amber-900 dark:text-amber-300 font-numeric">
               <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 text-amber-600 dark:text-[#F5B742]" />
               <span>
                 Partial settlement: <strong className="font-extrabold">{formatINR(remainingAfterSettlement)}</strong> will stay open as pending balance for {contact.name}.
@@ -264,7 +264,7 @@ export const SettleSplitModal: React.FC<SettleSplitModalProps> = ({
               required
               value={date}
               onChange={e => setDate(e.target.value)}
-              className="font-numeric tabular-nums w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-slate-50 dark:bg-[#171E2A] px-3.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+              className="font-numeric tabular-nums w-full rounded-xl border border-slate-200/90 dark:border-border-dark bg-slate-50 dark:bg-inset-dark px-3.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
             />
           </div>
 
@@ -277,13 +277,13 @@ export const SettleSplitModal: React.FC<SettleSplitModalProps> = ({
               value={note}
               onChange={e => setNote(e.target.value)}
               placeholder="e.g. Paid via GPay UPI"
-              className="w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-slate-50 dark:bg-[#171E2A] px-3.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+              className="w-full rounded-xl border border-slate-200/90 dark:border-border-dark bg-slate-50 dark:bg-inset-dark px-3.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
             />
           </div>
         </div>
 
         {/* Bank Repayment Transaction Connection */}
-        <div className="pt-2 border-t border-slate-100 dark:border-[#202836] space-y-2.5">
+        <div className="pt-2 border-t border-slate-100 dark:border-border-dark space-y-2.5">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
               <LinkIcon className="w-3.5 h-3.5 text-amber-500 dark:text-[#F5B742]" />
@@ -300,7 +300,7 @@ export const SettleSplitModal: React.FC<SettleSplitModalProps> = ({
 
           {selectedTransaction ? (
             /* Selected Transaction Banner */
-            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#171E2A] border border-slate-200/80 dark:border-[#202836] shadow-xs flex items-center justify-between gap-3 text-xs">
+            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-inset-dark border border-slate-200/80 dark:border-border-dark shadow-xs flex items-center justify-between gap-3 text-xs">
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className="w-7 h-7 rounded-xl bg-emerald-600 text-white flex items-center justify-center flex-shrink-0">
                   <CheckCircle2 className="w-4 h-4" />
@@ -321,7 +321,7 @@ export const SettleSplitModal: React.FC<SettleSplitModalProps> = ({
               <button
                 type="button"
                 onClick={() => setSelectedTxId(null)}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white dark:bg-[#131822] text-slate-600 dark:text-slate-300 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-[11px] font-bold transition-colors border border-slate-200/60 dark:border-[#202836] shadow-xs"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white dark:bg-card-dark text-slate-600 dark:text-slate-300 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-[11px] font-bold transition-colors border border-slate-200/60 dark:border-border-dark shadow-xs"
               >
                 <Unlink className="w-3 h-3" />
                 <span>Change / Unlink</span>
@@ -329,7 +329,7 @@ export const SettleSplitModal: React.FC<SettleSplitModalProps> = ({
             </div>
           ) : (
             /* Transaction Search and Candidate List */
-            <div className="p-3 bg-slate-50 dark:bg-[#171E2A] rounded-2xl border border-slate-200/80 dark:border-[#202836] space-y-2.5">
+            <div className="p-3 bg-slate-50 dark:bg-inset-dark rounded-2xl border border-slate-200/80 dark:border-border-dark space-y-2.5">
               {/* Search & Filter Tabs */}
               <div className="flex flex-col sm:flex-row items-center gap-2">
                 <div className="relative w-full">
@@ -339,17 +339,17 @@ export const SettleSplitModal: React.FC<SettleSplitModalProps> = ({
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
                     placeholder="Search bank transactions by merchant or amount..."
-                    className="w-full pl-8 pr-3 py-1.5 bg-white dark:bg-[#131822] border border-slate-200/90 dark:border-[#202836] rounded-xl text-xs font-medium text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+                    className="w-full pl-8 pr-3 py-1.5 bg-white dark:bg-card-dark border border-slate-200/90 dark:border-border-dark rounded-xl text-xs font-medium text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
                   />
                 </div>
 
-                <div className="flex items-center gap-1 bg-slate-200/70 dark:bg-[#202836] p-0.5 rounded-xl text-[11px] font-bold self-start sm:self-auto flex-shrink-0">
+                <div className="flex items-center gap-1 bg-slate-200/70 dark:bg-active-dark p-0.5 rounded-xl text-[11px] font-bold self-start sm:self-auto flex-shrink-0">
                   <button
                     type="button"
                     onClick={() => setFilterMode('all')}
                     className={`px-2 py-1 rounded-lg transition-all ${
                       filterMode === 'all'
-                        ? 'bg-white dark:bg-[#131822] text-slate-900 dark:text-white shadow-xs'
+                        ? 'bg-white dark:bg-card-dark text-slate-900 dark:text-white shadow-xs'
                         : 'text-slate-500'
                     }`}
                   >
@@ -398,7 +398,7 @@ export const SettleSplitModal: React.FC<SettleSplitModalProps> = ({
                         className={`p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-2 text-xs ${
                           isExact
                             ? 'bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-700/80'
-                            : 'bg-white dark:bg-[#131822] border-slate-200/90 dark:border-[#202836] hover:border-amber-400'
+                            : 'bg-white dark:bg-card-dark border-slate-200/90 dark:border-border-dark hover:border-amber-400'
                         }`}
                       >
                         <div className="min-w-0">
@@ -412,7 +412,7 @@ export const SettleSplitModal: React.FC<SettleSplitModalProps> = ({
                               </span>
                             )}
                             {usageCount > 0 && (
-                              <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-slate-200 dark:bg-[#202836] text-slate-700 dark:text-slate-300 flex items-center gap-0.5">
+                              <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-slate-200 dark:bg-active-dark text-slate-700 dark:text-slate-300 flex items-center gap-0.5">
                                 <Layers className="w-2.5 h-2.5" />
                                 <span>Linked to {usageCount} split{usageCount > 1 ? 's' : ''}</span>
                               </span>
@@ -439,7 +439,7 @@ export const SettleSplitModal: React.FC<SettleSplitModalProps> = ({
         </div>
 
         {/* Modal Footer Actions */}
-        <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-[#202836] gap-2">
+        <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-border-dark gap-2">
           <div>
             {splitEntry.settled && (
               <button
@@ -458,7 +458,7 @@ export const SettleSplitModal: React.FC<SettleSplitModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#171E2A] transition-colors"
+              className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-inset-dark transition-colors"
             >
               Cancel
             </button>

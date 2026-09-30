@@ -42,10 +42,9 @@ export const ViewTransition: React.FC<ViewTransitionProps> = ({ viewKey, childre
   const [activeKey, setActiveKey] = useState<string>(viewKey);
   const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
 
-  const pendingChildrenRef = useRef<React.ReactNode>(children);
-  pendingChildrenRef.current = children;
-
-  const snapshottedChildrenRef = useRef<React.ReactNode>(children);
+  // Children of the view currently on screen. Only refreshed while NOT switching,
+  // so during exit it still holds the OUTGOING view (not the incoming one).
+  const displayedChildrenRef = useRef<React.ReactNode>(children);
   const scrollMapRef = useRef<Record<string, number>>({});
   const transitionTimerRef = useRef<number | null>(null);
   const ceilingTimerRef = useRef<number | null>(null);
@@ -101,8 +100,7 @@ export const ViewTransition: React.FC<ViewTransitionProps> = ({ viewKey, childre
       const navDirection = toIdx >= fromIdx ? 'forward' : 'backward';
       setDirection(navDirection);
 
-      // 3. Snapshot exiting view to display while incoming chunk loads
-      snapshottedChildrenRef.current = pendingChildrenRef.current;
+      // 3. displayedChildrenRef keeps rendering the outgoing view until the exit timer fires
 
       // 4. Clear any active transition timers
       clearAllTimers();
@@ -149,10 +147,10 @@ export const ViewTransition: React.FC<ViewTransitionProps> = ({ viewKey, childre
           }, ENTER_SETTLE_MS);
         });
       }, EXIT_DURATION_MS);
-
-      return () => {
-        clearAllTimers();
-      };
+      // No effect cleanup here on purpose: the exit timer itself changes `activeKey`, which
+      // re-runs this effect, and a cleanup would cancel the enter rAF (scroll restore, heading
+      // focus) and the settle timer. Timers are cleared at the start of the next transition
+      // (step 4) and on unmount (separate effect above).
     }
   }, [viewKey, activeKey, reducedMotion]);
 
@@ -160,24 +158,26 @@ export const ViewTransition: React.FC<ViewTransitionProps> = ({ viewKey, childre
     return <div className="w-full">{children}</div>;
   }
 
-  // Derive transition classes based on active state machine phase & direction
-  let phaseClasses = 'opacity-100 translate-x-0 scale-100';
-  if (phase === 'exit') {
+  // Switching = the requested view differs from the one on screen, or exit is running.
+  const isSwitching = viewKey !== activeKey || phase === 'exit';
+  if (!isSwitching) displayedChildrenRef.current = children;
+  const contentToRender = isSwitching ? displayedChildrenRef.current : children;
+
+  // No transform at rest: a resting transform creates a containing block for fixed
+  // descendants and an extra compositor layer. Enter uses a one-shot keyframe instead.
+  let phaseClasses = '';
+  let phaseStyle: React.CSSProperties | undefined;
+  if (isSwitching) {
     const exitOffset = direction === 'forward' ? '-translate-x-2.5' : 'translate-x-2.5';
-    phaseClasses = `opacity-0 ${exitOffset} scale-[0.995] pointer-events-none`;
+    phaseClasses = `transition-[opacity,transform] duration-150 ease-out opacity-0 ${exitOffset} pointer-events-none`;
   } else if (phase === 'enter') {
-    phaseClasses = 'opacity-100 translate-x-0 scale-100';
+    phaseStyle = {
+      animation: `${direction === 'forward' ? 'view-enter-forward' : 'view-enter-backward'} ${ENTER_SETTLE_MS}ms cubic-bezier(0.22, 1, 0.36, 1) backwards`,
+    };
   }
 
-  // When idle, render live children directly so parent re-renders and prop changes are never blocked.
-  // Snapshot is only rendered during exit.
-  const contentToRender = phase === 'exit' ? snapshottedChildrenRef.current : children;
-
   return (
-    <div
-      ref={containerRef}
-      className={`w-full transition-all duration-150 ease-out transform will-change-transform-opacity ${phaseClasses}`}
-    >
+    <div ref={containerRef} className={`w-full ${phaseClasses}`} style={phaseStyle}>
       {contentToRender}
     </div>
   );

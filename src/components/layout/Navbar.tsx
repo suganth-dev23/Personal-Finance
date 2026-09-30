@@ -42,14 +42,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAddTx }) => {
   const meta = VIEW_TITLES[currentView] || { title: 'DhanVeda', subtitle: '' };
 
   return (
-    <header className="sticky top-0 z-20 bg-white/90 dark:bg-[#0B0E14]/90 backdrop-blur-md border-b border-slate-200/90 dark:border-[#202836] px-4 sm:px-8 py-4 flex items-center justify-between transition-colors">
+    <header className="sticky top-0 z-20 bg-white/90 dark:bg-[#0B0E14]/90 backdrop-blur-md border-b border-slate-200/90 dark:border-border-dark px-4 sm:px-8 py-4 flex items-center justify-between transition-colors">
       {/* Title info */}
       <div>
         <div className="flex items-center gap-2 min-w-0">
           <h1 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-none truncate max-w-[180px] sm:max-w-none">
             {meta.title}
           </h1>
-          <span className="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-[#171E2A] text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-[#202836]">
+          <span className="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-inset-dark text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-border-dark">
             {monthName} {year}
           </span>
         </div>
@@ -65,7 +65,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAddTx }) => {
           <button
             onClick={() => triggerSync(true)}
             title={syncStatus === 'syncing' ? 'Syncing with Google Drive...' : 'Google Drive Synced. Click to sync now.'}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#171E2A] dark:hover:bg-[#202836] text-xs font-medium transition-colors press"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-inset-dark dark:hover:bg-active-dark text-xs font-medium transition-colors press"
           >
             {syncStatus === 'syncing' ? (
               <RefreshCw className="w-3.5 h-3.5 text-indigo-500 animate-spin" />
@@ -81,12 +81,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAddTx }) => {
         ) : null}
 
         {/* Month flow pill */}
-        <div className="hidden xl:flex items-center gap-3 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-[#131822] border border-slate-200/90 dark:border-[#202836] text-xs">
+        <div className="hidden xl:flex items-center gap-3 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-card-dark border border-slate-200/90 dark:border-border-dark text-xs">
           <div>
             <span className="text-slate-400">In:</span>{' '}
             <span className="font-semibold font-numeric text-emerald-600 dark:text-emerald-400">+{formatINR(currentMonthIncome)}</span>
           </div>
-          <div className="w-px h-3 bg-slate-300 dark:bg-[#202836]"></div>
+          <div className="w-px h-3 bg-slate-300 dark:bg-active-dark"></div>
           <div>
             <span className="text-slate-400">Out:</span>{' '}
             <span className="font-semibold font-numeric text-[#F43F5E] dark:text-rose-400">-{formatINR(currentMonthExpense)}</span>
@@ -119,7 +119,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAddTx }) => {
         {/* Mobile Theme Toggle */}
         <button
           onClick={() => setDarkMode(prev => !prev)}
-          className="lg:hidden p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-[#171E2A] transition-colors press"
+          className="lg:hidden p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-inset-dark transition-colors press"
           title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
           aria-label={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
         >

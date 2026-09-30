@@ -61,7 +61,7 @@ export const MarkPaidModal: React.FC<MarkPaidModalProps> = ({
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Commitment Summary Card */}
-        <div className="rounded-xl border border-slate-200/90 dark:border-[#202836] bg-slate-50 dark:bg-[#131822] p-4">
+        <div className="rounded-xl border border-slate-200/90 dark:border-border-dark bg-slate-50 dark:bg-card-dark p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
@@ -86,7 +86,7 @@ export const MarkPaidModal: React.FC<MarkPaidModalProps> = ({
         </div>
 
         {/* Due Date Indicator */}
-        <div className="flex items-center justify-between rounded-xl bg-slate-100 dark:bg-[#171E2A] px-3.5 py-2.5 text-xs text-slate-600 dark:text-slate-400 border border-slate-200/90 dark:border-[#202836]">
+        <div className="flex items-center justify-between rounded-xl bg-slate-100 dark:bg-inset-dark px-3.5 py-2.5 text-xs text-slate-600 dark:text-slate-400 border border-slate-200/90 dark:border-border-dark">
           <span className="font-medium">Cycle Due Date</span>
           <span className="font-bold text-slate-900 dark:text-white font-numeric">
             {formatDate(targetDueDate)}
@@ -110,7 +110,7 @@ export const MarkPaidModal: React.FC<MarkPaidModalProps> = ({
               value={amountStr}
               onChange={e => setAmountStr(e.target.value)}
               placeholder="e.g. 2500"
-              className="w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-white dark:bg-[#171E2A] pl-8 pr-4 py-2.5 text-slate-900 dark:text-white font-bold text-lg font-numeric focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+              className="w-full rounded-xl border border-slate-200/90 dark:border-border-dark bg-white dark:bg-inset-dark pl-8 pr-4 py-2.5 text-slate-900 dark:text-white font-bold text-lg font-numeric focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
             />
           </div>
           {parsedAmount > 0 && (
@@ -121,7 +121,7 @@ export const MarkPaidModal: React.FC<MarkPaidModalProps> = ({
         </div>
 
         {/* Transaction Ledger Record Toggle */}
-        <div className="rounded-xl border border-slate-200/90 dark:border-[#202836] bg-white dark:bg-[#171E2A] p-3.5 transition-colors">
+        <div className="rounded-xl border border-slate-200/90 dark:border-border-dark bg-white dark:bg-inset-dark p-3.5 transition-colors">
           <label className="flex items-start gap-3 cursor-pointer">
             <input
               type="checkbox"
@@ -143,11 +143,11 @@ export const MarkPaidModal: React.FC<MarkPaidModalProps> = ({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200/90 dark:border-[#202836]">
+        <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200/90 dark:border-border-dark">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl border border-slate-200/90 dark:border-[#202836] px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1c2433] transition-colors"
+            className="rounded-xl border border-slate-200/90 dark:border-border-dark px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1c2433] transition-colors"
           >
             Cancel
           </button>

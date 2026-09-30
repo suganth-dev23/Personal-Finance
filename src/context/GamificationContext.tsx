@@ -218,6 +218,8 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     isDriveConnected,
   ]);
 
+  const suppressCelebrationsUntilRef = useRef<number>(0);
+
   // Evaluate badges against current financial context
   const evaluateBadges = useCallback((silent = false) => {
     if (!isLoaded || !isInitialized) return;
@@ -267,8 +269,9 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       persistState(streak, updatedBadgeIds, updatedBadgeDates, nextXP);
 
-      // Only emit celebration events for user-initiated actions, never on initial silent hydration
-      if (!silent) {
+      // Only emit celebration events for user-initiated actions, never on initial silent hydration or during bulk loads
+      const isCelebrationSuppressed = silent || Date.now() < suppressCelebrationsUntilRef.current;
+      if (!isCelebrationSuppressed) {
         // Cap celebrations to at most 2 to avoid notification storms
         newlyUnlocked.slice(0, 2).forEach((badge, idx) => {
           setTimeout(() => {
@@ -291,6 +294,12 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (!subscribeFinanceEvent) return;
 
     const unsubscribe = subscribeFinanceEvent((event) => {
+      if (event.type === 'bulk_data_loaded') {
+        suppressCelebrationsUntilRef.current = Date.now() + 3000;
+        evaluateBadges(true);
+        return;
+      }
+
       if (event.type === 'transaction_added') {
         recordActivity();
       }

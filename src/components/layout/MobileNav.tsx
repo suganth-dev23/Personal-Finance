@@ -19,7 +19,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({ onOpenMore, onOpenAddTx })
   return (
     <nav
       aria-label="Mobile navigation"
-      className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 dark:bg-[#0B0E14]/95 backdrop-blur-xl border-t border-slate-200/90 dark:border-[#202836] px-3 py-1.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] flex items-center justify-between shadow-[0_-8px_25px_rgba(0,0,0,0.06)] dark:shadow-[0_-8px_30px_rgba(0,0,0,0.6)]"
+      className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 dark:bg-[#0B0E14]/95 backdrop-blur-xl border-t border-slate-200/90 dark:border-border-dark px-3 py-1.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] flex items-center justify-between shadow-[0_-8px_25px_rgba(0,0,0,0.06)] dark:shadow-[0_-8px_30px_rgba(0,0,0,0.6)]"
     >
       {/* 1. Home */}
       <button

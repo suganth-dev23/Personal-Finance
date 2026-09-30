@@ -128,7 +128,7 @@ export const RecurringPaymentModal: React.FC<RecurringPaymentModalProps> = ({
             value={name}
             onChange={e => setName(e.target.value)}
             placeholder="e.g. House Rent, Netflix 4K, Zerodha Nifty SIP, JioFiber"
-            className="w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-white dark:bg-[#171E2A] px-3.5 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+            className="w-full rounded-xl border border-slate-200/90 dark:border-border-dark bg-white dark:bg-inset-dark px-3.5 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
           />
         </div>
 
@@ -150,7 +150,7 @@ export const RecurringPaymentModal: React.FC<RecurringPaymentModalProps> = ({
                 value={amountStr}
                 onChange={e => setAmountStr(e.target.value)}
                 placeholder="e.g. 15000"
-                className="w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-white dark:bg-[#171E2A] pl-8 pr-4 py-2.5 text-slate-900 dark:text-white font-bold text-lg font-numeric focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+                className="w-full rounded-xl border border-slate-200/90 dark:border-border-dark bg-white dark:bg-inset-dark pl-8 pr-4 py-2.5 text-slate-900 dark:text-white font-bold text-lg font-numeric focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
               />
             </div>
             {parsedAmount > 0 && (
@@ -167,7 +167,7 @@ export const RecurringPaymentModal: React.FC<RecurringPaymentModalProps> = ({
             <select
               value={frequency}
               onChange={e => setFrequency(e.target.value as RecurrenceFrequency)}
-              className="w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-white dark:bg-[#171E2A] px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+              className="w-full rounded-xl border border-slate-200/90 dark:border-border-dark bg-white dark:bg-inset-dark px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
             >
               {FREQUENCIES.map(f => (
                 <option key={f.value} value={f.value}>
@@ -193,7 +193,7 @@ export const RecurringPaymentModal: React.FC<RecurringPaymentModalProps> = ({
                   required
                   value={dayOfMonth}
                   onChange={e => setDayOfMonth(Math.max(1, Math.min(31, parseInt(e.target.value, 10) || 1)))}
-                  className="w-24 rounded-xl border border-slate-200/90 dark:border-[#202836] bg-white dark:bg-[#171E2A] px-3.5 py-2.5 text-sm text-slate-900 dark:text-white font-numeric font-bold focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+                  className="w-24 rounded-xl border border-slate-200/90 dark:border-border-dark bg-white dark:bg-inset-dark px-3.5 py-2.5 text-sm text-slate-900 dark:text-white font-numeric font-bold focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
                 />
                 <span className="text-xs text-slate-500 dark:text-slate-400">
                   {dayOfMonth >= 29 ? 'Auto short-month protected' : 'e.g. 5th of every month'}
@@ -218,7 +218,7 @@ export const RecurringPaymentModal: React.FC<RecurringPaymentModalProps> = ({
             <select
               value={category}
               onChange={e => setCategory(e.target.value)}
-              className="w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-white dark:bg-[#171E2A] px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+              className="w-full rounded-xl border border-slate-200/90 dark:border-border-dark bg-white dark:bg-inset-dark px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
             >
               {categories.map(c => (
                 <option key={c.id} value={c.name}>
@@ -240,7 +240,7 @@ export const RecurringPaymentModal: React.FC<RecurringPaymentModalProps> = ({
               required
               value={startDate}
               onChange={e => setStartDate(e.target.value)}
-              className="w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-white dark:bg-[#171E2A] px-3.5 py-2.5 text-sm text-slate-900 dark:text-white font-numeric focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+              className="w-full rounded-xl border border-slate-200/90 dark:border-border-dark bg-white dark:bg-inset-dark px-3.5 py-2.5 text-sm text-slate-900 dark:text-white font-numeric focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
             />
           </div>
 
@@ -254,7 +254,7 @@ export const RecurringPaymentModal: React.FC<RecurringPaymentModalProps> = ({
               min={startDate}
               onChange={e => setEndDate(e.target.value)}
               placeholder="Leave empty for ongoing"
-              className="w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-white dark:bg-[#171E2A] px-3.5 py-2.5 text-sm text-slate-900 dark:text-white font-numeric focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+              className="w-full rounded-xl border border-slate-200/90 dark:border-border-dark bg-white dark:bg-inset-dark px-3.5 py-2.5 text-sm text-slate-900 dark:text-white font-numeric focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
             />
           </div>
         </div>
@@ -268,7 +268,7 @@ export const RecurringPaymentModal: React.FC<RecurringPaymentModalProps> = ({
             <select
               value={paymentMethod}
               onChange={e => setPaymentMethod(e.target.value as PaymentMethod)}
-              className="w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-white dark:bg-[#171E2A] px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+              className="w-full rounded-xl border border-slate-200/90 dark:border-border-dark bg-white dark:bg-inset-dark px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
             >
               {PAYMENT_METHODS.map(m => (
                 <option key={m} value={m}>
@@ -278,7 +278,7 @@ export const RecurringPaymentModal: React.FC<RecurringPaymentModalProps> = ({
             </select>
           </div>
 
-          <div className="rounded-xl border border-slate-200/90 dark:border-[#202836] bg-slate-50 dark:bg-[#131822] p-3 flex items-center">
+          <div className="rounded-xl border border-slate-200/90 dark:border-border-dark bg-slate-50 dark:bg-card-dark p-3 flex items-center">
             <label className="flex items-start gap-2.5 cursor-pointer">
               <input
                 type="checkbox"
@@ -308,16 +308,16 @@ export const RecurringPaymentModal: React.FC<RecurringPaymentModalProps> = ({
             value={notes}
             onChange={e => setNotes(e.target.value)}
             placeholder="e.g. Consumer ID 10928374, HDFC Auto-Debit, 1-year prepaid plan"
-            className="w-full rounded-xl border border-slate-200/90 dark:border-[#202836] bg-white dark:bg-[#171E2A] px-3.5 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+            className="w-full rounded-xl border border-slate-200/90 dark:border-border-dark bg-white dark:bg-inset-dark px-3.5 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
           />
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200/90 dark:border-[#202836]">
+        <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200/90 dark:border-border-dark">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl border border-slate-200/90 dark:border-[#202836] px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1c2433] transition-colors"
+            className="rounded-xl border border-slate-200/90 dark:border-border-dark px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1c2433] transition-colors"
           >
             Cancel
           </button>

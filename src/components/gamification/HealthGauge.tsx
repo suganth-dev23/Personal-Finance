@@ -85,7 +85,7 @@ export const HealthGauge: React.FC = () => {
   ];
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#131822] border border-slate-200/90 dark:border-[#202836] p-4 sm:p-7 shadow-xs">
+    <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-card-dark border border-slate-200/90 dark:border-border-dark p-4 sm:p-7 shadow-xs">
       {/* Top hairline */}
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
 
@@ -138,7 +138,7 @@ export const HealthGauge: React.FC = () => {
                 stroke="currentColor"
                 strokeWidth="14"
                 strokeLinecap="round"
-                className="text-slate-100 dark:text-[#171E2A]"
+                className="text-slate-100 dark:text-inset-dark"
               />
 
               {/* Active Metric Gradient Arc */}
@@ -164,7 +164,7 @@ export const HealthGauge: React.FC = () => {
                       cx="0"
                       cy="0"
                       r="8"
-                      className="fill-white dark:fill-[#131822] stroke-[#F5B742]"
+                      className="fill-white dark:fill-card-dark stroke-[#F5B742]"
                       strokeWidth="2.5"
                     />
                     <circle
@@ -241,9 +241,16 @@ export const HealthGauge: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="h-1.5 w-full bg-slate-100 dark:bg-[#171E2A] rounded-full overflow-hidden">
+                <div
+                  className="h-1.5 w-full bg-slate-100 dark:bg-inset-dark rounded-full overflow-hidden"
+                  role="progressbar"
+                  aria-valuenow={pillar.score}
+                  aria-valuemin={0}
+                  aria-valuemax={pillar.max}
+                  aria-label={`${pillar.label} score: ${pillar.score} out of ${pillar.max}`}
+                >
                   <div
-                    className={`h-full rounded-full transition-all duration-700 ease-out ${pillar.color}`}
+                    className={`h-full rounded-full transition-[width] duration-700 ease-out ${pillar.color}`}
                     style={{ width: `${pct}%` }}
                   />
                 </div>
@@ -268,7 +275,7 @@ export const HealthGauge: React.FC = () => {
             : 'Score softening this week — review recent expenses and budget caps to return to prime grade.';
 
         return (
-          <div className="mt-5 pt-4 border-t border-slate-100 dark:border-[#202836] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="mt-5 pt-4 border-t border-slate-100 dark:border-border-dark flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2 text-xs">
               {isDeclining ? (
                 <span className="flex items-center gap-1.5 text-rose-600 dark:text-rose-400 font-medium">
@@ -285,7 +292,7 @@ export const HealthGauge: React.FC = () => {
 
             <button
               onClick={() => setCurrentView('badges')}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-[#171E2A] hover:bg-slate-200 dark:hover:bg-[#202836] text-xs font-semibold text-slate-800 dark:text-slate-200 transition-colors self-start sm:self-auto shrink-0"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-inset-dark hover:bg-slate-200 dark:hover:bg-active-dark text-xs font-semibold text-slate-800 dark:text-slate-200 transition-colors self-start sm:self-auto shrink-0"
             >
               <span>Achievement Vault</span>
               <ArrowRight className="w-3.5 h-3.5" />
