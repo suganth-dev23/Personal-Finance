@@ -411,3 +411,17 @@ textarea:focus-visible {
 [data-perf="lite"] .animate-bounce {
   animation: none !important;
 }
+
+/* ── Privacy Mode (Phase 8) ── */
+html[data-privacy="on"] [data-money],
+html[data-privacy="on"] .font-numeric {
+  filter: blur(6px);
+  transition: filter 0.2s ease;
+  user-select: none;
+}
+html[data-privacy="on"] [data-money]:hover,
+html[data-privacy="on"] .font-numeric:hover {
+  filter: blur(0px);
+  user-select: auto;
+}
+

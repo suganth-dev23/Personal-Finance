@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
  Settings as SettingsIcon,
  Shield,
@@ -14,6 +14,9 @@ import {
  CloudOff,
  UploadCloud,
  Activity,
+ Eye,
+ EyeOff,
+ RotateCcw,
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { AIProvider } from '../../types/finance';
@@ -88,6 +91,67 @@ export const SettingsView: React.FC = () => {
  } catch (err) {
  console.error('Failed to update motion preference:', err);
  }
+ };
+
+ const [isPrivacy, setIsPrivacy] = useState(() => {
+   if (typeof window === 'undefined') return false;
+   try {
+     return localStorage.getItem('dhanveda_privacy') === 'on';
+   } catch {
+     return false;
+   }
+ });
+
+ const [isCalmMode, setIsCalmMode] = useState(() => {
+   if (typeof window === 'undefined') return false;
+   try {
+     return localStorage.getItem('dhanveda_calm_mode') === 'true';
+   } catch {
+     return false;
+   }
+ });
+
+ useEffect(() => {
+   const handlePrivacyEvent = () => {
+     setIsPrivacy(typeof window !== 'undefined' && localStorage.getItem('dhanveda_privacy') === 'on');
+   };
+   const handleCalmEvent = () => {
+     setIsCalmMode(typeof window !== 'undefined' && localStorage.getItem('dhanveda_calm_mode') === 'true');
+   };
+   window.addEventListener('dhanveda-privacy-change', handlePrivacyEvent);
+   window.addEventListener('dhanveda-calm-change', handleCalmEvent);
+   return () => {
+     window.removeEventListener('dhanveda-privacy-change', handlePrivacyEvent);
+     window.removeEventListener('dhanveda-calm-change', handleCalmEvent);
+   };
+ }, []);
+
+ const handlePrivacyToggle = () => {
+   const next = !isPrivacy;
+   setIsPrivacy(next);
+   try {
+     if (next) {
+       localStorage.setItem('dhanveda_privacy', 'on');
+       document.documentElement.setAttribute('data-privacy', 'on');
+     } else {
+       localStorage.setItem('dhanveda_privacy', 'off');
+       document.documentElement.removeAttribute('data-privacy');
+     }
+     window.dispatchEvent(new CustomEvent('dhanveda-privacy-change'));
+   } catch (err) {
+     console.error('Failed to toggle privacy mode:', err);
+   }
+ };
+
+ const handleCalmModeToggle = () => {
+   const next = !isCalmMode;
+   setIsCalmMode(next);
+   try {
+     localStorage.setItem('dhanveda_calm_mode', next ? 'true' : 'false');
+     window.dispatchEvent(new CustomEvent('dhanveda-calm-change'));
+   } catch (err) {
+     console.error('Failed to toggle calm mode:', err);
+   }
  };
 
  const handleSaveAI = (e: React.FormEvent) => {
@@ -468,6 +532,91 @@ export const SettingsView: React.FC = () => {
  Instant view transitions, static chart renders, zero looped animations for calm focus.
  </p>
  </button>
+ </div>
+
+ {/* Privacy & Calm Mode Experience Controls */}
+ <div className="pt-4 border-t border-line space-y-3">
+ <h4 className="text-xs font-bold uppercase tracking-wider text-ink-3">
+ Privacy &amp; Focus Preferences
+ </h4>
+ <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+ {/* Privacy Mode Toggle */}
+ <div className="p-4 rounded-2xl border border-line bg-sunken flex items-start justify-between gap-4">
+ <div className="space-y-1 pr-2">
+ <div className="flex items-center gap-2">
+ {isPrivacy ? <EyeOff className="w-4 h-4 text-reward" /> : <Eye className="w-4 h-4 text-ink-2" />}
+ <span className="text-sm font-bold text-ink-1">Privacy Mode</span>
+ </div>
+ <p className="text-xs text-ink-3 leading-relaxed">
+ Blur all monetary amounts on screen for privacy when sharing.
+ </p>
+ </div>
+ <button
+ type="button"
+ role="switch"
+ aria-checked={isPrivacy}
+ aria-label="Toggle Privacy Mode"
+ onClick={handlePrivacyToggle}
+ className={`press relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary ${
+ isPrivacy ? 'bg-primary' : 'bg-line'
+ }`}
+ >
+ <span
+ className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+ isPrivacy ? 'translate-x-5' : 'translate-x-0'
+ }`}
+ />
+ </button>
+ </div>
+
+ {/* Calm Mode Toggle */}
+ <div className="p-4 rounded-2xl border border-line bg-sunken flex items-start justify-between gap-4">
+ <div className="space-y-1 pr-2">
+ <div className="flex items-center gap-2">
+ <Sparkles className={`w-4 h-4 ${isCalmMode ? 'text-primary' : 'text-ink-2'}`} />
+ <span className="text-sm font-bold text-ink-1">Calm Mode</span>
+ </div>
+ <p className="text-xs text-ink-3 leading-relaxed">
+ Suppress confetti and celebration particles for a tranquil experience.
+ </p>
+ </div>
+ <button
+ type="button"
+ role="switch"
+ aria-checked={isCalmMode}
+ aria-label="Toggle Calm Mode"
+ onClick={handleCalmModeToggle}
+ className={`press relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary ${
+ isCalmMode ? 'bg-primary' : 'bg-line'
+ }`}
+ >
+ <span
+ className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+ isCalmMode ? 'translate-x-5' : 'translate-x-0'
+ }`}
+ />
+ </button>
+ </div>
+ </div>
+
+ {/* Reset Setup Checklist Action */}
+ <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+ <p className="text-xs text-ink-3">
+ Want to revisit the onboarding checklist on your dashboard?
+ </p>
+ <button
+ type="button"
+ onClick={() => {
+ localStorage.removeItem('dhanveda_setup_checklist_dismissed');
+ window.dispatchEvent(new CustomEvent('dhanveda-checklist-reset'));
+ alert('Setup checklist reset. Return to Dashboard to view.');
+ }}
+ className="press self-start sm:self-auto px-3.5 py-2 rounded-xl border border-line bg-surface hover:bg-sunken text-xs font-bold text-ink-1 transition-colors flex items-center gap-1.5 shadow-xs"
+ >
+ <RotateCcw className="w-3.5 h-3.5 text-ink-3" />
+ <span>Reset Setup Checklist</span>
+ </button>
+ </div>
  </div>
  </div>
 

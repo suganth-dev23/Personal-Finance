@@ -16,6 +16,7 @@ import { RecentTransactions } from './RecentTransactions';
 import { AIInsightsWidget } from './AIInsightsWidget';
 import { CashFlowRunwayCard, RecurringBillsCard } from './RecurringAndRunwayWidget';
 import { OwedSummaryWidget } from './OwedSummaryWidget';
+import { SetupChecklistCard } from './SetupChecklistCard';
 import { Button, Card, Money, Stat } from '../ui';
 import { AnimatedNumber } from '../common/AnimatedNumber';
 import { HealthGauge } from '../gamification/HealthGauge';
@@ -104,6 +105,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx, onEdi
           </div>
         </Card>
       )}
+
+      {/* Setup Checklist Card */}
+      <SetupChecklistCard onOpenAddTx={onOpenAddTx} />
 
       {/* LEVEL 1: THE MASTER WEALTH LEDGER ANCHOR */}
       <Card

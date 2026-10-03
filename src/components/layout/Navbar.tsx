@@ -1,5 +1,5 @@
-import React from 'react';
-import { Plus, Sparkles, Sun, Moon, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, Sparkles, Sun, Moon, RefreshCw, Eye, EyeOff } from 'lucide-react';
 import { useFinance, AppView } from '../../context/FinanceContext';
 import { Money } from '../ui/Money';
 import { getCurrentMonthYear } from '../../utils/date';
@@ -39,6 +39,31 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAddTx }) => {
   } = useFinance();
   const { monthName, year } = getCurrentMonthYear();
   const meta = VIEW_TITLES[currentView] || { title: 'DhanVeda', subtitle: '' };
+
+  const [isPrivacy, setIsPrivacy] = useState(() => typeof window !== 'undefined' && localStorage.getItem('dhanveda_privacy') === 'on');
+
+  useEffect(() => {
+    const handlePrivacyChange = () => {
+      setIsPrivacy(typeof window !== 'undefined' && localStorage.getItem('dhanveda_privacy') === 'on');
+    };
+    window.addEventListener('dhanveda-privacy-change', handlePrivacyChange);
+    return () => window.removeEventListener('dhanveda-privacy-change', handlePrivacyChange);
+  }, []);
+
+  const togglePrivacy = () => {
+    const next = !isPrivacy;
+    setIsPrivacy(next);
+    try {
+      if (next) {
+        localStorage.setItem('dhanveda_privacy', 'on');
+        document.documentElement.setAttribute('data-privacy', 'on');
+      } else {
+        localStorage.setItem('dhanveda_privacy', 'off');
+        document.documentElement.removeAttribute('data-privacy');
+      }
+      window.dispatchEvent(new CustomEvent('dhanveda-privacy-change'));
+    } catch {}
+  };
 
   return (
     <header
@@ -99,6 +124,17 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAddTx }) => {
 
         {/* Daily Streak Indicator */}
         <StreakBanner compact={true} />
+
+        {/* Privacy Mode Toggle */}
+        <button
+          type="button"
+          onClick={togglePrivacy}
+          className="p-2 rounded-xl text-ink-3 hover:text-ink-1 hover:bg-sunken transition-colors press"
+          title={isPrivacy ? 'Disable privacy mode' : 'Enable privacy mode (blur amounts)'}
+          aria-label={isPrivacy ? 'Disable privacy mode' : 'Enable privacy mode (blur amounts)'}
+        >
+          {isPrivacy ? <EyeOff className="w-4 h-4 text-reward" /> : <Eye className="w-4 h-4" />}
+        </button>
 
         {/* AI Quick Button */}
         {currentView !== 'ai' && (

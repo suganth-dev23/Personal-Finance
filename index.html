@@ -43,6 +43,12 @@
             document.documentElement.setAttribute('data-perf', 'lite');
           }
         } catch (e) {}
+
+        try {
+          if (localStorage.getItem('dhanveda_privacy') === 'on') {
+            document.documentElement.setAttribute('data-privacy', 'on');
+          }
+        } catch (_) {}
       })();
     </script>
   </head>

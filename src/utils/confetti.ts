@@ -28,6 +28,15 @@ function canTriggerSparkle(): boolean {
   return true;
 }
 
+function isCalmMode(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    return localStorage.getItem('dhanveda_calm_mode') === 'true';
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Elegant non-intrusive alternative visual feedback for users with prefers-reduced-motion
  */
@@ -51,6 +60,7 @@ export function triggerGoldHairlineFlash() {
  * Fast, elegant burst lasting ~1.5s. Accepts optional trigger element to position origin.
  */
 export function burstConfetti(targetEl?: HTMLElement | null) {
+  if (isCalmMode()) return;
   if (!canTriggerMajorConfetti()) return;
 
   if (getPrefersReducedMotion()) {
@@ -87,6 +97,7 @@ export function burstConfetti(targetEl?: HTMLElement | null) {
  * Crisp, smooth, and lightweight — terminates cleanly within ~1.6s
  */
 export function goldShower() {
+  if (isCalmMode()) return;
   if (!canTriggerMajorConfetti()) return;
 
   if (getPrefersReducedMotion()) {
@@ -115,6 +126,7 @@ export function goldShower() {
  * Dual side cannons fired simultaneously for major milestone celebrations
  */
 export function dualSideCannons() {
+  if (isCalmMode()) return;
   if (!canTriggerMajorConfetti()) return;
 
   if (getPrefersReducedMotion()) {
@@ -152,6 +164,7 @@ export function dualSideCannons() {
  * Subtle sparkle for minor wins (streak continued, settlement recorded)
  */
 export function subtleSparkle(originOrEl?: { x: number; y: number } | HTMLElement | null) {
+  if (isCalmMode()) return;
   if (!canTriggerSparkle()) return;
 
   if (getPrefersReducedMotion()) {

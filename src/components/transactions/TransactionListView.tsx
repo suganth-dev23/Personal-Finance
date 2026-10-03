@@ -16,6 +16,7 @@ import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { useWindowVirtualizer } from '../../hooks/useWindowVirtualizer';
 import { Button, Card, Money, Stat } from '../ui';
 import { TransactionTableRow, TransactionCardRow } from './TransactionRow';
+import { useToast } from '../common/ToastProvider';
 
 interface TransactionListViewProps {
   onOpenAddModal: () => void;
@@ -196,16 +197,20 @@ export const TransactionListView: React.FC<TransactionListViewProps> = React.mem
     transactions,
     categories,
     contacts,
+    addTransaction,
     deleteTransaction,
     deleteMultipleTransactions,
     subscribeFinanceEvent,
   } = useFinance();
+  const { showToast } = useToast();
 
   // Highlight newly added transaction
   const [highlightedTxId, setHighlightedTxId] = useState<string | null>(null);
   const [deletingTxIds, setDeletingTxIds] = useState<Set<string>>(new Set());
 
   const handleDeleteTransaction = useCallback((txId: string, desc: string) => {
+    const txToDelete = transactions.find(t => t.id === txId);
+    if (!txToDelete) return;
     if (window.confirm(`Delete transaction "${desc}"?`)) {
       setDeletingTxIds(prev => new Set(prev).add(txId));
       window.setTimeout(() => {
@@ -215,9 +220,15 @@ export const TransactionListView: React.FC<TransactionListViewProps> = React.mem
           next.delete(txId);
           return next;
         });
+        showToast('info', 'Transaction Removed', desc, 5000, {
+          label: 'Undo',
+          onClick: () => {
+            addTransaction(txToDelete);
+          },
+        });
       }, 200);
     }
-  }, [deleteTransaction]);
+  }, [transactions, deleteTransaction, addTransaction, showToast]);
 
   useEffect(() => {
     if (!subscribeFinanceEvent) return;
