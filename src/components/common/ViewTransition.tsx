@@ -2,24 +2,24 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 
 interface ViewTransitionProps {
-  viewKey: string;
-  children: React.ReactNode;
+ viewKey: string;
+ children: React.ReactNode;
 }
 
 const VIEW_ORDER: Record<string, number> = {
-  dashboard: 0,
-  transactions: 1,
-  people: 2,
-  budgets: 3,
-  recurring: 4,
-  categories: 5,
-  emergency: 6,
-  investments: 7,
-  dreams: 8,
-  badges: 9,
-  ai: 10,
-  import: 11,
-  settings: 12,
+ dashboard: 0,
+ transactions: 1,
+ people: 2,
+ budgets: 3,
+ recurring: 4,
+ categories: 5,
+ emergency: 6,
+ investments: 7,
+ dreams: 8,
+ badges: 9,
+ ai: 10,
+ import: 11,
+ settings: 12,
 };
 
 // Feature flag for instant bisect or fallback if needed
@@ -37,148 +37,148 @@ const CEILING_TIMEOUT_MS = 600;
  * - Hard ceiling timer and single unified cleanup preventing hung transitions
  */
 export const ViewTransition: React.FC<ViewTransitionProps> = ({ viewKey, children }) => {
-  const reducedMotion = useReducedMotion();
-  const [phase, setPhase] = useState<'idle' | 'exit' | 'enter'>('idle');
-  const [activeKey, setActiveKey] = useState<string>(viewKey);
-  const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
+ const reducedMotion = useReducedMotion();
+ const [phase, setPhase] = useState<'idle' | 'exit' | 'enter'>('idle');
+ const [activeKey, setActiveKey] = useState<string>(viewKey);
+ const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
 
-  // Children of the view currently on screen. Only refreshed while NOT switching,
-  // so during exit it still holds the OUTGOING view (not the incoming one).
-  const displayedChildrenRef = useRef<React.ReactNode>(children);
-  const scrollMapRef = useRef<Record<string, number>>({});
-  const transitionTimerRef = useRef<number | null>(null);
-  const ceilingTimerRef = useRef<number | null>(null);
-  const rafRef = useRef<number | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const isFirstMount = useRef(true);
+ // Children of the view currently on screen. Only refreshed while NOT switching,
+ // so during exit it still holds the OUTGOING view (not the incoming one).
+ const displayedChildrenRef = useRef<React.ReactNode>(children);
+ const scrollMapRef = useRef<Record<string, number>>({});
+ const transitionTimerRef = useRef<number | null>(null);
+ const ceilingTimerRef = useRef<number | null>(null);
+ const rafRef = useRef<number | null>(null);
+ const containerRef = useRef<HTMLDivElement>(null);
+ const isFirstMount = useRef(true);
 
-  const clearAllTimers = () => {
-    if (transitionTimerRef.current !== null) {
-      clearTimeout(transitionTimerRef.current);
-      transitionTimerRef.current = null;
-    }
-    if (ceilingTimerRef.current !== null) {
-      clearTimeout(ceilingTimerRef.current);
-      ceilingTimerRef.current = null;
-    }
-    if (rafRef.current !== null) {
-      cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
-    }
-  };
+ const clearAllTimers = () => {
+ if (transitionTimerRef.current !== null) {
+ clearTimeout(transitionTimerRef.current);
+ transitionTimerRef.current = null;
+ }
+ if (ceilingTimerRef.current !== null) {
+ clearTimeout(ceilingTimerRef.current);
+ ceilingTimerRef.current = null;
+ }
+ if (rafRef.current !== null) {
+ cancelAnimationFrame(rafRef.current);
+ rafRef.current = null;
+ }
+ };
 
-  useEffect(() => {
-    return () => {
-      clearAllTimers();
-    };
-  }, []);
+ useEffect(() => {
+ return () => {
+ clearAllTimers();
+ };
+ }, []);
 
-  useEffect(() => {
-    if (!ENABLE_VIEW_TRANSITION || reducedMotion) {
-      clearAllTimers();
-      setActiveKey(viewKey);
-      setPhase('idle');
-      return;
-    }
+ useEffect(() => {
+ if (!ENABLE_VIEW_TRANSITION || reducedMotion) {
+ clearAllTimers();
+ setActiveKey(viewKey);
+ setPhase('idle');
+ return;
+ }
 
-    if (isFirstMount.current) {
-      isFirstMount.current = false;
-      setActiveKey(viewKey);
-      setPhase('idle');
-      return;
-    }
+ if (isFirstMount.current) {
+ isFirstMount.current = false;
+ setActiveKey(viewKey);
+ setPhase('idle');
+ return;
+ }
 
-    if (viewKey !== activeKey) {
-      // 1. Capture current scroll position for the exiting view
-      if (typeof window !== 'undefined') {
-        scrollMapRef.current[activeKey] = window.scrollY;
-      }
+ if (viewKey !== activeKey) {
+ // 1. Capture current scroll position for the exiting view
+ if (typeof window !== 'undefined') {
+ scrollMapRef.current[activeKey] = window.scrollY;
+ }
 
-      // 2. Determine slide direction from VIEW_ORDER (captured at exit start)
-      const fromIdx = VIEW_ORDER[activeKey] ?? 0;
-      const toIdx = VIEW_ORDER[viewKey] ?? 0;
-      const navDirection = toIdx >= fromIdx ? 'forward' : 'backward';
-      setDirection(navDirection);
+ // 2. Determine slide direction from VIEW_ORDER (captured at exit start)
+ const fromIdx = VIEW_ORDER[activeKey] ?? 0;
+ const toIdx = VIEW_ORDER[viewKey] ?? 0;
+ const navDirection = toIdx >= fromIdx ? 'forward' : 'backward';
+ setDirection(navDirection);
 
-      // 3. displayedChildrenRef keeps rendering the outgoing view until the exit timer fires
+ // 3. displayedChildrenRef keeps rendering the outgoing view until the exit timer fires
 
-      // 4. Clear any active transition timers
-      clearAllTimers();
+ // 4. Clear any active transition timers
+ clearAllTimers();
 
-      // 5. Begin exit phase
-      setPhase('exit');
+ // 5. Begin exit phase
+ setPhase('exit');
 
-      // Hard ceiling timeout: force idle state if transition hangs
-      ceilingTimerRef.current = window.setTimeout(() => {
-        setActiveKey(viewKey);
-        setPhase('idle');
-      }, CEILING_TIMEOUT_MS);
+ // Hard ceiling timeout: force idle state if transition hangs
+ ceilingTimerRef.current = window.setTimeout(() => {
+ setActiveKey(viewKey);
+ setPhase('idle');
+ }, CEILING_TIMEOUT_MS);
 
-      // 6. Settle exit and commit incoming view
-      transitionTimerRef.current = window.setTimeout(() => {
-        setActiveKey(viewKey);
-        setPhase('enter');
+ // 6. Settle exit and commit incoming view
+ transitionTimerRef.current = window.setTimeout(() => {
+ setActiveKey(viewKey);
+ setPhase('enter');
 
-        // Restore scroll position and focus view heading
-        rafRef.current = requestAnimationFrame(() => {
-          if (typeof window !== 'undefined') {
-            const savedScroll = scrollMapRef.current[viewKey] ?? 0;
-            window.scrollTo({ top: savedScroll, behavior: 'instant' });
-          }
+ // Restore scroll position and focus view heading
+ rafRef.current = requestAnimationFrame(() => {
+ if (typeof window !== 'undefined') {
+ const savedScroll = scrollMapRef.current[viewKey] ?? 0;
+ window.scrollTo({ top: savedScroll, behavior: 'instant' });
+ }
 
-          // Move focus to view heading for screen readers & keyboard navigation
-          const heading = containerRef.current?.querySelector<HTMLElement>(
-            'h1, h2, [data-view-heading]'
-          );
-          if (heading) {
-            if (!heading.hasAttribute('tabindex')) {
-              heading.setAttribute('tabindex', '-1');
-            }
-            heading.focus({ preventScroll: true });
-          }
+ // Move focus to view heading for screen readers & keyboard navigation
+ const heading = containerRef.current?.querySelector<HTMLElement>(
+ 'h1, h2, [data-view-heading]'
+ );
+ if (heading) {
+ if (!heading.hasAttribute('tabindex')) {
+ heading.setAttribute('tabindex', '-1');
+ }
+ heading.focus({ preventScroll: true });
+ }
 
-          // Complete enter phase to idle
-          transitionTimerRef.current = window.setTimeout(() => {
-            setPhase('idle');
-            if (ceilingTimerRef.current !== null) {
-              clearTimeout(ceilingTimerRef.current);
-              ceilingTimerRef.current = null;
-            }
-          }, ENTER_SETTLE_MS);
-        });
-      }, EXIT_DURATION_MS);
-      // No effect cleanup here on purpose: the exit timer itself changes `activeKey`, which
-      // re-runs this effect, and a cleanup would cancel the enter rAF (scroll restore, heading
-      // focus) and the settle timer. Timers are cleared at the start of the next transition
-      // (step 4) and on unmount (separate effect above).
-    }
-  }, [viewKey, activeKey, reducedMotion]);
+ // Complete enter phase to idle
+ transitionTimerRef.current = window.setTimeout(() => {
+ setPhase('idle');
+ if (ceilingTimerRef.current !== null) {
+ clearTimeout(ceilingTimerRef.current);
+ ceilingTimerRef.current = null;
+ }
+ }, ENTER_SETTLE_MS);
+ });
+ }, EXIT_DURATION_MS);
+ // No effect cleanup here on purpose: the exit timer itself changes `activeKey`, which
+ // re-runs this effect, and a cleanup would cancel the enter rAF (scroll restore, heading
+ // focus) and the settle timer. Timers are cleared at the start of the next transition
+ // (step 4) and on unmount (separate effect above).
+ }
+ }, [viewKey, activeKey, reducedMotion]);
 
-  if (!ENABLE_VIEW_TRANSITION || reducedMotion) {
-    return <div className="w-full">{children}</div>;
-  }
+ if (!ENABLE_VIEW_TRANSITION || reducedMotion) {
+ return <div className="w-full">{children}</div>;
+ }
 
-  // Switching = the requested view differs from the one on screen, or exit is running.
-  const isSwitching = viewKey !== activeKey || phase === 'exit';
-  if (!isSwitching) displayedChildrenRef.current = children;
-  const contentToRender = isSwitching ? displayedChildrenRef.current : children;
+ // Switching = the requested view differs from the one on screen, or exit is running.
+ const isSwitching = viewKey !== activeKey || phase === 'exit';
+ if (!isSwitching) displayedChildrenRef.current = children;
+ const contentToRender = isSwitching ? displayedChildrenRef.current : children;
 
-  // No transform at rest: a resting transform creates a containing block for fixed
-  // descendants and an extra compositor layer. Enter uses a one-shot keyframe instead.
-  let phaseClasses = '';
-  let phaseStyle: React.CSSProperties | undefined;
-  if (isSwitching) {
-    const exitOffset = direction === 'forward' ? '-translate-x-2.5' : 'translate-x-2.5';
-    phaseClasses = `transition-[opacity,transform] duration-150 ease-out opacity-0 ${exitOffset} pointer-events-none`;
-  } else if (phase === 'enter') {
-    phaseStyle = {
-      animation: `${direction === 'forward' ? 'view-enter-forward' : 'view-enter-backward'} ${ENTER_SETTLE_MS}ms cubic-bezier(0.22, 1, 0.36, 1) backwards`,
-    };
-  }
+ // No transform at rest: a resting transform creates a containing block for fixed
+ // descendants and an extra compositor layer. Enter uses a one-shot keyframe instead.
+ let phaseClasses = '';
+ let phaseStyle: React.CSSProperties | undefined;
+ if (isSwitching) {
+ const exitOffset = direction === 'forward' ? '-translate-x-2.5' : 'translate-x-2.5';
+ phaseClasses = `transition-[opacity,transform] duration-150 ease-out opacity-0 ${exitOffset} pointer-events-none`;
+ } else if (phase === 'enter') {
+ phaseStyle = {
+ animation: `${direction === 'forward' ? 'view-enter-forward' : 'view-enter-backward'} ${ENTER_SETTLE_MS}ms cubic-bezier(0.22, 1, 0.36, 1) backwards`,
+ };
+ }
 
-  return (
-    <div ref={containerRef} className={`w-full ${phaseClasses}`} style={phaseStyle}>
-      {contentToRender}
-    </div>
-  );
+ return (
+ <div ref={containerRef} className={`w-full ${phaseClasses}`} style={phaseStyle}>
+ {contentToRender}
+ </div>
+ );
 };

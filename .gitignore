@@ -28,3 +28,7 @@ dist-ssr
 
 # Scratch & test scripts
 scratch/
+ui-smoke-out/
+dhanveda-ui-overhaul-kit*
+__pycache__/
+*.pyc

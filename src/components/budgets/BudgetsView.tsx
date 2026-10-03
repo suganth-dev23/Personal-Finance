@@ -2,13 +2,12 @@ import React, { useState, useMemo } from 'react';
 import { Plus, Edit3, Trash2, AlertCircle, CheckCircle, PieChart, ShieldAlert } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { Budget } from '../../types/finance';
-import { formatINR, formatCompactINR } from '../../utils/currency';
-import { ProgressBar } from '../common/ProgressBar';
 import { AnimatedNumber } from '../common/AnimatedNumber';
 import { EmptyState } from '../common/EmptyState';
 import { IconRenderer } from '../common/IconRenderer';
 import { BudgetModal } from './BudgetModal';
 import { useStaggerChildren } from '../../hooks/useStaggerChildren';
+import { Button, Card, Money, Stat, Progress } from '../ui';
 
 export const BudgetsView: React.FC = () => {
   const { containerRef: budgetGridRef, getChildStyle } = useStaggerChildren(60);
@@ -58,23 +57,23 @@ export const BudgetsView: React.FC = () => {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
       {/* Hero Overview: Mineral Card with Gold Budget Highlight */}
-      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-card-dark text-slate-900 dark:text-white p-4 sm:p-8 border border-slate-200/90 dark:border-border-dark shadow-sm">
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
+      <Card variant="hero" padding="none" className="rounded-2xl p-4 sm:p-8">
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-reward-fill to-transparent opacity-80" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-500/10 dark:bg-amber-400/10 text-amber-600 dark:text-amber-400">
+              <span className="flex h-6 w-6 items-center justify-center rounded-xl bg-primary-tint text-primary">
                 <PieChart className="h-4 w-4" />
               </span>
-              <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+              <span className="text-xs font-bold uppercase tracking-wider text-ink-3">
                 MONTHLY BUDGET STATUS
               </span>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+            <p className="text-xs text-ink-3 mb-1">
               Remaining Spend Allocation
             </p>
             <div className="flex items-baseline gap-3">
-              <h2 className="text-3xl sm:text-4xl font-black font-numeric tracking-tight text-slate-900 dark:text-white">
+              <h2 className="text-3xl sm:text-4xl font-black font-numeric tracking-tight text-ink-1">
                 <AnimatedNumber value={Math.abs(remainingBudget)} animateOnMount={true} />
               </h2>
               <span
@@ -85,72 +84,79 @@ export const BudgetsView: React.FC = () => {
                 {isOverTotal ? 'over budget' : 'remaining'}
               </span>
             </div>
-            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-              <span className="font-numeric font-semibold">{overallPercent}%</span> used of <span className="font-numeric font-semibold">{formatINR(totalBudgeted)}</span> monthly limit • <span className="font-numeric font-semibold">{budgets.length}</span> active category limits
+            <p className="mt-2 text-xs text-ink-3">
+              <span className="font-numeric font-semibold">{overallPercent}%</span> used of <Money value={totalBudgeted} size="xs" /> monthly limit • <span className="font-numeric font-semibold">{budgets.length}</span> active category limits
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <button
+            <Button
               onClick={handleOpenAdd}
-              className="press inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-3 text-sm font-bold text-slate-950 shadow-sm hover:from-amber-400 hover:to-amber-500 transition-all"
+              leftIcon={<Plus className="h-4 w-4 stroke-[2.5]" />}
             >
-              <Plus className="h-4 w-4 stroke-[2.5]" />
-              <span>Set New Budget</span>
-            </button>
+              Set New Budget
+            </Button>
           </div>
         </div>
 
         {/* Dynamic Progress Bar */}
-        <div className="mt-6 pt-5 border-t border-slate-200/80 dark:border-border-dark">
-          <div className="flex justify-between items-center text-xs text-slate-500 dark:text-slate-400 mb-2 font-medium">
-            <span className="font-numeric">Spent: {formatINR(totalSpentInBudgeted)}</span>
-            <span className="font-numeric">Limit: {formatINR(totalBudgeted)}</span>
+        <div className="mt-6 pt-5 border-t border-line">
+          <div className="flex justify-between items-center text-xs text-ink-3 mb-2 font-medium">
+            <span className="font-numeric">Spent: <Money value={totalSpentInBudgeted} size="xs" /></span>
+            <span className="font-numeric">Limit: <Money value={totalBudgeted} size="xs" /></span>
           </div>
-          <ProgressBar
+          <Progress
             value={totalSpentInBudgeted}
             max={totalBudgeted}
-            alertThresholds
-            showMilestones
-            glowOnMilestone
+            tone="auto"
             size="md"
           />
         </div>
 
         {/* 4-column summary strip */}
-        <div className="mt-4 sm:mt-6 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 pt-4 sm:pt-6 border-t border-slate-200/80 dark:border-border-dark">
-          <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-inset-dark p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-border-dark/60">
-            <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">Total Allowed</span>
-            <p className="text-sm sm:text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">{formatCompactINR(totalBudgeted)}</p>
-          </div>
-          <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-inset-dark p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-border-dark/60">
-            <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">Actual Spent</span>
-            <p className="text-sm sm:text-lg font-bold font-numeric text-rose-600 dark:text-rose-400 mt-0.5">{formatCompactINR(totalSpentInBudgeted)}</p>
-          </div>
-          <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-inset-dark p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-border-dark/60">
-            <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">Active Caps</span>
-            <p className="text-sm sm:text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">{budgets.length}</p>
-          </div>
-          <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-inset-dark p-2.5 sm:p-3.5 border border-slate-200/60 dark:border-border-dark/60">
-            <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">Velocity Status</span>
-            <p className={`text-sm sm:text-lg font-bold font-numeric mt-0.5 ${isOverTotal ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
-              {isOverTotal ? 'Over Budget' : overallPercent >= 85 ? 'Near Ceiling' : 'Safe Velocity'}
-            </p>
-          </div>
+        <div className="mt-4 sm:mt-6 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 pt-4 sm:pt-6 border-t border-line">
+          <Card variant="sunken" padding="sm" className="rounded-xl sm:rounded-2xl">
+            <Stat
+              label="Total Allowed"
+              value={<Money value={totalBudgeted} compact size="lg" />}
+            />
+          </Card>
+          <Card variant="sunken" padding="sm" className="rounded-xl sm:rounded-2xl">
+            <Stat
+              label="Actual Spent"
+              value={<Money value={totalSpentInBudgeted} compact size="lg" />}
+            />
+          </Card>
+          <Card variant="sunken" padding="sm" className="rounded-xl sm:rounded-2xl">
+            <Stat
+              label="Active Caps"
+              value={<span>{budgets.length}</span>}
+            />
+          </Card>
+          <Card variant="sunken" padding="sm" className="rounded-xl sm:rounded-2xl">
+            <Stat
+              label="Velocity Status"
+              value={
+                <span className={`text-sm sm:text-lg font-bold font-numeric ${isOverTotal ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                  {isOverTotal ? 'Over Budget' : overallPercent >= 85 ? 'Near Ceiling' : 'Safe Velocity'}
+                </span>
+              }
+            />
+          </Card>
         </div>
-      </div>
+      </Card>
 
       {/* Section Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">
+          <h3 className="text-lg font-bold text-ink-1 tracking-tight">
             Category Spending Limits
           </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs text-ink-3">
             Active monthly expenditure caps, pacing status, and overrun protection
           </p>
         </div>
-        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+        <span className="text-xs font-semibold text-ink-3">
           {budgets.length} categories
         </span>
       </div>
@@ -180,108 +186,107 @@ export const BudgetsView: React.FC = () => {
                 style={getChildStyle(idx)}
                 className="animate-slide-up"
               >
-                <div
-                  className={`group lift bg-white dark:bg-card-dark rounded-3xl p-4 sm:p-5 border transition-all duration-300 shadow-sm hover:shadow-md ${
+                <Card
+                  variant="surface"
+                  padding="none"
+                  className={`group lift rounded-2xl p-4 sm:p-5 transition-[transform,box-shadow,background-color] duration-200 ${
                     isOver
                       ? 'border-rose-400 dark:border-rose-600/70 ring-2 ring-rose-500/30 animate-shake-then-flash'
                       : isNear
-                      ? 'border-amber-300 dark:border-amber-900/60'
-                      : 'border-slate-200/90 dark:border-border-dark hover:border-emerald-500/40'
+                      ? 'border-warning/30 dark:border-warning/30'
+                      : 'border-line hover:border-emerald-500/40 hover:shadow-md'
                   }`}
                 >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner transition-transform group-hover:scale-105"
-                      style={{
-                        backgroundColor: `${catInfo?.color || '#10b981'}20`,
-                        color: catInfo?.color || '#10b981',
-                      }}
-                    >
-                      <IconRenderer name={catInfo?.icon || 'Tag'} className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
-                        {b.category}
-                      </h3>
-                      <p className="text-xs text-slate-400 font-medium">
-                        Limit: <span className="font-bold text-slate-700 dark:text-slate-300 font-numeric">{formatINR(b.monthlyLimit)}</span>
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => handleEdit(b)}
-                      className="press flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200/90 dark:border-border-dark text-slate-400 hover:bg-slate-50 dark:hover:bg-inset-dark hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
-                      title="Edit Limit"
-                    >
-                      <Edit3 className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (window.confirm(`Remove budget for ${b.category}?`)) {
-                          deleteBudget(b.id);
-                        }
-                      }}
-                      className="press flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200/90 dark:border-border-dark text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-                      title="Delete Budget"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Progress & Numbers */}
-                <div className="mt-5 space-y-2.5">
-                  <div className="flex justify-between items-baseline text-xs">
-                    <div>
-                      <span className="text-slate-400 font-medium">Spent: </span>
-                      <span className="font-extrabold text-slate-900 dark:text-white font-numeric">{formatINR(spent)}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-400 font-medium">{remaining >= 0 ? 'Remaining: ' : 'Over: '}</span>
-                      <span
-                        className={`font-extrabold font-numeric ${
-                          remaining >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
-                        }`}
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner transition-transform group-hover:scale-105"
+                        style={{
+                          backgroundColor: `${catInfo?.color || '#10b981'}20`,
+                          color: catInfo?.color || '#10b981',
+                        }}
                       >
-                        {formatINR(Math.abs(remaining))}
-                      </span>
+                        <IconRenderer name={catInfo?.icon || 'Tag'} className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm sm:text-base font-bold text-ink-1">
+                          {b.category}
+                        </h3>
+                        <p className="text-xs text-ink-3 font-medium">
+                          Limit: <Money value={b.monthlyLimit} size="xs" className="font-bold text-ink-2" />
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => handleEdit(b)}
+                        className="press flex h-8 w-8 items-center justify-center rounded-xl border border-line text-ink-3 hover:bg-sunken hover:text-ink-1 transition-colors"
+                        title="Edit Limit"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (window.confirm(`Remove budget for ${b.category}?`)) {
+                            deleteBudget(b.id);
+                          }
+                        }}
+                        className="press flex h-8 w-8 items-center justify-center rounded-xl border border-line text-ink-3 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                        title="Delete Budget"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </div>
 
-                  <ProgressBar
-                    value={spent}
-                    max={b.monthlyLimit}
-                    alertThresholds
-                    showMilestones
-                    glowOnMilestone
-                    size="sm"
-                  />
+                  {/* Progress & Numbers */}
+                  <div className="mt-5 space-y-2.5">
+                    <div className="flex justify-between items-baseline text-xs">
+                      <div>
+                        <span className="text-ink-3 font-medium">Spent: </span>
+                        <Money value={spent} size="xs" className="font-extrabold text-ink-1" />
+                      </div>
+                      <div>
+                        <span className="text-ink-3 font-medium">{remaining >= 0 ? 'Remaining: ' : 'Over: '}</span>
+                        <Money
+                          value={Math.abs(remaining)}
+                          size="xs"
+                          tone={remaining >= 0 ? 'positive' : 'negative'}
+                          className="font-extrabold"
+                        />
+                      </div>
+                    </div>
 
-                  <div className="flex justify-between items-center text-[11px] pt-1">
-                    <span className="font-semibold text-slate-400 font-numeric">{percentUsed.toFixed(0)}% utilized</span>
-                    {isOver ? (
-                      <span className="font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1 font-numeric">
-                        <ShieldAlert className="w-3.5 h-3.5" />
-                        Exceeded by {formatINR(spent - b.monthlyLimit)}
-                      </span>
-                    ) : isNear ? (
-                      <span className="font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                        <AlertCircle className="w-3.5 h-3.5" />
-                        Near limit
-                      </span>
-                    ) : (
-                      <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                        <CheckCircle className="w-3.5 h-3.5" />
-                        On track
-                      </span>
-                    )}
+                    <Progress
+                      value={spent}
+                      max={b.monthlyLimit}
+                      tone="auto"
+                      size="sm"
+                    />
+
+                    <div className="flex justify-between items-center text-xs pt-1">
+                      <span className="font-semibold text-ink-3 font-numeric">{percentUsed.toFixed(0)}% utilized</span>
+                      {isOver ? (
+                        <span className="font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1 font-numeric">
+                          <ShieldAlert className="w-3.5 h-3.5" />
+                          Exceeded by <Money value={spent - b.monthlyLimit} size="xs" className="text-inherit" />
+                        </span>
+                      ) : isNear ? (
+                        <span className="font-bold text-ink-3 flex items-center gap-1">
+                          <AlertCircle className="w-3.5 h-3.5" />
+                          Near limit
+                        </span>
+                      ) : (
+                        <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                          <CheckCircle className="w-3.5 h-3.5" />
+                          On track
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
+                </Card>
               </div>
-            </div>
             );
           })}
         </div>

@@ -16,7 +16,7 @@ import { RecentTransactions } from './RecentTransactions';
 import { AIInsightsWidget } from './AIInsightsWidget';
 import { CashFlowRunwayCard, RecurringBillsCard } from './RecurringAndRunwayWidget';
 import { OwedSummaryWidget } from './OwedSummaryWidget';
-import { formatINR } from '../../utils/currency';
+import { Button, Card, Money, Stat } from '../ui';
 import { AnimatedNumber } from '../common/AnimatedNumber';
 import { HealthGauge } from '../gamification/HealthGauge';
 import { HealthGaugeCompact } from '../gamification/HealthGaugeCompact';
@@ -57,11 +57,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx, onEdi
     <div className="space-y-6">
       {/* Welcome Banner when starting fresh (Mineral Card with Gold Accent) */}
       {transactions.length === 0 && (
-        <div className="relative overflow-hidden rounded-3xl bg-slate-900 dark:bg-card-dark border border-amber-500/30 p-6 sm:p-8 text-white shadow-md">
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
+        <Card variant="surface" padding="none" className="relative overflow-hidden rounded-2xl border-primary/30 p-6 sm:p-8 text-white shadow-md">
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-reward-fill to-transparent opacity-80" />
           <div className="max-w-2xl space-y-3 relative z-10">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-xs font-extrabold uppercase tracking-wider text-amber-400">
-              <Sparkles className="w-3.5 h-3.5 text-[#F5B742]" />
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-tint border border-primary/25 text-xs font-extrabold uppercase tracking-wider text-reward">
+              <Sparkles className="w-3.5 h-3.5 text-reward" />
               <span>Clean Slate Ready</span>
             </span>
             <h2 className="text-2xl sm:text-3xl font-black tracking-tight leading-tight text-white">
@@ -72,79 +72,83 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx, onEdi
             </p>
 
             <div className="flex flex-wrap items-center gap-3 pt-2">
-              <button
+              <Button
                 onClick={onOpenAddTx}
-                className="press flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs sm:text-sm transition-all shadow-sm"
+                leftIcon={<Plus className="w-4 h-4 stroke-[2.5]" />}
               >
-                <Plus className="w-4 h-4 stroke-[2.5]" />
-                <span>Add First Transaction</span>
-              </button>
+                Add First Transaction
+              </Button>
 
-              <button
+              <Button
+                variant="secondary"
                 onClick={() => setCurrentView('import')}
-                className="press flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs sm:text-sm border border-slate-700 transition-all shadow-xs"
+                leftIcon={<UploadCloud className="w-4 h-4 text-reward" />}
+                className="bg-slate-800 hover:bg-slate-700 text-white border-slate-700"
               >
-                <UploadCloud className="w-4 h-4 text-amber-400" />
-                <span>Import Statement (CSV/PDF)</span>
-              </button>
+                Import Statement (CSV/PDF)
+              </Button>
 
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => {
                   if (window.confirm('Load sample Indian demo dataset (Swiggy, Zepto, HDFC Salary, SIPs, Goals)?')) {
                     resetToDemoData();
                   }
                 }}
-                className="press px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                className="text-xs text-ink-3 hover:text-white hover:bg-slate-800"
               >
                 Load Demo Dataset
-              </button>
+              </Button>
             </div>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* LEVEL 1: THE MASTER WEALTH LEDGER ANCHOR */}
-      <div
-        className={`relative overflow-hidden rounded-3xl bg-white dark:bg-card-dark border border-slate-200/90 dark:border-border-dark p-4 sm:p-8 shadow-xs ${
+      <Card
+        variant="hero"
+        padding="none"
+        className={`rounded-2xl p-4 sm:p-8 ${
           mobileTab !== 'overview' ? 'hidden sm:block' : ''
         }`}
       >
         {/* Suvarna gold accent hairline at top edge */}
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-reward-fill to-transparent opacity-80" />
 
         {/* Master Header: Net Worth & Action Cluster */}
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-500/10 dark:bg-amber-400/10 text-amber-600 dark:text-amber-400">
+              <span className="flex h-6 w-6 items-center justify-center rounded-xl bg-primary-tint text-primary">
                 <Wallet className="h-4 w-4" />
               </span>
-              <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+              <span className="text-xs font-bold uppercase tracking-wider text-ink-3">
                 TOTAL NET WORTH
               </span>
             </div>
-            <p className="hidden sm:block text-xs text-slate-500 dark:text-slate-400 mb-1">
+            <p className="hidden sm:block text-xs text-ink-3 mb-1">
               Consolidated Personal Wealth (Assets &minus; Liabilities)
             </p>
 
             <div className="mt-1">
               <div className="flex flex-wrap items-baseline gap-3 mt-0.5">
-                <h2 className="font-numeric text-2xl sm:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50">
+                <h2 className="font-numeric text-2xl sm:text-5xl font-extrabold tracking-tight text-ink-1 dark:text-slate-50">
                   <AnimatedNumber value={totalNetWorth} showDirection={false} animateOnMount={true} />
                 </h2>
                 <span
                   className={`font-numeric text-xs font-semibold px-2.5 py-1 rounded-md ${
                     currentMonthNet >= 0
-                      ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-500/20'
+                      ? 'bg-positive-tint text-positive dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-500/20'
                       : 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-500/20'
                   }`}
                 >
-                  {currentMonthNet >= 0 ? '+' : ''}{formatINR(currentMonthNet)} cashflow this month
+                  <Money value={currentMonthNet} size="xs" sign="always" className="text-inherit font-semibold" /> cashflow this month
                 </span>
               </div>
-              <p className="hidden sm:flex text-xs text-slate-500 dark:text-slate-400 mt-2 items-center gap-2 flex-wrap">
+              <p className="hidden sm:flex text-xs text-ink-3 mt-2 items-center gap-2 flex-wrap">
                 <span>Monthly savings rate:</span>
-                <span className="font-numeric font-bold text-slate-800 dark:text-slate-200">
+                <span className="font-numeric font-bold text-ink-1 dark:text-slate-200">
                   {currentMonthSavingsRate.toFixed(1)}%
                 </span>
                 <span className="text-slate-300 dark:text-slate-700">•</span>
@@ -159,122 +163,97 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx, onEdi
             </div>
           </div>
 
-          {/* Action Cluster (Desktop) */}
+          {/* Action Cluster (Desktop: secondary Split bill action, primary Add is in Sidebar) */}
           <div className="hidden sm:flex flex-wrap items-center gap-2.5">
-            <button
-              onClick={onOpenAddTx}
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-3 text-sm font-bold text-slate-950 shadow-sm hover:from-amber-400 hover:to-amber-500 transition-all active:scale-[0.98]"
-            >
-              <Plus className="h-4 w-4 stroke-[2.5]" />
-              <span>Add transaction</span>
-            </button>
-
-            <button
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={() => setCurrentView('people')}
-              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-inset-dark dark:hover:bg-[#1C2433] text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-border-dark text-xs sm:text-sm font-medium transition-all active:scale-95"
+              leftIcon={<Users className="w-4 h-4 text-primary" />}
             >
-              <Users className="w-4 h-4 text-indigo-500" />
-              <span>Split bill</span>
-            </button>
+              Split bill
+            </Button>
           </div>
         </div>
-
 
         {/* Integrated Flow & Asset Shelves */}
-        <div ref={summaryStripRef} className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mt-6 pt-5 sm:mt-7 sm:pt-6 border-t border-slate-100 dark:border-border-dark">
-          <div
+        <div ref={summaryStripRef} className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mt-6 pt-5 sm:mt-7 sm:pt-6 border-t border-line">
+          <Card
+            variant="sunken"
+            padding="sm"
             style={getSummaryStyle(0)}
             onClick={() => setCurrentView('transactions')}
-            className="animate-slide-up cursor-pointer p-3 sm:p-3.5 rounded-2xl bg-slate-50/70 dark:bg-inset-dark hover:bg-slate-100 dark:hover:bg-[#1C2433] border border-slate-100 dark:border-border-dark transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:shadow-sm"
+            className="animate-slide-up cursor-pointer hover:bg-line/60 transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:shadow-sm"
           >
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                Bank & Cash
-              </span>
-              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold">Liquid</span>
-            </div>
-            <p className="font-numeric text-base sm:text-xl font-bold text-slate-900 dark:text-white mt-1">
-              <AnimatedNumber value={totalBalance} animateOnMount={true} />
-            </p>
-            <span className="text-[11px] text-slate-400 mt-0.5 block truncate">
-              +{formatINR(currentMonthIncome)} in this mo
-            </span>
-          </div>
+            <Stat
+              label="Bank & Cash"
+              icon={<span className="text-xs text-positive font-bold">Liquid</span>}
+              value={<Money value={totalBalance} size="2xl" />}
+              sub={<>+<Money value={currentMonthIncome} size="xs" /> in this mo</>}
+            />
+          </Card>
 
-          <div
+          <Card
+            variant="sunken"
+            padding="sm"
             style={getSummaryStyle(1)}
             onClick={() => setCurrentView('transactions')}
-            className="animate-slide-up cursor-pointer p-3 sm:p-3.5 rounded-2xl bg-slate-50/70 dark:bg-inset-dark hover:bg-slate-100 dark:hover:bg-[#1C2433] border border-slate-100 dark:border-border-dark transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:shadow-sm"
+            className="animate-slide-up cursor-pointer hover:bg-line/60 transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:shadow-sm"
           >
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                Monthly spend
-              </span>
-              <span className="text-xs text-rose-600 dark:text-rose-400 font-bold">↓</span>
-            </div>
-            <p className="font-numeric text-base sm:text-xl font-bold text-rose-600 dark:text-rose-400 mt-1">
-              -<AnimatedNumber value={currentMonthExpense} animateOnMount={true} />
-            </p>
-            <span className="text-[11px] text-slate-400 mt-0.5 block truncate">
-              Debits &amp; UPI
-            </span>
-          </div>
+            <Stat
+              label="Monthly spend"
+              icon={<span className="text-xs text-ink-3 font-bold">↓</span>}
+              value={<Money value={currentMonthExpense} size="2xl" tone="expense" />}
+              sub="Debits & UPI"
+            />
+          </Card>
 
-          <div
+          <Card
+            variant="sunken"
+            padding="sm"
             style={getSummaryStyle(2)}
             onClick={() => setCurrentView('investments')}
-            className="animate-slide-up cursor-pointer p-3 sm:p-3.5 rounded-2xl bg-slate-50/70 dark:bg-inset-dark hover:bg-slate-100 dark:hover:bg-[#1C2433] border border-slate-100 dark:border-border-dark transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:shadow-sm"
+            className="animate-slide-up cursor-pointer hover:bg-line/60 transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:shadow-sm"
           >
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">
-                <span className="sm:hidden">Investments</span>
-                <span className="hidden sm:inline">Invested assets</span>
-              </span>
-              <span className="text-xs font-numeric font-bold text-[#C28834] dark:text-[#F5B742]">
-                {totalInvestmentGainLoss >= 0 ? '+' : ''}{totalInvestmentGainLossPct.toFixed(1)}%
-              </span>
-            </div>
-            <p className="font-numeric text-base sm:text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">
-              <AnimatedNumber value={totalInvestmentValue} animateOnMount={true} />
-            </p>
-            <span className="text-[11px] text-slate-400 mt-0.5 block truncate">
-              MF, Stocks, Gold, FDs
-            </span>
-          </div>
+            <Stat
+              label="Invested assets"
+              icon={
+                <span className="text-xs font-numeric font-bold text-reward dark:text-reward">
+                  {totalInvestmentGainLoss >= 0 ? '+' : ''}{totalInvestmentGainLossPct.toFixed(1)}%
+                </span>
+              }
+              value={<Money value={totalInvestmentValue} size="2xl" />}
+              sub="MF, Stocks, Gold, FDs"
+            />
+          </Card>
 
-          <div
+          <Card
+            variant="sunken"
+            padding="sm"
             style={getSummaryStyle(3)}
             onClick={() => setCurrentView('emergency')}
-            className="animate-slide-up cursor-pointer p-3 sm:p-3.5 rounded-2xl bg-slate-50/70 dark:bg-inset-dark hover:bg-slate-100 dark:hover:bg-[#1C2433] border border-slate-100 dark:border-border-dark transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:shadow-sm"
+            className="animate-slide-up cursor-pointer hover:bg-line/60 transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:shadow-sm"
           >
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                Liquid runway
-              </span>
-              <span className="text-xs font-semibold text-slate-400">
-                {emergencyFund.targetMonths}m goal
-              </span>
-            </div>
-            <p className="font-numeric text-base sm:text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">
-              {emergencyFundRunwayMonths.toFixed(1)} mos
-            </p>
-            <span className="text-[11px] text-slate-400 mt-0.5 block truncate font-numeric">
-              <AnimatedNumber value={emergencyFund.currentSaved} animateOnMount={true} /> saved
-            </span>
-          </div>
+            <Stat
+              label="Liquid runway"
+              icon={<span className="text-xs font-semibold text-ink-3">{emergencyFund.targetMonths}m goal</span>}
+              value={`${emergencyFundRunwayMonths.toFixed(1)} mos`}
+              sub={<><Money value={emergencyFund.currentSaved} size="xs" /> saved</>}
+            />
+          </Card>
         </div>
-      </div>
+      </Card>
 
       {/* MOBILE SEGMENTED VIEW SWITCHER (sm:hidden) - Sticky beneath top navbar */}
-      <div className="sm:hidden sticky top-14 z-20 -mx-4 px-4 py-2 bg-[#F8F9FA]/95 dark:bg-[#0B0E14]/95 backdrop-blur-md transition-all">
-        <div className="flex items-center p-1 rounded-2xl bg-slate-100 dark:bg-inset-dark border border-slate-200/80 dark:border-border-dark text-xs font-bold shadow-xs">
+      <div className="sm:hidden sticky top-14 z-20 -mx-4 px-4 py-2 bg-app/95 dark:bg-app/95 backdrop-blur-md transition-colors">
+        <div className="flex items-center p-1 rounded-2xl bg-sunken border border-line text-xs font-bold shadow-xs">
           <button
             type="button"
             onClick={() => handleTabChange('overview')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl transition-all ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl transition-colors ${
               mobileTab === 'overview'
-                ? 'bg-white dark:bg-active-dark text-slate-900 dark:text-[#F5B742] shadow-xs'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                ? 'bg-surface dark:bg-line text-ink-1 dark:text-reward shadow-xs'
+                : 'text-ink-3 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
             <Wallet className="w-3.5 h-3.5" />
@@ -283,10 +262,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx, onEdi
           <button
             type="button"
             onClick={() => handleTabChange('commitments')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl transition-all ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl transition-colors ${
               mobileTab === 'commitments'
-                ? 'bg-white dark:bg-active-dark text-slate-900 dark:text-[#F5B742] shadow-xs'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                ? 'bg-surface dark:bg-line text-ink-1 dark:text-reward shadow-xs'
+                : 'text-ink-3 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
             <CalendarClock className="w-3.5 h-3.5" />

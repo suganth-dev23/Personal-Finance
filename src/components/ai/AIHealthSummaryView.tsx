@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import {
-  Sparkles,
-  Key,
-  Bot,
-  AlertCircle,
-  CheckCircle,
-  Copy,
-  Download,
-  Trash2,
-  ExternalLink,
-  ShieldCheck,
-  RefreshCw,
+ Sparkles,
+ Key,
+ Bot,
+ AlertCircle,
+ CheckCircle,
+ Copy,
+ Download,
+ Trash2,
+ ExternalLink,
+ ShieldCheck,
+ RefreshCw,
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { AIProvider } from '../../types/finance';
@@ -20,452 +20,452 @@ import { formatINR } from '../../utils/currency';
 import { copyToClipboard } from '../../utils/clipboard';
 
 const PROVIDER_INFO: Record<AIProvider, { name: string; tag: string; link: string; defaultModel: string; note: string }> = {
-  gemini: {
-    name: 'Google Gemini',
-    tag: 'Recommended (Generous Free Tier)',
-    link: 'https://aistudio.google.com/app/apikey',
-    defaultModel: DEFAULT_AI_MODELS.gemini,
-    note: 'Google AI Studio offers a free tier with high limits and zero backend needed. 100% direct client communication.',
-  },
-  openai: {
-    name: 'OpenAI (ChatGPT)',
-    tag: 'Requires API Credits',
-    link: 'https://platform.openai.com/api-keys',
-    defaultModel: DEFAULT_AI_MODELS.openai,
-    note: 'Requires an active OpenAI developer account with billing or prepaid trial credits.',
-  },
-  anthropic: {
-    name: 'Anthropic (Claude)',
-    tag: 'Requires API Credits',
-    link: 'https://console.anthropic.com/settings/keys',
-    defaultModel: DEFAULT_AI_MODELS.anthropic,
-    note: 'Requires an active Anthropic Console account with prepaid API credits. Direct browser mode is supported.',
-  },
+ gemini: {
+ name: 'Google Gemini',
+ tag: 'Recommended (Generous Free Tier)',
+ link: 'https://aistudio.google.com/app/apikey',
+ defaultModel: DEFAULT_AI_MODELS.gemini,
+ note: 'Google AI Studio offers a free tier with high limits and zero backend needed. 100% direct client communication.',
+ },
+ openai: {
+ name: 'OpenAI (ChatGPT)',
+ tag: 'Requires API Credits',
+ link: 'https://platform.openai.com/api-keys',
+ defaultModel: DEFAULT_AI_MODELS.openai,
+ note: 'Requires an active OpenAI developer account with billing or prepaid trial credits.',
+ },
+ anthropic: {
+ name: 'Anthropic (Claude)',
+ tag: 'Requires API Credits',
+ link: 'https://console.anthropic.com/settings/keys',
+ defaultModel: DEFAULT_AI_MODELS.anthropic,
+ note: 'Requires an active Anthropic Console account with prepaid API credits. Direct browser mode is supported.',
+ },
 };
 
 export const AIHealthSummaryView: React.FC = () => {
-  const {
-    aiSettings,
-    updateAISettings,
-    aiReports,
-    saveAIReport,
-    deleteAIReport,
-    getAggregatesForAI,
-    currentMonthIncome,
-    currentMonthExpense,
-    currentMonthSavingsRate,
-    totalInvestmentValue,
-    emergencyFundRunwayMonths,
-  } = useFinance();
+ const {
+ aiSettings,
+ updateAISettings,
+ aiReports,
+ saveAIReport,
+ deleteAIReport,
+ getAggregatesForAI,
+ currentMonthIncome,
+ currentMonthExpense,
+ currentMonthSavingsRate,
+ totalInvestmentValue,
+ emergencyFundRunwayMonths,
+ } = useFinance();
 
-  const [provider, setProvider] = useState<AIProvider>(aiSettings.provider || 'gemini');
-  const [apiKey, setApiKey] = useState(aiSettings.apiKey || '');
-  const [showKey, setShowKey] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
+ const [provider, setProvider] = useState<AIProvider>(aiSettings.provider || 'gemini');
+ const [apiKey, setApiKey] = useState(aiSettings.apiKey || '');
+ const [showKey, setShowKey] = useState(false);
+ const [loading, setLoading] = useState(false);
+ const [errorMsg, setErrorMsg] = useState<string | null>(null);
+ const [copied, setCopied] = useState(false);
 
-  const selectedProviderInfo = PROVIDER_INFO[provider];
+ const selectedProviderInfo = PROVIDER_INFO[provider];
 
-  const handleSaveKey = () => {
-    updateAISettings({
-      provider,
-      apiKey: apiKey.trim(),
-      model: PROVIDER_INFO[provider].defaultModel,
-    });
-    alert('API Key stored securely in your browser local storage!');
-  };
+ const handleSaveKey = () => {
+ updateAISettings({
+ provider,
+ apiKey: apiKey.trim(),
+ model: PROVIDER_INFO[provider].defaultModel,
+ });
+ alert('API Key stored securely in your browser local storage!');
+ };
 
-  const handleGenerate = async () => {
-    if (!apiKey.trim()) {
-      setErrorMsg(`Please enter and save your ${selectedProviderInfo.name} API key first.`);
-      return;
-    }
+ const handleGenerate = async () => {
+ if (!apiKey.trim()) {
+ setErrorMsg(`Please enter and save your ${selectedProviderInfo.name} API key first.`);
+ return;
+ }
 
-    setLoading(true);
-    setErrorMsg(null);
+ setLoading(true);
+ setErrorMsg(null);
 
-    try {
-      const defaultModel = PROVIDER_INFO[provider].defaultModel;
-      updateAISettings({
-        provider,
-        apiKey: apiKey.trim(),
-        model: defaultModel,
-      });
+ try {
+ const defaultModel = PROVIDER_INFO[provider].defaultModel;
+ updateAISettings({
+ provider,
+ apiKey: apiKey.trim(),
+ model: defaultModel,
+ });
 
-      const aggregates = getAggregatesForAI();
-      const summaryText = await generateFinancialSummary(
-        { provider, apiKey: apiKey.trim(), model: defaultModel },
-        aggregates
-      );
+ const aggregates = getAggregatesForAI();
+ const summaryText = await generateFinancialSummary(
+ { provider, apiKey: apiKey.trim(), model: defaultModel },
+ aggregates
+ );
 
-      saveAIReport({
-        provider,
-        model: defaultModel,
-        summaryText,
-        financialSnapshot: {
-          monthlyIncome: currentMonthIncome,
-          monthlyExpense: currentMonthExpense,
-          savingsRate: currentMonthSavingsRate,
-          topExpenseCategory: aggregates.categorySpending[0]?.category || 'N/A',
-          emergencyFundMonths: emergencyFundRunwayMonths,
-          totalInvestments: totalInvestmentValue,
-          activeGoalsCount: aggregates.goals.length,
-        },
-      });
-    } catch (err: any) {
-      setErrorMsg(err.message || `Couldn't reach ${selectedProviderInfo.name}. Please check your API key in Settings.`);
-    } finally {
-      setLoading(false);
-    }
-  };
+ saveAIReport({
+ provider,
+ model: defaultModel,
+ summaryText,
+ financialSnapshot: {
+ monthlyIncome: currentMonthIncome,
+ monthlyExpense: currentMonthExpense,
+ savingsRate: currentMonthSavingsRate,
+ topExpenseCategory: aggregates.categorySpending[0]?.category || 'N/A',
+ emergencyFundMonths: emergencyFundRunwayMonths,
+ totalInvestments: totalInvestmentValue,
+ activeGoalsCount: aggregates.goals.length,
+ },
+ });
+ } catch (err: any) {
+ setErrorMsg(err.message || `Couldn't reach ${selectedProviderInfo.name}. Please check your API key in Settings.`);
+ } finally {
+ setLoading(false);
+ }
+ };
 
-  const activeReport = aiReports[0];
+ const activeReport = aiReports[0];
 
-  const handleCopy = async (text: string) => {
-    const success = await copyToClipboard(text);
-    if (success) {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
+ const handleCopy = async (text: string) => {
+ const success = await copyToClipboard(text);
+ if (success) {
+ setCopied(true);
+ setTimeout(() => setCopied(false), 2000);
+ }
+ };
 
-  const handleDownload = (text: string) => {
-    const blob = new Blob([text], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `dhanveda_ai_financial_summary_${new Date().toISOString().split('T')[0]}.md`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+ const handleDownload = (text: string) => {
+ const blob = new Blob([text], { type: 'text/markdown' });
+ const url = URL.createObjectURL(blob);
+ const a = document.createElement('a');
+ a.href = url;
+ a.download = `dhanveda_ai_financial_summary_${new Date().toISOString().split('T')[0]}.md`;
+ a.click();
+ URL.revokeObjectURL(url);
+ };
 
-  return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-16">
-      {/* Hero Overview: Mineral Card with Gold AI Highlight */}
-      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-card-dark text-slate-900 dark:text-white p-6 sm:p-8 border border-slate-200/90 dark:border-border-dark shadow-sm">
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-500/10 dark:bg-amber-400/10 text-amber-600 dark:text-amber-400">
-                <Sparkles className="h-4 w-4" />
-              </span>
-              <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
-                FINANCIAL HEALTH INTELLIGENCE
-              </span>
-            </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
-              Private Client-Side Intelligence Engine
-            </p>
-            <div className="flex items-baseline gap-3">
-              <h2 className="text-3xl sm:text-4xl font-black font-numeric tracking-tight text-slate-900 dark:text-white">
-                Zero-Telemetry
-              </h2>
-              <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
-                100% private in-browser
-              </span>
-            </div>
-            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-              Direct client-to-API inference with Gemini, Claude, or ChatGPT • Zero server-side telemetry
-            </p>
-          </div>
+ return (
+ <div className="space-y-6 max-w-7xl mx-auto pb-16">
+ {/* Hero Overview: Mineral Card with Gold AI Highlight */}
+ <div className="relative overflow-hidden rounded-2xl bg-surface text-ink-1 p-6 sm:p-8 border border-line shadow-sm">
+ <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-reward-fill to-transparent opacity-80" />
+ <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+ <div>
+ <div className="flex items-center gap-2 mb-2">
+ <span className="flex h-6 w-6 items-center justify-center rounded-xl bg-primary-tint text-primary">
+ <Sparkles className="h-4 w-4" />
+ </span>
+ <span className="text-xs font-bold uppercase tracking-wider text-ink-3">
+ FINANCIAL HEALTH INTELLIGENCE
+ </span>
+ </div>
+ <p className="text-xs text-ink-3 mb-1">
+ Private Client-Side Intelligence Engine
+ </p>
+ <div className="flex items-baseline gap-3">
+ <h2 className="text-3xl sm:text-4xl font-black font-numeric tracking-tight text-ink-1">
+ Zero-Telemetry
+ </h2>
+ <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+ 100% private in-browser
+ </span>
+ </div>
+ <p className="mt-2 text-xs text-ink-3">
+ Direct client-to-API inference with Gemini, Claude, or ChatGPT • Zero server-side telemetry
+ </p>
+ </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              onClick={handleGenerate}
-              disabled={loading}
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-3 text-sm font-bold text-slate-950 shadow-sm hover:from-amber-400 hover:to-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 dark:focus:ring-offset-slate-900 transition-all active:scale-[0.98] disabled:opacity-50"
-            >
-              {loading ? (
-                <>
-                  <RefreshCw className="h-4 w-4 animate-spin" />
-                  <span>Synthesizing...</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="h-4 w-4 stroke-[2.5]" />
-                  <span>Generate Health Assessment</span>
-                </>
-              )}
-            </button>
-          </div>
-        </div>
+ <div className="flex flex-wrap items-center gap-3">
+ <button
+ onClick={handleGenerate}
+ disabled={loading}
+ className="inline-flex items-center gap-2 rounded-xl bg-primary hover:opacity-95 text-on-primary px-5 py-3 text-sm font-bold text-slate-950 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-slate-900 transition-colors active:scale-[0.98] disabled:opacity-50"
+ >
+ {loading ? (
+ <>
+ <RefreshCw className="h-4 w-4 animate-spin" />
+ <span>Synthesizing...</span>
+ </>
+ ) : (
+ <>
+ <Sparkles className="h-4 w-4 stroke-[2.5]" />
+ <span>Generate Health Assessment</span>
+ </>
+ )}
+ </button>
+ </div>
+ </div>
 
-        {/* 4-column summary strip */}
-        <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-slate-200/80 dark:border-border-dark">
-          <div className="rounded-2xl bg-slate-50 dark:bg-inset-dark p-3.5 border border-slate-200/60 dark:border-border-dark/60">
-            <span className="text-xs text-slate-500 dark:text-slate-400">Monthly Inflow</span>
-            <p className="text-lg font-bold font-numeric text-emerald-600 dark:text-emerald-400 mt-0.5">
-              +{formatINR(currentMonthIncome)}
-            </p>
-          </div>
+ {/* 4-column summary strip */}
+ <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-line">
+ <div className="rounded-2xl bg-sunken p-3.5 border border-line">
+ <span className="text-xs text-ink-3">Monthly Inflow</span>
+ <p className="text-lg font-bold font-numeric text-emerald-600 dark:text-emerald-400 mt-0.5">
+ +{formatINR(currentMonthIncome)}
+ </p>
+ </div>
 
-          <div className="rounded-2xl bg-slate-50 dark:bg-inset-dark p-3.5 border border-slate-200/60 dark:border-border-dark/60">
-            <span className="text-xs text-slate-500 dark:text-slate-400">Monthly Outflow</span>
-            <p className="text-lg font-bold font-numeric text-rose-600 dark:text-rose-400 mt-0.5">
-              -{formatINR(currentMonthExpense)}
-            </p>
-          </div>
+ <div className="rounded-2xl bg-sunken p-3.5 border border-line">
+ <span className="text-xs text-ink-3">Monthly Outflow</span>
+ <p className="text-lg font-bold font-numeric text-rose-600 dark:text-rose-400 mt-0.5">
+ -{formatINR(currentMonthExpense)}
+ </p>
+ </div>
 
-          <div className="rounded-2xl bg-slate-50 dark:bg-inset-dark p-3.5 border border-slate-200/60 dark:border-border-dark/60">
-            <span className="text-xs text-slate-500 dark:text-slate-400">Savings Rate</span>
-            <p className="text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">
-              {currentMonthSavingsRate.toFixed(1)}%
-            </p>
-          </div>
+ <div className="rounded-2xl bg-sunken p-3.5 border border-line">
+ <span className="text-xs text-ink-3">Savings Rate</span>
+ <p className="text-lg font-bold font-numeric text-ink-1 mt-0.5">
+ {currentMonthSavingsRate.toFixed(1)}%
+ </p>
+ </div>
 
-          <div className="rounded-2xl bg-slate-50 dark:bg-inset-dark p-3.5 border border-slate-200/60 dark:border-border-dark/60">
-            <span className="text-xs text-slate-500 dark:text-slate-400">Liquid Runway</span>
-            <p className="text-lg font-bold font-numeric text-teal-600 dark:text-teal-400 mt-0.5">
-              {emergencyFundRunwayMonths.toFixed(1)} mos
-            </p>
-          </div>
-        </div>
-      </div>
+ <div className="rounded-2xl bg-sunken p-3.5 border border-line">
+ <span className="text-xs text-ink-3">Liquid Runway</span>
+ <p className="text-lg font-bold font-numeric text-teal-600 dark:text-teal-400 mt-0.5">
+ {emergencyFundRunwayMonths.toFixed(1)} mos
+ </p>
+ </div>
+ </div>
+ </div>
 
-      {/* Section Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">
-            AI Engine Configuration
-          </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Select your provider and manage private API keys (stored solely in browser IndexedDB)
-          </p>
-        </div>
-        <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-          <ShieldCheck className="w-3.5 h-3.5" />
-          <span>Zero-Telemetry</span>
-        </span>
-      </div>
+ {/* Section Header */}
+ <div className="flex items-center justify-between">
+ <div>
+ <h3 className="text-lg font-bold text-ink-1 tracking-tight">
+ AI Engine Configuration
+ </h3>
+ <p className="text-xs text-ink-3">
+ Select your provider and manage private API keys (stored solely in browser IndexedDB)
+ </p>
+ </div>
+ <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+ <ShieldCheck className="w-3.5 h-3.5" />
+ <span>Zero-Telemetry</span>
+ </span>
+ </div>
 
-      {/* BYOK Settings Card */}
-      <div className="rounded-3xl bg-white dark:bg-card-dark text-slate-900 dark:text-white p-6 sm:p-7 border border-slate-200/90 dark:border-border-dark shadow-sm space-y-6">
-        {/* Provider Tabs */}
-        <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
-            Select AI Intelligence Engine
-          </label>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {(Object.keys(PROVIDER_INFO) as AIProvider[]).map(pKey => {
-              const info = PROVIDER_INFO[pKey];
-              const isSelected = provider === pKey;
+ {/* BYOK Settings Card */}
+ <div className="rounded-2xl bg-surface text-ink-1 p-6 sm:p-7 border border-line shadow-sm space-y-6">
+ {/* Provider Tabs */}
+ <div>
+ <label className="block text-xs font-bold uppercase tracking-wider text-ink-3 mb-3">
+ Select AI Intelligence Engine
+ </label>
+ <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+ {(Object.keys(PROVIDER_INFO) as AIProvider[]).map(pKey => {
+ const info = PROVIDER_INFO[pKey];
+ const isSelected = provider === pKey;
 
-              return (
-                <button
-                  key={pKey}
-                  type="button"
-                  onClick={() => {
-                    setProvider(pKey);
-                    if (aiSettings.provider === pKey) {
-                      setApiKey(aiSettings.apiKey || '');
-                    }
-                  }}
-                  className={`press p-4 rounded-2xl text-left border transition-all duration-200 ${
-                    isSelected
-                      ? 'border-amber-500 bg-amber-500/10 ring-1 ring-amber-500/40'
-                      : 'border-slate-200/90 dark:border-border-dark bg-slate-50 dark:bg-inset-dark hover:border-slate-300 dark:hover:border-slate-700'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-sm text-slate-900 dark:text-white">
-                      {info.name}
-                    </span>
-                    {pKey === 'gemini' && (
-                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                        FREE TIER
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-slate-400 mt-1.5 line-clamp-1">{info.tag}</p>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+ return (
+ <button
+ key={pKey}
+ type="button"
+ onClick={() => {
+ setProvider(pKey);
+ if (aiSettings.provider === pKey) {
+ setApiKey(aiSettings.apiKey || '');
+ }
+ }}
+ className={`press p-4 rounded-2xl text-left border transition-colors duration-200 ${
+ isSelected
+ ? 'border-line bg-primary-tint ring-1 ring-primary/40'
+ : 'border-line bg-sunken hover:border-line-input'
+ }`}
+ >
+ <div className="flex items-center justify-between">
+ <span className="font-bold text-sm text-ink-1">
+ {info.name}
+ </span>
+ {pKey === 'gemini' && (
+ <span className="text-xs font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+ FREE TIER
+ </span>
+ )}
+ </div>
+ <p className="text-xs text-ink-3 mt-1.5 line-clamp-1">{info.tag}</p>
+ </button>
+ );
+ })}
+ </div>
+ </div>
 
-        {/* Provider Note & Key input */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-inset-dark border border-slate-200/80 dark:border-border-dark space-y-3.5">
-          <div className="flex items-start justify-between gap-2">
-            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-              <span className="font-bold text-slate-900 dark:text-white">{selectedProviderInfo.name}: </span>
-              {selectedProviderInfo.note}
-            </p>
-            <a
-              href={selectedProviderInfo.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 shrink-0"
-            >
-              <span>Get API Key</span>
-              <ExternalLink className="w-3 h-3" />
-            </a>
-          </div>
+ {/* Provider Note & Key input */}
+ <div className="p-4 sm:p-5 rounded-2xl bg-sunken border border-line space-y-3.5">
+ <div className="flex items-start justify-between gap-2">
+ <p className="text-xs text-ink-2 leading-relaxed">
+ <span className="font-bold text-ink-1">{selectedProviderInfo.name}: </span>
+ {selectedProviderInfo.note}
+ </p>
+ <a
+ href={selectedProviderInfo.link}
+ target="_blank"
+ rel="noopener noreferrer"
+ className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 shrink-0"
+ >
+ <span>Get API Key</span>
+ <ExternalLink className="w-3 h-3" />
+ </a>
+ </div>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
-            <div className="relative flex-1">
-              <Key className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type={showKey ? 'text' : 'password'}
-                value={apiKey}
-                onChange={e => setApiKey(e.target.value)}
-                placeholder={`Paste your ${selectedProviderInfo.name} API Key...`}
-                className="w-full pl-10 pr-20 py-2.5 bg-white dark:bg-card-dark border border-slate-200/90 dark:border-border-dark rounded-xl text-xs font-mono text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500"
-              />
-              <button
-                type="button"
-                onClick={() => setShowKey(!showKey)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[11px] font-semibold text-slate-400 hover:text-slate-700 dark:hover:text-white"
-              >
-                {showKey ? 'Hide' : 'Show'}
-              </button>
-            </div>
+ <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+ <div className="relative flex-1">
+ <Key className="w-4 h-4 text-ink-3 absolute left-3.5 top-1/2 -translate-y-1/2" />
+ <input
+ type={showKey ? 'text' : 'password'}
+ value={apiKey}
+ onChange={e => setApiKey(e.target.value)}
+ placeholder={`Paste your ${selectedProviderInfo.name} API Key...`}
+ className="w-full pl-10 pr-20 py-2.5 bg-surface border border-line rounded-xl text-xs font-mono text-ink-1 placeholder-slate-400 focus:outline-none focus:border-emerald-500"
+ />
+ <button
+ type="button"
+ onClick={() => setShowKey(!showKey)}
+ className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-ink-3 hover:text-ink-1"
+ >
+ {showKey ? 'Hide' : 'Show'}
+ </button>
+ </div>
 
-            <button
-              onClick={handleSaveKey}
-              className="px-5 py-2.5 rounded-xl bg-slate-100 dark:bg-active-dark hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-white text-xs font-bold border border-slate-200/80 dark:border-border-dark transition-colors"
-            >
-              Save Key
-            </button>
-          </div>
-        </div>
+ <button
+ onClick={handleSaveKey}
+ className="px-5 py-2.5 rounded-xl bg-sunken hover:bg-sunken/80 text-ink-1 text-xs font-bold border border-line transition-colors"
+ >
+ Save Key
+ </button>
+ </div>
+ </div>
 
-        {/* Generate Button & Context Pill */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 pt-2 border-t border-slate-200/80 dark:border-border-dark">
-          <div className="text-xs text-slate-500 dark:text-slate-400 flex flex-wrap gap-2 items-center">
-            <span>Context:</span>
-            <span className="font-semibold text-slate-900 dark:text-white font-numeric">Income: {formatINR(currentMonthIncome)}</span>
-            <span>•</span>
-            <span className="font-semibold text-slate-900 dark:text-white font-numeric">Expenses: {formatINR(currentMonthExpense)}</span>
-            <span>•</span>
-            <span className="font-semibold text-emerald-600 dark:text-emerald-400 font-numeric">Savings: {currentMonthSavingsRate.toFixed(1)}%</span>
-          </div>
+ {/* Generate Button & Context Pill */}
+ <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 pt-2 border-t border-line">
+ <div className="text-xs text-ink-3 flex flex-wrap gap-2 items-center">
+ <span>Context:</span>
+ <span className="font-semibold text-ink-1 font-numeric">Income: {formatINR(currentMonthIncome)}</span>
+ <span>•</span>
+ <span className="font-semibold text-ink-1 font-numeric">Expenses: {formatINR(currentMonthExpense)}</span>
+ <span>•</span>
+ <span className="font-semibold text-emerald-600 dark:text-emerald-400 font-numeric">Savings: {currentMonthSavingsRate.toFixed(1)}%</span>
+ </div>
 
-          <button
-            onClick={handleGenerate}
-            disabled={loading}
-            className="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-extrabold text-xs sm:text-sm shadow-md transition-all duration-200 active:scale-95 disabled:opacity-50"
-          >
-            {loading ? (
-              <>
-                <RefreshCw className="w-4 h-4 animate-spin" />
-                <span>Synthesizing Financial Telemetry...</span>
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-4 h-4 text-slate-950" />
-                <span>Generate Health Assessment</span>
-              </>
-            )}
-          </button>
-        </div>
+ <button
+ onClick={handleGenerate}
+ disabled={loading}
+ className="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-primary hover:opacity-95 text-on-primary shadow-xs font-extrabold text-xs sm:text-sm shadow-md transition-colors duration-200 active:scale-95 disabled:opacity-50"
+ >
+ {loading ? (
+ <>
+ <RefreshCw className="w-4 h-4 animate-spin" />
+ <span>Synthesizing Financial Telemetry...</span>
+ </>
+ ) : (
+ <>
+ <Sparkles className="w-4 h-4 text-slate-950" />
+ <span>Generate Health Assessment</span>
+ </>
+ )}
+ </button>
+ </div>
 
-        {errorMsg && (
-          <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-2xl flex items-start gap-3 text-xs text-rose-600 dark:text-rose-300">
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-500" />
-            <div className="flex-1">
-              <span className="font-bold">Error: </span>
-              {errorMsg}
-            </div>
-          </div>
-        )}
-      </div>
+ {errorMsg && (
+ <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-2xl flex items-start gap-3 text-xs text-rose-600 dark:text-rose-300">
+ <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-500" />
+ <div className="flex-1">
+ <span className="font-bold">Error: </span>
+ {errorMsg}
+ </div>
+ </div>
+ )}
+ </div>
 
-      {/* Generated Report Card */}
-      {activeReport ? (
-        <div className="bg-white dark:bg-card-dark rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/90 dark:border-border-dark space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-border-dark">
-            <div>
-              <div className="flex items-center gap-2.5">
-                <span className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                  <CheckCircle className="w-5 h-5" />
-                </span>
-                <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
-                  Latest Financial Health Assessment
-                </h3>
-              </div>
-              <p className="text-xs text-slate-400 mt-1">
-                Generated via {activeReport.provider.toUpperCase()} ({activeReport.model}) on {formatDateTime(activeReport.createdAt)}
-              </p>
-            </div>
+ {/* Generated Report Card */}
+ {activeReport ? (
+ <div className="bg-surface rounded-2xl p-6 sm:p-8 shadow-sm border border-line space-y-6">
+ <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-line">
+ <div>
+ <div className="flex items-center gap-2.5">
+ <span className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+ <CheckCircle className="w-5 h-5" />
+ </span>
+ <h3 className="text-base sm:text-lg font-bold text-ink-1">
+ Latest Financial Health Assessment
+ </h3>
+ </div>
+ <p className="text-xs text-ink-3 mt-1">
+ Generated via {activeReport.provider.toUpperCase()} ({activeReport.model}) on {formatDateTime(activeReport.createdAt)}
+ </p>
+ </div>
 
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => handleCopy(activeReport.summaryText)}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-inset-dark hover:bg-slate-200 dark:hover:bg-active-dark text-slate-700 dark:text-slate-300 text-xs font-semibold transition-colors border border-slate-200/60 dark:border-border-dark"
-                title="Copy Markdown"
-              >
-                <Copy className="w-3.5 h-3.5" />
-                <span>{copied ? 'Copied!' : 'Copy'}</span>
-              </button>
+ <div className="flex items-center gap-2">
+ <button
+ onClick={() => handleCopy(activeReport.summaryText)}
+ className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-sunken hover:bg-sunken/80 text-ink-2 text-xs font-semibold transition-colors border border-line"
+ title="Copy Markdown"
+ >
+ <Copy className="w-3.5 h-3.5" />
+ <span>{copied ? 'Copied!' : 'Copy'}</span>
+ </button>
 
-              <button
-                onClick={() => handleDownload(activeReport.summaryText)}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-inset-dark hover:bg-slate-200 dark:hover:bg-active-dark text-slate-700 dark:text-slate-300 text-xs font-semibold transition-colors border border-slate-200/60 dark:border-border-dark"
-                title="Export as Markdown file"
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span>Export MD</span>
-              </button>
-            </div>
-          </div>
+ <button
+ onClick={() => handleDownload(activeReport.summaryText)}
+ className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-sunken hover:bg-sunken/80 text-ink-2 text-xs font-semibold transition-colors border border-line"
+ title="Export as Markdown file"
+ >
+ <Download className="w-3.5 h-3.5" />
+ <span>Export MD</span>
+ </button>
+ </div>
+ </div>
 
-          {/* Render Summary Content */}
-          <div className="prose dark:prose-invert max-w-none text-sm text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-wrap font-sans bg-slate-50/50 dark:bg-inset-dark/50 p-6 rounded-2xl border border-slate-100 dark:border-border-dark">
-            {activeReport.summaryText}
-          </div>
-        </div>
-      ) : (
-        <div className="text-center py-12 bg-white dark:bg-card-dark rounded-3xl border border-dashed border-slate-200/90 dark:border-border-dark p-8">
-          <Bot className="w-10 h-10 text-slate-400 mx-auto mb-2" />
-          <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">
-            No summary generated yet
-          </h3>
-          <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
-            Choose your AI provider above, paste your API key, and click "Generate Health Assessment".
-          </p>
-        </div>
-      )}
+ {/* Render Summary Content */}
+ <div className="prose dark:prose-invert max-w-none text-sm text-ink-1 leading-relaxed whitespace-pre-wrap font-sans bg-sunken/50 p-6 rounded-2xl border border-line">
+ {activeReport.summaryText}
+ </div>
+ </div>
+ ) : (
+ <div className="text-center py-12 bg-surface rounded-2xl border border-dashed border-line p-8">
+ <Bot className="w-10 h-10 text-ink-3 mx-auto mb-2" />
+ <h3 className="text-base font-bold text-ink-1">
+ No summary generated yet
+ </h3>
+ <p className="text-xs text-ink-3 mt-1 max-w-sm mx-auto">
+ Choose your AI provider above, paste your API key, and click "Generate Health Assessment".
+ </p>
+ </div>
+ )}
 
-      {/* Report History */}
-      {aiReports.length > 1 && (
-        <div className="bg-white dark:bg-card-dark rounded-3xl p-6 shadow-sm border border-slate-200/90 dark:border-border-dark">
-          <h3 className="text-base font-bold text-slate-900 dark:text-white mb-4">
-            Past Reports History ({aiReports.length})
-          </h3>
-          <div className="divide-y divide-slate-100 dark:divide-border-dark">
-            {aiReports.slice(1).map(rep => (
-              <div key={rep.id} className="py-3.5 flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                    Summary via {rep.provider.toUpperCase()}
-                  </p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
-                    {formatDateTime(rep.createdAt)}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleCopy(rep.summaryText)}
-                    className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-inset-dark"
-                    title="Copy"
-                  >
-                    <Copy className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => deleteAIReport(rep.id)}
-                    className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
-                    title="Delete"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
+ {/* Report History */}
+ {aiReports.length > 1 && (
+ <div className="bg-surface rounded-2xl p-6 shadow-sm border border-line">
+ <h3 className="text-base font-bold text-ink-1 mb-4">
+ Past Reports History ({aiReports.length})
+ </h3>
+ <div className="divide-y divide-line">
+ {aiReports.slice(1).map(rep => (
+ <div key={rep.id} className="py-3.5 flex items-center justify-between gap-4">
+ <div>
+ <p className="text-xs font-bold text-ink-1">
+ Summary via {rep.provider.toUpperCase()}
+ </p>
+ <p className="text-xs text-ink-3 mt-0.5">
+ {formatDateTime(rep.createdAt)}
+ </p>
+ </div>
+ <div className="flex items-center gap-2">
+ <button
+ onClick={() => handleCopy(rep.summaryText)}
+ className="p-2 rounded-xl text-ink-3 hover:text-ink-1 hover:bg-sunken"
+ title="Copy"
+ >
+ <Copy className="w-3.5 h-3.5" />
+ </button>
+ <button
+ onClick={() => deleteAIReport(rep.id)}
+ className="p-2 rounded-xl text-ink-3 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+ title="Delete"
+ >
+ <Trash2 className="w-3.5 h-3.5" />
+ </button>
+ </div>
+ </div>
+ ))}
+ </div>
+ </div>
+ )}
+ </div>
+ );
 };

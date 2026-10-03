@@ -9,7 +9,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     
     <!-- PWA & Mobile Web App Meta Tags -->
-    <meta name="theme-color" content="#0B0E14" />
+    <meta name="theme-color" content="#F7F6F3" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0B0E14" media="(prefers-color-scheme: dark)" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -18,10 +19,10 @@
 
     <title>DhanVeda — INR Personal Finance & Wealth Tracker</title>
     
-    <!-- Google Fonts: Plus Jakarta Sans (UI) & JetBrains Mono (Precision Tabular Numerals) -->
+    <!-- Google Fonts: Plus Jakarta Sans (UI) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- Google Identity Services client script for OAuth 2.0 Token Client -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -41,7 +42,7 @@
       })();
     </script>
   </head>
-  <body class="h-full bg-[#F8F9FA] dark:bg-[#0B0E14] text-slate-900 dark:text-slate-100 font-['Plus_Jakarta_Sans',sans-serif]">
+  <body class="h-full bg-app text-ink-1 font-['Plus_Jakarta_Sans',sans-serif]">
     <div id="root" class="min-h-full"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

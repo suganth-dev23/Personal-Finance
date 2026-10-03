@@ -15,10 +15,10 @@ export const ViewSkeleton: React.FC<ViewSkeletonProps> = ({ view = 'dashboard' }
     return (
       <div className="space-y-6" aria-busy="true" aria-live="polite">
         {/* Header Hero Banner */}
-        <div className={`${SHIMMER_BASE} h-36 rounded-3xl p-6 sm:p-8 flex flex-col justify-between`}>
+        <div className={`${SHIMMER_BASE} h-36 rounded-2xl p-6 sm:p-8 flex flex-col justify-between`}>
           <div className="flex items-center justify-between">
             <div className="space-y-2">
-              <div className="h-4 w-32 bg-slate-100 dark:bg-inset-dark rounded-lg" />
+              <div className="h-4 w-32 bg-slate-100 dark:bg-inset-dark rounded-xl" />
               <div className="h-7 w-48 bg-slate-100 dark:bg-inset-dark rounded-xl" />
             </div>
             <div className="h-10 w-32 bg-slate-100 dark:bg-inset-dark rounded-xl" />
@@ -37,7 +37,7 @@ export const ViewSkeleton: React.FC<ViewSkeletonProps> = ({ view = 'dashboard' }
         </div>
 
         {/* Table Rows Skeleton */}
-        <div className={`${SHIMMER_BASE} rounded-3xl p-6 space-y-4`}>
+        <div className={`${SHIMMER_BASE} rounded-2xl p-6 space-y-4`}>
           <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-inset-dark">
             <div className="h-4 w-28 bg-slate-100 dark:bg-inset-dark rounded-md" />
             <div className="h-4 w-20 bg-slate-100 dark:bg-inset-dark rounded-md" />
@@ -75,10 +75,10 @@ export const ViewSkeleton: React.FC<ViewSkeletonProps> = ({ view = 'dashboard' }
     return (
       <div className="space-y-6" aria-busy="true" aria-live="polite">
         {/* Hero Card Banner */}
-        <div className={`${SHIMMER_BASE} h-40 rounded-3xl p-6 sm:p-8 flex flex-col justify-between`}>
+        <div className={`${SHIMMER_BASE} h-40 rounded-2xl p-6 sm:p-8 flex flex-col justify-between`}>
           <div className="flex items-center justify-between">
             <div className="space-y-2">
-              <div className="h-4 w-36 bg-slate-100 dark:bg-inset-dark rounded-lg" />
+              <div className="h-4 w-36 bg-slate-100 dark:bg-inset-dark rounded-xl" />
               <div className="h-8 w-52 bg-slate-100 dark:bg-inset-dark rounded-xl" />
             </div>
             <div className="h-11 w-36 bg-slate-100 dark:bg-inset-dark rounded-xl" />
@@ -91,7 +91,7 @@ export const ViewSkeleton: React.FC<ViewSkeletonProps> = ({ view = 'dashboard' }
           {[1, 2, 3, 4, 5, 6].map(i => (
             <div
               key={i}
-              className={`${SHIMMER_BASE} h-48 rounded-3xl p-5 flex flex-col justify-between`}
+              className={`${SHIMMER_BASE} h-48 rounded-2xl p-5 flex flex-col justify-between`}
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
@@ -101,7 +101,7 @@ export const ViewSkeleton: React.FC<ViewSkeletonProps> = ({ view = 'dashboard' }
                     <div className="h-3 w-20 bg-slate-100/70 dark:bg-inset-dark/70 rounded-md" />
                   </div>
                 </div>
-                <div className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-inset-dark" />
+                <div className="w-6 h-6 rounded-xl bg-slate-100 dark:bg-inset-dark" />
               </div>
               <div className="space-y-2 pt-4">
                 <div className="h-2 w-full bg-slate-100 dark:bg-inset-dark rounded-full" />
@@ -121,21 +121,21 @@ export const ViewSkeleton: React.FC<ViewSkeletonProps> = ({ view = 'dashboard' }
   if (view === 'settings' || view === 'import') {
     return (
       <div className="space-y-6 max-w-7xl mx-auto" aria-busy="true" aria-live="polite">
-        <div className={`${SHIMMER_BASE} h-40 rounded-3xl p-6 sm:p-8 flex flex-col justify-between`}>
+        <div className={`${SHIMMER_BASE} h-40 rounded-2xl p-6 sm:p-8 flex flex-col justify-between`}>
           <div className="space-y-2">
-            <div className="h-4 w-40 bg-slate-100 dark:bg-inset-dark rounded-lg" />
+            <div className="h-4 w-40 bg-slate-100 dark:bg-inset-dark rounded-xl" />
             <div className="h-8 w-60 bg-slate-100 dark:bg-inset-dark rounded-xl" />
           </div>
           <div className="h-3 w-72 bg-slate-100/70 dark:bg-inset-dark/70 rounded-md" />
         </div>
-        <div className={`${SHIMMER_BASE} rounded-3xl p-6 space-y-4`}>
+        <div className={`${SHIMMER_BASE} rounded-2xl p-6 space-y-4`}>
           <div className="h-5 w-48 bg-slate-100 dark:bg-inset-dark rounded-md" />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
             <div className="h-24 bg-slate-50 dark:bg-inset-dark/50 rounded-2xl p-4" />
             <div className="h-24 bg-slate-50 dark:bg-inset-dark/50 rounded-2xl p-4" />
           </div>
         </div>
-        <div className={`${SHIMMER_BASE} rounded-3xl p-6 space-y-4`}>
+        <div className={`${SHIMMER_BASE} rounded-2xl p-6 space-y-4`}>
           <div className="h-5 w-40 bg-slate-100 dark:bg-inset-dark rounded-md" />
           <div className="h-32 bg-slate-50 dark:bg-inset-dark/50 rounded-2xl p-4" />
         </div>
@@ -151,7 +151,7 @@ export const ViewSkeleton: React.FC<ViewSkeletonProps> = ({ view = 'dashboard' }
         {[1, 2, 3, 4].map(i => (
           <div
             key={i}
-            className={`${SHIMMER_BASE} h-32 rounded-3xl p-6 flex flex-col justify-between`}
+            className={`${SHIMMER_BASE} h-32 rounded-2xl p-6 flex flex-col justify-between`}
           >
             <div className="flex items-center justify-between">
               <div className="h-3.5 w-24 bg-slate-100 dark:bg-inset-dark rounded-md" />
@@ -167,7 +167,7 @@ export const ViewSkeleton: React.FC<ViewSkeletonProps> = ({ view = 'dashboard' }
 
       {/* Main Content / Chart Placeholder */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className={`${SHIMMER_BASE} lg:col-span-7 h-80 rounded-3xl p-6 space-y-4`}>
+        <div className={`${SHIMMER_BASE} lg:col-span-7 h-80 rounded-2xl p-6 space-y-4`}>
           <div className="flex items-center justify-between">
             <div className="h-4 w-48 bg-slate-100 dark:bg-inset-dark rounded-md" />
             <div className="h-6 w-24 bg-slate-100 dark:bg-inset-dark rounded-full" />
@@ -182,7 +182,7 @@ export const ViewSkeleton: React.FC<ViewSkeletonProps> = ({ view = 'dashboard' }
           </div>
         </div>
 
-        <div className={`${SHIMMER_BASE} lg:col-span-5 h-80 rounded-3xl p-6 space-y-4`}>
+        <div className={`${SHIMMER_BASE} lg:col-span-5 h-80 rounded-2xl p-6 space-y-4`}>
           <div className="h-4 w-36 bg-slate-100 dark:bg-inset-dark rounded-md" />
           <div className="h-56 w-full bg-slate-50 dark:bg-inset-dark/50 rounded-2xl flex items-center justify-center">
             <div className="w-32 h-32 rounded-full border-8 border-slate-100 dark:border-inset-dark border-t-amber-500 dark:border-t-[#F5B742] animate-spin motion-reduce:animate-none" />
@@ -191,7 +191,7 @@ export const ViewSkeleton: React.FC<ViewSkeletonProps> = ({ view = 'dashboard' }
       </div>
 
       {/* Bottom Table / Cards Placeholder */}
-      <div className={`${SHIMMER_BASE} h-64 rounded-3xl p-6 space-y-4`}>
+      <div className={`${SHIMMER_BASE} h-64 rounded-2xl p-6 space-y-4`}>
         <div className="h-4 w-40 bg-slate-100 dark:bg-inset-dark rounded-md" />
         <div className="space-y-3 pt-2">
           {[1, 2, 3].map(i => (

@@ -1,2280 +1,2289 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
-  Transaction,
-  Category,
-  Budget,
-  EmergencyFund,
-  Investment,
-  DreamGoal,
-  AISettings,
-  AIHealthReport,
-  Contact,
-  SettlementRecord,
-  ContactBalance,
-  SyncStatus,
-  RecurringPayment,
-  RecurringPaymentLog,
-  OwedDirection,
-  SplitEntry,
+ Transaction,
+ Category,
+ Budget,
+ EmergencyFund,
+ Investment,
+ DreamGoal,
+ AISettings,
+ AIHealthReport,
+ Contact,
+ SettlementRecord,
+ ContactBalance,
+ SyncStatus,
+ RecurringPayment,
+ RecurringPaymentLog,
+ OwedDirection,
+ SplitEntry,
 } from '../types/finance';
 import {
-  DEFAULT_CATEGORIES,
-  INITIAL_TRANSACTIONS,
-  INITIAL_BUDGETS,
-  INITIAL_EMERGENCY_FUND,
-  INITIAL_INVESTMENTS,
-  INITIAL_DREAMS,
-  INITIAL_RECURRING_PAYMENTS,
-  INITIAL_RECURRING_PAYMENT_LOGS,
+ DEFAULT_CATEGORIES,
+ INITIAL_TRANSACTIONS,
+ INITIAL_BUDGETS,
+ INITIAL_EMERGENCY_FUND,
+ INITIAL_INVESTMENTS,
+ INITIAL_DREAMS,
+ INITIAL_RECURRING_PAYMENTS,
+ INITIAL_RECURRING_PAYMENT_LOGS,
 } from '../utils/sampleData';
 import { getCurrentMonthYear, getTodayString } from '../utils/date';
+import { rebaseDemoData } from '../utils/rebaseDemoDates';
 import { getPaymentSchedule, calculateMonthlyEquivalent } from '../utils/recurringDates';
 import { DEFAULT_AI_MODELS, FinancialAggregates } from '../services/aiService';
 import {
-  migrateFromLocalStorage,
-  getAllFromStore,
-  saveAllToStore,
-  getSingleRecord,
-  saveSingleRecord,
-  clearAllStores,
-  addTombstone,
-  UserPreferences,
+ migrateFromLocalStorage,
+ getAllFromStore,
+ saveAllToStore,
+ getSingleRecord,
+ saveSingleRecord,
+ clearAllStores,
+ addTombstone,
+ UserPreferences,
 } from '../utils/db';
 import { googleAuthService } from '../services/googleAuth';
 import { driveSyncService } from '../services/driveSync';
 
 export type AppView = 
-  | 'dashboard'
-  | 'transactions'
-  | 'budgets'
-  | 'recurring'
-  | 'categories'
-  | 'emergency'
-  | 'investments'
-  | 'dreams'
-  | 'people'
-  | 'ai'
-  | 'import'
-  | 'settings'
-  | 'badges';
+ | 'dashboard'
+ | 'transactions'
+ | 'budgets'
+ | 'recurring'
+ | 'categories'
+ | 'emergency'
+ | 'investments'
+ | 'dreams'
+ | 'people'
+ | 'ai'
+ | 'import'
+ | 'settings'
+ | 'badges';
 
 export type FinanceEvent =
-  | { type: 'transaction_added'; tx: Transaction; silent?: boolean }
-  | { type: 'transaction_deleted'; count: number }
-  | { type: 'budget_exceeded'; category: string; spent: number; limit: number }
-  | { type: 'dream_contributed'; dreamId: string; dreamName: string; amount: number; isCompleted: boolean }
-  | { type: 'dream_completed'; dream: DreamGoal }
-  | { type: 'emergency_contributed'; amount: number; fundType: 'deposit' | 'withdrawal'; isFullyFunded: boolean }
-  | { type: 'recurring_paid'; paymentName: string; amount: number }
-  | { type: 'settlement_recorded'; contactName: string; amount: number; allSettled: boolean }
-  | { type: 'investment_updated'; totalValue: number }
-  | { type: 'streak_continued'; days: number }
-  | { type: 'streak_broken' }
-  | { type: 'badge_earned'; badge: { id: string; name: string; description: string; icon: string } }
-  | { type: 'recurring_overdue_detected'; count: number; paymentName?: string }
-  | { type: 'bulk_data_loaded' };
+ | { type: 'transaction_added'; tx: Transaction; silent?: boolean }
+ | { type: 'transaction_deleted'; count: number }
+ | { type: 'budget_exceeded'; category: string; spent: number; limit: number }
+ | { type: 'dream_contributed'; dreamId: string; dreamName: string; amount: number; isCompleted: boolean }
+ | { type: 'dream_completed'; dream: DreamGoal }
+ | { type: 'emergency_contributed'; amount: number; fundType: 'deposit' | 'withdrawal'; isFullyFunded: boolean }
+ | { type: 'recurring_paid'; paymentName: string; amount: number }
+ | { type: 'settlement_recorded'; contactName: string; amount: number; allSettled: boolean }
+ | { type: 'investment_updated'; totalValue: number }
+ | { type: 'streak_continued'; days: number }
+ | { type: 'streak_broken' }
+ | { type: 'badge_earned'; badge: { id: string; name: string; description: string; icon: string } }
+ | { type: 'recurring_overdue_detected'; count: number; paymentName?: string }
+ | { type: 'bulk_data_loaded' };
 
 export type FinanceEventListener = (event: FinanceEvent) => void;
 
 interface FinanceContextType {
-  // State
-  currentView: AppView;
-  setCurrentView: (view: AppView) => void;
-  darkMode: boolean;
-  setDarkMode: (val: boolean | ((prev: boolean) => boolean)) => void;
-  isInitialized: boolean;
+ // State
+ currentView: AppView;
+ setCurrentView: (view: AppView) => void;
+ darkMode: boolean;
+ setDarkMode: (val: boolean | ((prev: boolean) => boolean)) => void;
+ isInitialized: boolean;
 
-  // Event Pub/Sub
-  subscribeFinanceEvent: (listener: FinanceEventListener) => () => void;
-  emitFinanceEvent: (event: FinanceEvent) => void;
-  
-  transactions: Transaction[];
-  categories: Category[];
-  budgets: Budget[];
-  emergencyFund: EmergencyFund;
-  investments: Investment[];
-  dreams: DreamGoal[];
-  contacts: Contact[];
-  settlements: SettlementRecord[];
-  recurringPayments: RecurringPayment[];
-  recurringPaymentLogs: RecurringPaymentLog[];
-  aiSettings: AISettings;
-  aiReports: AIHealthReport[];
-  notRecurringTxIds: Set<string>;
-  toggleNotRecurring: (txId: string | string[]) => void;
+ // Event Pub/Sub
+ subscribeFinanceEvent: (listener: FinanceEventListener) => () => void;
+ emitFinanceEvent: (event: FinanceEvent) => void;
+ 
+ transactions: Transaction[];
+ categories: Category[];
+ budgets: Budget[];
+ emergencyFund: EmergencyFund;
+ investments: Investment[];
+ dreams: DreamGoal[];
+ contacts: Contact[];
+ settlements: SettlementRecord[];
+ recurringPayments: RecurringPayment[];
+ recurringPaymentLogs: RecurringPaymentLog[];
+ aiSettings: AISettings;
+ aiReports: AIHealthReport[];
+ notRecurringTxIds: Set<string>;
+ toggleNotRecurring: (txId: string | string[]) => void;
 
-  // Google Drive Cross-Device Sync
-  syncStatus: SyncStatus;
-  lastSyncedAt: string | null;
-  syncError: string | null;
-  isDriveConnected: boolean;
-  driveUserEmail: string | null;
-  triggerSync: (showFeedback?: boolean) => Promise<boolean>;
-  connectDrive: () => Promise<boolean>;
-  disconnectDrive: () => Promise<void>;
-  reloadFromDB: () => Promise<void>;
+ // Google Drive Cross-Device Sync
+ syncStatus: SyncStatus;
+ lastSyncedAt: string | null;
+ syncError: string | null;
+ isDriveConnected: boolean;
+ driveUserEmail: string | null;
+ triggerSync: (showFeedback?: boolean) => Promise<boolean>;
+ connectDrive: () => Promise<boolean>;
+ disconnectDrive: () => Promise<void>;
+ reloadFromDB: () => Promise<void>;
 
-  // Transactions CRUD
-  addTransaction: (tx: Omit<Transaction, 'id' | 'createdAt'>, options?: { silent?: boolean }) => Transaction;
-  addMultipleTransactions: (txs: Omit<Transaction, 'id' | 'createdAt'>[]) => void;
-  updateTransaction: (id: string, tx: Partial<Transaction>) => void;
-  deleteTransaction: (id: string) => void;
-  deleteMultipleTransactions: (ids: string[]) => void;
+ // Transactions CRUD
+ addTransaction: (tx: Omit<Transaction, 'id' | 'createdAt'>, options?: { silent?: boolean }) => Transaction;
+ addMultipleTransactions: (txs: Omit<Transaction, 'id' | 'createdAt'>[]) => void;
+ updateTransaction: (id: string, tx: Partial<Transaction>) => void;
+ deleteTransaction: (id: string) => void;
+ deleteMultipleTransactions: (ids: string[]) => void;
 
-  // Contacts & Splits CRUD
-  addContact: (contact: Omit<Contact, 'id' | 'createdAt'>) => Contact;
-  updateContact: (id: string, contact: Partial<Contact>) => void;
-  deleteContact: (id: string) => void;
-  recordSettlement: (
-    contactId: string,
-    amount: number,
-    note?: string,
-    date?: string,
-    sourceTransactionId?: string,
-    sourceSplitEntryId?: string,
-    linkedTransactionId?: string,
-    direction?: OwedDirection
-  ) => SettlementRecord;
-  updateSettlement: (id: string, updated: Partial<SettlementRecord>) => void;
-  deleteSettlement: (id: string) => void;
-  linkSettlementToTransaction: (settlementId: string, transactionId?: string) => void;
-  quickToggleSettleTransaction: (transactionId: string, splitEntryId?: string) => SettlementRecord | undefined;
-  assignSplitToContact: (transactionId: string, splitEntryId: string, contactId: string) => void;
-  settleSplitEntry: (
-    transactionId: string,
-    splitEntryId: string,
-    options: {
-      settled: boolean;
-      settledAmount?: number;
-      linkedTransactionId?: string;
-      note?: string;
-      date?: string;
-    }
-  ) => SettlementRecord | undefined;
+ // Contacts & Splits CRUD
+ addContact: (contact: Omit<Contact, 'id' | 'createdAt'>) => Contact;
+ updateContact: (id: string, contact: Partial<Contact>) => void;
+ deleteContact: (id: string) => void;
+ recordSettlement: (
+ contactId: string,
+ amount: number,
+ note?: string,
+ date?: string,
+ sourceTransactionId?: string,
+ sourceSplitEntryId?: string,
+ linkedTransactionId?: string,
+ direction?: OwedDirection
+ ) => SettlementRecord;
+ updateSettlement: (id: string, updated: Partial<SettlementRecord>) => void;
+ deleteSettlement: (id: string) => void;
+ linkSettlementToTransaction: (settlementId: string, transactionId?: string) => void;
+ quickToggleSettleTransaction: (transactionId: string, splitEntryId?: string) => SettlementRecord | undefined;
+ assignSplitToContact: (transactionId: string, splitEntryId: string, contactId: string) => void;
+ settleSplitEntry: (
+ transactionId: string,
+ splitEntryId: string,
+ options: {
+ settled: boolean;
+ settledAmount?: number;
+ linkedTransactionId?: string;
+ note?: string;
+ date?: string;
+ }
+ ) => SettlementRecord | undefined;
 
-  // Categories CRUD
-  addCategory: (cat: Omit<Category, 'id'>) => Category;
-  updateCategory: (id: string, cat: Partial<Category>) => void;
-  deleteCategory: (id: string) => void;
+ // Categories CRUD
+ addCategory: (cat: Omit<Category, 'id'>) => Category;
+ updateCategory: (id: string, cat: Partial<Category>) => void;
+ deleteCategory: (id: string) => void;
 
-  // Budgets CRUD
-  setBudgetForCategory: (category: string, monthlyLimit: number) => void;
-  deleteBudget: (id: string) => void;
+ // Budgets CRUD
+ setBudgetForCategory: (category: string, monthlyLimit: number) => void;
+ deleteBudget: (id: string) => void;
 
-  // Emergency Fund
-  updateEmergencySettings: (targetMonths: number, manualTargetAmount?: number) => void;
-  addEmergencyContribution: (amount: number, type: 'deposit' | 'withdrawal', note?: string, date?: string) => void;
+ // Emergency Fund
+ updateEmergencySettings: (targetMonths: number, manualTargetAmount?: number) => void;
+ addEmergencyContribution: (amount: number, type: 'deposit' | 'withdrawal', note?: string, date?: string) => void;
 
-  // Investments CRUD
-  addInvestment: (inv: Omit<Investment, 'id' | 'lastUpdated'>) => Investment;
-  updateInvestment: (id: string, inv: Partial<Investment>) => void;
-  deleteInvestment: (id: string) => void;
+ // Investments CRUD
+ addInvestment: (inv: Omit<Investment, 'id' | 'lastUpdated'>) => Investment;
+ updateInvestment: (id: string, inv: Partial<Investment>) => void;
+ deleteInvestment: (id: string) => void;
 
-  // Dreams CRUD
-  addDream: (dream: Omit<DreamGoal, 'id' | 'createdAt' | 'contributions' | 'currentSaved'> & { initialSaved?: number }) => DreamGoal;
-  updateDream: (id: string, dream: Partial<DreamGoal>) => void;
-  deleteDream: (id: string) => void;
-  addDreamContribution: (dreamId: string, amount: number, note?: string, date?: string) => void;
+ // Dreams CRUD
+ addDream: (dream: Omit<DreamGoal, 'id' | 'createdAt' | 'contributions' | 'currentSaved'> & { initialSaved?: number }) => DreamGoal;
+ updateDream: (id: string, dream: Partial<DreamGoal>) => void;
+ deleteDream: (id: string) => void;
+ addDreamContribution: (dreamId: string, amount: number, note?: string, date?: string) => void;
 
-  // Recurring Payments CRUD
-  addRecurringPayment: (payment: Omit<RecurringPayment, 'id' | 'createdAt' | 'updatedAt'>) => RecurringPayment;
-  updateRecurringPayment: (id: string, payment: Partial<RecurringPayment>) => void;
-  deleteRecurringPayment: (id: string) => void;
-  pauseRecurringPayment: (id: string) => void;
-  markRecurringPaymentPaid: (
-    recurringPaymentId: string,
-    dueDate: string,
-    actualAmount?: number,
-    linkedTransactionId?: string,
-    createTransaction?: boolean
-  ) => void;
+ // Recurring Payments CRUD
+ addRecurringPayment: (payment: Omit<RecurringPayment, 'id' | 'createdAt' | 'updatedAt'>) => RecurringPayment;
+ updateRecurringPayment: (id: string, payment: Partial<RecurringPayment>) => void;
+ deleteRecurringPayment: (id: string) => void;
+ pauseRecurringPayment: (id: string) => void;
+ markRecurringPaymentPaid: (
+ recurringPaymentId: string,
+ dueDate: string,
+ actualAmount?: number,
+ linkedTransactionId?: string,
+ createTransaction?: boolean
+ ) => void;
 
-  // AI
-  updateAISettings: (settings: Partial<AISettings>) => void;
-  saveAIReport: (report: Omit<AIHealthReport, 'id' | 'createdAt'>) => void;
-  deleteAIReport: (id: string) => void;
+ // AI
+ updateAISettings: (settings: Partial<AISettings>) => void;
+ saveAIReport: (report: Omit<AIHealthReport, 'id' | 'createdAt'>) => void;
+ deleteAIReport: (id: string) => void;
 
-  // Backup & Reset
-  resetToDemoData: () => void;
-  clearAllData: () => void;
-  exportBackupJSON: () => string;
-  importBackupJSON: (jsonStr: string) => boolean;
+ // Backup & Reset
+ resetToDemoData: () => void;
+ clearAllData: () => void;
+ exportBackupJSON: () => string;
+ importBackupJSON: (jsonStr: string) => boolean;
 
-  // Calculated Metrics
-  totalBalance: number;
-  totalNetWorth: number;
-  netSharedBalance: number;
-  peerBalanceSummary: {
-    totalOwedToMe: number;
-    totalIOwe: number;
-    net: number;
-    displayText: string;
-  };
-  currentMonthIncome: number;
-  currentMonthExpense: number;
-  currentMonthNet: number;
-  currentMonthSavingsRate: number;
-  totalInvestedAmount: number;
-  totalInvestmentValue: number;
-  totalInvestmentGainLoss: number;
-  totalInvestmentGainLossPct: number;
-  emergencyFundRunwayMonths: number;
-  totalGoalsTarget: number;
-  totalGoalsSaved: number;
-  contactBalances: ContactBalance[];
-  totalOwedToMe: number;
-  totalIOwe: number;
-  categorySpendingThisMonth: { category: string; spent: number; budget: number; percentUsed: number; color: string; icon: string }[];
-  upcomingRecurringPayments: Array<RecurringPayment & { nextDueDate: string; daysUntilDue: number }>;
-  overdueRecurringPayments: Array<RecurringPayment & { dueDate: string; daysOverdue: number }>;
-  totalMonthlyRecurringCommitment: number;
-  getAggregatesForAI: () => FinancialAggregates;
+ // Calculated Metrics
+ totalBalance: number;
+ totalNetWorth: number;
+ netSharedBalance: number;
+ peerBalanceSummary: {
+ totalOwedToMe: number;
+ totalIOwe: number;
+ net: number;
+ displayText: string;
+ };
+ currentMonthIncome: number;
+ currentMonthExpense: number;
+ currentMonthNet: number;
+ currentMonthSavingsRate: number;
+ totalInvestedAmount: number;
+ totalInvestmentValue: number;
+ totalInvestmentGainLoss: number;
+ totalInvestmentGainLossPct: number;
+ emergencyFundRunwayMonths: number;
+ totalGoalsTarget: number;
+ totalGoalsSaved: number;
+ contactBalances: ContactBalance[];
+ totalOwedToMe: number;
+ totalIOwe: number;
+ categorySpendingThisMonth: { category: string; spent: number; budget: number; percentUsed: number; color: string; icon: string }[];
+ upcomingRecurringPayments: Array<RecurringPayment & { nextDueDate: string; daysUntilDue: number }>;
+ overdueRecurringPayments: Array<RecurringPayment & { dueDate: string; daysOverdue: number }>;
+ totalMonthlyRecurringCommitment: number;
+ getAggregatesForAI: () => FinancialAggregates;
 }
 
 const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
 
 const EMPTY_EMERGENCY_FUND: EmergencyFund = {
-  targetMonths: 6,
-  monthlyExpenseBaseline: 50000,
-  currentSaved: 0,
-  contributions: [],
+ targetMonths: 6,
+ monthlyExpenseBaseline: 50000,
+ currentSaved: 0,
+ contributions: [],
 };
 
 export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentView, setCurrentView] = useState<AppView>('dashboard');
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [darkMode, setDarkMode] = useState<boolean>(() => {
-    const saved = typeof window !== 'undefined' ? localStorage.getItem('dhanveda_dark_mode') : null;
-    if (saved !== null) {
-      return saved === 'true';
-    }
-    return typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  });
-
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
-  const [budgets, setBudgets] = useState<Budget[]>([]);
-  const [emergencyFund, setEmergencyFund] = useState<EmergencyFund>(EMPTY_EMERGENCY_FUND);
-  const [investments, setInvestments] = useState<Investment[]>([]);
-  const [dreams, setDreams] = useState<DreamGoal[]>([]);
-  const [contacts, setContacts] = useState<Contact[]>([]);
-  const [settlements, setSettlements] = useState<SettlementRecord[]>([]);
-  const [recurringPayments, setRecurringPayments] = useState<RecurringPayment[]>([]);
-  const [recurringPaymentLogs, setRecurringPaymentLogs] = useState<RecurringPaymentLog[]>([]);
-  const [notRecurringTxIds, setNotRecurringTxIds] = useState<Set<string>>(new Set());
-
-  const [aiSettings, setAISettings] = useState<AISettings>({
-    provider: 'gemini',
-    apiKey: '',
-    model: DEFAULT_AI_MODELS.gemini,
-  });
-
-  const [aiReports, setAIReports] = useState<AIHealthReport[]>([]);
-
-  // Sync state
-  const [syncStatus, setSyncStatus] = useState<SyncStatus>('disconnected');
-  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(driveSyncService.getLastSyncedAt());
-  const [syncError, setSyncError] = useState<string | null>(null);
-  const [isDriveConnected, setIsDriveConnected] = useState<boolean>(false);
-  const [driveUserEmail, setDriveUserEmail] = useState<string | null>(null);
-
-  // Synchronous references to in-memory state for safe sync flushes
-  const transactionsRef = useRef(transactions);
-  const contactsRef = useRef(contacts);
-  const settlementsRef = useRef(settlements);
-  const categoriesRef = useRef(categories);
-  const budgetsRef = useRef(budgets);
-  const emergencyFundRef = useRef(emergencyFund);
-  const investmentsRef = useRef(investments);
-  const dreamsRef = useRef(dreams);
-  const recurringPaymentsRef = useRef(recurringPayments);
-  const recurringPaymentLogsRef = useRef(recurringPaymentLogs);
-
-  useEffect(() => {
-    transactionsRef.current = transactions;
-    contactsRef.current = contacts;
-    settlementsRef.current = settlements;
-    categoriesRef.current = categories;
-    budgetsRef.current = budgets;
-    emergencyFundRef.current = emergencyFund;
-    investmentsRef.current = investments;
-    dreamsRef.current = dreams;
-    recurringPaymentsRef.current = recurringPayments;
-    recurringPaymentLogsRef.current = recurringPaymentLogs;
-  }, [
-    transactions,
-    contacts,
-    settlements,
-    categories,
-    budgets,
-    emergencyFund,
-    investments,
-    dreams,
-    recurringPayments,
-    recurringPaymentLogs,
-  ]);
-
-  // In-memory pub/sub for domain finance events
-  const eventListenersRef = useRef<Set<FinanceEventListener>>(new Set());
-
-  const subscribeFinanceEvent = useCallback((listener: FinanceEventListener) => {
-    eventListenersRef.current.add(listener);
-    return () => {
-      eventListenersRef.current.delete(listener);
-    };
-  }, []);
-
-  const emitFinanceEvent = useCallback((event: FinanceEvent) => {
-    eventListenersRef.current.forEach(listener => {
-      try {
-        listener(event);
-      } catch (err) {
-        console.error('Error in finance event listener:', err);
-      }
-    });
-  }, []);
-
-  // Reload all records from IndexedDB into React state
-  const reloadFromDB = useCallback(async () => {
-    try {
-      const [
-        dbTx,
-        dbCat,
-        dbBudgets,
-        dbEm,
-        dbInv,
-        dbDreams,
-        dbContacts,
-        dbSettlements,
-        dbAiSet,
-        dbAiReports,
-        dbPrefs,
-        dbRecPay,
-        dbRecLogs,
-      ] = await Promise.all([
-        getAllFromStore<Transaction>('transactions'),
-        getAllFromStore<Category>('categories'),
-        getAllFromStore<Budget>('budgets'),
-        getSingleRecord<EmergencyFund & { id: string }>('emergencyFund'),
-        getAllFromStore<Investment>('investments'),
-        getAllFromStore<DreamGoal>('dreams'),
-        getAllFromStore<Contact>('contacts'),
-        getAllFromStore<SettlementRecord>('settlements'),
-        getSingleRecord<AISettings & { id: string }>('aiSettings'),
-        getAllFromStore<AIHealthReport>('aiReports'),
-        getSingleRecord<UserPreferences>('userPreferences', 'general'),
-        getAllFromStore<RecurringPayment>('recurringPayments'),
-        getAllFromStore<RecurringPaymentLog>('recurringPaymentLogs'),
-      ]);
-
-      if (dbTx && Array.isArray(dbTx)) {
-        const normalized = dbTx.map(t => {
-          let splitWith: SplitEntry[] | undefined = undefined;
-          if (t.splitWith && !Array.isArray(t.splitWith) && typeof t.splitWith === 'object') {
-            const single = t.splitWith as any;
-            splitWith = [{
-              id: single.id || `split-${t.id}-1`,
-              contactId: single.contactId ? String(single.contactId).trim() : undefined,
-              label: single.label || (!single.contactId ? 'Unnamed Person' : undefined),
-              amount: Number(single.amount) || 0,
-              direction: single.direction === 'i_owe_them' ? 'i_owe_them' : 'they_owe_me',
-              settled: Boolean(single.settled),
-              settledAmount: typeof single.settledAmount === 'number' ? single.settledAmount : undefined,
-              linkedTransactionId: single.linkedTransactionId || undefined,
-            }];
-          } else if (Array.isArray(t.splitWith)) {
-            splitWith = t.splitWith.map((entry, idx) => ({
-              id: entry.id || `split-${t.id}-${idx + 1}`,
-              contactId: entry.contactId ? String(entry.contactId).trim() : undefined,
-              label: entry.label || (!entry.contactId ? `Person ${idx + 1}` : undefined),
-              amount: Number(entry.amount) || 0,
-              direction: entry.direction === 'i_owe_them' ? 'i_owe_them' : 'they_owe_me',
-              settled: Boolean(entry.settled),
-              settledAmount: typeof entry.settledAmount === 'number' ? entry.settledAmount : undefined,
-              linkedTransactionId: entry.linkedTransactionId || undefined,
-            }));
-          }
-          return {
-            ...t,
-            amount: Number(t.amount) || 0,
-            splitWith: splitWith && splitWith.length > 0 ? splitWith : undefined,
-          };
-        });
-        setTransactions(normalized);
-      }
-      if (dbCat && Array.isArray(dbCat) && dbCat.length > 0) setCategories(dbCat);
-      if (dbBudgets && Array.isArray(dbBudgets)) setBudgets(dbBudgets);
-      if (dbEm) {
-        const { id: _id, ...cleanEm } = dbEm;
-        setEmergencyFund(cleanEm);
-      }
-      if (dbInv && Array.isArray(dbInv)) setInvestments(dbInv);
-      if (dbDreams && Array.isArray(dbDreams)) setDreams(dbDreams);
-      if (dbContacts && Array.isArray(dbContacts)) setContacts(dbContacts);
-      if (dbSettlements && Array.isArray(dbSettlements)) setSettlements(dbSettlements);
-      if (dbRecPay && Array.isArray(dbRecPay)) {
-        setRecurringPayments(dbRecPay);
-      }
-      if (dbRecLogs && Array.isArray(dbRecLogs)) {
-        setRecurringPaymentLogs(dbRecLogs);
-      }
-      if (dbAiSet) {
-        const { id: _id, ...cleanAi } = dbAiSet;
-        setAISettings({
-          provider: cleanAi.provider || 'gemini',
-          apiKey: cleanAi.apiKey || '',
-          model: cleanAi.model || DEFAULT_AI_MODELS[cleanAi.provider || 'gemini'],
-        });
-      }
-      if (dbAiReports && Array.isArray(dbAiReports)) setAIReports(dbAiReports);
-      if (dbPrefs) {
-        if (dbPrefs.darkMode !== undefined) setDarkMode(dbPrefs.darkMode);
-        if (dbPrefs.notRecurringTxIds && Array.isArray(dbPrefs.notRecurringTxIds)) {
-          setNotRecurringTxIds(new Set(dbPrefs.notRecurringTxIds));
-        }
-      }
-    } catch (err) {
-      console.error('[FinanceContext] Error reloading from IndexedDB:', err);
-    }
-  }, []);
-
-  // Initial load from IndexedDB + migrate from localStorage if available
-  useEffect(() => {
-    let isMounted = true;
-    async function init() {
-      try {
-        await migrateFromLocalStorage();
-        if (isMounted) {
-          await reloadFromDB();
-        }
-      } catch (err) {
-        console.error('[FinanceContext] Error initializing IndexedDB:', err);
-      } finally {
-        if (isMounted) setIsInitialized(true);
-      }
-    }
-
-    init();
-    return () => {
-      isMounted = false;
-    };
-  }, [reloadFromDB]);
-
-  // Sync methods
-  const triggerSync = useCallback(async (_showFeedback = true): Promise<boolean> => {
-    try {
-      // 1. Immediately flush all current in-memory React state to IndexedDB so driveSync reads 100% current data
-      await Promise.all([
-        saveAllToStore('transactions', transactionsRef.current),
-        saveAllToStore('contacts', contactsRef.current),
-        saveAllToStore('settlements', settlementsRef.current),
-        saveAllToStore('categories', categoriesRef.current),
-        saveAllToStore('budgets', budgetsRef.current),
-        saveAllToStore('investments', investmentsRef.current),
-        saveAllToStore('dreams', dreamsRef.current),
-        saveAllToStore('recurringPayments', recurringPaymentsRef.current),
-        saveAllToStore('recurringPaymentLogs', recurringPaymentLogsRef.current),
-        saveSingleRecord('emergencyFund', { ...emergencyFundRef.current, id: 'current' }),
-      ]);
-
-      const ok = await driveSyncService.sync();
-      if (ok) {
-        await reloadFromDB();
-      }
-      return ok;
-    } catch (err: any) {
-      console.error('[FinanceContext] triggerSync error:', err);
-      return false;
-    }
-  }, [reloadFromDB]);
-
-  const connectDrive = useCallback(async (): Promise<boolean> => {
-    try {
-      setSyncStatus('syncing');
-      setSyncError(null);
-      const token = await googleAuthService.requestAccessToken(true);
-      if (token) {
-        const ok = await triggerSync(true);
-        return ok;
-      }
-      setSyncStatus('disconnected');
-      return false;
-    } catch (err: any) {
-      console.error('[FinanceContext] connectDrive error:', err);
-      setSyncError(err?.message || 'Failed to connect Google Drive');
-      setSyncStatus('error');
-      return false;
-    }
-  }, [triggerSync]);
-
-  const disconnectDrive = useCallback(async (): Promise<void> => {
-    await googleAuthService.disconnect();
-    setSyncStatus('disconnected');
-    setSyncError(null);
-  }, []);
-
-  // Subscriptions to Google Auth & Drive Sync
-  useEffect(() => {
-    return googleAuthService.subscribe((connected, profile) => {
-      setIsDriveConnected(connected);
-      setDriveUserEmail(profile?.email || null);
-      if (!connected) {
-        setSyncStatus(googleAuthService.hasClientId() ? 'disconnected' : 'unconfigured');
-      }
-    });
-  }, []);
-
-  useEffect(() => {
-    return driveSyncService.subscribe((isSyncing, lastSync, error) => {
-      setLastSyncedAt(lastSync);
-      setSyncError(error);
-      if (isSyncing) {
-        setSyncStatus('syncing');
-      } else if (error) {
-        setSyncStatus('error');
-      } else if (lastSync) {
-        setSyncStatus('synced');
-      } else if (googleAuthService.isConnected()) {
-        setSyncStatus('idle');
-      }
-    });
-  }, []);
-
-  // Sync Triggers: on app start (if enabled)
-  useEffect(() => {
-    if (!isInitialized) return;
-    if (googleAuthService.isSyncEnabled()) {
-      triggerSync(false);
-    }
-  }, [isInitialized, triggerSync]);
-
-  // Sync Triggers: on network back online
-  useEffect(() => {
-    const handleOnline = () => {
-      if (googleAuthService.isSyncEnabled()) {
-        triggerSync(false);
-      }
-    };
-    window.addEventListener('online', handleOnline);
-    return () => window.removeEventListener('online', handleOnline);
-  }, [triggerSync]);
-
-  // Sync Triggers: every 3 minutes if tab is visible
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (
-        document.visibilityState === 'visible' &&
-        navigator.onLine &&
-        googleAuthService.isSyncEnabled() &&
-        !driveSyncService.isSyncing()
-      ) {
-        triggerSync(false);
-      }
-    }, 3 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [triggerSync]);
-
-  // Sync to IndexedDB once initialized
-  useEffect(() => {
-    if (!isInitialized) return;
-    saveAllToStore('transactions', transactions).catch(e => console.error('Error saving transactions:', e));
-  }, [transactions, isInitialized]);
-
-  useEffect(() => {
-    if (!isInitialized) return;
-    saveAllToStore('categories', categories).catch(e => console.error('Error saving categories:', e));
-  }, [categories, isInitialized]);
-
-  useEffect(() => {
-    if (!isInitialized) return;
-    saveAllToStore('budgets', budgets).catch(e => console.error('Error saving budgets:', e));
-  }, [budgets, isInitialized]);
-
-  useEffect(() => {
-    if (!isInitialized) return;
-    saveSingleRecord('emergencyFund', { ...emergencyFund, id: 'current' }).catch(e => console.error('Error saving emergency fund:', e));
-  }, [emergencyFund, isInitialized]);
-
-  useEffect(() => {
-    if (!isInitialized) return;
-    saveAllToStore('investments', investments).catch(e => console.error('Error saving investments:', e));
-  }, [investments, isInitialized]);
-
-  useEffect(() => {
-    if (!isInitialized) return;
-    saveAllToStore('dreams', dreams).catch(e => console.error('Error saving dreams:', e));
-  }, [dreams, isInitialized]);
-
-  useEffect(() => {
-    if (!isInitialized) return;
-    saveAllToStore('contacts', contacts).catch(e => console.error('Error saving contacts:', e));
-  }, [contacts, isInitialized]);
-
-  useEffect(() => {
-    if (!isInitialized) return;
-    saveAllToStore('settlements', settlements).catch(e => console.error('Error saving settlements:', e));
-  }, [settlements, isInitialized]);
-
-  useEffect(() => {
-    if (!isInitialized) return;
-    saveAllToStore('recurringPayments', recurringPayments).catch(e => console.error('Error saving recurring payments:', e));
-  }, [recurringPayments, isInitialized]);
-
-  useEffect(() => {
-    if (!isInitialized) return;
-    saveAllToStore('recurringPaymentLogs', recurringPaymentLogs).catch(e => console.error('Error saving recurring payment logs:', e));
-  }, [recurringPaymentLogs, isInitialized]);
-
-  useEffect(() => {
-    if (!isInitialized) return;
-    saveSingleRecord('aiSettings', { ...aiSettings, id: 'current' }).catch(e => console.error('Error saving AI settings:', e));
-  }, [aiSettings, isInitialized]);
-
-  useEffect(() => {
-    if (!isInitialized) return;
-    saveAllToStore('aiReports', aiReports).catch(e => console.error('Error saving AI reports:', e));
-  }, [aiReports, isInitialized]);
-
-  useEffect(() => {
-    // Apply temporary .theme-anim class for smooth transition only during toggle (E.4)
-    document.documentElement.classList.add('theme-anim');
-    const timer = setTimeout(() => {
-      document.documentElement.classList.remove('theme-anim');
-    }, 350);
-
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('dhanveda_dark_mode', 'true');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('dhanveda_dark_mode', 'false');
-    }
-    if (isInitialized) {
-      saveSingleRecord('userPreferences', {
-        id: 'general',
-        darkMode,
-        notRecurringTxIds: Array.from(notRecurringTxIds),
-        updatedAt: new Date().toISOString(),
-      }).catch(e => console.error('Error saving user preferences:', e));
-    }
-    return () => clearTimeout(timer);
-  }, [darkMode, notRecurringTxIds, isInitialized]);
-
-  const toggleNotRecurring = (txId: string | string[]) => {
-    setNotRecurringTxIds(prev => {
-      const next = new Set(prev);
-      const ids = Array.isArray(txId) ? txId : [txId];
-      const allPresent = ids.every(id => next.has(id));
-      if (allPresent) {
-        ids.forEach(id => next.delete(id));
-      } else {
-        ids.forEach(id => next.add(id));
-      }
-      return next;
-    });
-  };
-
-  // Transaction operations
-  const addTransaction = (
-    txData: Omit<Transaction, 'id' | 'createdAt'>,
-    options?: { silent?: boolean }
-  ): Transaction => {
-    const now = new Date().toISOString();
-    const newTx: Transaction = {
-      ...txData,
-      id: `tx-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-      createdAt: now,
-      updatedAt: now,
-    };
-    transactionsRef.current = [newTx, ...transactionsRef.current];
-    setTransactions(prev => [newTx, ...prev]);
-    if (!options?.silent) {
-      emitFinanceEvent({ type: 'transaction_added', tx: newTx });
-    }
-    return newTx;
-  };
-
-  const addMultipleTransactions = (txsData: Omit<Transaction, 'id' | 'createdAt'>[]) => {
-    const timestamp = Date.now();
-    const now = new Date().toISOString();
-    const newTxs: Transaction[] = txsData.map((t, idx) => ({
-      ...t,
-      id: `tx-${timestamp}-${idx}-${Math.random().toString(36).substring(2, 5)}`,
-      createdAt: now,
-      updatedAt: now,
-    }));
-    transactionsRef.current = [...newTxs, ...transactionsRef.current];
-    setTransactions(prev => [...newTxs, ...prev]);
-  };
-
-  const updateTransaction = (id: string, updated: Partial<Transaction>) => {
-    const now = new Date().toISOString();
-    transactionsRef.current = transactionsRef.current.map(t =>
-      t.id === id ? { ...t, ...updated, updatedAt: now } : t
-    );
-    setTransactions(prev =>
-      prev.map(t => (t.id === id ? { ...t, ...updated, updatedAt: now } : t))
-    );
-  };
-
-  const deleteTransaction = (id: string) => {
-    addTombstone('transactions', id);
-    transactionsRef.current = transactionsRef.current.filter(t => t.id !== id);
-    setTransactions(prev => prev.filter(t => t.id !== id));
-
-    // Clean up or detach settlements tied to this transaction
-    const now = new Date().toISOString();
-    const updatedSettlements: SettlementRecord[] = [];
-
-    settlementsRef.current.forEach(s => {
-      const linkedTxId = s.linkedTransactionId === id ? undefined : s.linkedTransactionId;
-
-      // Check multi-split reconciliation
-      if (s.reconciledSplits && s.reconciledSplits.length > 0) {
-        const remainingSplits = s.reconciledSplits.filter(r => r.transactionId !== id);
-        if (remainingSplits.length === 0 && (s.sourceTransactionId === id || !s.sourceTransactionId)) {
-          // All reconciled splits belonged to this deleted transaction -> delete settlement
-          addTombstone('settlements', s.id);
-          return;
-        }
-        // Partial removal: some splits remain on other transactions!
-        const nextSourceTx = s.sourceTransactionId === id
-          ? (remainingSplits[0]?.transactionId || undefined)
-          : s.sourceTransactionId;
-        const nextSourceSplit = s.sourceTransactionId === id
-          ? (remainingSplits[0]?.splitEntryId || undefined)
-          : s.sourceSplitEntryId;
-
-        updatedSettlements.push({
-          ...s,
-          sourceTransactionId: nextSourceTx,
-          sourceSplitEntryId: nextSourceSplit,
-          linkedTransactionId: linkedTxId,
-          reconciledSplits: remainingSplits.length > 0 ? remainingSplits : undefined,
-          updatedAt: now,
-        });
-        return;
-      }
-
-      // Legacy single-split settlement
-      if (s.sourceTransactionId === id) {
-        addTombstone('settlements', s.id);
-        return;
-      }
-
-      updatedSettlements.push({
-        ...s,
-        linkedTransactionId: linkedTxId,
-      });
-    });
-
-    settlementsRef.current = updatedSettlements;
-    setSettlements(updatedSettlements);
-    emitFinanceEvent({ type: 'transaction_deleted', count: 1 });
-  };
-
-  const deleteMultipleTransactions = (ids: string[]) => {
-    ids.forEach(id => addTombstone('transactions', id));
-    const set = new Set(ids);
-    transactionsRef.current = transactionsRef.current.filter(t => !set.has(t.id));
-    setTransactions(prev => prev.filter(t => !set.has(t.id)));
-
-    const now = new Date().toISOString();
-    const updatedSettlements: SettlementRecord[] = [];
-
-    settlementsRef.current.forEach(s => {
-      const linkedTxId = s.linkedTransactionId && set.has(s.linkedTransactionId) ? undefined : s.linkedTransactionId;
-
-      if (s.reconciledSplits && s.reconciledSplits.length > 0) {
-        const remainingSplits = s.reconciledSplits.filter(r => !set.has(r.transactionId));
-        if (remainingSplits.length === 0 && (s.sourceTransactionId ? set.has(s.sourceTransactionId) : true)) {
-          addTombstone('settlements', s.id);
-          return;
-        }
-        const nextSourceTx = s.sourceTransactionId && set.has(s.sourceTransactionId)
-          ? (remainingSplits[0]?.transactionId || undefined)
-          : s.sourceTransactionId;
-        const nextSourceSplit = s.sourceTransactionId && set.has(s.sourceTransactionId)
-          ? (remainingSplits[0]?.splitEntryId || undefined)
-          : s.sourceSplitEntryId;
-
-        updatedSettlements.push({
-          ...s,
-          sourceTransactionId: nextSourceTx,
-          sourceSplitEntryId: nextSourceSplit,
-          linkedTransactionId: linkedTxId,
-          reconciledSplits: remainingSplits.length > 0 ? remainingSplits : undefined,
-          updatedAt: now,
-        });
-        return;
-      }
-
-      if (s.sourceTransactionId && set.has(s.sourceTransactionId)) {
-        addTombstone('settlements', s.id);
-        return;
-      }
-
-      updatedSettlements.push({
-        ...s,
-        linkedTransactionId: linkedTxId,
-      });
-    });
-
-    settlementsRef.current = updatedSettlements;
-    setSettlements(updatedSettlements);
-    emitFinanceEvent({ type: 'transaction_deleted', count: ids.length });
-  };
-
-  // Contact CRUD operations
-  const addContact = (contactData: Omit<Contact, 'id' | 'createdAt'>): Contact => {
-    const now = new Date().toISOString();
-    const newContact: Contact = {
-      ...contactData,
-      id: `contact-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-      createdAt: now,
-      updatedAt: now,
-    };
-    contactsRef.current = [...contactsRef.current, newContact];
-    setContacts(prev => [...prev, newContact]);
-    return newContact;
-  };
-
-  const updateContact = (id: string, updated: Partial<Contact>) => {
-    const now = new Date().toISOString();
-    contactsRef.current = contactsRef.current.map(c =>
-      c.id === id ? { ...c, ...updated, updatedAt: now } : c
-    );
-    setContacts(prev =>
-      prev.map(c => (c.id === id ? { ...c, ...updated, updatedAt: now } : c))
-    );
-  };
-
-  const deleteContact = (id: string) => {
-    addTombstone('contacts', id);
-    contactsRef.current = contactsRef.current.filter(c => c.id !== id);
-    setContacts(prev => prev.filter(c => c.id !== id));
-    // Tombstone and remove all settlements tied to this contact for sync integrity
-    const tiedSettlements = settlementsRef.current.filter(s => s.contactId === id);
-    tiedSettlements.forEach(s => addTombstone('settlements', s.id));
-    settlementsRef.current = settlementsRef.current.filter(s => s.contactId !== id);
-    setSettlements(prev => prev.filter(s => s.contactId !== id));
-    const now = new Date().toISOString();
-    transactionsRef.current = transactionsRef.current.map(t => {
-      if (!t.splitWith || !Array.isArray(t.splitWith)) return t;
-      const updatedSplits = t.splitWith.map(s =>
-        s.contactId === id ? { ...s, contactId: undefined, label: s.label || 'Former Contact' } : s
-      );
-      return { ...t, splitWith: updatedSplits, updatedAt: now };
-    });
-    setTransactions(prev =>
-      prev.map(t => {
-        if (!t.splitWith || !Array.isArray(t.splitWith)) return t;
-        const updatedSplits = t.splitWith.map(s =>
-          s.contactId === id ? { ...s, contactId: undefined, label: s.label || 'Former Contact' } : s
-        );
-        return { ...t, splitWith: updatedSplits, updatedAt: now };
-      })
-    );
-  };
-
-  const recordSettlement = (
-    contactId: string,
-    amount: number,
-    note?: string,
-    date?: string,
-    sourceTransactionId?: string,
-    sourceSplitEntryId?: string,
-    linkedTransactionId?: string,
-    direction?: OwedDirection
-  ): SettlementRecord => {
-    const now = new Date().toISOString();
-    const resolvedDirection: OwedDirection = direction || 'they_owe_me';
-
-    // If this is a contact-level settlement (no sourceTransactionId),
-    // automatically reconcile open splits for this contact in FIFO order!
-    const reconciledSplits: Array<{ transactionId: string; splitEntryId: string; amount: number }> = [];
-
-    if (!sourceTransactionId && amount > 0) {
-      let remainingToReconcile = amount;
-      let firstReconciledTxId: string | undefined = undefined;
-      let firstReconciledSplitId: string | undefined = undefined;
-
-      const updatedTxs = transactionsRef.current.map(t => {
-        if (!t.splitWith || !Array.isArray(t.splitWith) || remainingToReconcile <= 0) return t;
-        let txModified = false;
-        const updatedSplits = t.splitWith.map(entry => {
-          if (
-            entry.contactId === contactId &&
-            entry.direction === resolvedDirection &&
-            !entry.settled &&
-            remainingToReconcile > 0
-          ) {
-            const currentSettled = entry.settledAmount || 0;
-            const openAmt = Math.max(0, entry.amount - currentSettled);
-            if (openAmt > 0) {
-              const allocation = Math.min(openAmt, remainingToReconcile);
-              const newSettledAmt = currentSettled + allocation;
-              const isFull = newSettledAmt >= entry.amount - 0.01;
-              remainingToReconcile -= allocation;
-              txModified = true;
-              reconciledSplits.push({
-                transactionId: t.id,
-                splitEntryId: entry.id,
-                amount: allocation,
-              });
-              if (!firstReconciledTxId) {
-                firstReconciledTxId = t.id;
-                firstReconciledSplitId = entry.id;
-              }
-              return {
-                ...entry,
-                settled: isFull,
-                settledAmount: Number(newSettledAmt.toFixed(2)),
-                linkedTransactionId: linkedTransactionId || entry.linkedTransactionId,
-              };
-            }
-          }
-          return entry;
-        });
-
-        return txModified ? { ...t, splitWith: updatedSplits, updatedAt: now } : t;
-      });
-
-      if (firstReconciledTxId) {
-        transactionsRef.current = updatedTxs;
-        setTransactions(updatedTxs);
-        sourceTransactionId = firstReconciledTxId;
-        sourceSplitEntryId = firstReconciledSplitId;
-      }
-    }
-
-    const newSettlement: SettlementRecord = {
-      id: `set-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-      contactId,
-      amount,
-      date: date || now.split('T')[0],
-      note: note || 'Settlement payment',
-      createdAt: now,
-      updatedAt: now,
-      sourceTransactionId,
-      sourceSplitEntryId,
-      linkedTransactionId,
-      direction: resolvedDirection,
-      reconciledSplits: reconciledSplits.length > 0 ? reconciledSplits : undefined,
-    };
-    settlementsRef.current = [newSettlement, ...settlementsRef.current];
-    setSettlements(prev => [newSettlement, ...prev]);
-    const contact = contacts.find(c => c.id === contactId);
-    emitFinanceEvent({
-      type: 'settlement_recorded',
-      contactName: contact ? contact.name : 'Contact',
-      amount,
-      allSettled: false,
-    });
-    return newSettlement;
-  };
-
-  const deleteSettlement = (id: string) => {
-    addTombstone('settlements', id);
-    const target = settlementsRef.current.find(s => s.id === id);
-    settlementsRef.current = settlementsRef.current.filter(s => s.id !== id);
-    setSettlements(prev => prev.filter(s => s.id !== id));
-
-    const now = new Date().toISOString();
-
-    // 1. If this settlement tracked multi-split reconciliations, restore all of them
-    if (target?.reconciledSplits && target.reconciledSplits.length > 0) {
-      const splitLookup = new Map<string, number>();
-      target.reconciledSplits.forEach(r => {
-        splitLookup.set(`${r.transactionId}:${r.splitEntryId}`, r.amount);
-      });
-
-      const updatedTxs = transactionsRef.current.map(t => {
-        if (!t.splitWith || !Array.isArray(t.splitWith)) return t;
-        let txModified = false;
-        const updatedSplits = t.splitWith.map(s => {
-          const key = `${t.id}:${s.id}`;
-          if (splitLookup.has(key)) {
-            txModified = true;
-            const reconciledAmt = splitLookup.get(key) || 0;
-            const currentSettled = s.settledAmount !== undefined ? s.settledAmount : s.amount;
-            const newSettledAmt = Math.max(0, currentSettled - reconciledAmt);
-            if (newSettledAmt <= 0.01) {
-              return { ...s, settled: false, settledAmount: undefined, linkedTransactionId: undefined };
-            } else {
-              return { ...s, settled: false, settledAmount: Number(newSettledAmt.toFixed(2)) };
-            }
-          }
-          return s;
-        });
-        return txModified ? { ...t, splitWith: updatedSplits, updatedAt: now } : t;
-      });
-
-      transactionsRef.current = updatedTxs;
-      setTransactions(updatedTxs);
-    } else if (target?.sourceTransactionId) {
-      // 2. Legacy fallback for single-split settlements
-      const updatedTxs = transactionsRef.current.map(t => {
-        if (t.id !== target.sourceTransactionId || !t.splitWith) return t;
-        const updatedSplits = t.splitWith.map(s => {
-          if (target.sourceSplitEntryId ? s.id === target.sourceSplitEntryId : true) {
-            return { ...s, settled: false, settledAmount: undefined, linkedTransactionId: undefined };
-          }
-          return s;
-        });
-        return { ...t, splitWith: updatedSplits, updatedAt: now };
-      });
-      transactionsRef.current = updatedTxs;
-      setTransactions(updatedTxs);
-    }
-  };
-
-  const updateSettlement = (id: string, updated: Partial<SettlementRecord>) => {
-    const now = new Date().toISOString();
-    settlementsRef.current = settlementsRef.current.map(s =>
-      s.id === id ? { ...s, ...updated, updatedAt: now } : s
-    );
-    setSettlements(prev =>
-      prev.map(s => (s.id === id ? { ...s, ...updated, updatedAt: now } : s))
-    );
-  };
-
-  const linkSettlementToTransaction = (settlementId: string, transactionId?: string) => {
-    const now = new Date().toISOString();
-    settlementsRef.current = settlementsRef.current.map(s =>
-      s.id === settlementId
-        ? { ...s, linkedTransactionId: transactionId || undefined, updatedAt: now }
-        : s
-    );
-    setSettlements(prev =>
-      prev.map(s =>
-        s.id === settlementId
-          ? { ...s, linkedTransactionId: transactionId || undefined, updatedAt: now }
-          : s
-      )
-    );
-  };
-
-  const quickToggleSettleTransaction = (
-    transactionId: string,
-    splitEntryId?: string
-  ): SettlementRecord | undefined => {
-    const tx = transactions.find(t => t.id === transactionId);
-    if (!tx || !tx.splitWith || !Array.isArray(tx.splitWith)) return undefined;
-
-    const targetEntryId = splitEntryId || tx.splitWith[0]?.id;
-    if (!targetEntryId) return undefined;
-
-    const targetEntry = tx.splitWith.find(e => e.id === targetEntryId);
-    if (!targetEntry) return undefined;
-
-    const isCurrentlySettled = Boolean(targetEntry.settled);
-    const now = new Date().toISOString();
-
-    if (!isCurrentlySettled) {
-      // 1. Mark that specific splitEntry as settled
-      const updatedSplits = tx.splitWith.map(e =>
-        e.id === targetEntryId ? { ...e, settled: true } : e
-      );
-      updateTransaction(transactionId, { splitWith: updatedSplits, updatedAt: now });
-
-      // 2. If it is attached to a contact, record SettlementRecord
-      if (targetEntry.contactId) {
-        const newSettlement: SettlementRecord = {
-          id: `set-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-          contactId: targetEntry.contactId,
-          date: now.split('T')[0],
-          amount: targetEntry.amount,
-          note: `Quick settlement for "${tx.description}"`,
-          createdAt: now,
-          updatedAt: now,
-          sourceTransactionId: transactionId,
-          sourceSplitEntryId: targetEntryId,
-          direction: targetEntry.direction,
-        };
-        settlementsRef.current = [newSettlement, ...settlementsRef.current];
-        setSettlements(prev => [newSettlement, ...prev]);
-        const contact = contacts.find(c => c.id === targetEntry.contactId);
-        emitFinanceEvent({
-          type: 'settlement_recorded',
-          contactName: contact ? contact.name : 'Contact',
-          amount: targetEntry.amount,
-          allSettled: false,
-        });
-        return newSettlement;
-      }
-      return undefined;
-    } else {
-      // 1. Mark that specific splitEntry as unsettled
-      const updatedSplits = tx.splitWith.map(e =>
-        e.id === targetEntryId ? { ...e, settled: false } : e
-      );
-      updateTransaction(transactionId, { splitWith: updatedSplits, updatedAt: now });
-
-      // 2. Remove the auto-created settlement record strictly matching this split entry
-      const toDelete = settlements.find(
-        s =>
-          s.sourceTransactionId === transactionId &&
-          s.sourceSplitEntryId === targetEntryId
-      );
-      if (toDelete) {
-        addTombstone('settlements', toDelete.id);
-        settlementsRef.current = settlementsRef.current.filter(s => s.id !== toDelete.id);
-        setSettlements(prev => prev.filter(s => s.id !== toDelete.id));
-      }
-      return undefined;
-    }
-  };
-
-  const assignSplitToContact = (
-    transactionId: string,
-    splitEntryId: string,
-    contactId: string
-  ) => {
-    const tx = transactions.find(t => t.id === transactionId);
-    if (!tx || !tx.splitWith || !Array.isArray(tx.splitWith)) return;
-
-    const now = new Date().toISOString();
-    const updatedSplits = tx.splitWith.map(e =>
-      e.id === splitEntryId
-        ? {
-            ...e,
-            contactId,
-            label: undefined, // Clear generic label once assigned to a real person
-          }
-        : e
-    );
-    updateTransaction(transactionId, { splitWith: updatedSplits, updatedAt: now });
-  };
-
-  const settleSplitEntry = (
-    transactionId: string,
-    splitEntryId: string,
-    options: {
-      settled: boolean;
-      settledAmount?: number;
-      linkedTransactionId?: string;
-      note?: string;
-      date?: string;
-    }
-  ): SettlementRecord | undefined => {
-    const tx = transactions.find(t => t.id === transactionId);
-    if (!tx || !tx.splitWith || !Array.isArray(tx.splitWith)) return undefined;
-
-    const targetEntry = tx.splitWith.find(e => e.id === splitEntryId);
-    if (!targetEntry) return undefined;
-
-    const now = new Date().toISOString();
-
-    if (options.settled) {
-      const inputAmount =
-        typeof options.settledAmount === 'number' ? options.settledAmount : targetEntry.amount;
-      if (inputAmount <= 0) return undefined;
-
-      const finalSettledAmount = Math.min(inputAmount, targetEntry.amount);
-      const isFullSettlement = finalSettledAmount >= targetEntry.amount - 0.01;
-
-      // 1. Update splitEntry on transaction
-      const updatedSplits = tx.splitWith.map(e =>
-        e.id === splitEntryId
-          ? {
-              ...e,
-              settled: isFullSettlement,
-              settledAmount: finalSettledAmount,
-              linkedTransactionId: options.linkedTransactionId || undefined,
-            }
-          : e
-      );
-      updateTransaction(transactionId, { splitWith: updatedSplits, updatedAt: now });
-
-      // 2. If attached to a contact, record or update SettlementRecord
-      if (targetEntry.contactId) {
-        const existingSettlement = settlements.find(
-          s =>
-            s.sourceTransactionId === transactionId &&
-            s.sourceSplitEntryId === splitEntryId
-        );
-
-        if (existingSettlement) {
-          const updatedRecord: SettlementRecord = {
-            ...existingSettlement,
-            amount: finalSettledAmount,
-            date: options.date || existingSettlement.date,
-            note: options.note || existingSettlement.note,
-            linkedTransactionId: options.linkedTransactionId || undefined,
-            direction: targetEntry.direction,
-            updatedAt: now,
-          };
-          updateSettlement(existingSettlement.id, updatedRecord);
-          return updatedRecord;
-        } else {
-          const newSettlement: SettlementRecord = {
-            id: `set-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-            contactId: targetEntry.contactId,
-            date: options.date || now.split('T')[0],
-            amount: finalSettledAmount,
-            note: options.note || `Settlement for "${tx.description}"`,
-            createdAt: now,
-            updatedAt: now,
-            sourceTransactionId: transactionId,
-            sourceSplitEntryId: splitEntryId,
-            linkedTransactionId: options.linkedTransactionId || undefined,
-            direction: targetEntry.direction,
-          };
-          settlementsRef.current = [newSettlement, ...settlementsRef.current];
-          setSettlements(prev => [newSettlement, ...prev]);
-          const contact = contacts.find(c => c.id === targetEntry.contactId);
-          emitFinanceEvent({
-            type: 'settlement_recorded',
-            contactName: contact ? contact.name : 'Contact',
-            amount: finalSettledAmount,
-            allSettled: false,
-          });
-          return newSettlement;
-        }
-      }
-      return undefined;
-    } else {
-      // Unsettle
-      const updatedSplits = tx.splitWith.map(e =>
-        e.id === splitEntryId
-          ? {
-              ...e,
-              settled: false,
-              settledAmount: undefined,
-              linkedTransactionId: undefined,
-            }
-          : e
-      );
-      updateTransaction(transactionId, { splitWith: updatedSplits, updatedAt: now });
-
-      // Remove auto-created settlement record strictly matching this splitEntryId
-      const toDelete = settlements.find(
-        s =>
-          s.sourceTransactionId === transactionId &&
-          s.sourceSplitEntryId === splitEntryId
-      );
-      if (toDelete) {
-        addTombstone('settlements', toDelete.id);
-        settlementsRef.current = settlementsRef.current.filter(s => s.id !== toDelete.id);
-        setSettlements(prev => prev.filter(s => s.id !== toDelete.id));
-      }
-      return undefined;
-    }
-  };
-
-  // Category operations
-  const addCategory = (catData: Omit<Category, 'id'>): Category => {
-    const now = new Date().toISOString();
-    const newCat: Category = {
-      ...catData,
-      id: `cat-${Date.now()}`,
-      isCustom: true,
-      updatedAt: now,
-    };
-    categoriesRef.current = [...categoriesRef.current, newCat];
-    setCategories(prev => [...prev, newCat]);
-    return newCat;
-  };
-
-  const updateCategory = (id: string, updated: Partial<Category>) => {
-    const now = new Date().toISOString();
-    categoriesRef.current = categoriesRef.current.map(c =>
-      c.id === id ? { ...c, ...updated, updatedAt: now } : c
-    );
-    setCategories(prev =>
-      prev.map(c => (c.id === id ? { ...c, ...updated, updatedAt: now } : c))
-    );
-  };
-
-  const deleteCategory = (id: string) => {
-    addTombstone('categories', id);
-    categoriesRef.current = categoriesRef.current.filter(c => c.id !== id);
-    setCategories(prev => prev.filter(c => c.id !== id));
-  };
-
-  // Budget operations
-  const setBudgetForCategory = (category: string, monthlyLimit: number) => {
-    const now = new Date().toISOString();
-    const updater = (prev: Budget[]) => {
-      const existingIdx = prev.findIndex(b => b.category.toLowerCase() === category.toLowerCase());
-      if (existingIdx >= 0) {
-        const next = [...prev];
-        next[existingIdx] = { ...next[existingIdx], monthlyLimit, updatedAt: now };
-        return next;
-      } else {
-        return [...prev, { id: `b-${Date.now()}`, category, monthlyLimit, updatedAt: now }];
-      }
-    };
-    budgetsRef.current = updater(budgetsRef.current);
-    setBudgets(updater);
-  };
-
-  const deleteBudget = (id: string) => {
-    addTombstone('budgets', id);
-    budgetsRef.current = budgetsRef.current.filter(b => b.id !== id);
-    setBudgets(prev => prev.filter(b => b.id !== id));
-  };
-
-  // Emergency Fund operations
-  const updateEmergencySettings = (targetMonths: number, manualTargetAmount?: number) => {
-    const now = new Date().toISOString();
-    emergencyFundRef.current = {
-      ...emergencyFundRef.current,
-      targetMonths,
-      manualTargetAmount,
-      updatedAt: now,
-    };
-    setEmergencyFund(prev => ({
-      ...prev,
-      targetMonths,
-      manualTargetAmount,
-      updatedAt: now,
-    }));
-  };
-
-  const addEmergencyContribution = (
-    amount: number,
-    type: 'deposit' | 'withdrawal',
-    note?: string,
-    date?: string
-  ) => {
-    const now = new Date().toISOString();
-    const today = date || now.split('T')[0];
-    const newContribution = {
-      id: `em-${Date.now()}`,
-      date: today,
-      amount,
-      type,
-      note: note || (type === 'deposit' ? 'Emergency Fund Deposit' : 'Emergency Fund Withdrawal'),
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    const newSaved = type === 'deposit'
-      ? emergencyFundRef.current.currentSaved + amount
-      : Math.max(0, emergencyFundRef.current.currentSaved - amount);
-
-    emergencyFundRef.current = {
-      ...emergencyFundRef.current,
-      currentSaved: newSaved,
-      contributions: [newContribution, ...emergencyFundRef.current.contributions],
-      updatedAt: now,
-    };
-
-    setEmergencyFund(prev => {
-      const saved = type === 'deposit' ? prev.currentSaved + amount : Math.max(0, prev.currentSaved - amount);
-      return {
-        ...prev,
-        currentSaved: saved,
-        contributions: [newContribution, ...prev.contributions],
-        updatedAt: now,
-      };
-    });
-
-    const target = emergencyFund.manualTargetAmount || (emergencyFund.targetMonths * (emergencyFund.monthlyExpenseBaseline || 50000));
-    const finalSaved = newSaved;
-    const isFullyFunded = finalSaved >= target;
-    emitFinanceEvent({
-      type: 'emergency_contributed',
-      amount,
-      fundType: type,
-      isFullyFunded,
-    });
-  };
-
-  // Investments operations
-  const addInvestment = (invData: Omit<Investment, 'id' | 'lastUpdated'>): Investment => {
-    const now = new Date().toISOString();
-    const newInv: Investment = {
-      ...invData,
-      id: `inv-${Date.now()}`,
-      lastUpdated: now.split('T')[0],
-      updatedAt: now,
-      logs: [
-        {
-          id: `log-${Date.now()}`,
-          date: now.split('T')[0],
-          investedDelta: invData.investedAmount,
-          valueDelta: invData.currentValue,
-          note: 'Initial holding created',
-        },
-      ],
-    };
-    investmentsRef.current = [newInv, ...investmentsRef.current];
-    setInvestments(prev => [newInv, ...prev]);
-    return newInv;
-  };
-
-  const updateInvestment = (id: string, updated: Partial<Investment>) => {
-    const now = new Date().toISOString();
-    investmentsRef.current = investmentsRef.current.map(i =>
-      i.id === id
-        ? {
-            ...i,
-            ...updated,
-            lastUpdated: now.split('T')[0],
-            updatedAt: now,
-          }
-        : i
-    );
-    setInvestments(prev =>
-      prev.map(i =>
-        i.id === id
-          ? {
-              ...i,
-              ...updated,
-              lastUpdated: now.split('T')[0],
-              updatedAt: now,
-            }
-          : i
-      )
-    );
-  };
-
-  const deleteInvestment = (id: string) => {
-    addTombstone('investments', id);
-    investmentsRef.current = investmentsRef.current.filter(i => i.id !== id);
-    setInvestments(prev => prev.filter(i => i.id !== id));
-  };
-
-  // Dreams operations
-  const addDream = (
-    dreamData: Omit<DreamGoal, 'id' | 'createdAt' | 'contributions' | 'currentSaved'> & {
-      initialSaved?: number;
-    }
-  ): DreamGoal => {
-    const now = new Date().toISOString();
-    const initialSaved = dreamData.initialSaved || 0;
-    const today = now.split('T')[0];
-    const newDream: DreamGoal = {
-      id: `dream-${Date.now()}`,
-      name: dreamData.name,
-      targetAmount: dreamData.targetAmount,
-      currentSaved: initialSaved,
-      targetDate: dreamData.targetDate,
-      category: dreamData.category || 'General',
-      icon: dreamData.icon || 'Target',
-      color: dreamData.color || '#3b82f6',
-      priority: dreamData.priority || 'medium',
-      createdAt: today,
-      updatedAt: now,
-      contributions: initialSaved > 0 ? [
-        {
-          id: `dc-${Date.now()}`,
-          date: today,
-          amount: initialSaved,
-          note: 'Initial contribution',
-          createdAt: now,
-        }
-      ] : [],
-    };
-    dreamsRef.current = [newDream, ...dreamsRef.current];
-    setDreams(prev => [newDream, ...prev]);
-    return newDream;
-  };
-
-  const updateDream = (id: string, updated: Partial<DreamGoal>) => {
-    const now = new Date().toISOString();
-    dreamsRef.current = dreamsRef.current.map(d =>
-      d.id === id ? { ...d, ...updated, updatedAt: now } : d
-    );
-    setDreams(prev =>
-      prev.map(d => (d.id === id ? { ...d, ...updated, updatedAt: now } : d))
-    );
-  };
-
-  const deleteDream = (id: string) => {
-    addTombstone('dreams', id);
-    dreamsRef.current = dreamsRef.current.filter(d => d.id !== id);
-    setDreams(prev => prev.filter(d => d.id !== id));
-  };
-
-  const addDreamContribution = (dreamId: string, amount: number, note?: string, date?: string) => {
-    const now = new Date().toISOString();
-    const today = date || now.split('T')[0];
-    const newContribution = {
-      id: `dc-${Date.now()}`,
-      date: today,
-      amount,
-      note: note || 'Goal Contribution',
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    const dreamUpdater = (prev: DreamGoal[]) =>
-      prev.map(d => {
-        if (d.id === dreamId) {
-          return {
-            ...d,
-            currentSaved: d.currentSaved + amount,
-            contributions: [newContribution, ...(d.contributions || [])],
-            updatedAt: now,
-          };
-        }
-        return d;
-      });
-
-    dreamsRef.current = dreamUpdater(dreamsRef.current);
-    setDreams(dreamUpdater);
-
-    const targetDream = dreams.find(d => d.id === dreamId);
-    if (targetDream) {
-      const isCompleted = (targetDream.currentSaved + amount) >= targetDream.targetAmount;
-      emitFinanceEvent({
-        type: 'dream_contributed',
-        dreamId,
-        dreamName: targetDream.name,
-        amount,
-        isCompleted,
-      });
-      if (isCompleted) {
-        emitFinanceEvent({
-          type: 'dream_completed',
-          dream: {
-            ...targetDream,
-            currentSaved: targetDream.currentSaved + amount,
-          },
-        });
-      }
-    }
-  };
-
-  // Recurring Payments CRUD
-  const addRecurringPayment = (
-    paymentData: Omit<RecurringPayment, 'id' | 'createdAt' | 'updatedAt'>
-  ): RecurringPayment => {
-    const now = new Date().toISOString();
-    const newPayment: RecurringPayment = {
-      ...paymentData,
-      id: `rec-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-      createdAt: now,
-      updatedAt: now,
-    };
-    recurringPaymentsRef.current = [newPayment, ...recurringPaymentsRef.current];
-    setRecurringPayments(prev => [newPayment, ...prev]);
-    return newPayment;
-  };
-
-  const updateRecurringPayment = (id: string, updated: Partial<RecurringPayment>) => {
-    const now = new Date().toISOString();
-    recurringPaymentsRef.current = recurringPaymentsRef.current.map(p =>
-      p.id === id ? { ...p, ...updated, updatedAt: now } : p
-    );
-    setRecurringPayments(prev =>
-      prev.map(p => (p.id === id ? { ...p, ...updated, updatedAt: now } : p))
-    );
-  };
-
-  const deleteRecurringPayment = (id: string) => {
-    addTombstone('recurringPayments', id);
-    const logsToDelete = recurringPaymentLogs.filter(l => l.recurringPaymentId === id);
-    logsToDelete.forEach(l => addTombstone('recurringPaymentLogs', l.id));
-
-    recurringPaymentsRef.current = recurringPaymentsRef.current.filter(p => p.id !== id);
-    recurringPaymentLogsRef.current = recurringPaymentLogsRef.current.filter(l => l.recurringPaymentId !== id);
-    setRecurringPayments(prev => prev.filter(p => p.id !== id));
-    setRecurringPaymentLogs(prev => prev.filter(l => l.recurringPaymentId !== id));
-  };
-
-  const pauseRecurringPayment = (id: string) => {
-    const now = new Date().toISOString();
-    recurringPaymentsRef.current = recurringPaymentsRef.current.map(p =>
-      p.id === id ? { ...p, isActive: !p.isActive, updatedAt: now } : p
-    );
-    setRecurringPayments(prev =>
-      prev.map(p => (p.id === id ? { ...p, isActive: !p.isActive, updatedAt: now } : p))
-    );
-  };
-
-  const markRecurringPaymentPaid = (
-    recurringPaymentId: string,
-    dueDate: string,
-    actualAmount?: number,
-    linkedTransactionId?: string,
-    createTransaction?: boolean
-  ) => {
-    const payment = recurringPayments.find(p => p.id === recurringPaymentId);
-    if (!payment) return;
-
-    const paidAmount = actualAmount !== undefined ? actualAmount : payment.amount;
-    const paidDate = getTodayString();
-    const now = new Date().toISOString();
-
-    let txId = linkedTransactionId;
-    const shouldCreateTx = createTransaction !== undefined ? createTransaction : Boolean(payment.autoLogTransaction);
-
-    if (shouldCreateTx && !txId) {
-      const newTx = addTransaction({
-        date: paidDate,
-        amount: paidAmount,
-        type: 'debit',
-        category: payment.category,
-        description: `${payment.name} (Recurring: ${dueDate})`,
-        paymentMethod: payment.paymentMethod || 'Other',
-        source: 'manual',
-      }, { silent: true });
-      txId = newTx.id;
-    }
-
-    const newLog: RecurringPaymentLog = {
-      id: `reclog-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-      recurringPaymentId,
-      dueDate,
-      paidDate,
-      amount: paidAmount,
-      linkedTransactionId: txId,
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    recurringPaymentLogsRef.current = [newLog, ...recurringPaymentLogsRef.current];
-    setRecurringPaymentLogs(prev => [newLog, ...prev]);
-    emitFinanceEvent({
-      type: 'recurring_paid',
-      paymentName: payment.name,
-      amount: paidAmount,
-    });
-  };
-
-  // AI Settings
-  const updateAISettings = (settings: Partial<AISettings>) => {
-    setAISettings(prev => {
-      const provider = settings.provider || prev.provider;
-      const resolvedModel = settings.model || DEFAULT_AI_MODELS[provider];
-      return {
-        ...prev,
-        ...settings,
-        provider,
-        model: resolvedModel,
-        updatedAt: new Date().toISOString(),
-      };
-    });
-  };
-
-  const saveAIReport = (reportData: Omit<AIHealthReport, 'id' | 'createdAt'>) => {
-    const now = new Date().toISOString();
-    const newReport: AIHealthReport = {
-      ...reportData,
-      id: `rep-${Date.now()}`,
-      createdAt: now,
-      updatedAt: now,
-    };
-    setAIReports(prev => [newReport, ...prev]);
-  };
-
-  const deleteAIReport = (id: string) => {
-    addTombstone('aiReports', id);
-    setAIReports(prev => prev.filter(r => r.id !== id));
-  };
-
-  // Reset & Backup
-  const resetToDemoData = () => {
-    emitFinanceEvent({ type: 'bulk_data_loaded' });
-    setTransactions(INITIAL_TRANSACTIONS);
-    setCategories(DEFAULT_CATEGORIES);
-    setBudgets(INITIAL_BUDGETS);
-    setEmergencyFund(INITIAL_EMERGENCY_FUND);
-    setInvestments(INITIAL_INVESTMENTS);
-    setDreams(INITIAL_DREAMS);
-    setContacts([]);
-    setSettlements([]);
-    setRecurringPayments(INITIAL_RECURRING_PAYMENTS);
-    setRecurringPaymentLogs(INITIAL_RECURRING_PAYMENT_LOGS);
-    setAIReports([]);
-    setNotRecurringTxIds(new Set());
-  };
-
-  const clearAllData = async () => {
-    setTransactions([]);
-    setBudgets([]);
-    setInvestments([]);
-    setDreams([]);
-    setContacts([]);
-    setSettlements([]);
-    setRecurringPayments([]);
-    setRecurringPaymentLogs([]);
-    setAIReports([]);
-    setEmergencyFund(EMPTY_EMERGENCY_FUND);
-    setNotRecurringTxIds(new Set());
-    await clearAllStores();
-  };
-
-  const exportBackupJSON = (): string => {
-    const backupData = {
-      version: '2.1',
-      exportedAt: new Date().toISOString(),
-      transactions,
-      categories,
-      budgets,
-      emergencyFund,
-      investments,
-      dreams,
-      contacts,
-      settlements,
-      recurringPayments,
-      recurringPaymentLogs,
-      aiReports,
-      userPreferences: {
-        darkMode,
-        notRecurringTxIds: Array.from(notRecurringTxIds),
-      },
-    };
-    return JSON.stringify(backupData, null, 2);
-  };
-
-  const importBackupJSON = (jsonStr: string): boolean => {
-    try {
-      emitFinanceEvent({ type: 'bulk_data_loaded' });
-      const data = JSON.parse(jsonStr);
-      if (Array.isArray(data.transactions)) setTransactions(data.transactions);
-      if (Array.isArray(data.categories)) setCategories(data.categories);
-      if (Array.isArray(data.budgets)) setBudgets(data.budgets);
-      if (data.emergencyFund) setEmergencyFund(data.emergencyFund);
-      if (Array.isArray(data.investments)) setInvestments(data.investments);
-      if (Array.isArray(data.dreams)) setDreams(data.dreams);
-      if (Array.isArray(data.contacts)) setContacts(data.contacts);
-      if (Array.isArray(data.settlements)) setSettlements(data.settlements);
-      if (Array.isArray(data.recurringPayments)) setRecurringPayments(data.recurringPayments);
-      if (Array.isArray(data.recurringPaymentLogs)) setRecurringPaymentLogs(data.recurringPaymentLogs);
-      if (Array.isArray(data.aiReports)) setAIReports(data.aiReports);
-      if (data.userPreferences) {
-        if (data.userPreferences.darkMode !== undefined) setDarkMode(data.userPreferences.darkMode);
-        if (Array.isArray(data.userPreferences.notRecurringTxIds)) {
-          setNotRecurringTxIds(new Set(data.userPreferences.notRecurringTxIds));
-        }
-      }
-      return true;
-    } catch (e) {
-      console.error('Failed to import backup JSON:', e);
-      return false;
-    }
-  };
-
-  // Calculated Metrics
-  const totalBalance = useMemo(() => {
-    return transactions.reduce((acc, t) => {
-      return t.type === 'credit' ? acc + t.amount : acc - t.amount;
-    }, 0);
-  }, [transactions]);
-
-  const { key: currentMonthKey, monthName: currentMonthName } = getCurrentMonthYear();
-
-  const currentMonthTransactions = useMemo(() => {
-    return transactions.filter(t => t.date.startsWith(currentMonthKey));
-  }, [transactions, currentMonthKey]);
-
-  const currentMonthIncome = useMemo(() => {
-    return currentMonthTransactions
-      .filter(t => t.type === 'credit')
-      .reduce((acc, t) => acc + t.amount, 0);
-  }, [currentMonthTransactions]);
-
-  const currentMonthExpense = useMemo(() => {
-    return currentMonthTransactions
-      .filter(t => t.type === 'debit')
-      .reduce((acc, t) => acc + t.amount, 0);
-  }, [currentMonthTransactions]);
-
-  const currentMonthNet = currentMonthIncome - currentMonthExpense;
-  const currentMonthSavingsRate = currentMonthIncome > 0 ? (currentMonthNet / currentMonthIncome) * 100 : 0;
-
-  const totalInvestedAmount = useMemo(() => {
-    return investments.reduce((acc, i) => acc + i.investedAmount, 0);
-  }, [investments]);
-
-  const totalInvestmentValue = useMemo(() => {
-    return investments.reduce((acc, i) => acc + i.currentValue, 0);
-  }, [investments]);
-
-  const totalInvestmentGainLoss = totalInvestmentValue - totalInvestedAmount;
-  const totalInvestmentGainLossPct = totalInvestedAmount > 0 ? (totalInvestmentGainLoss / totalInvestedAmount) * 100 : 0;
-
-  const averageMonthlyExpenses = useMemo(() => {
-    const monthExpensesMap: Record<string, number> = {};
-    transactions.forEach(t => {
-      if (t.type === 'debit') {
-        const ym = t.date.substring(0, 7);
-        monthExpensesMap[ym] = (monthExpensesMap[ym] || 0) + t.amount;
-      }
-    });
-
-    const expenseValues = Object.values(monthExpensesMap);
-    if (expenseValues.length === 0) return 50000;
-    const sum = expenseValues.reduce((a, b) => a + b, 0);
-    return sum / expenseValues.length;
-  }, [transactions]);
-
-  const effectiveMonthlyBaseline = emergencyFund.manualTargetAmount
-    ? emergencyFund.manualTargetAmount / emergencyFund.targetMonths
-    : averageMonthlyExpenses;
-
-  const emergencyFundRunwayMonths = effectiveMonthlyBaseline > 0
-    ? emergencyFund.currentSaved / effectiveMonthlyBaseline
-    : 0;
-
-  const totalGoalsTarget = useMemo(() => {
-    return dreams.reduce((acc, d) => acc + d.targetAmount, 0);
-  }, [dreams]);
-
-  const totalGoalsSaved = useMemo(() => {
-    return dreams.reduce((acc, d) => acc + d.currentSaved, 0);
-  }, [dreams]);
-
-  // Derived Splits & Owed Metrics
-  const contactBalances = useMemo<ContactBalance[]>(() => {
-    return contacts.map(contact => {
-      let owedToMe = 0;
-      let iOweThem = 0;
-      let lastUpdated = contact.createdAt;
-
-      transactions.forEach(t => {
-        if (t.splitWith && Array.isArray(t.splitWith)) {
-          t.splitWith.forEach(entry => {
-            if (entry.contactId === contact.id) {
-              const fullAmount = entry.amount;
-              const settledAmt = entry.settled
-                ? (entry.settledAmount !== undefined ? entry.settledAmount : fullAmount)
-                : (entry.settledAmount || 0);
-              const remaining = Math.max(0, fullAmount - settledAmt);
-
-              if (remaining > 0) {
-                if (entry.direction === 'they_owe_me') {
-                  owedToMe += remaining;
-                } else {
-                  iOweThem += remaining;
-                }
-              }
-              if (t.date > lastUpdated) {
-                lastUpdated = t.date;
-              }
-            }
-          });
-        }
-      });
-
-      // Process generic settlements and overpayment amounts for this contact
-      settlements
-        .filter(s => s.contactId === contact.id)
-        .forEach(s => {
-          let settlementApplicableAmount = 0;
-          if (!s.sourceTransactionId) {
-            settlementApplicableAmount = s.amount;
-          } else if (s.reconciledSplits && s.reconciledSplits.length > 0) {
-            const totalReconciled = s.reconciledSplits.reduce((sum, r) => sum + r.amount, 0);
-            const excess = Math.max(0, s.amount - totalReconciled);
-            settlementApplicableAmount = excess;
-          }
-
-          if (settlementApplicableAmount <= 0) {
-            if (s.date > lastUpdated) lastUpdated = s.date;
-            return;
-          }
-
-          if (s.direction === 'they_owe_me') {
-            // Contact repaid user: reduce owedToMe, excess overpayment becomes user owes contact
-            const deduction = Math.min(owedToMe, settlementApplicableAmount);
-            owedToMe -= deduction;
-            const excess = settlementApplicableAmount - deduction;
-            if (excess > 0) {
-              iOweThem += excess;
-            }
-          } else if (s.direction === 'i_owe_them') {
-            // User repaid contact: reduce iOweThem, excess overpayment becomes contact owes user
-            const deduction = Math.min(iOweThem, settlementApplicableAmount);
-            iOweThem -= deduction;
-            const excess = settlementApplicableAmount - deduction;
-            if (excess > 0) {
-              owedToMe += excess;
-            }
-          } else {
-            // Fallback if direction was not stored (legacy records):
-            if (owedToMe >= iOweThem) {
-              const deduction = Math.min(owedToMe, settlementApplicableAmount);
-              owedToMe -= deduction;
-              const leftover = settlementApplicableAmount - deduction;
-              if (leftover > 0) {
-                iOweThem += leftover;
-              }
-            } else {
-              const deduction = Math.min(iOweThem, settlementApplicableAmount);
-              iOweThem -= deduction;
-              const leftover = settlementApplicableAmount - deduction;
-              if (leftover > 0) {
-                owedToMe += leftover;
-              }
-            }
-          }
-          if (s.date > lastUpdated) {
-            lastUpdated = s.date;
-          }
-        });
-
-      // True net balance: positive = they owe user; negative = user owes them
-      const netAmount = owedToMe - iOweThem;
-
-      return {
-        contactId: contact.id,
-        netAmount: Number(netAmount.toFixed(2)),
-        lastUpdated,
-      };
-    });
-  }, [contacts, transactions, settlements]);
-
-  const totalOwedToMe = useMemo(() => {
-    const namedOwed = contactBalances
-      .filter(b => b.netAmount > 0)
-      .reduce((acc, b) => acc + b.netAmount, 0);
-
-    let unnamedOwed = 0;
-    transactions.forEach(t => {
-      if (t.splitWith && Array.isArray(t.splitWith)) {
-        t.splitWith.forEach(entry => {
-          if (!entry.contactId && entry.direction === 'they_owe_me') {
-            const fullAmount = entry.amount;
-            const settledAmt = entry.settled
-              ? (entry.settledAmount !== undefined ? entry.settledAmount : fullAmount)
-              : (entry.settledAmount || 0);
-            const remaining = Math.max(0, fullAmount - settledAmt);
-            unnamedOwed += remaining;
-          }
-        });
-      }
-    });
-
-    return Number((namedOwed + unnamedOwed).toFixed(2));
-  }, [contactBalances, transactions]);
-
-  const totalIOwe = useMemo(() => {
-    const namedIOwe = contactBalances
-      .filter(b => b.netAmount < 0)
-      .reduce((acc, b) => acc + Math.abs(b.netAmount), 0);
-
-    let unnamedIOwe = 0;
-    transactions.forEach(t => {
-      if (t.splitWith && Array.isArray(t.splitWith)) {
-        t.splitWith.forEach(entry => {
-          if (!entry.contactId && entry.direction === 'i_owe_them') {
-            const fullAmount = entry.amount;
-            const settledAmt = entry.settled
-              ? (entry.settledAmount !== undefined ? entry.settledAmount : fullAmount)
-              : (entry.settledAmount || 0);
-            const remaining = Math.max(0, fullAmount - settledAmt);
-            unnamedIOwe += remaining;
-          }
-        });
-      }
-    });
-
-    return Number((namedIOwe + unnamedIOwe).toFixed(2));
-  }, [contactBalances, transactions]);
-
-  const netSharedBalance = useMemo(() => {
-    return Number((totalOwedToMe - totalIOwe).toFixed(2));
-  }, [totalOwedToMe, totalIOwe]);
-
-  const totalNetWorth = useMemo(() => {
-    // Note: emergencyFund.currentSaved and totalGoalsSaved are held in bank/cash accounts
-    // and are already accounted for within totalBalance (credits - debits).
-    // Adding them here would double-count liquid savings.
-    const net = totalBalance + totalInvestmentValue + netSharedBalance;
-    return Number(net.toFixed(2));
-  }, [totalBalance, totalInvestmentValue, netSharedBalance]);
-
-  const peerBalanceSummary = useMemo(() => {
-    let displayText = 'Split accounts settled';
-    if (totalOwedToMe > 0 && totalIOwe > 0) {
-      displayText = `Friends owe ₹${totalOwedToMe.toLocaleString('en-IN')} · You owe ₹${totalIOwe.toLocaleString('en-IN')}`;
-    } else if (totalOwedToMe > 0) {
-      displayText = `Friends owe ₹${totalOwedToMe.toLocaleString('en-IN')}`;
-    } else if (totalIOwe > 0) {
-      displayText = `You owe ₹${totalIOwe.toLocaleString('en-IN')}`;
-    }
-    return {
-      totalOwedToMe,
-      totalIOwe,
-      net: netSharedBalance,
-      displayText,
-    };
-  }, [totalOwedToMe, totalIOwe, netSharedBalance]);
-
-  const categorySpendingThisMonth = useMemo(() => {
-    const spendMap: Record<string, number> = {};
-    currentMonthTransactions.forEach(t => {
-      if (t.type === 'debit') {
-        spendMap[t.category] = (spendMap[t.category] || 0) + t.amount;
-      }
-    });
-
-    const budgetMap = new Map(budgets.map(b => [b.category.toLowerCase(), b.monthlyLimit]));
-    const categoryInfoMap = new Map(categories.map(c => [c.name.toLowerCase(), c]));
-
-    const result = Object.entries(spendMap).map(([categoryName, spent]) => {
-      const budget = budgetMap.get(categoryName.toLowerCase()) || 0;
-      const catInfo = categoryInfoMap.get(categoryName.toLowerCase());
-      const percentUsed = budget > 0 ? (spent / budget) * 100 : 0;
-
-      return {
-        category: categoryName,
-        spent,
-        budget,
-        percentUsed,
-        color: catInfo?.color || '#64748b',
-        icon: catInfo?.icon || 'Tag',
-      };
-    });
-
-    budgets.forEach(b => {
-      const alreadyIncluded = result.some(r => r.category.toLowerCase() === b.category.toLowerCase());
-      if (!alreadyIncluded) {
-        const catInfo = categoryInfoMap.get(b.category.toLowerCase());
-        result.push({
-          category: b.category,
-          spent: 0,
-          budget: b.monthlyLimit,
-          percentUsed: 0,
-          color: catInfo?.color || '#64748b',
-          icon: catInfo?.icon || 'Tag',
-        });
-      }
-    });
-
-    return result.sort((a, b) => b.spent - a.spent);
-  }, [currentMonthTransactions, budgets, categories]);
-
-  // Budget exceeded detector (fires when percentUsed crosses 100)
-  const prevSpendingRef = useRef<Map<string, number>>(new Map());
-  useEffect(() => {
-    if (!isInitialized) return;
-
-    categorySpendingThisMonth.forEach(cat => {
-      if (cat.budget > 0) {
-        const prevPercent = prevSpendingRef.current.get(cat.category.toLowerCase()) ?? 0;
-        if (prevPercent <= 100 && cat.percentUsed > 100) {
-          emitFinanceEvent({
-            type: 'budget_exceeded',
-            category: cat.category,
-            spent: cat.spent,
-            limit: cat.budget,
-          });
-        }
-      }
-    });
-
-    const newMap = new Map<string, number>();
-    categorySpendingThisMonth.forEach(cat => {
-      newMap.set(cat.category.toLowerCase(), cat.percentUsed);
-    });
-    prevSpendingRef.current = newMap;
-  }, [categorySpendingThisMonth, isInitialized, emitFinanceEvent]);
-
-  // Derived Recurring Payments
-  const totalMonthlyRecurringCommitment = useMemo(() => {
-    return recurringPayments
-      .filter(p => p.isActive)
-      .reduce((sum, p) => sum + calculateMonthlyEquivalent(p.amount, p.frequency), 0);
-  }, [recurringPayments]);
-
-  const { upcomingRecurringPayments, overdueRecurringPayments } = useMemo(() => {
-    const upcoming: Array<RecurringPayment & { nextDueDate: string; daysUntilDue: number }> = [];
-    const overdue: Array<RecurringPayment & { dueDate: string; daysOverdue: number }> = [];
-
-    const now = new Date();
-    recurringPayments
-      .filter(p => p.isActive)
-      .forEach(p => {
-        const schedule = getPaymentSchedule(p, recurringPaymentLogs, now);
-        if (schedule.activeDueDate) {
-          if (schedule.isOverdue) {
-            overdue.push({
-              ...p,
-              dueDate: schedule.activeDueDate,
-              daysOverdue: Math.abs(schedule.daysDiff),
-            });
-          } else {
-            upcoming.push({
-              ...p,
-              nextDueDate: schedule.activeDueDate,
-              daysUntilDue: Math.max(0, schedule.daysDiff),
-            });
-          }
-        }
-      });
-
-    overdue.sort((a, b) => b.daysOverdue - a.daysOverdue);
-    upcoming.sort((a, b) => a.daysUntilDue - b.daysUntilDue);
-
-    return { upcomingRecurringPayments: upcoming, overdueRecurringPayments: overdue };
-  }, [recurringPayments, recurringPaymentLogs]);
-
-  // Overdue recurring payments alert on app load
-  const hasAlertedOverdueRef = useRef(false);
-  useEffect(() => {
-    if (!isInitialized || hasAlertedOverdueRef.current) return;
-    if (overdueRecurringPayments.length > 0) {
-      hasAlertedOverdueRef.current = true;
-      const first = overdueRecurringPayments[0];
-      emitFinanceEvent({
-        type: 'recurring_overdue_detected',
-        count: overdueRecurringPayments.length,
-        paymentName: first ? first.name : undefined,
-      });
-    }
-  }, [isInitialized, overdueRecurringPayments, emitFinanceEvent]);
-
-  const getAggregatesForAI = (): FinancialAggregates => {
-    const invBreakdownMap: Record<string, number> = {};
-    investments.forEach(i => {
-      invBreakdownMap[i.type] = (invBreakdownMap[i.type] || 0) + i.currentValue;
-    });
-
-    const invBreakdown = Object.entries(invBreakdownMap).map(([type, value]) => ({ type, value }));
-
-    const goalsList = dreams.map(d => ({
-      name: d.name,
-      target: d.targetAmount,
-      saved: d.currentSaved,
-      targetDate: d.targetDate,
-      percentComplete: d.targetAmount > 0 ? (d.currentSaved / d.targetAmount) * 100 : 0,
-    }));
-
-    return {
-      currentMonthName,
-      monthlyIncome: currentMonthIncome,
-      monthlyExpenses: currentMonthExpense,
-      netSavings: currentMonthNet,
-      savingsRate: currentMonthSavingsRate,
-      categorySpending: categorySpendingThisMonth.map(c => ({
-        category: c.category,
-        spent: c.spent,
-        budget: c.budget > 0 ? c.budget : undefined,
-        percentUsed: c.budget > 0 ? c.percentUsed : undefined,
-      })),
-      emergencyFund: {
-        target: emergencyFund.manualTargetAmount || (effectiveMonthlyBaseline * emergencyFund.targetMonths),
-        saved: emergencyFund.currentSaved,
-        monthsCovered: emergencyFundRunwayMonths,
-        targetMonths: emergencyFund.targetMonths,
-      },
-      investments: {
-        totalInvested: totalInvestedAmount,
-        currentValue: totalInvestmentValue,
-        totalGainLoss: totalInvestmentGainLoss,
-        gainLossPercent: totalInvestmentGainLossPct,
-        breakdown: invBreakdown,
-      },
-      goals: goalsList,
-    };
-  };
-
-  return (
-    <FinanceContext.Provider
-      value={{
-        currentView,
-        setCurrentView,
-        darkMode,
-        setDarkMode,
-        isInitialized,
-        subscribeFinanceEvent,
-        emitFinanceEvent,
-        transactions,
-        categories,
-        budgets,
-        emergencyFund,
-        investments,
-        dreams,
-        contacts,
-        settlements,
-        recurringPayments,
-        recurringPaymentLogs,
-        aiSettings,
-        aiReports,
-        notRecurringTxIds,
-        toggleNotRecurring,
-        syncStatus,
-        lastSyncedAt,
-        syncError,
-        isDriveConnected,
-        driveUserEmail,
-        triggerSync,
-        connectDrive,
-        disconnectDrive,
-        reloadFromDB,
-        addTransaction,
-        addMultipleTransactions,
-        updateTransaction,
-        deleteTransaction,
-        deleteMultipleTransactions,
-        addContact,
-        updateContact,
-        deleteContact,
-        recordSettlement,
-        updateSettlement,
-        deleteSettlement,
-        linkSettlementToTransaction,
-        quickToggleSettleTransaction,
-        assignSplitToContact,
-        settleSplitEntry,
-        addCategory,
-        updateCategory,
-        deleteCategory,
-        setBudgetForCategory,
-        deleteBudget,
-        updateEmergencySettings,
-        addEmergencyContribution,
-        addInvestment,
-        updateInvestment,
-        deleteInvestment,
-        addDream,
-        updateDream,
-        deleteDream,
-        addDreamContribution,
-        addRecurringPayment,
-        updateRecurringPayment,
-        deleteRecurringPayment,
-        pauseRecurringPayment,
-        markRecurringPaymentPaid,
-        updateAISettings,
-        saveAIReport,
-        deleteAIReport,
-        resetToDemoData,
-        clearAllData,
-        exportBackupJSON,
-        importBackupJSON,
-        totalBalance,
-        totalNetWorth,
-        netSharedBalance,
-        peerBalanceSummary,
-        currentMonthIncome,
-        currentMonthExpense,
-        currentMonthNet,
-        currentMonthSavingsRate,
-        totalInvestedAmount,
-        totalInvestmentValue,
-        totalInvestmentGainLoss,
-        totalInvestmentGainLossPct,
-        emergencyFundRunwayMonths,
-        totalGoalsTarget,
-        totalGoalsSaved,
-        contactBalances,
-        totalOwedToMe,
-        totalIOwe,
-        categorySpendingThisMonth,
-        upcomingRecurringPayments,
-        overdueRecurringPayments,
-        totalMonthlyRecurringCommitment,
-        getAggregatesForAI,
-      }}
-    >
-      {children}
-    </FinanceContext.Provider>
-  );
+ const [currentView, setCurrentView] = useState<AppView>('dashboard');
+ const [isInitialized, setIsInitialized] = useState(false);
+ const [darkMode, setDarkMode] = useState<boolean>(() => {
+ const saved = typeof window !== 'undefined' ? localStorage.getItem('dhanveda_dark_mode') : null;
+ if (saved !== null) {
+ return saved === 'true';
+ }
+ return typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+ });
+
+ const [transactions, setTransactions] = useState<Transaction[]>([]);
+ const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
+ const [budgets, setBudgets] = useState<Budget[]>([]);
+ const [emergencyFund, setEmergencyFund] = useState<EmergencyFund>(EMPTY_EMERGENCY_FUND);
+ const [investments, setInvestments] = useState<Investment[]>([]);
+ const [dreams, setDreams] = useState<DreamGoal[]>([]);
+ const [contacts, setContacts] = useState<Contact[]>([]);
+ const [settlements, setSettlements] = useState<SettlementRecord[]>([]);
+ const [recurringPayments, setRecurringPayments] = useState<RecurringPayment[]>([]);
+ const [recurringPaymentLogs, setRecurringPaymentLogs] = useState<RecurringPaymentLog[]>([]);
+ const [notRecurringTxIds, setNotRecurringTxIds] = useState<Set<string>>(new Set());
+
+ const [aiSettings, setAISettings] = useState<AISettings>({
+ provider: 'gemini',
+ apiKey: '',
+ model: DEFAULT_AI_MODELS.gemini,
+ });
+
+ const [aiReports, setAIReports] = useState<AIHealthReport[]>([]);
+
+ // Sync state
+ const [syncStatus, setSyncStatus] = useState<SyncStatus>('disconnected');
+ const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(driveSyncService.getLastSyncedAt());
+ const [syncError, setSyncError] = useState<string | null>(null);
+ const [isDriveConnected, setIsDriveConnected] = useState<boolean>(false);
+ const [driveUserEmail, setDriveUserEmail] = useState<string | null>(null);
+
+ // Synchronous references to in-memory state for safe sync flushes
+ const transactionsRef = useRef(transactions);
+ const contactsRef = useRef(contacts);
+ const settlementsRef = useRef(settlements);
+ const categoriesRef = useRef(categories);
+ const budgetsRef = useRef(budgets);
+ const emergencyFundRef = useRef(emergencyFund);
+ const investmentsRef = useRef(investments);
+ const dreamsRef = useRef(dreams);
+ const recurringPaymentsRef = useRef(recurringPayments);
+ const recurringPaymentLogsRef = useRef(recurringPaymentLogs);
+
+ useEffect(() => {
+ transactionsRef.current = transactions;
+ contactsRef.current = contacts;
+ settlementsRef.current = settlements;
+ categoriesRef.current = categories;
+ budgetsRef.current = budgets;
+ emergencyFundRef.current = emergencyFund;
+ investmentsRef.current = investments;
+ dreamsRef.current = dreams;
+ recurringPaymentsRef.current = recurringPayments;
+ recurringPaymentLogsRef.current = recurringPaymentLogs;
+ }, [
+ transactions,
+ contacts,
+ settlements,
+ categories,
+ budgets,
+ emergencyFund,
+ investments,
+ dreams,
+ recurringPayments,
+ recurringPaymentLogs,
+ ]);
+
+ // In-memory pub/sub for domain finance events
+ const eventListenersRef = useRef<Set<FinanceEventListener>>(new Set());
+
+ const subscribeFinanceEvent = useCallback((listener: FinanceEventListener) => {
+ eventListenersRef.current.add(listener);
+ return () => {
+ eventListenersRef.current.delete(listener);
+ };
+ }, []);
+
+ const emitFinanceEvent = useCallback((event: FinanceEvent) => {
+ eventListenersRef.current.forEach(listener => {
+ try {
+ listener(event);
+ } catch (err) {
+ console.error('Error in finance event listener:', err);
+ }
+ });
+ }, []);
+
+ // Reload all records from IndexedDB into React state
+ const reloadFromDB = useCallback(async () => {
+ try {
+ const [
+ dbTx,
+ dbCat,
+ dbBudgets,
+ dbEm,
+ dbInv,
+ dbDreams,
+ dbContacts,
+ dbSettlements,
+ dbAiSet,
+ dbAiReports,
+ dbPrefs,
+ dbRecPay,
+ dbRecLogs,
+ ] = await Promise.all([
+ getAllFromStore<Transaction>('transactions'),
+ getAllFromStore<Category>('categories'),
+ getAllFromStore<Budget>('budgets'),
+ getSingleRecord<EmergencyFund & { id: string }>('emergencyFund'),
+ getAllFromStore<Investment>('investments'),
+ getAllFromStore<DreamGoal>('dreams'),
+ getAllFromStore<Contact>('contacts'),
+ getAllFromStore<SettlementRecord>('settlements'),
+ getSingleRecord<AISettings & { id: string }>('aiSettings'),
+ getAllFromStore<AIHealthReport>('aiReports'),
+ getSingleRecord<UserPreferences>('userPreferences', 'general'),
+ getAllFromStore<RecurringPayment>('recurringPayments'),
+ getAllFromStore<RecurringPaymentLog>('recurringPaymentLogs'),
+ ]);
+
+ if (dbTx && Array.isArray(dbTx)) {
+ const normalized = dbTx.map(t => {
+ let splitWith: SplitEntry[] | undefined = undefined;
+ if (t.splitWith && !Array.isArray(t.splitWith) && typeof t.splitWith === 'object') {
+ const single = t.splitWith as any;
+ splitWith = [{
+ id: single.id || `split-${t.id}-1`,
+ contactId: single.contactId ? String(single.contactId).trim() : undefined,
+ label: single.label || (!single.contactId ? 'Unnamed Person' : undefined),
+ amount: Number(single.amount) || 0,
+ direction: single.direction === 'i_owe_them' ? 'i_owe_them' : 'they_owe_me',
+ settled: Boolean(single.settled),
+ settledAmount: typeof single.settledAmount === 'number' ? single.settledAmount : undefined,
+ linkedTransactionId: single.linkedTransactionId || undefined,
+ }];
+ } else if (Array.isArray(t.splitWith)) {
+ splitWith = t.splitWith.map((entry, idx) => ({
+ id: entry.id || `split-${t.id}-${idx + 1}`,
+ contactId: entry.contactId ? String(entry.contactId).trim() : undefined,
+ label: entry.label || (!entry.contactId ? `Person ${idx + 1}` : undefined),
+ amount: Number(entry.amount) || 0,
+ direction: entry.direction === 'i_owe_them' ? 'i_owe_them' : 'they_owe_me',
+ settled: Boolean(entry.settled),
+ settledAmount: typeof entry.settledAmount === 'number' ? entry.settledAmount : undefined,
+ linkedTransactionId: entry.linkedTransactionId || undefined,
+ }));
+ }
+ return {
+ ...t,
+ amount: Number(t.amount) || 0,
+ splitWith: splitWith && splitWith.length > 0 ? splitWith : undefined,
+ };
+ });
+ setTransactions(normalized);
+ }
+ if (dbCat && Array.isArray(dbCat) && dbCat.length > 0) setCategories(dbCat);
+ if (dbBudgets && Array.isArray(dbBudgets)) setBudgets(dbBudgets);
+ if (dbEm) {
+ const { id: _id, ...cleanEm } = dbEm;
+ setEmergencyFund(cleanEm);
+ }
+ if (dbInv && Array.isArray(dbInv)) setInvestments(dbInv);
+ if (dbDreams && Array.isArray(dbDreams)) setDreams(dbDreams);
+ if (dbContacts && Array.isArray(dbContacts)) setContacts(dbContacts);
+ if (dbSettlements && Array.isArray(dbSettlements)) setSettlements(dbSettlements);
+ if (dbRecPay && Array.isArray(dbRecPay)) {
+ setRecurringPayments(dbRecPay);
+ }
+ if (dbRecLogs && Array.isArray(dbRecLogs)) {
+ setRecurringPaymentLogs(dbRecLogs);
+ }
+ if (dbAiSet) {
+ const { id: _id, ...cleanAi } = dbAiSet;
+ setAISettings({
+ provider: cleanAi.provider || 'gemini',
+ apiKey: cleanAi.apiKey || '',
+ model: cleanAi.model || DEFAULT_AI_MODELS[cleanAi.provider || 'gemini'],
+ });
+ }
+ if (dbAiReports && Array.isArray(dbAiReports)) setAIReports(dbAiReports);
+ if (dbPrefs) {
+ if (dbPrefs.darkMode !== undefined) setDarkMode(dbPrefs.darkMode);
+ if (dbPrefs.notRecurringTxIds && Array.isArray(dbPrefs.notRecurringTxIds)) {
+ setNotRecurringTxIds(new Set(dbPrefs.notRecurringTxIds));
+ }
+ }
+ } catch (err) {
+ console.error('[FinanceContext] Error reloading from IndexedDB:', err);
+ }
+ }, []);
+
+ // Initial load from IndexedDB + migrate from localStorage if available
+ useEffect(() => {
+ let isMounted = true;
+ async function init() {
+ try {
+ await migrateFromLocalStorage();
+ if (isMounted) {
+ await reloadFromDB();
+ }
+ } catch (err) {
+ console.error('[FinanceContext] Error initializing IndexedDB:', err);
+ } finally {
+ if (isMounted) setIsInitialized(true);
+ }
+ }
+
+ init();
+ return () => {
+ isMounted = false;
+ };
+ }, [reloadFromDB]);
+
+ // Sync methods
+ const triggerSync = useCallback(async (_showFeedback = true): Promise<boolean> => {
+ try {
+ // 1. Immediately flush all current in-memory React state to IndexedDB so driveSync reads 100% current data
+ await Promise.all([
+ saveAllToStore('transactions', transactionsRef.current),
+ saveAllToStore('contacts', contactsRef.current),
+ saveAllToStore('settlements', settlementsRef.current),
+ saveAllToStore('categories', categoriesRef.current),
+ saveAllToStore('budgets', budgetsRef.current),
+ saveAllToStore('investments', investmentsRef.current),
+ saveAllToStore('dreams', dreamsRef.current),
+ saveAllToStore('recurringPayments', recurringPaymentsRef.current),
+ saveAllToStore('recurringPaymentLogs', recurringPaymentLogsRef.current),
+ saveSingleRecord('emergencyFund', { ...emergencyFundRef.current, id: 'current' }),
+ ]);
+
+ const ok = await driveSyncService.sync();
+ if (ok) {
+ await reloadFromDB();
+ }
+ return ok;
+ } catch (err: any) {
+ console.error('[FinanceContext] triggerSync error:', err);
+ return false;
+ }
+ }, [reloadFromDB]);
+
+ const connectDrive = useCallback(async (): Promise<boolean> => {
+ try {
+ setSyncStatus('syncing');
+ setSyncError(null);
+ const token = await googleAuthService.requestAccessToken(true);
+ if (token) {
+ const ok = await triggerSync(true);
+ return ok;
+ }
+ setSyncStatus('disconnected');
+ return false;
+ } catch (err: any) {
+ console.error('[FinanceContext] connectDrive error:', err);
+ setSyncError(err?.message || 'Failed to connect Google Drive');
+ setSyncStatus('error');
+ return false;
+ }
+ }, [triggerSync]);
+
+ const disconnectDrive = useCallback(async (): Promise<void> => {
+ await googleAuthService.disconnect();
+ setSyncStatus('disconnected');
+ setSyncError(null);
+ }, []);
+
+ // Subscriptions to Google Auth & Drive Sync
+ useEffect(() => {
+ return googleAuthService.subscribe((connected, profile) => {
+ setIsDriveConnected(connected);
+ setDriveUserEmail(profile?.email || null);
+ if (!connected) {
+ setSyncStatus(googleAuthService.hasClientId() ? 'disconnected' : 'unconfigured');
+ }
+ });
+ }, []);
+
+ useEffect(() => {
+ return driveSyncService.subscribe((isSyncing, lastSync, error) => {
+ setLastSyncedAt(lastSync);
+ setSyncError(error);
+ if (isSyncing) {
+ setSyncStatus('syncing');
+ } else if (error) {
+ setSyncStatus('error');
+ } else if (lastSync) {
+ setSyncStatus('synced');
+ } else if (googleAuthService.isConnected()) {
+ setSyncStatus('idle');
+ }
+ });
+ }, []);
+
+ // Sync Triggers: on app start (if enabled)
+ useEffect(() => {
+ if (!isInitialized) return;
+ if (googleAuthService.isSyncEnabled()) {
+ triggerSync(false);
+ }
+ }, [isInitialized, triggerSync]);
+
+ // Sync Triggers: on network back online
+ useEffect(() => {
+ const handleOnline = () => {
+ if (googleAuthService.isSyncEnabled()) {
+ triggerSync(false);
+ }
+ };
+ window.addEventListener('online', handleOnline);
+ return () => window.removeEventListener('online', handleOnline);
+ }, [triggerSync]);
+
+ // Sync Triggers: every 3 minutes if tab is visible
+ useEffect(() => {
+ const interval = setInterval(() => {
+ if (
+ document.visibilityState === 'visible' &&
+ navigator.onLine &&
+ googleAuthService.isSyncEnabled() &&
+ !driveSyncService.isSyncing()
+ ) {
+ triggerSync(false);
+ }
+ }, 3 * 60 * 1000);
+ return () => clearInterval(interval);
+ }, [triggerSync]);
+
+ // Sync to IndexedDB once initialized
+ useEffect(() => {
+ if (!isInitialized) return;
+ saveAllToStore('transactions', transactions).catch(e => console.error('Error saving transactions:', e));
+ }, [transactions, isInitialized]);
+
+ useEffect(() => {
+ if (!isInitialized) return;
+ saveAllToStore('categories', categories).catch(e => console.error('Error saving categories:', e));
+ }, [categories, isInitialized]);
+
+ useEffect(() => {
+ if (!isInitialized) return;
+ saveAllToStore('budgets', budgets).catch(e => console.error('Error saving budgets:', e));
+ }, [budgets, isInitialized]);
+
+ useEffect(() => {
+ if (!isInitialized) return;
+ saveSingleRecord('emergencyFund', { ...emergencyFund, id: 'current' }).catch(e => console.error('Error saving emergency fund:', e));
+ }, [emergencyFund, isInitialized]);
+
+ useEffect(() => {
+ if (!isInitialized) return;
+ saveAllToStore('investments', investments).catch(e => console.error('Error saving investments:', e));
+ }, [investments, isInitialized]);
+
+ useEffect(() => {
+ if (!isInitialized) return;
+ saveAllToStore('dreams', dreams).catch(e => console.error('Error saving dreams:', e));
+ }, [dreams, isInitialized]);
+
+ useEffect(() => {
+ if (!isInitialized) return;
+ saveAllToStore('contacts', contacts).catch(e => console.error('Error saving contacts:', e));
+ }, [contacts, isInitialized]);
+
+ useEffect(() => {
+ if (!isInitialized) return;
+ saveAllToStore('settlements', settlements).catch(e => console.error('Error saving settlements:', e));
+ }, [settlements, isInitialized]);
+
+ useEffect(() => {
+ if (!isInitialized) return;
+ saveAllToStore('recurringPayments', recurringPayments).catch(e => console.error('Error saving recurring payments:', e));
+ }, [recurringPayments, isInitialized]);
+
+ useEffect(() => {
+ if (!isInitialized) return;
+ saveAllToStore('recurringPaymentLogs', recurringPaymentLogs).catch(e => console.error('Error saving recurring payment logs:', e));
+ }, [recurringPaymentLogs, isInitialized]);
+
+ useEffect(() => {
+ if (!isInitialized) return;
+ saveSingleRecord('aiSettings', { ...aiSettings, id: 'current' }).catch(e => console.error('Error saving AI settings:', e));
+ }, [aiSettings, isInitialized]);
+
+ useEffect(() => {
+ if (!isInitialized) return;
+ saveAllToStore('aiReports', aiReports).catch(e => console.error('Error saving AI reports:', e));
+ }, [aiReports, isInitialized]);
+
+ useEffect(() => {
+ // Apply temporary .theme-anim class for smooth transition only during toggle (E.4)
+ document.documentElement.classList.add('theme-anim');
+ const timer = setTimeout(() => {
+ document.documentElement.classList.remove('theme-anim');
+ }, 350);
+
+ if (darkMode) {
+ document.documentElement.classList.add('dark');
+ localStorage.setItem('dhanveda_dark_mode', 'true');
+ } else {
+ document.documentElement.classList.remove('dark');
+ localStorage.setItem('dhanveda_dark_mode', 'false');
+ }
+ if (isInitialized) {
+ saveSingleRecord('userPreferences', {
+ id: 'general',
+ darkMode,
+ notRecurringTxIds: Array.from(notRecurringTxIds),
+ updatedAt: new Date().toISOString(),
+ }).catch(e => console.error('Error saving user preferences:', e));
+ }
+ return () => clearTimeout(timer);
+ }, [darkMode, notRecurringTxIds, isInitialized]);
+
+ const toggleNotRecurring = (txId: string | string[]) => {
+ setNotRecurringTxIds(prev => {
+ const next = new Set(prev);
+ const ids = Array.isArray(txId) ? txId : [txId];
+ const allPresent = ids.every(id => next.has(id));
+ if (allPresent) {
+ ids.forEach(id => next.delete(id));
+ } else {
+ ids.forEach(id => next.add(id));
+ }
+ return next;
+ });
+ };
+
+ // Transaction operations
+ const addTransaction = (
+ txData: Omit<Transaction, 'id' | 'createdAt'>,
+ options?: { silent?: boolean }
+ ): Transaction => {
+ const now = new Date().toISOString();
+ const newTx: Transaction = {
+ ...txData,
+ id: `tx-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+ createdAt: now,
+ updatedAt: now,
+ };
+ transactionsRef.current = [newTx, ...transactionsRef.current];
+ setTransactions(prev => [newTx, ...prev]);
+ if (!options?.silent) {
+ emitFinanceEvent({ type: 'transaction_added', tx: newTx });
+ }
+ return newTx;
+ };
+
+ const addMultipleTransactions = (txsData: Omit<Transaction, 'id' | 'createdAt'>[]) => {
+ const timestamp = Date.now();
+ const now = new Date().toISOString();
+ const newTxs: Transaction[] = txsData.map((t, idx) => ({
+ ...t,
+ id: `tx-${timestamp}-${idx}-${Math.random().toString(36).substring(2, 5)}`,
+ createdAt: now,
+ updatedAt: now,
+ }));
+ transactionsRef.current = [...newTxs, ...transactionsRef.current];
+ setTransactions(prev => [...newTxs, ...prev]);
+ };
+
+ const updateTransaction = (id: string, updated: Partial<Transaction>) => {
+ const now = new Date().toISOString();
+ transactionsRef.current = transactionsRef.current.map(t =>
+ t.id === id ? { ...t, ...updated, updatedAt: now } : t
+ );
+ setTransactions(prev =>
+ prev.map(t => (t.id === id ? { ...t, ...updated, updatedAt: now } : t))
+ );
+ };
+
+ const deleteTransaction = (id: string) => {
+ addTombstone('transactions', id);
+ transactionsRef.current = transactionsRef.current.filter(t => t.id !== id);
+ setTransactions(prev => prev.filter(t => t.id !== id));
+
+ // Clean up or detach settlements tied to this transaction
+ const now = new Date().toISOString();
+ const updatedSettlements: SettlementRecord[] = [];
+
+ settlementsRef.current.forEach(s => {
+ const linkedTxId = s.linkedTransactionId === id ? undefined : s.linkedTransactionId;
+
+ // Check multi-split reconciliation
+ if (s.reconciledSplits && s.reconciledSplits.length > 0) {
+ const remainingSplits = s.reconciledSplits.filter(r => r.transactionId !== id);
+ if (remainingSplits.length === 0 && (s.sourceTransactionId === id || !s.sourceTransactionId)) {
+ // All reconciled splits belonged to this deleted transaction -> delete settlement
+ addTombstone('settlements', s.id);
+ return;
+ }
+ // Partial removal: some splits remain on other transactions!
+ const nextSourceTx = s.sourceTransactionId === id
+ ? (remainingSplits[0]?.transactionId || undefined)
+ : s.sourceTransactionId;
+ const nextSourceSplit = s.sourceTransactionId === id
+ ? (remainingSplits[0]?.splitEntryId || undefined)
+ : s.sourceSplitEntryId;
+
+ updatedSettlements.push({
+ ...s,
+ sourceTransactionId: nextSourceTx,
+ sourceSplitEntryId: nextSourceSplit,
+ linkedTransactionId: linkedTxId,
+ reconciledSplits: remainingSplits.length > 0 ? remainingSplits : undefined,
+ updatedAt: now,
+ });
+ return;
+ }
+
+ // Legacy single-split settlement
+ if (s.sourceTransactionId === id) {
+ addTombstone('settlements', s.id);
+ return;
+ }
+
+ updatedSettlements.push({
+ ...s,
+ linkedTransactionId: linkedTxId,
+ });
+ });
+
+ settlementsRef.current = updatedSettlements;
+ setSettlements(updatedSettlements);
+ emitFinanceEvent({ type: 'transaction_deleted', count: 1 });
+ };
+
+ const deleteMultipleTransactions = (ids: string[]) => {
+ ids.forEach(id => addTombstone('transactions', id));
+ const set = new Set(ids);
+ transactionsRef.current = transactionsRef.current.filter(t => !set.has(t.id));
+ setTransactions(prev => prev.filter(t => !set.has(t.id)));
+
+ const now = new Date().toISOString();
+ const updatedSettlements: SettlementRecord[] = [];
+
+ settlementsRef.current.forEach(s => {
+ const linkedTxId = s.linkedTransactionId && set.has(s.linkedTransactionId) ? undefined : s.linkedTransactionId;
+
+ if (s.reconciledSplits && s.reconciledSplits.length > 0) {
+ const remainingSplits = s.reconciledSplits.filter(r => !set.has(r.transactionId));
+ if (remainingSplits.length === 0 && (s.sourceTransactionId ? set.has(s.sourceTransactionId) : true)) {
+ addTombstone('settlements', s.id);
+ return;
+ }
+ const nextSourceTx = s.sourceTransactionId && set.has(s.sourceTransactionId)
+ ? (remainingSplits[0]?.transactionId || undefined)
+ : s.sourceTransactionId;
+ const nextSourceSplit = s.sourceTransactionId && set.has(s.sourceTransactionId)
+ ? (remainingSplits[0]?.splitEntryId || undefined)
+ : s.sourceSplitEntryId;
+
+ updatedSettlements.push({
+ ...s,
+ sourceTransactionId: nextSourceTx,
+ sourceSplitEntryId: nextSourceSplit,
+ linkedTransactionId: linkedTxId,
+ reconciledSplits: remainingSplits.length > 0 ? remainingSplits : undefined,
+ updatedAt: now,
+ });
+ return;
+ }
+
+ if (s.sourceTransactionId && set.has(s.sourceTransactionId)) {
+ addTombstone('settlements', s.id);
+ return;
+ }
+
+ updatedSettlements.push({
+ ...s,
+ linkedTransactionId: linkedTxId,
+ });
+ });
+
+ settlementsRef.current = updatedSettlements;
+ setSettlements(updatedSettlements);
+ emitFinanceEvent({ type: 'transaction_deleted', count: ids.length });
+ };
+
+ // Contact CRUD operations
+ const addContact = (contactData: Omit<Contact, 'id' | 'createdAt'>): Contact => {
+ const now = new Date().toISOString();
+ const newContact: Contact = {
+ ...contactData,
+ id: `contact-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+ createdAt: now,
+ updatedAt: now,
+ };
+ contactsRef.current = [...contactsRef.current, newContact];
+ setContacts(prev => [...prev, newContact]);
+ return newContact;
+ };
+
+ const updateContact = (id: string, updated: Partial<Contact>) => {
+ const now = new Date().toISOString();
+ contactsRef.current = contactsRef.current.map(c =>
+ c.id === id ? { ...c, ...updated, updatedAt: now } : c
+ );
+ setContacts(prev =>
+ prev.map(c => (c.id === id ? { ...c, ...updated, updatedAt: now } : c))
+ );
+ };
+
+ const deleteContact = (id: string) => {
+ addTombstone('contacts', id);
+ contactsRef.current = contactsRef.current.filter(c => c.id !== id);
+ setContacts(prev => prev.filter(c => c.id !== id));
+ // Tombstone and remove all settlements tied to this contact for sync integrity
+ const tiedSettlements = settlementsRef.current.filter(s => s.contactId === id);
+ tiedSettlements.forEach(s => addTombstone('settlements', s.id));
+ settlementsRef.current = settlementsRef.current.filter(s => s.contactId !== id);
+ setSettlements(prev => prev.filter(s => s.contactId !== id));
+ const now = new Date().toISOString();
+ transactionsRef.current = transactionsRef.current.map(t => {
+ if (!t.splitWith || !Array.isArray(t.splitWith)) return t;
+ const updatedSplits = t.splitWith.map(s =>
+ s.contactId === id ? { ...s, contactId: undefined, label: s.label || 'Former Contact' } : s
+ );
+ return { ...t, splitWith: updatedSplits, updatedAt: now };
+ });
+ setTransactions(prev =>
+ prev.map(t => {
+ if (!t.splitWith || !Array.isArray(t.splitWith)) return t;
+ const updatedSplits = t.splitWith.map(s =>
+ s.contactId === id ? { ...s, contactId: undefined, label: s.label || 'Former Contact' } : s
+ );
+ return { ...t, splitWith: updatedSplits, updatedAt: now };
+ })
+ );
+ };
+
+ const recordSettlement = (
+ contactId: string,
+ amount: number,
+ note?: string,
+ date?: string,
+ sourceTransactionId?: string,
+ sourceSplitEntryId?: string,
+ linkedTransactionId?: string,
+ direction?: OwedDirection
+ ): SettlementRecord => {
+ const now = new Date().toISOString();
+ const resolvedDirection: OwedDirection = direction || 'they_owe_me';
+
+ // If this is a contact-level settlement (no sourceTransactionId),
+ // automatically reconcile open splits for this contact in FIFO order!
+ const reconciledSplits: Array<{ transactionId: string; splitEntryId: string; amount: number }> = [];
+
+ if (!sourceTransactionId && amount > 0) {
+ let remainingToReconcile = amount;
+ let firstReconciledTxId: string | undefined = undefined;
+ let firstReconciledSplitId: string | undefined = undefined;
+
+ const updatedTxs = transactionsRef.current.map(t => {
+ if (!t.splitWith || !Array.isArray(t.splitWith) || remainingToReconcile <= 0) return t;
+ let txModified = false;
+ const updatedSplits = t.splitWith.map(entry => {
+ if (
+ entry.contactId === contactId &&
+ entry.direction === resolvedDirection &&
+ !entry.settled &&
+ remainingToReconcile > 0
+ ) {
+ const currentSettled = entry.settledAmount || 0;
+ const openAmt = Math.max(0, entry.amount - currentSettled);
+ if (openAmt > 0) {
+ const allocation = Math.min(openAmt, remainingToReconcile);
+ const newSettledAmt = currentSettled + allocation;
+ const isFull = newSettledAmt >= entry.amount - 0.01;
+ remainingToReconcile -= allocation;
+ txModified = true;
+ reconciledSplits.push({
+ transactionId: t.id,
+ splitEntryId: entry.id,
+ amount: allocation,
+ });
+ if (!firstReconciledTxId) {
+ firstReconciledTxId = t.id;
+ firstReconciledSplitId = entry.id;
+ }
+ return {
+ ...entry,
+ settled: isFull,
+ settledAmount: Number(newSettledAmt.toFixed(2)),
+ linkedTransactionId: linkedTransactionId || entry.linkedTransactionId,
+ };
+ }
+ }
+ return entry;
+ });
+
+ return txModified ? { ...t, splitWith: updatedSplits, updatedAt: now } : t;
+ });
+
+ if (firstReconciledTxId) {
+ transactionsRef.current = updatedTxs;
+ setTransactions(updatedTxs);
+ sourceTransactionId = firstReconciledTxId;
+ sourceSplitEntryId = firstReconciledSplitId;
+ }
+ }
+
+ const newSettlement: SettlementRecord = {
+ id: `set-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+ contactId,
+ amount,
+ date: date || now.split('T')[0],
+ note: note || 'Settlement payment',
+ createdAt: now,
+ updatedAt: now,
+ sourceTransactionId,
+ sourceSplitEntryId,
+ linkedTransactionId,
+ direction: resolvedDirection,
+ reconciledSplits: reconciledSplits.length > 0 ? reconciledSplits : undefined,
+ };
+ settlementsRef.current = [newSettlement, ...settlementsRef.current];
+ setSettlements(prev => [newSettlement, ...prev]);
+ const contact = contacts.find(c => c.id === contactId);
+ emitFinanceEvent({
+ type: 'settlement_recorded',
+ contactName: contact ? contact.name : 'Contact',
+ amount,
+ allSettled: false,
+ });
+ return newSettlement;
+ };
+
+ const deleteSettlement = (id: string) => {
+ addTombstone('settlements', id);
+ const target = settlementsRef.current.find(s => s.id === id);
+ settlementsRef.current = settlementsRef.current.filter(s => s.id !== id);
+ setSettlements(prev => prev.filter(s => s.id !== id));
+
+ const now = new Date().toISOString();
+
+ // 1. If this settlement tracked multi-split reconciliations, restore all of them
+ if (target?.reconciledSplits && target.reconciledSplits.length > 0) {
+ const splitLookup = new Map<string, number>();
+ target.reconciledSplits.forEach(r => {
+ splitLookup.set(`${r.transactionId}:${r.splitEntryId}`, r.amount);
+ });
+
+ const updatedTxs = transactionsRef.current.map(t => {
+ if (!t.splitWith || !Array.isArray(t.splitWith)) return t;
+ let txModified = false;
+ const updatedSplits = t.splitWith.map(s => {
+ const key = `${t.id}:${s.id}`;
+ if (splitLookup.has(key)) {
+ txModified = true;
+ const reconciledAmt = splitLookup.get(key) || 0;
+ const currentSettled = s.settledAmount !== undefined ? s.settledAmount : s.amount;
+ const newSettledAmt = Math.max(0, currentSettled - reconciledAmt);
+ if (newSettledAmt <= 0.01) {
+ return { ...s, settled: false, settledAmount: undefined, linkedTransactionId: undefined };
+ } else {
+ return { ...s, settled: false, settledAmount: Number(newSettledAmt.toFixed(2)) };
+ }
+ }
+ return s;
+ });
+ return txModified ? { ...t, splitWith: updatedSplits, updatedAt: now } : t;
+ });
+
+ transactionsRef.current = updatedTxs;
+ setTransactions(updatedTxs);
+ } else if (target?.sourceTransactionId) {
+ // 2. Legacy fallback for single-split settlements
+ const updatedTxs = transactionsRef.current.map(t => {
+ if (t.id !== target.sourceTransactionId || !t.splitWith) return t;
+ const updatedSplits = t.splitWith.map(s => {
+ if (target.sourceSplitEntryId ? s.id === target.sourceSplitEntryId : true) {
+ return { ...s, settled: false, settledAmount: undefined, linkedTransactionId: undefined };
+ }
+ return s;
+ });
+ return { ...t, splitWith: updatedSplits, updatedAt: now };
+ });
+ transactionsRef.current = updatedTxs;
+ setTransactions(updatedTxs);
+ }
+ };
+
+ const updateSettlement = (id: string, updated: Partial<SettlementRecord>) => {
+ const now = new Date().toISOString();
+ settlementsRef.current = settlementsRef.current.map(s =>
+ s.id === id ? { ...s, ...updated, updatedAt: now } : s
+ );
+ setSettlements(prev =>
+ prev.map(s => (s.id === id ? { ...s, ...updated, updatedAt: now } : s))
+ );
+ };
+
+ const linkSettlementToTransaction = (settlementId: string, transactionId?: string) => {
+ const now = new Date().toISOString();
+ settlementsRef.current = settlementsRef.current.map(s =>
+ s.id === settlementId
+ ? { ...s, linkedTransactionId: transactionId || undefined, updatedAt: now }
+ : s
+ );
+ setSettlements(prev =>
+ prev.map(s =>
+ s.id === settlementId
+ ? { ...s, linkedTransactionId: transactionId || undefined, updatedAt: now }
+ : s
+ )
+ );
+ };
+
+ const quickToggleSettleTransaction = (
+ transactionId: string,
+ splitEntryId?: string
+ ): SettlementRecord | undefined => {
+ const tx = transactions.find(t => t.id === transactionId);
+ if (!tx || !tx.splitWith || !Array.isArray(tx.splitWith)) return undefined;
+
+ const targetEntryId = splitEntryId || tx.splitWith[0]?.id;
+ if (!targetEntryId) return undefined;
+
+ const targetEntry = tx.splitWith.find(e => e.id === targetEntryId);
+ if (!targetEntry) return undefined;
+
+ const isCurrentlySettled = Boolean(targetEntry.settled);
+ const now = new Date().toISOString();
+
+ if (!isCurrentlySettled) {
+ // 1. Mark that specific splitEntry as settled
+ const updatedSplits = tx.splitWith.map(e =>
+ e.id === targetEntryId ? { ...e, settled: true } : e
+ );
+ updateTransaction(transactionId, { splitWith: updatedSplits, updatedAt: now });
+
+ // 2. If it is attached to a contact, record SettlementRecord
+ if (targetEntry.contactId) {
+ const newSettlement: SettlementRecord = {
+ id: `set-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+ contactId: targetEntry.contactId,
+ date: now.split('T')[0],
+ amount: targetEntry.amount,
+ note: `Quick settlement for "${tx.description}"`,
+ createdAt: now,
+ updatedAt: now,
+ sourceTransactionId: transactionId,
+ sourceSplitEntryId: targetEntryId,
+ direction: targetEntry.direction,
+ };
+ settlementsRef.current = [newSettlement, ...settlementsRef.current];
+ setSettlements(prev => [newSettlement, ...prev]);
+ const contact = contacts.find(c => c.id === targetEntry.contactId);
+ emitFinanceEvent({
+ type: 'settlement_recorded',
+ contactName: contact ? contact.name : 'Contact',
+ amount: targetEntry.amount,
+ allSettled: false,
+ });
+ return newSettlement;
+ }
+ return undefined;
+ } else {
+ // 1. Mark that specific splitEntry as unsettled
+ const updatedSplits = tx.splitWith.map(e =>
+ e.id === targetEntryId ? { ...e, settled: false } : e
+ );
+ updateTransaction(transactionId, { splitWith: updatedSplits, updatedAt: now });
+
+ // 2. Remove the auto-created settlement record strictly matching this split entry
+ const toDelete = settlements.find(
+ s =>
+ s.sourceTransactionId === transactionId &&
+ s.sourceSplitEntryId === targetEntryId
+ );
+ if (toDelete) {
+ addTombstone('settlements', toDelete.id);
+ settlementsRef.current = settlementsRef.current.filter(s => s.id !== toDelete.id);
+ setSettlements(prev => prev.filter(s => s.id !== toDelete.id));
+ }
+ return undefined;
+ }
+ };
+
+ const assignSplitToContact = (
+ transactionId: string,
+ splitEntryId: string,
+ contactId: string
+ ) => {
+ const tx = transactions.find(t => t.id === transactionId);
+ if (!tx || !tx.splitWith || !Array.isArray(tx.splitWith)) return;
+
+ const now = new Date().toISOString();
+ const updatedSplits = tx.splitWith.map(e =>
+ e.id === splitEntryId
+ ? {
+ ...e,
+ contactId,
+ label: undefined, // Clear generic label once assigned to a real person
+ }
+ : e
+ );
+ updateTransaction(transactionId, { splitWith: updatedSplits, updatedAt: now });
+ };
+
+ const settleSplitEntry = (
+ transactionId: string,
+ splitEntryId: string,
+ options: {
+ settled: boolean;
+ settledAmount?: number;
+ linkedTransactionId?: string;
+ note?: string;
+ date?: string;
+ }
+ ): SettlementRecord | undefined => {
+ const tx = transactions.find(t => t.id === transactionId);
+ if (!tx || !tx.splitWith || !Array.isArray(tx.splitWith)) return undefined;
+
+ const targetEntry = tx.splitWith.find(e => e.id === splitEntryId);
+ if (!targetEntry) return undefined;
+
+ const now = new Date().toISOString();
+
+ if (options.settled) {
+ const inputAmount =
+ typeof options.settledAmount === 'number' ? options.settledAmount : targetEntry.amount;
+ if (inputAmount <= 0) return undefined;
+
+ const finalSettledAmount = Math.min(inputAmount, targetEntry.amount);
+ const isFullSettlement = finalSettledAmount >= targetEntry.amount - 0.01;
+
+ // 1. Update splitEntry on transaction
+ const updatedSplits = tx.splitWith.map(e =>
+ e.id === splitEntryId
+ ? {
+ ...e,
+ settled: isFullSettlement,
+ settledAmount: finalSettledAmount,
+ linkedTransactionId: options.linkedTransactionId || undefined,
+ }
+ : e
+ );
+ updateTransaction(transactionId, { splitWith: updatedSplits, updatedAt: now });
+
+ // 2. If attached to a contact, record or update SettlementRecord
+ if (targetEntry.contactId) {
+ const existingSettlement = settlements.find(
+ s =>
+ s.sourceTransactionId === transactionId &&
+ s.sourceSplitEntryId === splitEntryId
+ );
+
+ if (existingSettlement) {
+ const updatedRecord: SettlementRecord = {
+ ...existingSettlement,
+ amount: finalSettledAmount,
+ date: options.date || existingSettlement.date,
+ note: options.note || existingSettlement.note,
+ linkedTransactionId: options.linkedTransactionId || undefined,
+ direction: targetEntry.direction,
+ updatedAt: now,
+ };
+ updateSettlement(existingSettlement.id, updatedRecord);
+ return updatedRecord;
+ } else {
+ const newSettlement: SettlementRecord = {
+ id: `set-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+ contactId: targetEntry.contactId,
+ date: options.date || now.split('T')[0],
+ amount: finalSettledAmount,
+ note: options.note || `Settlement for "${tx.description}"`,
+ createdAt: now,
+ updatedAt: now,
+ sourceTransactionId: transactionId,
+ sourceSplitEntryId: splitEntryId,
+ linkedTransactionId: options.linkedTransactionId || undefined,
+ direction: targetEntry.direction,
+ };
+ settlementsRef.current = [newSettlement, ...settlementsRef.current];
+ setSettlements(prev => [newSettlement, ...prev]);
+ const contact = contacts.find(c => c.id === targetEntry.contactId);
+ emitFinanceEvent({
+ type: 'settlement_recorded',
+ contactName: contact ? contact.name : 'Contact',
+ amount: finalSettledAmount,
+ allSettled: false,
+ });
+ return newSettlement;
+ }
+ }
+ return undefined;
+ } else {
+ // Unsettle
+ const updatedSplits = tx.splitWith.map(e =>
+ e.id === splitEntryId
+ ? {
+ ...e,
+ settled: false,
+ settledAmount: undefined,
+ linkedTransactionId: undefined,
+ }
+ : e
+ );
+ updateTransaction(transactionId, { splitWith: updatedSplits, updatedAt: now });
+
+ // Remove auto-created settlement record strictly matching this splitEntryId
+ const toDelete = settlements.find(
+ s =>
+ s.sourceTransactionId === transactionId &&
+ s.sourceSplitEntryId === splitEntryId
+ );
+ if (toDelete) {
+ addTombstone('settlements', toDelete.id);
+ settlementsRef.current = settlementsRef.current.filter(s => s.id !== toDelete.id);
+ setSettlements(prev => prev.filter(s => s.id !== toDelete.id));
+ }
+ return undefined;
+ }
+ };
+
+ // Category operations
+ const addCategory = (catData: Omit<Category, 'id'>): Category => {
+ const now = new Date().toISOString();
+ const newCat: Category = {
+ ...catData,
+ id: `cat-${Date.now()}`,
+ isCustom: true,
+ updatedAt: now,
+ };
+ categoriesRef.current = [...categoriesRef.current, newCat];
+ setCategories(prev => [...prev, newCat]);
+ return newCat;
+ };
+
+ const updateCategory = (id: string, updated: Partial<Category>) => {
+ const now = new Date().toISOString();
+ categoriesRef.current = categoriesRef.current.map(c =>
+ c.id === id ? { ...c, ...updated, updatedAt: now } : c
+ );
+ setCategories(prev =>
+ prev.map(c => (c.id === id ? { ...c, ...updated, updatedAt: now } : c))
+ );
+ };
+
+ const deleteCategory = (id: string) => {
+ addTombstone('categories', id);
+ categoriesRef.current = categoriesRef.current.filter(c => c.id !== id);
+ setCategories(prev => prev.filter(c => c.id !== id));
+ };
+
+ // Budget operations
+ const setBudgetForCategory = (category: string, monthlyLimit: number) => {
+ const now = new Date().toISOString();
+ const updater = (prev: Budget[]) => {
+ const existingIdx = prev.findIndex(b => b.category.toLowerCase() === category.toLowerCase());
+ if (existingIdx >= 0) {
+ const next = [...prev];
+ next[existingIdx] = { ...next[existingIdx], monthlyLimit, updatedAt: now };
+ return next;
+ } else {
+ return [...prev, { id: `b-${Date.now()}`, category, monthlyLimit, updatedAt: now }];
+ }
+ };
+ budgetsRef.current = updater(budgetsRef.current);
+ setBudgets(updater);
+ };
+
+ const deleteBudget = (id: string) => {
+ addTombstone('budgets', id);
+ budgetsRef.current = budgetsRef.current.filter(b => b.id !== id);
+ setBudgets(prev => prev.filter(b => b.id !== id));
+ };
+
+ // Emergency Fund operations
+ const updateEmergencySettings = (targetMonths: number, manualTargetAmount?: number) => {
+ const now = new Date().toISOString();
+ emergencyFundRef.current = {
+ ...emergencyFundRef.current,
+ targetMonths,
+ manualTargetAmount,
+ updatedAt: now,
+ };
+ setEmergencyFund(prev => ({
+ ...prev,
+ targetMonths,
+ manualTargetAmount,
+ updatedAt: now,
+ }));
+ };
+
+ const addEmergencyContribution = (
+ amount: number,
+ type: 'deposit' | 'withdrawal',
+ note?: string,
+ date?: string
+ ) => {
+ const now = new Date().toISOString();
+ const today = date || now.split('T')[0];
+ const newContribution = {
+ id: `em-${Date.now()}`,
+ date: today,
+ amount,
+ type,
+ note: note || (type === 'deposit' ? 'Emergency Fund Deposit' : 'Emergency Fund Withdrawal'),
+ createdAt: now,
+ updatedAt: now,
+ };
+
+ const newSaved = type === 'deposit'
+ ? emergencyFundRef.current.currentSaved + amount
+ : Math.max(0, emergencyFundRef.current.currentSaved - amount);
+
+ emergencyFundRef.current = {
+ ...emergencyFundRef.current,
+ currentSaved: newSaved,
+ contributions: [newContribution, ...emergencyFundRef.current.contributions],
+ updatedAt: now,
+ };
+
+ setEmergencyFund(prev => {
+ const saved = type === 'deposit' ? prev.currentSaved + amount : Math.max(0, prev.currentSaved - amount);
+ return {
+ ...prev,
+ currentSaved: saved,
+ contributions: [newContribution, ...prev.contributions],
+ updatedAt: now,
+ };
+ });
+
+ const target = emergencyFund.manualTargetAmount || (emergencyFund.targetMonths * (emergencyFund.monthlyExpenseBaseline || 50000));
+ const finalSaved = newSaved;
+ const isFullyFunded = finalSaved >= target;
+ emitFinanceEvent({
+ type: 'emergency_contributed',
+ amount,
+ fundType: type,
+ isFullyFunded,
+ });
+ };
+
+ // Investments operations
+ const addInvestment = (invData: Omit<Investment, 'id' | 'lastUpdated'>): Investment => {
+ const now = new Date().toISOString();
+ const newInv: Investment = {
+ ...invData,
+ id: `inv-${Date.now()}`,
+ lastUpdated: now.split('T')[0],
+ updatedAt: now,
+ logs: [
+ {
+ id: `log-${Date.now()}`,
+ date: now.split('T')[0],
+ investedDelta: invData.investedAmount,
+ valueDelta: invData.currentValue,
+ note: 'Initial holding created',
+ },
+ ],
+ };
+ investmentsRef.current = [newInv, ...investmentsRef.current];
+ setInvestments(prev => [newInv, ...prev]);
+ return newInv;
+ };
+
+ const updateInvestment = (id: string, updated: Partial<Investment>) => {
+ const now = new Date().toISOString();
+ investmentsRef.current = investmentsRef.current.map(i =>
+ i.id === id
+ ? {
+ ...i,
+ ...updated,
+ lastUpdated: now.split('T')[0],
+ updatedAt: now,
+ }
+ : i
+ );
+ setInvestments(prev =>
+ prev.map(i =>
+ i.id === id
+ ? {
+ ...i,
+ ...updated,
+ lastUpdated: now.split('T')[0],
+ updatedAt: now,
+ }
+ : i
+ )
+ );
+ };
+
+ const deleteInvestment = (id: string) => {
+ addTombstone('investments', id);
+ investmentsRef.current = investmentsRef.current.filter(i => i.id !== id);
+ setInvestments(prev => prev.filter(i => i.id !== id));
+ };
+
+ // Dreams operations
+ const addDream = (
+ dreamData: Omit<DreamGoal, 'id' | 'createdAt' | 'contributions' | 'currentSaved'> & {
+ initialSaved?: number;
+ }
+ ): DreamGoal => {
+ const now = new Date().toISOString();
+ const initialSaved = dreamData.initialSaved || 0;
+ const today = now.split('T')[0];
+ const newDream: DreamGoal = {
+ id: `dream-${Date.now()}`,
+ name: dreamData.name,
+ targetAmount: dreamData.targetAmount,
+ currentSaved: initialSaved,
+ targetDate: dreamData.targetDate,
+ category: dreamData.category || 'General',
+ icon: dreamData.icon || 'Target',
+ color: dreamData.color || '#3b82f6',
+ priority: dreamData.priority || 'medium',
+ createdAt: today,
+ updatedAt: now,
+ contributions: initialSaved > 0 ? [
+ {
+ id: `dc-${Date.now()}`,
+ date: today,
+ amount: initialSaved,
+ note: 'Initial contribution',
+ createdAt: now,
+ }
+ ] : [],
+ };
+ dreamsRef.current = [newDream, ...dreamsRef.current];
+ setDreams(prev => [newDream, ...prev]);
+ return newDream;
+ };
+
+ const updateDream = (id: string, updated: Partial<DreamGoal>) => {
+ const now = new Date().toISOString();
+ dreamsRef.current = dreamsRef.current.map(d =>
+ d.id === id ? { ...d, ...updated, updatedAt: now } : d
+ );
+ setDreams(prev =>
+ prev.map(d => (d.id === id ? { ...d, ...updated, updatedAt: now } : d))
+ );
+ };
+
+ const deleteDream = (id: string) => {
+ addTombstone('dreams', id);
+ dreamsRef.current = dreamsRef.current.filter(d => d.id !== id);
+ setDreams(prev => prev.filter(d => d.id !== id));
+ };
+
+ const addDreamContribution = (dreamId: string, amount: number, note?: string, date?: string) => {
+ const now = new Date().toISOString();
+ const today = date || now.split('T')[0];
+ const newContribution = {
+ id: `dc-${Date.now()}`,
+ date: today,
+ amount,
+ note: note || 'Goal Contribution',
+ createdAt: now,
+ updatedAt: now,
+ };
+
+ const dreamUpdater = (prev: DreamGoal[]) =>
+ prev.map(d => {
+ if (d.id === dreamId) {
+ return {
+ ...d,
+ currentSaved: d.currentSaved + amount,
+ contributions: [newContribution, ...(d.contributions || [])],
+ updatedAt: now,
+ };
+ }
+ return d;
+ });
+
+ dreamsRef.current = dreamUpdater(dreamsRef.current);
+ setDreams(dreamUpdater);
+
+ const targetDream = dreams.find(d => d.id === dreamId);
+ if (targetDream) {
+ const isCompleted = (targetDream.currentSaved + amount) >= targetDream.targetAmount;
+ emitFinanceEvent({
+ type: 'dream_contributed',
+ dreamId,
+ dreamName: targetDream.name,
+ amount,
+ isCompleted,
+ });
+ if (isCompleted) {
+ emitFinanceEvent({
+ type: 'dream_completed',
+ dream: {
+ ...targetDream,
+ currentSaved: targetDream.currentSaved + amount,
+ },
+ });
+ }
+ }
+ };
+
+ // Recurring Payments CRUD
+ const addRecurringPayment = (
+ paymentData: Omit<RecurringPayment, 'id' | 'createdAt' | 'updatedAt'>
+ ): RecurringPayment => {
+ const now = new Date().toISOString();
+ const newPayment: RecurringPayment = {
+ ...paymentData,
+ id: `rec-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+ createdAt: now,
+ updatedAt: now,
+ };
+ recurringPaymentsRef.current = [newPayment, ...recurringPaymentsRef.current];
+ setRecurringPayments(prev => [newPayment, ...prev]);
+ return newPayment;
+ };
+
+ const updateRecurringPayment = (id: string, updated: Partial<RecurringPayment>) => {
+ const now = new Date().toISOString();
+ recurringPaymentsRef.current = recurringPaymentsRef.current.map(p =>
+ p.id === id ? { ...p, ...updated, updatedAt: now } : p
+ );
+ setRecurringPayments(prev =>
+ prev.map(p => (p.id === id ? { ...p, ...updated, updatedAt: now } : p))
+ );
+ };
+
+ const deleteRecurringPayment = (id: string) => {
+ addTombstone('recurringPayments', id);
+ const logsToDelete = recurringPaymentLogs.filter(l => l.recurringPaymentId === id);
+ logsToDelete.forEach(l => addTombstone('recurringPaymentLogs', l.id));
+
+ recurringPaymentsRef.current = recurringPaymentsRef.current.filter(p => p.id !== id);
+ recurringPaymentLogsRef.current = recurringPaymentLogsRef.current.filter(l => l.recurringPaymentId !== id);
+ setRecurringPayments(prev => prev.filter(p => p.id !== id));
+ setRecurringPaymentLogs(prev => prev.filter(l => l.recurringPaymentId !== id));
+ };
+
+ const pauseRecurringPayment = (id: string) => {
+ const now = new Date().toISOString();
+ recurringPaymentsRef.current = recurringPaymentsRef.current.map(p =>
+ p.id === id ? { ...p, isActive: !p.isActive, updatedAt: now } : p
+ );
+ setRecurringPayments(prev =>
+ prev.map(p => (p.id === id ? { ...p, isActive: !p.isActive, updatedAt: now } : p))
+ );
+ };
+
+ const markRecurringPaymentPaid = (
+ recurringPaymentId: string,
+ dueDate: string,
+ actualAmount?: number,
+ linkedTransactionId?: string,
+ createTransaction?: boolean
+ ) => {
+ const payment = recurringPayments.find(p => p.id === recurringPaymentId);
+ if (!payment) return;
+
+ const paidAmount = actualAmount !== undefined ? actualAmount : payment.amount;
+ const paidDate = getTodayString();
+ const now = new Date().toISOString();
+
+ let txId = linkedTransactionId;
+ const shouldCreateTx = createTransaction !== undefined ? createTransaction : Boolean(payment.autoLogTransaction);
+
+ if (shouldCreateTx && !txId) {
+ const newTx = addTransaction({
+ date: paidDate,
+ amount: paidAmount,
+ type: 'debit',
+ category: payment.category,
+ description: `${payment.name} (Recurring: ${dueDate})`,
+ paymentMethod: payment.paymentMethod || 'Other',
+ source: 'manual',
+ }, { silent: true });
+ txId = newTx.id;
+ }
+
+ const newLog: RecurringPaymentLog = {
+ id: `reclog-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+ recurringPaymentId,
+ dueDate,
+ paidDate,
+ amount: paidAmount,
+ linkedTransactionId: txId,
+ createdAt: now,
+ updatedAt: now,
+ };
+
+ recurringPaymentLogsRef.current = [newLog, ...recurringPaymentLogsRef.current];
+ setRecurringPaymentLogs(prev => [newLog, ...prev]);
+ emitFinanceEvent({
+ type: 'recurring_paid',
+ paymentName: payment.name,
+ amount: paidAmount,
+ });
+ };
+
+ // AI Settings
+ const updateAISettings = (settings: Partial<AISettings>) => {
+ setAISettings(prev => {
+ const provider = settings.provider || prev.provider;
+ const resolvedModel = settings.model || DEFAULT_AI_MODELS[provider];
+ return {
+ ...prev,
+ ...settings,
+ provider,
+ model: resolvedModel,
+ updatedAt: new Date().toISOString(),
+ };
+ });
+ };
+
+ const saveAIReport = (reportData: Omit<AIHealthReport, 'id' | 'createdAt'>) => {
+ const now = new Date().toISOString();
+ const newReport: AIHealthReport = {
+ ...reportData,
+ id: `rep-${Date.now()}`,
+ createdAt: now,
+ updatedAt: now,
+ };
+ setAIReports(prev => [newReport, ...prev]);
+ };
+
+ const deleteAIReport = (id: string) => {
+ addTombstone('aiReports', id);
+ setAIReports(prev => prev.filter(r => r.id !== id));
+ };
+
+ // Reset & Backup
+ const resetToDemoData = () => {
+ emitFinanceEvent({ type: 'bulk_data_loaded' });
+ const rebased = rebaseDemoData({
+ transactions: INITIAL_TRANSACTIONS,
+ emergencyFund: INITIAL_EMERGENCY_FUND,
+ investments: INITIAL_INVESTMENTS,
+ dreams: INITIAL_DREAMS,
+ recurringPayments: INITIAL_RECURRING_PAYMENTS,
+ recurringPaymentLogs: INITIAL_RECURRING_PAYMENT_LOGS,
+ });
+ setTransactions(rebased.transactions);
+ setCategories(DEFAULT_CATEGORIES);
+ setBudgets(INITIAL_BUDGETS);
+ setEmergencyFund(rebased.emergencyFund);
+ setInvestments(rebased.investments);
+ setDreams(rebased.dreams);
+ setContacts([]);
+ setSettlements([]);
+ setRecurringPayments(rebased.recurringPayments);
+ setRecurringPaymentLogs(rebased.recurringPaymentLogs);
+ setAIReports([]);
+ setNotRecurringTxIds(new Set());
+ };
+
+ const clearAllData = async () => {
+ setTransactions([]);
+ setBudgets([]);
+ setInvestments([]);
+ setDreams([]);
+ setContacts([]);
+ setSettlements([]);
+ setRecurringPayments([]);
+ setRecurringPaymentLogs([]);
+ setAIReports([]);
+ setEmergencyFund(EMPTY_EMERGENCY_FUND);
+ setNotRecurringTxIds(new Set());
+ await clearAllStores();
+ };
+
+ const exportBackupJSON = (): string => {
+ const backupData = {
+ version: '2.1',
+ exportedAt: new Date().toISOString(),
+ transactions,
+ categories,
+ budgets,
+ emergencyFund,
+ investments,
+ dreams,
+ contacts,
+ settlements,
+ recurringPayments,
+ recurringPaymentLogs,
+ aiReports,
+ userPreferences: {
+ darkMode,
+ notRecurringTxIds: Array.from(notRecurringTxIds),
+ },
+ };
+ return JSON.stringify(backupData, null, 2);
+ };
+
+ const importBackupJSON = (jsonStr: string): boolean => {
+ try {
+ emitFinanceEvent({ type: 'bulk_data_loaded' });
+ const data = JSON.parse(jsonStr);
+ if (Array.isArray(data.transactions)) setTransactions(data.transactions);
+ if (Array.isArray(data.categories)) setCategories(data.categories);
+ if (Array.isArray(data.budgets)) setBudgets(data.budgets);
+ if (data.emergencyFund) setEmergencyFund(data.emergencyFund);
+ if (Array.isArray(data.investments)) setInvestments(data.investments);
+ if (Array.isArray(data.dreams)) setDreams(data.dreams);
+ if (Array.isArray(data.contacts)) setContacts(data.contacts);
+ if (Array.isArray(data.settlements)) setSettlements(data.settlements);
+ if (Array.isArray(data.recurringPayments)) setRecurringPayments(data.recurringPayments);
+ if (Array.isArray(data.recurringPaymentLogs)) setRecurringPaymentLogs(data.recurringPaymentLogs);
+ if (Array.isArray(data.aiReports)) setAIReports(data.aiReports);
+ if (data.userPreferences) {
+ if (data.userPreferences.darkMode !== undefined) setDarkMode(data.userPreferences.darkMode);
+ if (Array.isArray(data.userPreferences.notRecurringTxIds)) {
+ setNotRecurringTxIds(new Set(data.userPreferences.notRecurringTxIds));
+ }
+ }
+ return true;
+ } catch (e) {
+ console.error('Failed to import backup JSON:', e);
+ return false;
+ }
+ };
+
+ // Calculated Metrics
+ const totalBalance = useMemo(() => {
+ return transactions.reduce((acc, t) => {
+ return t.type === 'credit' ? acc + t.amount : acc - t.amount;
+ }, 0);
+ }, [transactions]);
+
+ const { key: currentMonthKey, monthName: currentMonthName } = getCurrentMonthYear();
+
+ const currentMonthTransactions = useMemo(() => {
+ return transactions.filter(t => t.date.startsWith(currentMonthKey));
+ }, [transactions, currentMonthKey]);
+
+ const currentMonthIncome = useMemo(() => {
+ return currentMonthTransactions
+ .filter(t => t.type === 'credit')
+ .reduce((acc, t) => acc + t.amount, 0);
+ }, [currentMonthTransactions]);
+
+ const currentMonthExpense = useMemo(() => {
+ return currentMonthTransactions
+ .filter(t => t.type === 'debit')
+ .reduce((acc, t) => acc + t.amount, 0);
+ }, [currentMonthTransactions]);
+
+ const currentMonthNet = currentMonthIncome - currentMonthExpense;
+ const currentMonthSavingsRate = currentMonthIncome > 0 ? (currentMonthNet / currentMonthIncome) * 100 : 0;
+
+ const totalInvestedAmount = useMemo(() => {
+ return investments.reduce((acc, i) => acc + i.investedAmount, 0);
+ }, [investments]);
+
+ const totalInvestmentValue = useMemo(() => {
+ return investments.reduce((acc, i) => acc + i.currentValue, 0);
+ }, [investments]);
+
+ const totalInvestmentGainLoss = totalInvestmentValue - totalInvestedAmount;
+ const totalInvestmentGainLossPct = totalInvestedAmount > 0 ? (totalInvestmentGainLoss / totalInvestedAmount) * 100 : 0;
+
+ const averageMonthlyExpenses = useMemo(() => {
+ const monthExpensesMap: Record<string, number> = {};
+ transactions.forEach(t => {
+ if (t.type === 'debit') {
+ const ym = t.date.substring(0, 7);
+ monthExpensesMap[ym] = (monthExpensesMap[ym] || 0) + t.amount;
+ }
+ });
+
+ const expenseValues = Object.values(monthExpensesMap);
+ if (expenseValues.length === 0) return 50000;
+ const sum = expenseValues.reduce((a, b) => a + b, 0);
+ return sum / expenseValues.length;
+ }, [transactions]);
+
+ const effectiveMonthlyBaseline = emergencyFund.manualTargetAmount
+ ? emergencyFund.manualTargetAmount / emergencyFund.targetMonths
+ : averageMonthlyExpenses;
+
+ const emergencyFundRunwayMonths = effectiveMonthlyBaseline > 0
+ ? emergencyFund.currentSaved / effectiveMonthlyBaseline
+ : 0;
+
+ const totalGoalsTarget = useMemo(() => {
+ return dreams.reduce((acc, d) => acc + d.targetAmount, 0);
+ }, [dreams]);
+
+ const totalGoalsSaved = useMemo(() => {
+ return dreams.reduce((acc, d) => acc + d.currentSaved, 0);
+ }, [dreams]);
+
+ // Derived Splits & Owed Metrics
+ const contactBalances = useMemo<ContactBalance[]>(() => {
+ return contacts.map(contact => {
+ let owedToMe = 0;
+ let iOweThem = 0;
+ let lastUpdated = contact.createdAt;
+
+ transactions.forEach(t => {
+ if (t.splitWith && Array.isArray(t.splitWith)) {
+ t.splitWith.forEach(entry => {
+ if (entry.contactId === contact.id) {
+ const fullAmount = entry.amount;
+ const settledAmt = entry.settled
+ ? (entry.settledAmount !== undefined ? entry.settledAmount : fullAmount)
+ : (entry.settledAmount || 0);
+ const remaining = Math.max(0, fullAmount - settledAmt);
+
+ if (remaining > 0) {
+ if (entry.direction === 'they_owe_me') {
+ owedToMe += remaining;
+ } else {
+ iOweThem += remaining;
+ }
+ }
+ if (t.date > lastUpdated) {
+ lastUpdated = t.date;
+ }
+ }
+ });
+ }
+ });
+
+ // Process generic settlements and overpayment amounts for this contact
+ settlements
+ .filter(s => s.contactId === contact.id)
+ .forEach(s => {
+ let settlementApplicableAmount = 0;
+ if (!s.sourceTransactionId) {
+ settlementApplicableAmount = s.amount;
+ } else if (s.reconciledSplits && s.reconciledSplits.length > 0) {
+ const totalReconciled = s.reconciledSplits.reduce((sum, r) => sum + r.amount, 0);
+ const excess = Math.max(0, s.amount - totalReconciled);
+ settlementApplicableAmount = excess;
+ }
+
+ if (settlementApplicableAmount <= 0) {
+ if (s.date > lastUpdated) lastUpdated = s.date;
+ return;
+ }
+
+ if (s.direction === 'they_owe_me') {
+ // Contact repaid user: reduce owedToMe, excess overpayment becomes user owes contact
+ const deduction = Math.min(owedToMe, settlementApplicableAmount);
+ owedToMe -= deduction;
+ const excess = settlementApplicableAmount - deduction;
+ if (excess > 0) {
+ iOweThem += excess;
+ }
+ } else if (s.direction === 'i_owe_them') {
+ // User repaid contact: reduce iOweThem, excess overpayment becomes contact owes user
+ const deduction = Math.min(iOweThem, settlementApplicableAmount);
+ iOweThem -= deduction;
+ const excess = settlementApplicableAmount - deduction;
+ if (excess > 0) {
+ owedToMe += excess;
+ }
+ } else {
+ // Fallback if direction was not stored (legacy records):
+ if (owedToMe >= iOweThem) {
+ const deduction = Math.min(owedToMe, settlementApplicableAmount);
+ owedToMe -= deduction;
+ const leftover = settlementApplicableAmount - deduction;
+ if (leftover > 0) {
+ iOweThem += leftover;
+ }
+ } else {
+ const deduction = Math.min(iOweThem, settlementApplicableAmount);
+ iOweThem -= deduction;
+ const leftover = settlementApplicableAmount - deduction;
+ if (leftover > 0) {
+ owedToMe += leftover;
+ }
+ }
+ }
+ if (s.date > lastUpdated) {
+ lastUpdated = s.date;
+ }
+ });
+
+ // True net balance: positive = they owe user; negative = user owes them
+ const netAmount = owedToMe - iOweThem;
+
+ return {
+ contactId: contact.id,
+ netAmount: Number(netAmount.toFixed(2)),
+ lastUpdated,
+ };
+ });
+ }, [contacts, transactions, settlements]);
+
+ const totalOwedToMe = useMemo(() => {
+ const namedOwed = contactBalances
+ .filter(b => b.netAmount > 0)
+ .reduce((acc, b) => acc + b.netAmount, 0);
+
+ let unnamedOwed = 0;
+ transactions.forEach(t => {
+ if (t.splitWith && Array.isArray(t.splitWith)) {
+ t.splitWith.forEach(entry => {
+ if (!entry.contactId && entry.direction === 'they_owe_me') {
+ const fullAmount = entry.amount;
+ const settledAmt = entry.settled
+ ? (entry.settledAmount !== undefined ? entry.settledAmount : fullAmount)
+ : (entry.settledAmount || 0);
+ const remaining = Math.max(0, fullAmount - settledAmt);
+ unnamedOwed += remaining;
+ }
+ });
+ }
+ });
+
+ return Number((namedOwed + unnamedOwed).toFixed(2));
+ }, [contactBalances, transactions]);
+
+ const totalIOwe = useMemo(() => {
+ const namedIOwe = contactBalances
+ .filter(b => b.netAmount < 0)
+ .reduce((acc, b) => acc + Math.abs(b.netAmount), 0);
+
+ let unnamedIOwe = 0;
+ transactions.forEach(t => {
+ if (t.splitWith && Array.isArray(t.splitWith)) {
+ t.splitWith.forEach(entry => {
+ if (!entry.contactId && entry.direction === 'i_owe_them') {
+ const fullAmount = entry.amount;
+ const settledAmt = entry.settled
+ ? (entry.settledAmount !== undefined ? entry.settledAmount : fullAmount)
+ : (entry.settledAmount || 0);
+ const remaining = Math.max(0, fullAmount - settledAmt);
+ unnamedIOwe += remaining;
+ }
+ });
+ }
+ });
+
+ return Number((namedIOwe + unnamedIOwe).toFixed(2));
+ }, [contactBalances, transactions]);
+
+ const netSharedBalance = useMemo(() => {
+ return Number((totalOwedToMe - totalIOwe).toFixed(2));
+ }, [totalOwedToMe, totalIOwe]);
+
+ const totalNetWorth = useMemo(() => {
+ // Note: emergencyFund.currentSaved and totalGoalsSaved are held in bank/cash accounts
+ // and are already accounted for within totalBalance (credits - debits).
+ // Adding them here would double-count liquid savings.
+ const net = totalBalance + totalInvestmentValue + netSharedBalance;
+ return Number(net.toFixed(2));
+ }, [totalBalance, totalInvestmentValue, netSharedBalance]);
+
+ const peerBalanceSummary = useMemo(() => {
+ let displayText = 'Split accounts settled';
+ if (totalOwedToMe > 0 && totalIOwe > 0) {
+ displayText = `Friends owe ₹${totalOwedToMe.toLocaleString('en-IN')} · You owe ₹${totalIOwe.toLocaleString('en-IN')}`;
+ } else if (totalOwedToMe > 0) {
+ displayText = `Friends owe ₹${totalOwedToMe.toLocaleString('en-IN')}`;
+ } else if (totalIOwe > 0) {
+ displayText = `You owe ₹${totalIOwe.toLocaleString('en-IN')}`;
+ }
+ return {
+ totalOwedToMe,
+ totalIOwe,
+ net: netSharedBalance,
+ displayText,
+ };
+ }, [totalOwedToMe, totalIOwe, netSharedBalance]);
+
+ const categorySpendingThisMonth = useMemo(() => {
+ const spendMap: Record<string, number> = {};
+ currentMonthTransactions.forEach(t => {
+ if (t.type === 'debit') {
+ spendMap[t.category] = (spendMap[t.category] || 0) + t.amount;
+ }
+ });
+
+ const budgetMap = new Map(budgets.map(b => [b.category.toLowerCase(), b.monthlyLimit]));
+ const categoryInfoMap = new Map(categories.map(c => [c.name.toLowerCase(), c]));
+
+ const result = Object.entries(spendMap).map(([categoryName, spent]) => {
+ const budget = budgetMap.get(categoryName.toLowerCase()) || 0;
+ const catInfo = categoryInfoMap.get(categoryName.toLowerCase());
+ const percentUsed = budget > 0 ? (spent / budget) * 100 : 0;
+
+ return {
+ category: categoryName,
+ spent,
+ budget,
+ percentUsed,
+ color: catInfo?.color || '#64748b',
+ icon: catInfo?.icon || 'Tag',
+ };
+ });
+
+ budgets.forEach(b => {
+ const alreadyIncluded = result.some(r => r.category.toLowerCase() === b.category.toLowerCase());
+ if (!alreadyIncluded) {
+ const catInfo = categoryInfoMap.get(b.category.toLowerCase());
+ result.push({
+ category: b.category,
+ spent: 0,
+ budget: b.monthlyLimit,
+ percentUsed: 0,
+ color: catInfo?.color || '#64748b',
+ icon: catInfo?.icon || 'Tag',
+ });
+ }
+ });
+
+ return result.sort((a, b) => b.spent - a.spent);
+ }, [currentMonthTransactions, budgets, categories]);
+
+ // Budget exceeded detector (fires when percentUsed crosses 100)
+ const prevSpendingRef = useRef<Map<string, number>>(new Map());
+ useEffect(() => {
+ if (!isInitialized) return;
+
+ categorySpendingThisMonth.forEach(cat => {
+ if (cat.budget > 0) {
+ const prevPercent = prevSpendingRef.current.get(cat.category.toLowerCase()) ?? 0;
+ if (prevPercent <= 100 && cat.percentUsed > 100) {
+ emitFinanceEvent({
+ type: 'budget_exceeded',
+ category: cat.category,
+ spent: cat.spent,
+ limit: cat.budget,
+ });
+ }
+ }
+ });
+
+ const newMap = new Map<string, number>();
+ categorySpendingThisMonth.forEach(cat => {
+ newMap.set(cat.category.toLowerCase(), cat.percentUsed);
+ });
+ prevSpendingRef.current = newMap;
+ }, [categorySpendingThisMonth, isInitialized, emitFinanceEvent]);
+
+ // Derived Recurring Payments
+ const totalMonthlyRecurringCommitment = useMemo(() => {
+ return recurringPayments
+ .filter(p => p.isActive)
+ .reduce((sum, p) => sum + calculateMonthlyEquivalent(p.amount, p.frequency), 0);
+ }, [recurringPayments]);
+
+ const { upcomingRecurringPayments, overdueRecurringPayments } = useMemo(() => {
+ const upcoming: Array<RecurringPayment & { nextDueDate: string; daysUntilDue: number }> = [];
+ const overdue: Array<RecurringPayment & { dueDate: string; daysOverdue: number }> = [];
+
+ const now = new Date();
+ recurringPayments
+ .filter(p => p.isActive)
+ .forEach(p => {
+ const schedule = getPaymentSchedule(p, recurringPaymentLogs, now);
+ if (schedule.activeDueDate) {
+ if (schedule.isOverdue) {
+ overdue.push({
+ ...p,
+ dueDate: schedule.activeDueDate,
+ daysOverdue: Math.abs(schedule.daysDiff),
+ });
+ } else {
+ upcoming.push({
+ ...p,
+ nextDueDate: schedule.activeDueDate,
+ daysUntilDue: Math.max(0, schedule.daysDiff),
+ });
+ }
+ }
+ });
+
+ overdue.sort((a, b) => b.daysOverdue - a.daysOverdue);
+ upcoming.sort((a, b) => a.daysUntilDue - b.daysUntilDue);
+
+ return { upcomingRecurringPayments: upcoming, overdueRecurringPayments: overdue };
+ }, [recurringPayments, recurringPaymentLogs]);
+
+ // Overdue recurring payments alert on app load
+ const hasAlertedOverdueRef = useRef(false);
+ useEffect(() => {
+ if (!isInitialized || hasAlertedOverdueRef.current) return;
+ if (overdueRecurringPayments.length > 0) {
+ hasAlertedOverdueRef.current = true;
+ const first = overdueRecurringPayments[0];
+ emitFinanceEvent({
+ type: 'recurring_overdue_detected',
+ count: overdueRecurringPayments.length,
+ paymentName: first ? first.name : undefined,
+ });
+ }
+ }, [isInitialized, overdueRecurringPayments, emitFinanceEvent]);
+
+ const getAggregatesForAI = (): FinancialAggregates => {
+ const invBreakdownMap: Record<string, number> = {};
+ investments.forEach(i => {
+ invBreakdownMap[i.type] = (invBreakdownMap[i.type] || 0) + i.currentValue;
+ });
+
+ const invBreakdown = Object.entries(invBreakdownMap).map(([type, value]) => ({ type, value }));
+
+ const goalsList = dreams.map(d => ({
+ name: d.name,
+ target: d.targetAmount,
+ saved: d.currentSaved,
+ targetDate: d.targetDate,
+ percentComplete: d.targetAmount > 0 ? (d.currentSaved / d.targetAmount) * 100 : 0,
+ }));
+
+ return {
+ currentMonthName,
+ monthlyIncome: currentMonthIncome,
+ monthlyExpenses: currentMonthExpense,
+ netSavings: currentMonthNet,
+ savingsRate: currentMonthSavingsRate,
+ categorySpending: categorySpendingThisMonth.map(c => ({
+ category: c.category,
+ spent: c.spent,
+ budget: c.budget > 0 ? c.budget : undefined,
+ percentUsed: c.budget > 0 ? c.percentUsed : undefined,
+ })),
+ emergencyFund: {
+ target: emergencyFund.manualTargetAmount || (effectiveMonthlyBaseline * emergencyFund.targetMonths),
+ saved: emergencyFund.currentSaved,
+ monthsCovered: emergencyFundRunwayMonths,
+ targetMonths: emergencyFund.targetMonths,
+ },
+ investments: {
+ totalInvested: totalInvestedAmount,
+ currentValue: totalInvestmentValue,
+ totalGainLoss: totalInvestmentGainLoss,
+ gainLossPercent: totalInvestmentGainLossPct,
+ breakdown: invBreakdown,
+ },
+ goals: goalsList,
+ };
+ };
+
+ return (
+ <FinanceContext.Provider
+ value={{
+ currentView,
+ setCurrentView,
+ darkMode,
+ setDarkMode,
+ isInitialized,
+ subscribeFinanceEvent,
+ emitFinanceEvent,
+ transactions,
+ categories,
+ budgets,
+ emergencyFund,
+ investments,
+ dreams,
+ contacts,
+ settlements,
+ recurringPayments,
+ recurringPaymentLogs,
+ aiSettings,
+ aiReports,
+ notRecurringTxIds,
+ toggleNotRecurring,
+ syncStatus,
+ lastSyncedAt,
+ syncError,
+ isDriveConnected,
+ driveUserEmail,
+ triggerSync,
+ connectDrive,
+ disconnectDrive,
+ reloadFromDB,
+ addTransaction,
+ addMultipleTransactions,
+ updateTransaction,
+ deleteTransaction,
+ deleteMultipleTransactions,
+ addContact,
+ updateContact,
+ deleteContact,
+ recordSettlement,
+ updateSettlement,
+ deleteSettlement,
+ linkSettlementToTransaction,
+ quickToggleSettleTransaction,
+ assignSplitToContact,
+ settleSplitEntry,
+ addCategory,
+ updateCategory,
+ deleteCategory,
+ setBudgetForCategory,
+ deleteBudget,
+ updateEmergencySettings,
+ addEmergencyContribution,
+ addInvestment,
+ updateInvestment,
+ deleteInvestment,
+ addDream,
+ updateDream,
+ deleteDream,
+ addDreamContribution,
+ addRecurringPayment,
+ updateRecurringPayment,
+ deleteRecurringPayment,
+ pauseRecurringPayment,
+ markRecurringPaymentPaid,
+ updateAISettings,
+ saveAIReport,
+ deleteAIReport,
+ resetToDemoData,
+ clearAllData,
+ exportBackupJSON,
+ importBackupJSON,
+ totalBalance,
+ totalNetWorth,
+ netSharedBalance,
+ peerBalanceSummary,
+ currentMonthIncome,
+ currentMonthExpense,
+ currentMonthNet,
+ currentMonthSavingsRate,
+ totalInvestedAmount,
+ totalInvestmentValue,
+ totalInvestmentGainLoss,
+ totalInvestmentGainLossPct,
+ emergencyFundRunwayMonths,
+ totalGoalsTarget,
+ totalGoalsSaved,
+ contactBalances,
+ totalOwedToMe,
+ totalIOwe,
+ categorySpendingThisMonth,
+ upcomingRecurringPayments,
+ overdueRecurringPayments,
+ totalMonthlyRecurringCommitment,
+ getAggregatesForAI,
+ }}
+ >
+ {children}
+ </FinanceContext.Provider>
+ );
 };
 
 export const useFinance = () => {
-  const context = useContext(FinanceContext);
-  if (!context) {
-    throw new Error('useFinance must be used within a FinanceProvider');
-  }
-  return context;
+ const context = useContext(FinanceContext);
+ if (!context) {
+ throw new Error('useFinance must be used within a FinanceProvider');
+ }
+ return context;
 };

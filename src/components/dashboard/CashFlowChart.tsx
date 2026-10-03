@@ -1,16 +1,16 @@
 import React, { useMemo, useState } from 'react';
 import {
-  ResponsiveContainer,
-  ComposedChart,
-  AreaChart,
-  Area,
-  Bar,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-  CartesianGrid,
+ ResponsiveContainer,
+ ComposedChart,
+ AreaChart,
+ Area,
+ Bar,
+ Line,
+ XAxis,
+ YAxis,
+ Tooltip,
+ Legend,
+ CartesianGrid,
 } from 'recharts';
 import { Waves, BarChart3 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
@@ -19,227 +19,227 @@ import { getRelativeMonthsList } from '../../utils/date';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 
 export const CashFlowChart: React.FC = () => {
-  const { transactions, darkMode } = useFinance();
-  const reducedMotion = useReducedMotion();
-  const [chartMode, setChartMode] = useState<'wave' | 'bars'>('wave');
+ const { transactions, darkMode } = useFinance();
+ const reducedMotion = useReducedMotion();
+ const [chartMode, setChartMode] = useState<'wave' | 'bars'>('wave');
 
-  const chartData = useMemo(() => {
-    const months = getRelativeMonthsList(6); // last 6 months
+ const chartData = useMemo(() => {
+ const months = getRelativeMonthsList(6); // last 6 months
 
-    return months.map(m => {
-      const monthTxs = transactions.filter(t => t.date.startsWith(m.key));
-      const income = monthTxs.filter(t => t.type === 'credit').reduce((a, b) => a + b.amount, 0);
-      const expense = monthTxs.filter(t => t.type === 'debit').reduce((a, b) => a + b.amount, 0);
-      const net = income - expense;
+ return months.map(m => {
+ const monthTxs = transactions.filter(t => t.date.startsWith(m.key));
+ const income = monthTxs.filter(t => t.type === 'credit').reduce((a, b) => a + b.amount, 0);
+ const expense = monthTxs.filter(t => t.type === 'debit').reduce((a, b) => a + b.amount, 0);
+ const net = income - expense;
 
-      return {
-        monthKey: m.key,
-        name: m.label,
-        Income: income,
-        Expenses: expense,
-        NetSavings: net,
-      };
-    });
-  }, [transactions]);
+ return {
+ monthKey: m.key,
+ name: m.label,
+ Income: income,
+ Expenses: expense,
+ NetSavings: net,
+ };
+ });
+ }, [transactions]);
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white/95 dark:bg-card-dark/95 backdrop-blur-md p-3.5 rounded-xl shadow-xl border border-slate-200 dark:border-border-dark text-xs space-y-1.5">
-          <p className="font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-border-dark pb-1">
-            {label}
-          </p>
-          {payload.map((item: any) => (
-            <div key={item.name} className="flex items-center justify-between gap-4">
-              <span className="flex items-center gap-1.5" style={{ color: item.color }}>
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
-                <span>{item.name}:</span>
-              </span>
-              <span className="font-bold font-numeric text-slate-900 dark:text-white">
-                {formatINR(item.value)}
-              </span>
-            </div>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
+ const CustomTooltip = ({ active, payload, label }: any) => {
+ if (active && payload && payload.length) {
+ return (
+ <div className="bg-surface/95 backdrop-blur-md p-3.5 rounded-xl shadow-xl border border-line text-xs space-y-1.5">
+ <p className="font-bold text-ink-1 border-b border-line pb-1">
+ {label}
+ </p>
+ {payload.map((item: any) => (
+ <div key={item.name} className="flex items-center justify-between gap-4">
+ <span className="flex items-center gap-1.5" style={{ color: item.color }}>
+ <span className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
+ <span>{item.name}:</span>
+ </span>
+ <span className="font-bold font-numeric text-ink-1">
+ {formatINR(item.value)}
+ </span>
+ </div>
+ ))}
+ </div>
+ );
+ }
+ return null;
+ };
 
-  return (
-    <div className="bg-white dark:bg-card-dark rounded-3xl p-4 sm:p-6 shadow-xs border border-slate-200/90 dark:border-border-dark flex flex-col h-full">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-            <span>Cash flow trajectory</span>
-            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-              6 Months
-            </span>
-          </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            {chartMode === 'wave' ? 'Net liquid savings velocity' : 'Income vs Expenses vs Net Savings in INR'}
-          </p>
-        </div>
+ return (
+ <div className="bg-surface rounded-2xl p-4 sm:p-6 shadow-xs border border-line flex flex-col h-full">
+ <div className="flex items-center justify-between mb-4">
+ <div>
+ <h3 className="text-base font-bold text-ink-1 flex items-center gap-2">
+ <span>Cash flow trajectory</span>
+ <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+ 6 Months
+ </span>
+ </h3>
+ <p className="text-xs text-ink-3 mt-0.5">
+ {chartMode === 'wave' ? 'Net liquid savings velocity' : 'Income vs Expenses vs Net Savings in INR'}
+ </p>
+ </div>
 
-        {/* View mode toggle */}
-        <div className="flex items-center p-1 bg-slate-100 dark:bg-inset-dark rounded-xl border border-slate-200/80 dark:border-border-dark">
-          <button
-            type="button"
-            onClick={() => setChartMode('wave')}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
-              chartMode === 'wave'
-                ? 'bg-white dark:bg-active-dark text-emerald-600 dark:text-emerald-400 shadow-xs'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-            }`}
-            title="Minimalist Wave Flow"
-          >
-            <Waves className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Wave</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setChartMode('bars')}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
-              chartMode === 'bars'
-                ? 'bg-white dark:bg-active-dark text-emerald-600 dark:text-emerald-400 shadow-xs'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-            }`}
-            title="Comparison Bars"
-          >
-            <BarChart3 className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Bars</span>
-          </button>
-        </div>
-      </div>
+ {/* View mode toggle */}
+ <div className="flex items-center p-1 bg-sunken rounded-xl border border-line">
+ <button
+ type="button"
+ onClick={() => setChartMode('wave')}
+ className={`flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-semibold transition-colors ${
+ chartMode === 'wave'
+ ? 'bg-surface dark:bg-line text-emerald-600 dark:text-emerald-400 shadow-xs'
+ : 'text-ink-3 hover:text-slate-800 dark:hover:text-slate-200'
+ }`}
+ title="Minimalist Wave Flow"
+ >
+ <Waves className="w-3.5 h-3.5" />
+ <span className="hidden sm:inline">Wave</span>
+ </button>
+ <button
+ type="button"
+ onClick={() => setChartMode('bars')}
+ className={`flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-semibold transition-colors ${
+ chartMode === 'bars'
+ ? 'bg-surface dark:bg-line text-emerald-600 dark:text-emerald-400 shadow-xs'
+ : 'text-ink-3 hover:text-slate-800 dark:hover:text-slate-200'
+ }`}
+ title="Comparison Bars"
+ >
+ <BarChart3 className="w-3.5 h-3.5" />
+ <span className="hidden sm:inline">Bars</span>
+ </button>
+ </div>
+ </div>
 
-      <div key={chartMode} className="w-full h-[260px] sm:h-[300px] animate-fade-in">
-        <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={100}>
-          {chartMode === 'wave' ? (
-            <AreaChart data={chartData} margin={{ top: 15, right: 10, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="emeraldCashFlow" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.35} />
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(156, 163, 175, 0.12)" />
-              <XAxis
-                dataKey="name"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fontSize: 11, fill: '#94A3B8' }}
-              />
-              <YAxis
-                width={45}
-                axisLine={false}
-                tickLine={false}
-                tick={{ fontSize: 11, fill: '#94A3B8' }}
-                tickFormatter={value => formatCompactINR(value)}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend
-                wrapperStyle={{ fontSize: 11, paddingTop: 10 }}
-                formatter={value => <span className="text-slate-600 dark:text-slate-400 font-medium">{value}</span>}
-              />
-              <Area
-                type="monotone"
-                dataKey="NetSavings"
-                name="Net Savings"
-                stroke="#10b981"
-                strokeWidth={2.5}
-                fillOpacity={1}
-                fill="url(#emeraldCashFlow)"
-                dot={{ r: 3.5, fill: '#10b981', strokeWidth: 2, stroke: darkMode ? '#0B0E14' : '#FFFFFF' }}
-                activeDot={{ r: 5, fill: '#10B981' }}
-                isAnimationActive={!reducedMotion}
-                animationBegin={0}
-                animationDuration={600}
-                animationEasing="ease-out"
-              />
-              <Line
-                type="monotone"
-                dataKey="Income"
-                name="Income"
-                stroke="#059669"
-                strokeWidth={1.5}
-                strokeDasharray="4 4"
-                dot={false}
-                isAnimationActive={!reducedMotion}
-                animationBegin={120}
-                animationDuration={600}
-                animationEasing="ease-out"
-              />
-              <Line
-                type="monotone"
-                dataKey="Expenses"
-                name="Expenses"
-                stroke="#f43f5e"
-                strokeWidth={1.5}
-                strokeDasharray="4 4"
-                dot={false}
-                isAnimationActive={!reducedMotion}
-                animationBegin={240}
-                animationDuration={600}
-                animationEasing="ease-out"
-              />
-            </AreaChart>
-          ) : (
-            <ComposedChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(156, 163, 175, 0.12)" />
-              <XAxis
-                dataKey="name"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fontSize: 11, fill: '#94A3B8' }}
-              />
-              <YAxis
-                width={45}
-                axisLine={false}
-                tickLine={false}
-                tick={{ fontSize: 11, fill: '#94A3B8' }}
-                tickFormatter={value => formatCompactINR(value)}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend
-                wrapperStyle={{ fontSize: 11, paddingTop: 10 }}
-                formatter={value => <span className="text-slate-600 dark:text-slate-400 font-medium">{value}</span>}
-              />
-              <Bar
-                dataKey="Income"
-                fill="#10b981"
-                radius={[4, 4, 0, 0]}
-                maxBarSize={16}
-                isAnimationActive={!reducedMotion}
-                animationBegin={0}
-                animationDuration={600}
-                animationEasing="ease-out"
-              />
-              <Bar
-                dataKey="Expenses"
-                fill="#f43f5e"
-                radius={[4, 4, 0, 0]}
-                maxBarSize={16}
-                isAnimationActive={!reducedMotion}
-                animationBegin={120}
-                animationDuration={600}
-                animationEasing="ease-out"
-              />
-              <Line
-                type="monotone"
-                dataKey="NetSavings"
-                name="Net Savings"
-                stroke="#F5B742"
-                strokeWidth={2.5}
-                dot={{ r: 3, fill: '#F5B742' }}
-                isAnimationActive={!reducedMotion}
-                animationBegin={240}
-                animationDuration={600}
-                animationEasing="ease-out"
-              />
-            </ComposedChart>
-          )}
-        </ResponsiveContainer>
-      </div>
-    </div>
-  );
+ <div key={chartMode} className="w-full h-[260px] sm:h-[300px] animate-fade-in">
+ <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={100}>
+ {chartMode === 'wave' ? (
+ <AreaChart data={chartData} margin={{ top: 15, right: 10, left: 0, bottom: 0 }}>
+ <defs>
+ <linearGradient id="emeraldCashFlow" x1="0" y1="0" x2="0" y2="1">
+ <stop offset="5%" stopColor="#10b981" stopOpacity={0.35} />
+ <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
+ </linearGradient>
+ </defs>
+ <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(156, 163, 175, 0.12)" />
+ <XAxis
+ dataKey="name"
+ axisLine={false}
+ tickLine={false}
+ tick={{ fontSize: 11, fill: '#94A3B8' }}
+ />
+ <YAxis
+ width={45}
+ axisLine={false}
+ tickLine={false}
+ tick={{ fontSize: 11, fill: '#94A3B8' }}
+ tickFormatter={value => formatCompactINR(value)}
+ />
+ <Tooltip content={<CustomTooltip />} />
+ <Legend
+ wrapperStyle={{ fontSize: 11, paddingTop: 10 }}
+ formatter={value => <span className="text-ink-2 font-medium">{value}</span>}
+ />
+ <Area
+ type="monotone"
+ dataKey="NetSavings"
+ name="Net Savings"
+ stroke="#10b981"
+ strokeWidth={2.5}
+ fillOpacity={1}
+ fill="url(#emeraldCashFlow)"
+ dot={{ r: 3.5, fill: '#10b981', strokeWidth: 2, stroke: darkMode ? '#0B0E14' : '#FFFFFF' }}
+ activeDot={{ r: 5, fill: '#10B981' }}
+ isAnimationActive={!reducedMotion}
+ animationBegin={0}
+ animationDuration={600}
+ animationEasing="ease-out"
+ />
+ <Line
+ type="monotone"
+ dataKey="Income"
+ name="Income"
+ stroke="#059669"
+ strokeWidth={1.5}
+ strokeDasharray="4 4"
+ dot={false}
+ isAnimationActive={!reducedMotion}
+ animationBegin={120}
+ animationDuration={600}
+ animationEasing="ease-out"
+ />
+ <Line
+ type="monotone"
+ dataKey="Expenses"
+ name="Expenses"
+ stroke="#64748B"
+ strokeWidth={1.5}
+ strokeDasharray="4 4"
+ dot={false}
+ isAnimationActive={!reducedMotion}
+ animationBegin={240}
+ animationDuration={600}
+ animationEasing="ease-out"
+ />
+ </AreaChart>
+ ) : (
+ <ComposedChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+ <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(156, 163, 175, 0.12)" />
+ <XAxis
+ dataKey="name"
+ axisLine={false}
+ tickLine={false}
+ tick={{ fontSize: 11, fill: '#94A3B8' }}
+ />
+ <YAxis
+ width={45}
+ axisLine={false}
+ tickLine={false}
+ tick={{ fontSize: 11, fill: '#94A3B8' }}
+ tickFormatter={value => formatCompactINR(value)}
+ />
+ <Tooltip content={<CustomTooltip />} />
+ <Legend
+ wrapperStyle={{ fontSize: 11, paddingTop: 10 }}
+ formatter={value => <span className="text-ink-2 font-medium">{value}</span>}
+ />
+ <Bar
+ dataKey="Income"
+ fill="#10b981"
+ radius={[4, 4, 0, 0]}
+ maxBarSize={16}
+ isAnimationActive={!reducedMotion}
+ animationBegin={0}
+ animationDuration={600}
+ animationEasing="ease-out"
+ />
+ <Bar
+ dataKey="Expenses"
+ fill="#64748B"
+ radius={[4, 4, 0, 0]}
+ maxBarSize={16}
+ isAnimationActive={!reducedMotion}
+ animationBegin={120}
+ animationDuration={600}
+ animationEasing="ease-out"
+ />
+ <Line
+ type="monotone"
+ dataKey="NetSavings"
+ name="Net Savings"
+ stroke="var(--primary)"
+ strokeWidth={2.5}
+ dot={{ r: 3, fill: 'var(--primary)' }}
+ isAnimationActive={!reducedMotion}
+ animationBegin={240}
+ animationDuration={600}
+ animationEasing="ease-out"
+ />
+ </ComposedChart>
+ )}
+ </ResponsiveContainer>
+ </div>
+ </div>
+ );
 };

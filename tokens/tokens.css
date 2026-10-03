@@ -1,0 +1,43 @@
+/* DhanVeda design tokens v1 (Tailwind v4). SINGLE SOURCE OF TRUTH for colour.
+ * scripts/contrast-check.py parses this file and fails if any required pair drops below WCAG.
+ *
+ * Use: paste into src/index.css AFTER `@import "tailwindcss";`. Names are deliberately different from the existing
+ * @theme tokens (canvas/card/inset/border/hover/active/gold/emerald/crimson) so both can coexist during migration;
+ * delete the old ones once their codemod folder is done.
+ *
+ * Roles -> utilities:  app=bg-app  surface=bg-surface  sunken=bg-sunken  line=border-line  line-input=border-line-input
+ *   ink-1/2/3=text-ink-1/2/3  primary=bg-primary text-primary  on-primary=text-on-primary  primary-tint=bg-primary-tint
+ *   positive|negative|warning|reward = text-<role>, with bg-<role>-tint ; reward-fill=bg-reward-fill (decoration only)
+ * Rules: one filled primary per viewport; expenses are ink (not negative); negative = breach/overdue/debt only;
+ *        gold (reward*) only in gamification; never rely on colour alone (add sign/icon/label).
+ */
+:root {
+  --app: #F7F6F3;          --surface: #FFFFFF;      --sunken: #F0EEEA;
+  --line: #E4E1DA;         --line-input: #7D838D;
+  --ink-1: #14181F;        --ink-2: #4B5563;        --ink-3: #5F6B7A;
+  --primary: #2B4FD8;      --on-primary: #FFFFFF;   --primary-tint: #E8EDFF;
+  --positive: #0B7A55;     --positive-tint: #E6F5EE;
+  --negative: #C2253F;     --negative-tint: #FCEBEE;
+  --warning: #8A5300;      --warning-tint: #FFF3D6;
+  --reward: #8F6410;       --reward-tint: #FFF6DD;  --reward-fill: #F5B742;
+}
+.dark {
+  --app: #0B0E14;          --surface: #131822;      --sunken: #171E2A;
+  --line: #202836;         --line-input: #66728D;
+  --ink-1: #E8ECF4;        --ink-2: #A3AEC2;        --ink-3: #8591A8;
+  --primary: #8FA8FF;      --on-primary: #0B0E14;   --primary-tint: #1B2547;
+  --positive: #3DD6A0;     --positive-tint: #0F2A22;
+  --negative: #FF7A8E;     --negative-tint: #2E1519;
+  --warning: #FFB84D;      --warning-tint: #2B2110;
+  --reward: #F5B742;       --reward-tint: #2A2210;  --reward-fill: #F5B742;
+}
+@theme inline {
+  --color-app: var(--app);            --color-surface: var(--surface);    --color-sunken: var(--sunken);
+  --color-line: var(--line);          --color-line-input: var(--line-input);
+  --color-ink-1: var(--ink-1);        --color-ink-2: var(--ink-2);        --color-ink-3: var(--ink-3);
+  --color-primary: var(--primary);    --color-on-primary: var(--on-primary);  --color-primary-tint: var(--primary-tint);
+  --color-positive: var(--positive);  --color-positive-tint: var(--positive-tint);
+  --color-negative: var(--negative);  --color-negative-tint: var(--negative-tint);
+  --color-warning: var(--warning);    --color-warning-tint: var(--warning-tint);
+  --color-reward: var(--reward);      --color-reward-tint: var(--reward-tint);  --color-reward-fill: var(--reward-fill);
+}

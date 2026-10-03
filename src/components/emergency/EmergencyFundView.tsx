@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { ShieldCheck, Plus, ArrowDownLeft, ArrowUpRight, Sliders, Calendar, Shield } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
-import { formatINR, formatCompactINR } from '../../utils/currency';
 import { formatDate } from '../../utils/date';
-import { ProgressBar } from '../common/ProgressBar';
 import { AnimatedNumber } from '../common/AnimatedNumber';
 import { useStaggerChildren } from '../../hooks/useStaggerChildren';
 import { EmergencyContributionModal } from './EmergencyContributionModal';
+import { Button, Card, Money, Stat, Progress } from '../ui';
 
 export const EmergencyFundView: React.FC = () => {
   const { containerRef: metricPillarsRef, getChildStyle } = useStaggerChildren(40);
@@ -35,193 +34,223 @@ export const EmergencyFundView: React.FC = () => {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
       {/* Top Banner & Runway Meter: Mineral Card with Gold Reserve Highlight */}
-      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-card-dark text-slate-900 dark:text-white p-4 sm:p-8 border border-slate-200/90 dark:border-border-dark shadow-sm">
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
+      <Card variant="hero" padding="none" className="p-4 sm:p-8 rounded-2xl">
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-reward-fill to-transparent opacity-80" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-500/10 dark:bg-amber-400/10 text-amber-600 dark:text-amber-400">
-                <ShieldCheck className="h-4 w-4" />
-              </span>
-              <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
-                EMERGENCY SAFETY RESERVE
-              </span>
+          <div className="flex items-center gap-5">
+            <Progress
+              type="ring"
+              value={emergencyFund.currentSaved}
+              max={effectiveTarget}
+              tone="auto"
+              size="lg"
+            />
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="flex h-6 w-6 items-center justify-center rounded-xl bg-primary-tint text-primary">
+                  <ShieldCheck className="h-4 w-4" />
+                </span>
+                <span className="text-xs font-bold uppercase tracking-wider text-ink-3">
+                  EMERGENCY SAFETY RESERVE
+                </span>
+              </div>
+              <p className="text-xs text-ink-3 mb-1">
+                Secured Liquid Cash Runway
+              </p>
+              <div className="flex items-baseline gap-3">
+                <h2 className="text-3xl sm:text-4xl font-black font-numeric tracking-tight text-ink-1">
+                  <AnimatedNumber value={emergencyFund.currentSaved} animateOnMount={true} />
+                </h2>
+                <span className={`text-sm font-semibold ${
+                  percentFunded >= 100
+                    ? 'text-positive'
+                    : percentFunded >= 50
+                    ? 'text-ink-3'
+                    : 'text-negative'
+                }`}>
+                  {percentFunded}% funded
+                </span>
+              </div>
+              <p className="mt-2 text-xs text-ink-3 flex items-center gap-1 flex-wrap">
+                <span>Secures</span>
+                <span className="font-numeric font-bold">{emergencyFundRunwayMonths.toFixed(1)}</span>
+                <span>months of baseline expenses • Goal: {emergencyFund.targetMonths} months (</span>
+                <Money value={effectiveTarget} size="xs" />
+                <span>)</span>
+              </p>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
-              Secured Liquid Cash Runway
-            </p>
-            <div className="flex items-baseline gap-3">
-              <h2 className="text-3xl sm:text-4xl font-black font-numeric tracking-tight text-slate-900 dark:text-white">
-                <AnimatedNumber value={emergencyFund.currentSaved} animateOnMount={true} />
-              </h2>
-              <span className={`text-sm font-semibold ${
-                percentFunded >= 100
-                  ? 'text-emerald-600 dark:text-emerald-400'
-                  : percentFunded >= 50
-                  ? 'text-amber-600 dark:text-amber-400'
-                  : 'text-rose-600 dark:text-rose-400'
-              }`}>
-                {percentFunded}% funded
-              </span>
-            </div>
-            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-              Secures <span className="font-numeric font-bold">{emergencyFundRunwayMonths.toFixed(1)}</span> months of baseline expenses • Goal: {emergencyFund.targetMonths} months ({formatINR(effectiveTarget)})
-            </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <button
+            <Button
+              variant="secondary"
+              size="md"
+              leftIcon={<Sliders className="w-4 h-4 text-ink-3" />}
               onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-              className="inline-flex items-center gap-2 px-4 py-3 bg-slate-100 dark:bg-inset-dark hover:bg-slate-200 dark:hover:bg-active-dark text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-border-dark rounded-xl text-xs sm:text-sm font-bold transition-all active:scale-95"
             >
-              <Sliders className="w-4 h-4 text-slate-400" />
-              <span>Adjust Target</span>
-            </button>
-            <button
+              Adjust Target
+            </Button>
+            <Button
+              variant="primary"
+              size="md"
+              leftIcon={<Plus className="h-4 w-4 stroke-[2.5]" />}
               onClick={() => setIsModalOpen(true)}
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-3 text-sm font-bold text-slate-950 shadow-sm hover:from-amber-400 hover:to-amber-500 transition-all active:scale-[0.98]"
             >
-              <Plus className="h-4 w-4 stroke-[2.5]" />
-              <span>Log Contribution</span>
-            </button>
+              Log Contribution
+            </Button>
           </div>
         </div>
 
         {/* Settings Panel if toggled */}
         {isSettingsOpen && (
-          <form onSubmit={handleSaveSettings} className="mt-6 p-5 bg-slate-50 dark:bg-inset-dark rounded-2xl border border-slate-200/80 dark:border-border-dark space-y-4">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
-              <Sliders className="w-3.5 h-3.5" /> Customize Emergency Target
-            </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Target Duration (Months of Expenses)
-                </label>
-                <select
-                  value={targetMonths}
-                  onChange={e => setTargetMonths(parseInt(e.target.value))}
-                  className="w-full py-2.5 px-3.5 bg-white dark:bg-card-dark border border-slate-200/90 dark:border-border-dark rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:border-amber-500"
+          <Card variant="sunken" padding="none" className="mt-6 p-5 rounded-2xl">
+            <form onSubmit={handleSaveSettings} className="space-y-4">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-ink-3 flex items-center gap-1.5">
+                <Sliders className="w-3.5 h-3.5" /> Customize Emergency Target
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-ink-2 mb-1.5">
+                    Target Duration (Months of Expenses)
+                  </label>
+                  <select
+                    value={targetMonths}
+                    onChange={e => setTargetMonths(parseInt(e.target.value))}
+                    className="w-full py-2.5 px-3.5 bg-surface border border-line rounded-xl text-sm text-ink-1 focus:outline-none focus:border-primary"
+                  >
+                    <option value={3}>3 Months (Aggressive / High Job Security)</option>
+                    <option value={6}>6 Months (Standard Recommended)</option>
+                    <option value={9}>9 Months (Conservative / Single Earner)</option>
+                    <option value={12}>12 Months (Freelancer / Business Owner)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-ink-2 mb-1.5">
+                    Custom Target Amount (INR ₹)
+                  </label>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={manualTarget}
+                    onChange={e => setManualTarget(e.target.value)}
+                    placeholder="e.g. 360000"
+                    className="w-full py-2.5 px-3.5 bg-surface border border-line rounded-xl text-sm text-ink-1 font-numeric focus:outline-none focus:border-primary"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsSettingsOpen(false)}
                 >
-                  <option value={3}>3 Months (Aggressive / High Job Security)</option>
-                  <option value={6}>6 Months (Standard Recommended)</option>
-                  <option value={9}>9 Months (Conservative / Single Earner)</option>
-                  <option value={12}>12 Months (Freelancer / Business Owner)</option>
-                </select>
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="sm"
+                >
+                  Save Settings
+                </Button>
               </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Custom Target Amount (INR ₹)
-                </label>
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  value={manualTarget}
-                  onChange={e => setManualTarget(e.target.value)}
-                  placeholder="e.g. 360000"
-                  className="w-full py-2.5 px-3.5 bg-white dark:bg-card-dark border border-slate-200/90 dark:border-border-dark rounded-xl text-sm text-slate-900 dark:text-white font-numeric focus:outline-none focus:border-amber-500"
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setIsSettingsOpen(false)}
-                className="px-4 py-2 text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-xl"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-5 py-2 text-xs font-bold text-slate-950 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 rounded-xl shadow-sm transition-all"
-              >
-                Save Settings
-              </button>
-            </div>
-          </form>
+            </form>
+          </Card>
         )}
 
         {/* Progress Track */}
-        <div className="mt-6 pt-5 border-t border-slate-200/80 dark:border-border-dark">
-          <div className="flex justify-between items-center text-xs text-slate-500 dark:text-slate-400 mb-2 font-medium">
+        <div className="mt-6 pt-5 border-t border-line">
+          <div className="flex justify-between items-center text-xs text-ink-3 mb-2 font-medium">
             <span className="font-numeric">{percentFunded}% Funded</span>
-            <span>{deficit > 0 ? <span className="font-numeric">{formatINR(deficit)} to reach goal</span> : '100% Fully Funded 🎉'}</span>
+            <span>
+              {deficit > 0 ? (
+                <span className="inline-flex items-center gap-1 font-numeric">
+                  <Money value={deficit} size="xs" />
+                  <span>to reach goal</span>
+                </span>
+              ) : (
+                '100% Fully Funded 🎉'
+              )}
+            </span>
           </div>
-          <ProgressBar
+          <Progress
             value={emergencyFund.currentSaved}
             max={effectiveTarget}
-            showMilestones
-            glowOnMilestone
+            tone="auto"
             size="md"
           />
         </div>
 
         {/* 4 Metric Pillars */}
-        <div ref={metricPillarsRef} className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-slate-200/80 dark:border-border-dark">
-          <div style={getChildStyle(0)} className="animate-slide-up bg-slate-50 dark:bg-inset-dark border border-slate-200/60 dark:border-border-dark/60 rounded-2xl p-3.5">
-            <span className="text-xs text-slate-500 dark:text-slate-400">Current Saved</span>
-            <p className="text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">{formatCompactINR(emergencyFund.currentSaved)}</p>
+        <div ref={metricPillarsRef} className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-line">
+          <div style={getChildStyle(0)} className="animate-slide-up">
+            <Card variant="sunken" padding="sm" className="rounded-2xl h-full">
+              <Stat label="Current Saved" value={emergencyFund.currentSaved} moneyProps={{ compact: true }} />
+            </Card>
           </div>
-          <div style={getChildStyle(1)} className="animate-slide-up bg-slate-50 dark:bg-inset-dark border border-slate-200/60 dark:border-border-dark/60 rounded-2xl p-3.5">
-            <span className="text-xs text-slate-500 dark:text-slate-400">Target Fund</span>
-            <p className="text-lg font-bold font-numeric text-emerald-600 dark:text-emerald-400 mt-0.5">{formatCompactINR(effectiveTarget)}</p>
+          <div style={getChildStyle(1)} className="animate-slide-up">
+            <Card variant="sunken" padding="sm" className="rounded-2xl h-full">
+              <Stat label="Target Fund" value={effectiveTarget} moneyProps={{ compact: true, tone: 'positive' }} />
+            </Card>
           </div>
-          <div style={getChildStyle(2)} className="animate-slide-up bg-slate-50 dark:bg-inset-dark border border-slate-200/60 dark:border-border-dark/60 rounded-2xl p-3.5">
-            <span className="text-xs text-slate-500 dark:text-slate-400">Runway Secured</span>
-            <p className="text-lg font-bold font-numeric text-teal-600 dark:text-teal-400 mt-0.5">{emergencyFundRunwayMonths.toFixed(1)} Months</p>
+          <div style={getChildStyle(2)} className="animate-slide-up">
+            <Card variant="sunken" padding="sm" className="rounded-2xl h-full">
+              <Stat label="Runway Secured" value={`${emergencyFundRunwayMonths.toFixed(1)} Months`} />
+            </Card>
           </div>
-          <div style={getChildStyle(3)} className="animate-slide-up bg-slate-50 dark:bg-inset-dark border border-slate-200/60 dark:border-border-dark/60 rounded-2xl p-3.5">
-            <span className="text-xs text-slate-500 dark:text-slate-400">Shield Status</span>
-            <p className={`text-lg font-bold mt-0.5 ${
-              percentFunded >= 100
-                ? 'text-emerald-600 dark:text-emerald-400'
-                : percentFunded >= 50
-                ? 'text-amber-600 dark:text-amber-400'
-                : 'text-rose-600 dark:text-rose-400'
-            }`}>
-              {percentFunded >= 100 ? 'Fully Shielded' : percentFunded >= 50 ? 'Moderate Cushion' : 'Under Target'}
-            </p>
+          <div style={getChildStyle(3)} className="animate-slide-up">
+            <Card variant="sunken" padding="sm" className="rounded-2xl h-full">
+              <Stat
+                label="Shield Status"
+                value={
+                  <span className={percentFunded >= 100 ? 'text-positive' : percentFunded >= 50 ? 'text-ink-2' : 'text-negative'}>
+                    {percentFunded >= 100 ? 'Fully Shielded' : percentFunded >= 50 ? 'Moderate Cushion' : 'Under Target'}
+                  </span>
+                }
+              />
+            </Card>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Section Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">
+          <h3 className="text-lg font-bold text-ink-1 tracking-tight">
             Contribution &amp; Activity Log
           </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs text-ink-3">
             Historical ledger of safety deposits and emergency withdrawals
           </p>
         </div>
-        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+        <span className="text-xs font-semibold text-ink-3">
           {emergencyFund.contributions.length} records
         </span>
       </div>
 
       {/* Contribution & Withdrawal History */}
-      <div className="bg-white dark:bg-card-dark rounded-3xl p-5 sm:p-7 shadow-sm border border-slate-200/90 dark:border-border-dark">
+      <Card variant="surface" padding="none" className="rounded-2xl p-5 sm:p-7">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+            <h3 className="text-base sm:text-lg font-bold text-ink-1">
               Contribution & Activity Log
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-ink-3 mt-0.5">
               Historical ledger of safety deposits and emergency withdrawals
             </p>
           </div>
-          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-inset-dark text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-border-dark">
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-sunken text-ink-2 border border-line">
             {emergencyFund.contributions.length} records
           </span>
         </div>
 
         {emergencyFund.contributions.length === 0 ? (
-          <div className="text-center py-12 border border-dashed border-slate-200/90 dark:border-border-dark rounded-2xl">
-            <Shield className="w-10 h-10 text-slate-300 dark:text-slate-700 mx-auto mb-2" />
-            <p className="text-xs text-slate-400">
+          <div className="text-center py-12 border border-dashed border-line rounded-2xl">
+            <Shield className="w-10 h-10 text-ink-3 mx-auto mb-2" />
+            <p className="text-xs text-ink-3">
               No contributions logged yet. Click "Log Contribution" to record your first reserve deposit.
             </p>
           </div>
@@ -233,7 +262,7 @@ export const EmergencyFundView: React.FC = () => {
               return (
                 <div
                   key={item.id}
-                  className="p-4 rounded-2xl bg-slate-50 dark:bg-inset-dark/60 hover:bg-slate-100 dark:hover:bg-inset-dark border border-slate-100 dark:border-border-dark flex items-center justify-between gap-4 transition-colors"
+                  className="p-4 rounded-2xl bg-sunken hover:bg-line border border-line flex items-center justify-between gap-4 transition-colors"
                 >
                   <div className="flex items-center gap-3.5">
                     <div
@@ -246,10 +275,10 @@ export const EmergencyFundView: React.FC = () => {
                       {isDeposit ? <ArrowDownLeft className="w-5 h-5" /> : <ArrowUpRight className="w-5 h-5" />}
                     </div>
                     <div>
-                      <p className="font-bold text-sm text-slate-900 dark:text-white">
+                      <p className="font-bold text-sm text-ink-1">
                         {item.note || (isDeposit ? 'Safety Reserve Deposit' : 'Emergency Withdrawal')}
                       </p>
-                      <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1.5 font-medium">
+                      <p className="text-xs text-ink-3 mt-0.5 flex items-center gap-1.5 font-medium">
                         <Calendar className="w-3.5 h-3.5" />
                         <span>{formatDate(item.date)}</span>
                       </p>
@@ -257,16 +286,20 @@ export const EmergencyFundView: React.FC = () => {
                   </div>
 
                   <div className="text-right">
-                    <span className={`text-base font-extrabold font-numeric ${isDeposit ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                      {isDeposit ? '+' : '-'}{formatINR(item.amount)}
-                    </span>
+                    <Money
+                      value={isDeposit ? item.amount : -item.amount}
+                      sign="always"
+                      tone={isDeposit ? 'positive' : 'negative'}
+                      size="md"
+                      className="font-extrabold"
+                    />
                   </div>
                 </div>
               );
             })}
           </div>
         )}
-      </div>
+      </Card>
 
       <EmergencyContributionModal
         isOpen={isModalOpen}

@@ -1,30 +1,37 @@
 @import "tailwindcss";
 
+:root {
+  --app: #F7F6F3;          --surface: #FFFFFF;      --sunken: #F0EEEA;
+  --line: #E4E1DA;         --line-input: #7D838D;
+  --ink-1: #14181F;        --ink-2: #4B5563;        --ink-3: #5F6B7A;
+  --primary: #2B4FD8;      --on-primary: #FFFFFF;   --primary-tint: #E8EDFF;
+  --positive: #0B7A55;     --positive-tint: #E6F5EE;
+  --negative: #C2253F;     --negative-tint: #FCEBEE;
+  --warning: #8A5300;      --warning-tint: #FFF3D6;
+  --reward: #8F6410;       --reward-tint: #FFF6DD;  --reward-fill: #F5B742;
+}
+.dark {
+  --app: #0B0E14;          --surface: #131822;      --sunken: #171E2A;
+  --line: #202836;         --line-input: #66728D;
+  --ink-1: #E8ECF4;        --ink-2: #A3AEC2;        --ink-3: #8591A8;
+  --primary: #8FA8FF;      --on-primary: #0B0E14;   --primary-tint: #1B2547;
+  --positive: #3DD6A0;     --positive-tint: #0F2A22;
+  --negative: #FF7A8E;     --negative-tint: #2E1519;
+  --warning: #FFB84D;      --warning-tint: #2B2110;
+  --reward: #F5B742;       --reward-tint: #2A2210;  --reward-fill: #F5B742;
+}
+@theme inline {
+  --color-app: var(--app);            --color-surface: var(--surface);    --color-sunken: var(--sunken);
+  --color-line: var(--line);          --color-line-input: var(--line-input);
+  --color-ink-1: var(--ink-1);        --color-ink-2: var(--ink-2);        --color-ink-3: var(--ink-3);
+  --color-primary: var(--primary);    --color-on-primary: var(--on-primary);  --color-primary-tint: var(--primary-tint);
+  --color-positive: var(--positive);  --color-positive-tint: var(--positive-tint);
+  --color-negative: var(--negative);  --color-negative-tint: var(--negative-tint);
+  --color-warning: var(--warning);    --color-warning-tint: var(--warning-tint);
+  --color-reward: var(--reward);      --color-reward-tint: var(--reward-tint);  --color-reward-fill: var(--reward-fill);
+}
+
 @theme {
-  /* ── Surface Elevation System ── */
-  --color-canvas: #F8F9FA;
-  --color-canvas-dark: #0B0E14;
-  --color-card: #FFFFFF;
-  --color-card-dark: #131822;
-  --color-inset: #F1F5F9;
-  --color-inset-dark: #171E2A;
-  --color-border: #E2E8F0;
-  --color-border-dark: #202836;
-
-  /* ── Interactive Surface States ── */
-  --color-hover: #F1F5F9;
-  --color-hover-dark: #1C2433;
-  --color-active: #E2E8F0;
-  --color-active-dark: #202836;
-
-  /* ── Brand Accents ── */
-  --color-gold: #F5B742;
-  --color-gold-muted: #C28834;
-  --color-emerald: #10B981;
-  --color-emerald-deep: #059669;
-  --color-crimson: #F43F5E;
-  --color-crimson-deep: #E11D48;
-
   /* ── Keyframe Animations ── */
   @keyframes shimmer {
     0% { transform: translateX(-100%); }
@@ -163,7 +170,7 @@
 @layer base {
   :root {
     --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --font-numeric: 'JetBrains Mono', monospace;
+    --font-numeric: var(--font-sans);
   }
   
   html {
@@ -176,15 +183,15 @@
   }
 
   body {
-    @apply bg-[#F8F9FA] text-slate-900 antialiased dark:bg-[#0B0E14] dark:text-slate-100 min-h-screen selection:bg-amber-500/30 selection:text-amber-300;
+    @apply bg-app text-ink-1 antialiased min-h-screen selection:bg-primary/20 selection:text-primary;
   }
 }
 
 /* Numeric Ledger Class for Currency Figures */
 .font-numeric {
-  font-family: var(--font-numeric);
-  font-feature-settings: "tnum" 1, "zero" 1;
-  font-variant-numeric: tabular-nums;
+  font-family: var(--font-sans);
+  font-feature-settings: "tnum" 1;
+  font-variant-numeric: tabular-nums lining-nums;
 }
 
 /* Custom modern scrollbars */
@@ -244,10 +251,10 @@ html.theme-anim *::after {
 }
 .press:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px var(--color-canvas, #F8F9FA), 0 0 0 4px var(--color-gold, #F5B742);
+  box-shadow: 0 0 0 2px var(--app, #F7F6F3), 0 0 0 4px var(--primary, #2B4FD8);
 }
 :where(.dark, .dark *) .press:focus-visible {
-  box-shadow: 0 0 0 2px var(--color-canvas-dark, #0B0E14), 0 0 0 4px var(--color-gold, #F5B742);
+  box-shadow: 0 0 0 2px var(--app, #0B0E14), 0 0 0 4px var(--primary, #8FA8FF);
 }
 
 button:focus-visible,
@@ -256,7 +263,7 @@ input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px var(--color-canvas, #F8F9FA), 0 0 0 4px var(--color-gold, #F5B742);
+  box-shadow: 0 0 0 2px var(--app, #F7F6F3), 0 0 0 4px var(--primary, #2B4FD8);
 }
 
 :where(.dark, .dark *) button:focus-visible,
@@ -264,7 +271,7 @@ textarea:focus-visible {
 :where(.dark, .dark *) input:focus-visible,
 :where(.dark, .dark *) select:focus-visible,
 :where(.dark, .dark *) textarea:focus-visible {
-  box-shadow: 0 0 0 2px var(--color-canvas-dark, #0B0E14), 0 0 0 4px var(--color-gold, #F5B742);
+  box-shadow: 0 0 0 2px var(--app, #0B0E14), 0 0 0 4px var(--primary, #8FA8FF);
 }
 
 .lift {

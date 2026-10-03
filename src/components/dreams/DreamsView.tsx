@@ -9,15 +9,14 @@ import {
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { DreamGoal } from '../../types/finance';
-import { formatINR, formatCompactINR } from '../../utils/currency';
 import { formatDate, calculateMonthsDiff } from '../../utils/date';
 import { IconRenderer } from '../common/IconRenderer';
-import { ProgressBar } from '../common/ProgressBar';
 import { AnimatedNumber } from '../common/AnimatedNumber';
 import { EmptyState } from '../common/EmptyState';
 import { DreamModal } from './DreamModal';
 import { DreamContributionModal } from './DreamContributionModal';
 import { useStaggerChildren } from '../../hooks/useStaggerChildren';
+import { Button, Card, Money, Stat, Progress } from '../ui';
 
 export const DreamsView: React.FC = () => {
   const { containerRef: dreamGridRef, getChildStyle } = useStaggerChildren(60);
@@ -50,94 +49,104 @@ export const DreamsView: React.FC = () => {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
       {/* Hero Overview: Mineral Card with Gold Milestone Highlight */}
-      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-card-dark text-slate-900 dark:text-white p-4 sm:p-8 border border-slate-200/90 dark:border-border-dark shadow-sm">
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#F5B742] to-transparent opacity-80" />
+      <Card variant="hero" padding="none" className="p-4 sm:p-8 rounded-2xl">
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-reward-fill to-transparent opacity-80" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-500/10 dark:bg-amber-400/10 text-amber-600 dark:text-amber-400">
+              <span className="flex h-6 w-6 items-center justify-center rounded-xl bg-primary-tint text-primary">
                 <Target className="h-4 w-4" />
               </span>
-              <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+              <span className="text-xs font-bold uppercase tracking-wider text-ink-3">
                 MILESTONE GOALS &amp; DREAMS
               </span>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+            <p className="text-xs text-ink-3 mb-1">
               Total Accumulated Goal Savings
             </p>
             <div className="flex items-baseline gap-3">
-              <h2 className="text-3xl sm:text-4xl font-black font-numeric tracking-tight text-slate-900 dark:text-white">
+              <h2 className="text-3xl sm:text-4xl font-black font-numeric tracking-tight text-ink-1">
                 <AnimatedNumber value={totalGoalsSaved} animateOnMount={true} />
               </h2>
-              <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+              <span className="text-sm font-semibold text-positive">
                 {overallPercent}% reached
               </span>
             </div>
-            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-              Target across all goals: <span className="font-numeric">{formatINR(totalGoalsTarget)}</span> • {completedGoalsCount} of {dreams.length} completed
+            <p className="mt-2 text-xs text-ink-3 flex items-center gap-1 flex-wrap">
+              <span>Target across all goals:</span>
+              <Money value={totalGoalsTarget} size="xs" />
+              <span>• {completedGoalsCount} of {dreams.length} completed</span>
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <button
+            <Button
+              variant="primary"
+              size="md"
+              leftIcon={<Plus className="h-4 w-4 stroke-[2.5]" />}
               onClick={handleOpenAdd}
-              className="press inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-3 text-sm font-bold text-slate-950 shadow-sm hover:from-amber-400 hover:to-amber-500 transition-all"
             >
-              <Plus className="h-4 w-4 stroke-[2.5]" />
-              <span>New Milestone</span>
-            </button>
+              New Milestone
+            </Button>
           </div>
         </div>
 
         {/* Global Progress Track */}
-        <div className="mt-6 pt-5 border-t border-slate-200/80 dark:border-border-dark">
-          <div className="flex justify-between items-center text-xs text-slate-500 dark:text-slate-400 mb-2 font-medium">
+        <div className="mt-6 pt-5 border-t border-line">
+          <div className="flex justify-between items-center text-xs text-ink-3 mb-2 font-medium">
             <span className="font-numeric">Overall Progress: {overallPercent}%</span>
-            <span className="font-numeric">Target: {formatINR(totalGoalsTarget)}</span>
+            <span className="font-numeric flex items-center gap-1">
+              <span>Target:</span>
+              <Money value={totalGoalsTarget} size="xs" />
+            </span>
           </div>
-          <ProgressBar
+          <Progress
             value={totalGoalsSaved}
             max={totalGoalsTarget}
-            showMilestones
-            glowOnMilestone
+            tone="auto"
             size="md"
           />
         </div>
 
         {/* 4-column summary strip */}
-        <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-slate-200/80 dark:border-border-dark">
-          <div className="rounded-2xl bg-slate-50 dark:bg-inset-dark p-3.5 border border-slate-200/60 dark:border-border-dark/60">
-            <span className="text-xs text-slate-500 dark:text-slate-400">Total Target</span>
-            <p className="text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">{formatCompactINR(totalGoalsTarget)}</p>
+        <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-line">
+          <div className="animate-slide-up">
+            <Card variant="sunken" padding="sm" className="rounded-2xl h-full">
+              <Stat label="Total Target" value={totalGoalsTarget} moneyProps={{ compact: true }} />
+            </Card>
           </div>
-          <div className="rounded-2xl bg-slate-50 dark:bg-inset-dark p-3.5 border border-slate-200/60 dark:border-border-dark/60">
-            <span className="text-xs text-slate-500 dark:text-slate-400">Total Saved</span>
-            <p className="text-lg font-bold font-numeric text-emerald-600 dark:text-emerald-400 mt-0.5">{formatCompactINR(totalGoalsSaved)}</p>
+          <div className="animate-slide-up">
+            <Card variant="sunken" padding="sm" className="rounded-2xl h-full">
+              <Stat label="Total Saved" value={totalGoalsSaved} moneyProps={{ compact: true, tone: 'positive' }} />
+            </Card>
           </div>
-          <div className="rounded-2xl bg-slate-50 dark:bg-inset-dark p-3.5 border border-slate-200/60 dark:border-border-dark/60">
-            <span className="text-xs text-slate-500 dark:text-slate-400">Active Dreams</span>
-            <p className="text-lg font-bold font-numeric text-slate-900 dark:text-white mt-0.5">{dreams.length} goals</p>
+          <div className="animate-slide-up">
+            <Card variant="sunken" padding="sm" className="rounded-2xl h-full">
+              <Stat label="Active Dreams" value={`${dreams.length} goals`} />
+            </Card>
           </div>
-          <div className="rounded-2xl bg-slate-50 dark:bg-inset-dark p-3.5 border border-slate-200/60 dark:border-border-dark/60">
-            <span className="text-xs text-slate-500 dark:text-slate-400">Success Rate</span>
-            <p className="text-lg font-bold font-numeric text-emerald-600 dark:text-emerald-400 mt-0.5">
-              {dreams.length > 0 ? `${Math.round((completedGoalsCount / dreams.length) * 100)}%` : '0%'}
-            </p>
+          <div className="animate-slide-up">
+            <Card variant="sunken" padding="sm" className="rounded-2xl h-full">
+              <Stat
+                label="Success Rate"
+                value={dreams.length > 0 ? `${Math.round((completedGoalsCount / dreams.length) * 100)}%` : '0%'}
+              />
+            </Card>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Section Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">
+          <h3 className="text-lg font-bold text-ink-1 tracking-tight">
             Active Milestone Goals
           </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs text-ink-3">
             Target savings, vacations, vehicle purchases, and life dreams
           </p>
         </div>
-        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+        <span className="text-xs font-semibold text-ink-3">
           {dreams.length} goals
         </span>
       </div>
@@ -170,13 +179,15 @@ export const DreamsView: React.FC = () => {
             const themeColor = dream.color || '#10b981';
 
             return (
-              <div
+              <Card
                 key={dream.id}
+                variant="surface"
+                padding="none"
                 style={getChildStyle(idx)}
-                className={`group lift bg-white dark:bg-card-dark rounded-3xl p-6 border transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between relative overflow-hidden animate-slide-up ${
+                className={`group lift rounded-2xl p-6 transition-[transform,box-shadow,border-color] duration-200 shadow-sm hover:shadow-md flex flex-col justify-between relative overflow-hidden animate-slide-up ${
                   isCompleted
-                    ? 'border-amber-400/60 dark:border-amber-400/40 ring-1 ring-amber-400/20'
-                    : 'border-slate-200/90 dark:border-border-dark hover:border-emerald-500/40'
+                    ? 'border-line/60 dark:border-line/40 ring-1 ring-primary/20'
+                    : 'border-line hover:border-emerald-500/40'
                 }`}
               >
                 {/* Accent top stripe glow */}
@@ -200,14 +211,14 @@ export const DreamsView: React.FC = () => {
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <h3 className="font-bold text-slate-900 dark:text-white text-base leading-tight">
+                          <h3 className="font-bold text-ink-1 text-base leading-tight">
                             {dream.name}
                           </h3>
                         </div>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-xs text-slate-400 font-medium">{dream.category}</span>
+                          <span className="text-xs text-ink-3 font-medium">{dream.category}</span>
                           {dream.priority === 'high' && (
-                            <span className="text-[10px] uppercase font-extrabold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 border border-rose-500/20">
+                            <span className="text-xs uppercase font-extrabold px-2 py-0.5 rounded-full bg-warning-tint text-warning border border-warning/20">
                               High
                             </span>
                           )}
@@ -218,7 +229,7 @@ export const DreamsView: React.FC = () => {
                     <div className="flex items-center gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => handleEdit(dream)}
-                        className="press flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200/90 dark:border-border-dark text-slate-400 hover:bg-slate-50 dark:hover:bg-inset-dark hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+                        className="press flex h-8 w-8 items-center justify-center rounded-xl border border-line text-ink-3 hover:bg-sunken hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
                         title="Edit Goal"
                       >
                         <Edit3 className="w-3.5 h-3.5" />
@@ -229,7 +240,7 @@ export const DreamsView: React.FC = () => {
                             deleteDream(dream.id);
                           }
                         }}
-                        className="press flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200/90 dark:border-border-dark text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                        className="press flex h-8 w-8 items-center justify-center rounded-xl border border-line text-ink-3 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
                         title="Delete Goal"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -241,78 +252,87 @@ export const DreamsView: React.FC = () => {
                   <div className="mt-5 space-y-3">
                     <div className="flex justify-between items-baseline">
                       <div>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                        <span className="text-xs font-bold uppercase tracking-wider text-ink-3">
                           Saved
                         </span>
-                        <p className="text-xl font-extrabold text-slate-900 dark:text-white font-numeric">
-                          {formatINR(dream.currentSaved)}
-                        </p>
+                        <div>
+                          <Money value={dream.currentSaved} size="lg" className="font-extrabold" />
+                        </div>
                       </div>
                       <div className="text-right">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                        <span className="text-xs font-bold uppercase tracking-wider text-ink-3">
                           Target
                         </span>
-                        <p className="text-sm font-bold text-slate-500 dark:text-slate-400 font-numeric">
-                          {formatINR(dream.targetAmount)}
-                        </p>
+                        <div>
+                          <Money value={dream.targetAmount} size="sm" className="font-bold text-ink-3" />
+                        </div>
                       </div>
                     </div>
 
                     {/* Progress Bar */}
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-xs font-semibold">
-                        <span className="text-slate-500 dark:text-slate-400 font-numeric">{percent}% Complete</span>
-                        <span className={isCompleted ? 'text-emerald-500 font-bold animate-pulse-success-infinite inline-block' : 'text-slate-400'}>
-                          {isCompleted ? 'Accomplished 🎉' : <span className="font-numeric">{formatINR(remaining)} left</span>}
+                        <span className="text-ink-3 font-numeric">{percent}% Complete</span>
+                        <span className={isCompleted ? 'text-positive font-bold animate-pulse-success-infinite inline-block' : 'text-ink-3'}>
+                          {isCompleted ? (
+                            'Accomplished 🎉'
+                          ) : (
+                            <span className="inline-flex items-center gap-1 font-numeric">
+                              <Money value={remaining} size="xs" />
+                              <span>left</span>
+                            </span>
+                          )}
                         </span>
                       </div>
-                      <ProgressBar
+                      <Progress
                         value={dream.currentSaved}
                         max={dream.targetAmount}
-                        color={themeColor}
-                        showMilestones
-                        glowOnMilestone
+                        tone="auto"
                         size="sm"
                       />
                     </div>
 
                     {/* Deadline & Suggested Monthly Savings */}
                     {dream.targetDate && !isCompleted && monthsLeft !== null && (
-                      <div className="p-3.5 bg-slate-50 dark:bg-inset-dark rounded-2xl border border-slate-200/80 dark:border-border-dark text-xs space-y-1.5">
-                        <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
+                      <Card variant="sunken" padding="none" className="p-3.5 rounded-2xl text-xs space-y-1.5">
+                        <div className="flex items-center justify-between text-ink-3">
                           <span className="flex items-center gap-1.5">
                             <Clock className="w-3.5 h-3.5" />
                             <span>Target: {formatDate(dream.targetDate)}</span>
                           </span>
-                          <span className="font-semibold text-slate-700 dark:text-slate-300">
+                          <span className="font-semibold text-ink-2">
                             {monthsLeft} mo. left
                           </span>
                         </div>
-                        <div className="flex items-center justify-between font-bold pt-1.5 border-t border-slate-200/60 dark:border-border-dark">
-                          <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                        <div className="flex items-center justify-between font-bold pt-1.5 border-t border-line">
+                          <span className="text-positive flex items-center gap-1">
                             <Zap className="w-3 h-3" /> Monthly Target:
                           </span>
-                          <span className="text-slate-900 dark:text-white font-numeric">{formatINR(suggestedMonthly)} / mo</span>
+                          <span className="inline-flex items-center gap-1 text-ink-1 font-numeric">
+                            <Money value={suggestedMonthly} size="xs" />
+                            <span>/ mo</span>
+                          </span>
                         </div>
-                      </div>
+                      </Card>
                     )}
                   </div>
                 </div>
 
                 {/* Bottom Action */}
-                <div className="mt-5 pt-4 border-t border-slate-100 dark:border-border-dark flex items-center justify-between">
-                  <span className="text-xs text-slate-400 font-medium">
+                <div className="mt-5 pt-4 border-t border-line flex items-center justify-between">
+                  <span className="text-xs text-ink-3 font-medium">
                     {dream.contributions?.length || 0} contributions
                   </span>
-                  <button
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    leftIcon={<Plus className="w-3.5 h-3.5" />}
                     onClick={() => handleOpenContribution(dream)}
-                    className="press flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-inset-dark hover:bg-amber-500 hover:text-slate-950 dark:hover:bg-[#F5B742] dark:hover:text-slate-950 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all duration-200 border border-slate-200/60 dark:border-border-dark"
                   >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Log Savings</span>
-                  </button>
+                    Log Savings
+                  </Button>
                 </div>
-              </div>
+              </Card>
             );
           })}
         </div>
