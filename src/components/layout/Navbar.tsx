@@ -41,7 +41,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAddTx }) => {
   const meta = VIEW_TITLES[currentView] || { title: 'DhanVeda', subtitle: '' };
 
   return (
-    <header className="sticky top-0 z-20 bg-surface/95 border-b border-line px-4 sm:px-8 py-4 flex items-center justify-between transition-colors">
+    <header
+      role="banner"
+      aria-label="Main Header"
+      className="sticky top-0 z-20 bg-surface/95 border-b border-line px-4 sm:px-8 py-4 flex items-center justify-between transition-colors"
+    >
       {/* Title info */}
       <div>
         <div className="flex items-center gap-2 min-w-0">
@@ -64,6 +68,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAddTx }) => {
           <button
             onClick={() => triggerSync(true)}
             title={syncStatus === 'syncing' ? 'Syncing with Google Drive...' : 'Google Drive Synced. Click to sync now.'}
+            aria-label={syncStatus === 'syncing' ? 'Syncing with Google Drive' : 'Google Drive sync status'}
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-sunken hover:bg-line text-xs font-medium transition-colors press"
           >
             {syncStatus === 'syncing' ? (
@@ -99,6 +104,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAddTx }) => {
         {currentView !== 'ai' && (
           <button
             onClick={() => setCurrentView('ai')}
+            aria-label="AI Health Summary"
             className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-reward bg-reward-tint hover:bg-reward-fill/20 border border-reward/30 transition-colors press"
           >
             <Sparkles className="w-3.5 h-3.5 text-reward" />
@@ -109,6 +115,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAddTx }) => {
         {/* Add Transaction Button (Tablet only, desktop uses Sidebar CTA to prevent duplication) */}
         <button
           onClick={onOpenAddTx}
+          aria-label="Add Transaction"
           className="hidden sm:flex lg:hidden items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary hover:opacity-95 text-on-primary font-bold text-xs sm:text-sm shadow-xs transition-colors press"
         >
           <Plus className="w-4 h-4" />
@@ -119,8 +126,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAddTx }) => {
         <button
           onClick={() => setDarkMode(prev => !prev)}
           className="lg:hidden p-2 rounded-xl text-ink-3 hover:bg-sunken transition-colors press"
-          title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-          aria-label={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+          aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
         >
           {darkMode ? <Sun className="w-4 h-4 text-reward" /> : <Moon className="w-4 h-4" />}
         </button>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
   X,
@@ -14,6 +14,7 @@ import {
   TrendingUp,
   Target,
   FileSpreadsheet,
+  Search,
 } from 'lucide-react';
 import { useFinance, AppView } from '../../context/FinanceContext';
 import { useOverlayTransition } from '../../hooks/useOverlayTransition';
@@ -54,7 +55,7 @@ const DRAWER_SECTIONS: DrawerSection[] = [
     ],
   },
   {
-    title: '',
+    title: 'Configuration',
     items: [
       { id: 'import', label: 'Import Statement', desc: 'PDF & CSV bank statements', icon: FileSpreadsheet },
       { id: 'settings', label: 'Settings', desc: 'Drive Sync & Backup', icon: Settings },
@@ -64,6 +65,8 @@ const DRAWER_SECTIONS: DrawerSection[] = [
 
 export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ isOpen, onClose }) => {
   const { currentView, setCurrentView, darkMode, setDarkMode } = useFinance();
+  const [searchQuery, setSearchQuery] = useState('');
+
   const { shouldRender, isAnimatingIn } = useOverlayTransition({
     isOpen,
     onClose,
@@ -74,6 +77,26 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ isOpen, onCl
     isActive: Boolean(shouldRender && isAnimatingIn),
     onEscape: onClose,
   });
+
+  // Reset search query when drawer closes
+  useEffect(() => {
+    if (!isOpen) {
+      setSearchQuery('');
+    }
+  }, [isOpen]);
+
+  const filteredSections = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return DRAWER_SECTIONS;
+    return DRAWER_SECTIONS.map((section) => ({
+      ...section,
+      items: section.items.filter(
+        (item) =>
+          item.label.toLowerCase().includes(query) ||
+          item.desc.toLowerCase().includes(query)
+      ),
+    })).filter((section) => section.items.length > 0);
+  }, [searchQuery]);
 
   if (!shouldRender || typeof document === 'undefined') return null;
 
@@ -103,7 +126,7 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ isOpen, onCl
         }`}
       >
         {/* Drag Pill */}
-        <div className="w-10 h-1 rounded-full bg-line-input/40 mx-auto mb-1" />
+        <div aria-hidden="true" className="w-10 h-1 rounded-full bg-line-input/40 mx-auto mb-1" />
 
         <div className="flex items-center justify-between pb-2 border-b border-line">
           <div>
@@ -113,61 +136,97 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ isOpen, onCl
             <p className="text-xs text-ink-3">All wealth, budgeting and configuration tools</p>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            aria-label="Close drawer"
+            aria-label="Close navigation drawer"
             className="p-1.5 rounded-xl text-ink-3 hover:text-ink-1 hover:bg-sunken transition-colors press"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="space-y-3">
-          {DRAWER_SECTIONS.map((section) => (
-            <div key={section.title || 'misc'}>
-              {section.title && (
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-ink-3 px-1 mb-1.5">
-                  {section.title}
-                </h4>
-              )}
-              <div className="grid grid-cols-2 gap-2">
-                {section.items.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = currentView === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => handleSelect(item.id)}
-                      className={`flex items-center gap-2.5 p-2.5 rounded-2xl text-left transition-colors press ${
-                        item.fullWidth ? 'col-span-2' : ''
-                      } ${
-                        isActive
-                          ? 'bg-primary-tint text-primary border border-primary/30'
-                          : 'bg-sunken text-ink-1 border border-line hover:bg-line/50'
-                      }`}
-                    >
-                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
-                        isActive
-                          ? 'bg-primary/20 text-primary'
-                          : 'bg-surface text-ink-2 shadow-2xs'
-                      }`}>
-                        <Icon className="w-4 h-4" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <span className="block text-xs font-bold leading-tight truncate">{item.label}</span>
-                        <span className="block text-xs text-ink-3 leading-tight truncate mt-0.5">{item.desc}</span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
+        {/* Search Field */}
+        <div className="relative">
+          <Search className="w-4 h-4 text-ink-3 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Search views..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Search views"
+            className="w-full pl-9 pr-8 py-2 bg-sunken border border-line rounded-xl text-xs sm:text-sm text-ink-1 placeholder:text-ink-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              aria-label="Clear search"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-3 hover:text-ink-1 p-0.5 rounded-lg"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
+
+        {filteredSections.length === 0 ? (
+          <div className="py-8 text-center text-ink-3 text-sm">
+            No matching views
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filteredSections.map((section) => (
+              <div key={section.title || 'misc'}>
+                {section.title && (
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-ink-3 px-1 mb-1.5">
+                    {section.title}
+                  </h4>
+                )}
+                <div className="grid grid-cols-2 gap-2">
+                  {section.items.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = currentView === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => handleSelect(item.id)}
+                        aria-label={item.label}
+                        aria-current={currentView === item.id ? 'page' : undefined}
+                        className={`flex items-center gap-2.5 p-2.5 rounded-2xl text-left transition-colors press ${
+                          item.fullWidth ? 'col-span-2' : ''
+                        } ${
+                          isActive
+                            ? 'bg-primary-tint text-primary border border-primary/30'
+                            : 'bg-sunken text-ink-1 border border-line hover:bg-line/50'
+                        }`}
+                      >
+                        <div
+                          className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                            isActive
+                              ? 'bg-primary/20 text-primary'
+                              : 'bg-surface text-ink-2 shadow-2xs'
+                          }`}
+                        >
+                          <Icon className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <span className="block text-xs font-bold leading-tight truncate">{item.label}</span>
+                          <span className="block text-xs text-ink-3 leading-tight truncate mt-0.5">{item.desc}</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="pt-3 border-t border-line flex items-center justify-between">
           <span className="text-xs font-semibold text-ink-3">Theme</span>
           <button
-            onClick={() => setDarkMode(prev => !prev)}
+            type="button"
+            onClick={() => setDarkMode((prev: boolean) => !prev)}
             className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-sunken hover:bg-line text-xs font-semibold text-ink-2 transition-colors press"
           >
             {darkMode ? <Sun className="w-3.5 h-3.5 text-reward" /> : <Moon className="w-3.5 h-3.5 text-ink-2" />}

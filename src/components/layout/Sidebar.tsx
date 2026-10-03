@@ -94,14 +94,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTx }) => {
   }, [totalXP]);
 
   return (
-    <aside className="hidden lg:flex flex-col w-64 border-r border-line bg-surface h-screen sticky top-0 z-30 select-none">
+    <aside
+      role="navigation"
+      aria-label="Desktop Sidebar"
+      className="hidden lg:flex flex-col lg:w-20 xl:w-64 border-r border-line bg-surface h-screen sticky top-0 z-30 select-none"
+    >
       {/* Brand Header */}
-      <div className="p-6 border-b border-line">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-reward-fill flex items-center justify-center text-ink-1 font-black text-xl shadow-xs border border-reward/30">
+      <div className="p-3 xl:p-6 border-b border-line">
+        <div className="flex items-center justify-center xl:justify-start gap-3">
+          <div className="w-10 h-10 shrink-0 rounded-xl bg-reward-fill flex items-center justify-center text-ink-1 font-black text-xl shadow-xs border border-reward/30">
             ₹
           </div>
-          <div>
+          <div className="hidden xl:block">
             <h1 className="text-lg font-black text-ink-1 leading-none tracking-tight">
               DhanVeda
             </h1>
@@ -112,7 +116,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTx }) => {
         </div>
 
         {/* Quick Balance Preview */}
-        <div className="mt-4 p-3 bg-sunken rounded-xl border border-line">
+        <div className="hidden xl:block mt-4 p-3 bg-sunken rounded-xl border border-line">
           <p className="text-xs font-semibold text-ink-3">
             Bank &amp; Cash (Liquid)
           </p>
@@ -124,7 +128,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTx }) => {
         {/* Gamification Level Status */}
         <div
           onClick={() => setCurrentView('badges')}
-          className="relative mt-2.5 p-2.5 bg-reward-tint hover:bg-reward-fill/20 rounded-xl border border-reward/20 transition-colors cursor-pointer group press"
+          className="hidden xl:block relative mt-2.5 p-2.5 bg-reward-tint hover:bg-reward-fill/20 rounded-xl border border-reward/20 transition-colors cursor-pointer group press"
           title={`Level ${levelInfo.level} Wealth Architect. ${levelInfo.xpToNext} XP to Level ${levelInfo.level + 1}. Click to view Achievements.`}
         >
           {xpDelta !== null && (
@@ -140,7 +144,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTx }) => {
               {totalXP} XP
             </span>
           </div>
-          <div className="h-1.5 w-full bg-line rounded-full overflow-hidden contain-paint">
+          <div
+            role="progressbar"
+            aria-valuenow={Math.round(progressPercent)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label="XP level progress"
+            className="h-1.5 w-full bg-line rounded-full overflow-hidden contain-paint"
+          >
             <div
               className="h-full w-full bg-reward-fill rounded-full origin-left will-change-transform"
               style={{ transform: `scaleX(${progressPercent / 100})` }}
@@ -150,22 +161,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTx }) => {
       </div>
 
       {/* Primary Action Button (Isolation Effect: single filled primary CTA on desktop) */}
-      <div className="px-4 pt-4 pb-2">
+      <div className="px-2 xl:px-4 pt-4 pb-2 flex justify-center">
         <button
           onClick={onOpenAddTx}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary hover:opacity-95 text-on-primary font-bold text-sm shadow-xs transition-colors press min-h-[44px]"
+          title="Add Transaction"
+          aria-label="Add Transaction"
+          className="w-11 h-11 xl:w-full xl:h-auto flex items-center justify-center gap-2 p-0 xl:px-4 xl:py-2.5 rounded-xl bg-primary hover:opacity-95 text-on-primary font-bold text-sm shadow-xs transition-colors press min-h-[44px]"
         >
-          <Plus className="w-4 h-4" />
-          <span>Add Transaction</span>
+          <Plus className="w-4 h-4 shrink-0" />
+          <span className="hidden xl:inline">Add Transaction</span>
         </button>
       </div>
 
       {/* Navigation sections (Hick's Law / Chunking) */}
-      <nav className="flex-1 px-3 py-2 space-y-3 overflow-y-auto">
+      <nav aria-label="Main Navigation" className="flex-1 px-2 xl:px-3 py-2 space-y-3 overflow-y-auto">
         {NAV_SECTIONS.map((section, idx) => (
           <div key={idx} className="space-y-0.5">
             {section.title && (
-              <div className="px-3 py-1 text-xs font-bold uppercase tracking-wider text-ink-3">
+              <div className="hidden xl:block px-3 py-1 text-xs font-bold uppercase tracking-wider text-ink-3">
                 {section.title}
               </div>
             )}
@@ -178,7 +191,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTx }) => {
                 <button
                   key={item.id}
                   onClick={() => setCurrentView(item.id)}
-                  className={`w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-sm font-semibold transition-colors duration-150 press min-h-[38px] ${
+                  title={item.label}
+                  aria-label={item.label}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`w-full flex items-center justify-center xl:justify-between px-2 xl:px-3.5 py-2 rounded-xl text-sm font-semibold transition-colors duration-150 press min-h-[38px] ${
                     isActive
                       ? 'bg-primary-tint text-primary shadow-xs'
                       : 'text-ink-2 hover:bg-sunken hover:text-ink-1'
@@ -194,10 +210,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTx }) => {
                           : 'text-ink-3'
                       }`}
                     />
-                    <span>{item.label}</span>
+                    <span className="hidden xl:inline">{item.label}</span>
                   </div>
                   {isAI && (
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-reward-tint text-reward">
+                    <span className="hidden xl:inline text-xs font-semibold px-2 py-0.5 rounded-full bg-reward-tint text-reward">
                       BYOK
                     </span>
                   )}
@@ -211,23 +227,26 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTx }) => {
         <div className="pt-2 border-t border-line space-y-0.5">
           <button
             onClick={() => setCurrentView('settings')}
-            className={`w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-sm font-semibold transition-colors duration-150 press min-h-[38px] ${
+            title="Settings"
+            aria-label="Settings"
+            aria-current={currentView === 'settings' ? 'page' : undefined}
+            className={`w-full flex items-center justify-center xl:justify-between px-2 xl:px-3.5 py-2 rounded-xl text-sm font-semibold transition-colors duration-150 press min-h-[38px] ${
               currentView === 'settings'
                 ? 'bg-primary-tint text-primary shadow-xs'
                 : 'text-ink-2 hover:bg-sunken hover:text-ink-1'
             }`}
           >
             <div className="flex items-center gap-3">
-              <Settings className={`w-4 h-4 ${currentView === 'settings' ? 'text-primary' : 'text-ink-3'}`} />
-              <span>Settings</span>
+              <Settings className={`w-4 h-4 shrink-0 ${currentView === 'settings' ? 'text-primary' : 'text-ink-3'}`} />
+              <span className="hidden xl:inline">Settings</span>
             </div>
           </button>
         </div>
       </nav>
 
       {/* Footer / Theme Toggle */}
-      <div className="p-4 border-t border-line flex items-center justify-between">
-        <div className="flex items-center gap-2 text-xs text-ink-3">
+      <div className="p-3 xl:p-4 border-t border-line flex items-center justify-center xl:justify-between">
+        <div className="hidden xl:flex items-center gap-2 text-xs text-ink-3">
           <span className="w-2 h-2 rounded-full bg-positive"></span>
           <span>100% Local Storage</span>
         </div>
