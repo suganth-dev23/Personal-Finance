@@ -1,0 +1,47 @@
+{
+ "n": 500,
+ "cpu": 6,
+ "url": "http://127.0.0.1:4182/",
+ "seeded": 500,
+ "cold_load_to_content_s": 4.55,
+ "cold_blocked_ms": 2662,
+ "fcp_ms": 1548,
+ "first_load_transfer_kB": 1494,
+ "open_transactions": {
+  "found": false,
+  "first_paint_ms": 491,
+  "blocked_ms": 0
+ },
+ "transactions_dom": {
+  "nodes": 41,
+  "rowsLike": 0
+ },
+ "scroll": {
+  "p50": 16,
+  "p95": 28,
+  "worst": 34,
+  "over33": 1,
+  "over100": 0
+ },
+ "delete_one_transaction": {
+  "clicked": false,
+  "idb_puts": 0,
+  "idb_deletes": 0,
+  "idb_store_clears": 0,
+  "blocked_ms": 0
+ },
+ "leave_transactions_to_budgets": {
+  "found": false,
+  "first_paint_ms": 473,
+  "blocked_ms": 0
+ },
+ "back_home": {
+  "found": false,
+  "first_paint_ms": 441,
+  "blocked_ms": 0
+ },
+ "end_state": {
+  "dom_nodes": 5388,
+  "js_heap_MB": 13.5
+ }
+}
