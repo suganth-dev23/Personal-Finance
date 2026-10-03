@@ -117,3 +117,38 @@ import { Sheet } from '@/components/ui';
 
 ## 10. Headers (`PageHeader.tsx`, `SectionHeader.tsx`)
 - Standardized page and section headers with action buttons and badges.
+
+---
+
+## 11. Skeleton (`Skeleton.tsx`)
+```tsx
+import { Skeleton } from '@/components/ui';
+
+<Skeleton width={120} height={24} />
+<Skeleton circle width={40} height={40} />
+```
+- Shimmer pulse placeholder with configurable dimensions and rounded-xl / circular radius.
+
+---
+
+## 12. EmptyState (`EmptyState.tsx`)
+```tsx
+import { EmptyState } from '@/components/ui';
+
+<EmptyState
+  icon={Receipt}
+  title="No transactions yet"
+  description="Add your first transaction to start tracking."
+  actionLabel="Add Transaction"
+  onAction={handleAdd}
+/>
+```
+- Standardized empty view placeholder with icon badge, title, description, and primary CTA.
+
+---
+
+## 13. Toast (`Toast.tsx`)
+```tsx
+import { Toast } from '@/components/ui';
+```
+- Accessible feedback alert toasts for actions, sync updates, and warnings.
