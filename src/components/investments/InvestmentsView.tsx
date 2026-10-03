@@ -226,7 +226,7 @@ export const InvestmentsView: React.FC = () => {
  {/* Asset Category Cards Grid */}
  {assetSegments.length > 0 && (
  <div className="space-y-4">
- <div className="flex items-center justify-between">
+ <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
  <div>
  <h3 className="text-lg font-bold text-ink-1 tracking-tight">
  Asset Class Allocation
@@ -254,7 +254,7 @@ export const InvestmentsView: React.FC = () => {
  : ''
  }`}
  >
- <div className="flex items-center justify-between">
+ <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
  <span className="text-xs font-medium text-ink-3">
  {seg.type}
  </span>
@@ -310,7 +310,7 @@ export const InvestmentsView: React.FC = () => {
  </div>
  ) : (
  <div className="space-y-4">
- <div className="flex items-center justify-between">
+ <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
  <div>
  <h3 className="text-lg font-bold text-ink-1 tracking-tight">
  All Holdings
@@ -319,7 +319,7 @@ export const InvestmentsView: React.FC = () => {
  Track performance, SIP schedules, and valuations across brokers
  </p>
  </div>
- <div className="flex items-center gap-2">
+ <div className="flex items-center gap-2 self-start sm:self-auto">
  <label className="text-xs text-ink-3 font-medium">Filter:</label>
  <select
  value={filterType}

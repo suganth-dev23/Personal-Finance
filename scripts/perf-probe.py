@@ -14,7 +14,7 @@ Transactions DOM size / heap / scroll frame times, typing in search, and how man
 import argparse, json, sys, time
 from playwright.sync_api import sync_playwright
 
-NAV_TX, NAV_BUDGETS, NAV_HOME = "Ledger", "Budgets", "Home"      # visible button labels (mobile tab bar / More sheet)
+NAV_TX, NAV_BUDGETS, NAV_HOME = "History", "Budgets", "Home"      # visible button labels (mobile tab bar / More sheet)
 INIT = """
 window.__lt=[]; window.__puts=0; window.__clears=0; window.__dels=0;
 try{ new PerformanceObserver(l=>{for(const e of l.getEntries()) window.__lt.push(e.duration)}).observe({type:'longtask',buffered:true}); }catch(e){}
@@ -29,7 +29,7 @@ SEED = """async (N)=>{ const db=await new Promise((ok,err)=>{const r=indexedDB.o
     out.push({...b,id:'perf-'+i,date:d.toISOString().slice(0,10),createdAt:d.toISOString(),updatedAt:d.toISOString()}) }
   await new Promise((ok,err)=>{const tx=db.transaction('transactions','readwrite'),s=tx.objectStore('transactions'); s.clear(); out.forEach(o=>s.put(o)); tx.oncomplete=ok; tx.onerror=()=>err(tx.error)});
   db.close(); return out.length }"""
-CLICK = "(l)=>{const b=[...document.querySelectorAll('button')].find(x=>x.textContent.trim().startsWith(l)); if(b) b.click(); return !!b}"
+CLICK = "(l)=>{const b=[...document.querySelectorAll('button')].find(x=>{const t=x.textContent.trim(); return t.startsWith(l) || (l==='History' && t.startsWith('Ledger'))}); if(b) b.click(); return !!b}"
 POPUPS = "()=>{const b=[...document.querySelectorAll('button')].find(x=>x.textContent.includes('Collect & Continue')); b&&b.click(); return !!b}"
 BLOCKED = "()=>Math.round(window.__lt.reduce((a,d)=>a+Math.max(0,d-50),0))"
 
@@ -48,6 +48,10 @@ def settle(pg, quiet_polls=2, max_s=120):
 def go(pg, label):
     pg.wait_for_timeout(800); pg.evaluate("()=>{window.__lt=[]}")
     t0 = time.time(); ok = pg.evaluate(CLICK, label)
+    if not ok:
+        pg.evaluate("""()=>{const m=[...document.querySelectorAll('button')].find(x=>x.textContent.trim().startsWith('More')||x.getAttribute('aria-label')==='Open more tools and views'); if(m) m.click()}""")
+        pg.wait_for_timeout(400)
+        ok = pg.evaluate(CLICK, label)
     pg.evaluate("()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))")
     first_paint_ms = round((time.time() - t0) * 1000)
     return {"found": ok, "first_paint_ms": first_paint_ms, "blocked_ms": settle(pg)}

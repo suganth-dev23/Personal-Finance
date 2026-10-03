@@ -143,7 +143,7 @@ export const AIHealthSummaryView: React.FC = () => {
  return (
  <div className="space-y-6 max-w-7xl mx-auto pb-16">
  {/* Hero Overview: Mineral Card with Gold AI Highlight */}
- <div className="relative overflow-hidden rounded-2xl bg-surface text-ink-1 p-6 sm:p-8 border border-line shadow-sm">
+ <div className="relative overflow-hidden rounded-2xl bg-surface text-ink-1 p-3.5 sm:p-8 border border-line shadow-sm">
  <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-reward-fill to-transparent opacity-80" />
  <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
  <div>
@@ -193,7 +193,7 @@ export const AIHealthSummaryView: React.FC = () => {
  </div>
 
  {/* 4-column summary strip */}
- <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-line">
+ <div className="mt-6 grid grid-cols-1 min-[360px]:grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-line">
  <div className="rounded-2xl bg-sunken p-3.5 border border-line">
  <span className="text-xs text-ink-3">Monthly Inflow</span>
  <p className="text-lg font-bold font-numeric text-emerald-600 dark:text-emerald-400 mt-0.5">
@@ -241,7 +241,7 @@ export const AIHealthSummaryView: React.FC = () => {
  </div>
 
  {/* BYOK Settings Card */}
- <div className="rounded-2xl bg-surface text-ink-1 p-6 sm:p-7 border border-line shadow-sm space-y-6">
+ <div className="rounded-2xl bg-surface text-ink-1 p-3.5 sm:p-7 border border-line shadow-sm space-y-6">
  {/* Provider Tabs */}
  <div>
  <label className="block text-xs font-bold uppercase tracking-wider text-ink-3 mb-3">

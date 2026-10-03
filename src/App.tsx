@@ -81,12 +81,12 @@ const MainContent: React.FC = () => {
       <Sidebar onOpenAddTx={handleOpenAddTx} />
 
       {/* Main Workspace Area */}
-      <div className="flex-1 flex flex-col min-w-0 pb-20 lg:pb-8">
+      <div className="flex-1 flex flex-col min-w-0 max-w-full pb-20 lg:pb-8 overflow-x-hidden">
         {/* Top Navbar */}
         <Navbar onOpenAddTx={handleOpenAddTx} />
 
         {/* Dynamic Lazy-Loaded View Router */}
-        <main className="flex-1 px-4 sm:px-8 py-6 w-full">
+        <main className="flex-1 px-4 sm:px-8 py-6 w-full max-w-full overflow-x-hidden">
           <ViewTransition viewKey={currentView}>
             <Suspense fallback={<ViewSkeleton view={currentView} />}>
               {currentView === 'dashboard' && (

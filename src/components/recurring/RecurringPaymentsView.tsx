@@ -139,7 +139,7 @@ export const RecurringPaymentsView: React.FC = () => {
  return (
  <div className="space-y-6 w-full pb-16">
  {/* Hero Overview: Mineral Card with Gold Commitment Highlight */}
- <div className="relative overflow-hidden rounded-2xl bg-surface text-ink-1 p-4 sm:p-8 border border-line shadow-sm">
+ <div className="relative overflow-hidden rounded-2xl bg-surface text-ink-1 p-3.5 sm:p-8 border border-line shadow-sm">
  <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
  <div>
  <div className="flex items-center gap-2 mb-2">
@@ -176,7 +176,7 @@ export const RecurringPaymentsView: React.FC = () => {
  </div>
 
  {/* Quick summary strip */}
- <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-line">
+ <div className="mt-6 grid grid-cols-1 min-[360px]:grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-line">
  <div className="rounded-2xl bg-sunken p-3.5 border border-line">
  <span className="text-xs text-ink-3">Active Commitments</span>
  <p className="text-lg font-bold font-numeric text-ink-1 mt-0.5">
@@ -213,8 +213,8 @@ export const RecurringPaymentsView: React.FC = () => {
 
  {/* Overdue Alerts Section (if any overdue commitments) */}
  {overdueRecurringPayments.length > 0 && (
- <div className="rounded-2xl border border-rose-200 dark:border-rose-900/50 bg-rose-50/70 dark:bg-rose-950/20 p-5 sm:p-6 transition-colors duration-200 animate-shake-x">
- <div className="flex items-center gap-2.5 mb-4 text-rose-700 dark:text-rose-400">
+ <div className="rounded-2xl border border-rose-200 dark:border-rose-900/50 bg-rose-50/70 dark:bg-rose-950/20 p-3.5 sm:p-6 transition-colors duration-200 animate-shake-x">
+ <div className="flex flex-wrap items-center justify-between gap-2 mb-4 text-rose-700 dark:text-rose-400">
  <AlertCircle className="h-5 w-5 shrink-0" />
  <h3 className="font-bold text-base">Overdue Payments Requiring Attention</h3>
  <span className="ml-auto rounded-full bg-rose-200/70 dark:bg-rose-900/60 px-2.5 py-0.5 text-xs font-black text-rose-800 dark:text-rose-200">
@@ -384,7 +384,7 @@ export const RecurringPaymentsView: React.FC = () => {
  </div>
 
  {/* All Declared Recurring Commitments */}
- <div className="rounded-2xl border border-line bg-surface p-5 sm:p-7 shadow-sm">
+ <div className="rounded-2xl border border-line bg-surface p-3.5 sm:p-7 shadow-sm">
  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
  <div>
  <h3 className="text-lg font-bold text-ink-1 tracking-tight">
@@ -397,7 +397,7 @@ export const RecurringPaymentsView: React.FC = () => {
 
  {/* Filter tabs */}
  <div className="flex flex-wrap items-center gap-2">
- <div className="inline-flex rounded-xl bg-sunken p-1 border border-line">
+ <div className="inline-flex max-w-full overflow-x-auto rounded-xl bg-sunken p-1 border border-line">
  <button
  onClick={() => setActiveTab('all')}
  className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-colors ${
@@ -538,7 +538,7 @@ export const RecurringPaymentsView: React.FC = () => {
  </div>
 
  {/* Right: Amount, Schedule, and Actions */}
- <div className="flex flex-wrap items-center justify-between sm:justify-end gap-x-4 gap-y-3 sm:shrink-0 pl-14 sm:pl-0">
+ <div className="flex flex-wrap items-center justify-between sm:justify-end gap-x-4 gap-y-3 sm:shrink-0 pl-0 sm:pl-0">
  <div className="text-left sm:text-right">
  <div>
  <Money value={payment.amount} size="sm" />
