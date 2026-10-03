@@ -256,6 +256,7 @@ export const TransactionCardRow: React.FC<TransactionRowProps> = React.memo(func
 
   return (
     <div
+      role="row"
       style={style}
       className={`animate-slide-up transition-[transform,opacity] duration-200 overflow-hidden ${
         isDeleting ? 'opacity-0 -translate-x-4 max-h-0' : 'max-h-36'

@@ -1,9 +1,9 @@
-import React, { useState, Suspense, lazy } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { FinanceProvider, useFinance } from './context/FinanceContext';
 import { GamificationProvider } from './context/GamificationContext';
 import { ToastProvider } from './components/common/ToastProvider';
 import { Sidebar } from './components/layout/Sidebar';
-import { Navbar } from './components/layout/Navbar';
+import { Navbar, VIEW_TITLES } from './components/layout/Navbar';
 import { MobileNav } from './components/layout/MobileNav';
 import { MobileMoreDrawer } from './components/layout/MobileMoreDrawer';
 import { TransactionModal } from './components/transactions/TransactionModal';
@@ -12,136 +12,142 @@ import { ViewTransition } from './components/common/ViewTransition';
 import type { Transaction } from './types/finance';
 
 // Lazy-loaded route views
+const dashboardPromise = import('./components/dashboard/DashboardView');
 const DashboardView = lazy(() =>
- import('./components/dashboard/DashboardView').then(m => ({ default: m.DashboardView }))
+  dashboardPromise.then(m => ({ default: m.DashboardView }))
 );
 const TransactionListView = lazy(() =>
- import('./components/transactions/TransactionListView').then(m => ({ default: m.TransactionListView }))
+  import('./components/transactions/TransactionListView').then(m => ({ default: m.TransactionListView }))
 );
 const PeopleView = lazy(() =>
- import('./components/people/PeopleView').then(m => ({ default: m.PeopleView }))
+  import('./components/people/PeopleView').then(m => ({ default: m.PeopleView }))
 );
 const BudgetsView = lazy(() =>
- import('./components/budgets/BudgetsView').then(m => ({ default: m.BudgetsView }))
+  import('./components/budgets/BudgetsView').then(m => ({ default: m.BudgetsView }))
 );
 const RecurringPaymentsView = lazy(() =>
- import('./components/recurring/RecurringPaymentsView').then(m => ({ default: m.RecurringPaymentsView }))
+  import('./components/recurring/RecurringPaymentsView').then(m => ({ default: m.RecurringPaymentsView }))
 );
 const CategoriesView = lazy(() =>
- import('./components/categories/CategoriesView').then(m => ({ default: m.CategoriesView }))
+  import('./components/categories/CategoriesView').then(m => ({ default: m.CategoriesView }))
 );
 const EmergencyFundView = lazy(() =>
- import('./components/emergency/EmergencyFundView').then(m => ({ default: m.EmergencyFundView }))
+  import('./components/emergency/EmergencyFundView').then(m => ({ default: m.EmergencyFundView }))
 );
 const InvestmentsView = lazy(() =>
- import('./components/investments/InvestmentsView').then(m => ({ default: m.InvestmentsView }))
+  import('./components/investments/InvestmentsView').then(m => ({ default: m.InvestmentsView }))
 );
 const DreamsView = lazy(() =>
- import('./components/dreams/DreamsView').then(m => ({ default: m.DreamsView }))
+  import('./components/dreams/DreamsView').then(m => ({ default: m.DreamsView }))
 );
 const AIHealthSummaryView = lazy(() =>
- import('./components/ai/AIHealthSummaryView').then(m => ({ default: m.AIHealthSummaryView }))
+  import('./components/ai/AIHealthSummaryView').then(m => ({ default: m.AIHealthSummaryView }))
 );
 const StatementImportView = lazy(() =>
- import('./components/import/StatementImportView').then(m => ({ default: m.StatementImportView }))
+  import('./components/import/StatementImportView').then(m => ({ default: m.StatementImportView }))
 );
 const SettingsView = lazy(() =>
- import('./components/settings/SettingsView').then(m => ({ default: m.SettingsView }))
+  import('./components/settings/SettingsView').then(m => ({ default: m.SettingsView }))
 );
 const BadgeShowcase = lazy(() =>
- import('./components/gamification/BadgeShowcase').then(m => ({ default: m.BadgeShowcase }))
+  import('./components/gamification/BadgeShowcase').then(m => ({ default: m.BadgeShowcase }))
 );
 import { BadgePopup } from './components/gamification/BadgePopup';
 
 const MainContent: React.FC = () => {
- const { currentView } = useFinance();
- const [isAddTxOpen, setIsAddTxOpen] = useState(false);
- const [editingTx, setEditingTx] = useState<Transaction | null>(null);
- const [isMoreDrawerOpen, setIsMoreDrawerOpen] = useState(false);
+  const { currentView } = useFinance();
+  const [isAddTxOpen, setIsAddTxOpen] = useState(false);
+  const [editingTx, setEditingTx] = useState<Transaction | null>(null);
+  const [isMoreDrawerOpen, setIsMoreDrawerOpen] = useState(false);
 
- const handleOpenAddTx = () => {
- setEditingTx(null);
- setIsAddTxOpen(true);
- };
+  useEffect(() => {
+    const title = VIEW_TITLES[currentView]?.title || 'DhanVeda';
+    document.title = `${title} — INR Personal Finance & Wealth Tracker`;
+  }, [currentView]);
 
- const handleEditTx = (tx: Transaction) => {
- setEditingTx(tx);
- setIsAddTxOpen(true);
- };
+  const handleOpenAddTx = () => {
+    setEditingTx(null);
+    setIsAddTxOpen(true);
+  };
 
- return (
- <div className="flex min-h-screen bg-app dark:bg-app text-ink-1 transition-colors">
- {/* Desktop Sidebar */}
- <Sidebar onOpenAddTx={handleOpenAddTx} />
+  const handleEditTx = (tx: Transaction) => {
+    setEditingTx(tx);
+    setIsAddTxOpen(true);
+  };
 
- {/* Main Workspace Area */}
- <div className="flex-1 flex flex-col min-w-0 pb-20 lg:pb-8">
- {/* Top Navbar */}
- <Navbar onOpenAddTx={handleOpenAddTx} />
+  return (
+    <div className="flex min-h-screen bg-app dark:bg-app text-ink-1 transition-colors">
+      {/* Desktop Sidebar */}
+      <Sidebar onOpenAddTx={handleOpenAddTx} />
 
- {/* Dynamic Lazy-Loaded View Router */}
- <main className="flex-1 px-4 sm:px-8 py-6 w-full">
- <ViewTransition viewKey={currentView}>
- <Suspense fallback={<ViewSkeleton view={currentView} />}>
- {currentView === 'dashboard' && (
- <DashboardView
- onOpenAddTx={handleOpenAddTx}
- onEditTransaction={handleEditTx}
- />
- )}
- {currentView === 'transactions' && (
- <TransactionListView
- onOpenAddModal={handleOpenAddTx}
- onEditTransaction={handleEditTx}
- />
- )}
- {currentView === 'people' && <PeopleView />}
- {currentView === 'budgets' && <BudgetsView />}
- {currentView === 'recurring' && <RecurringPaymentsView />}
- {currentView === 'categories' && <CategoriesView />}
- {currentView === 'emergency' && <EmergencyFundView />}
- {currentView === 'investments' && <InvestmentsView />}
- {currentView === 'dreams' && <DreamsView />}
- {currentView === 'ai' && <AIHealthSummaryView />}
- {currentView === 'import' && <StatementImportView />}
- {currentView === 'settings' && <SettingsView />}
- {currentView === 'badges' && <BadgeShowcase />}
- </Suspense>
- </ViewTransition>
- </main>
- </div>
+      {/* Main Workspace Area */}
+      <div className="flex-1 flex flex-col min-w-0 pb-20 lg:pb-8">
+        {/* Top Navbar */}
+        <Navbar onOpenAddTx={handleOpenAddTx} />
 
- {/* Mobile Bottom Navigation */}
- <MobileNav
- onOpenMore={() => setIsMoreDrawerOpen(true)}
- onOpenAddTx={handleOpenAddTx}
- />
+        {/* Dynamic Lazy-Loaded View Router */}
+        <main className="flex-1 px-4 sm:px-8 py-6 w-full">
+          <ViewTransition viewKey={currentView}>
+            <Suspense fallback={<ViewSkeleton view={currentView} />}>
+              {currentView === 'dashboard' && (
+                <DashboardView
+                  onOpenAddTx={handleOpenAddTx}
+                  onEditTransaction={handleEditTx}
+                />
+              )}
+              {currentView === 'transactions' && (
+                <TransactionListView
+                  onOpenAddModal={handleOpenAddTx}
+                  onEditTransaction={handleEditTx}
+                />
+              )}
+              {currentView === 'people' && <PeopleView />}
+              {currentView === 'budgets' && <BudgetsView />}
+              {currentView === 'recurring' && <RecurringPaymentsView />}
+              {currentView === 'categories' && <CategoriesView />}
+              {currentView === 'emergency' && <EmergencyFundView />}
+              {currentView === 'investments' && <InvestmentsView />}
+              {currentView === 'dreams' && <DreamsView />}
+              {currentView === 'ai' && <AIHealthSummaryView />}
+              {currentView === 'import' && <StatementImportView />}
+              {currentView === 'settings' && <SettingsView />}
+              {currentView === 'badges' && <BadgeShowcase />}
+            </Suspense>
+          </ViewTransition>
+        </main>
+      </div>
 
- {/* Mobile More Drawer */}
- <MobileMoreDrawer
- isOpen={isMoreDrawerOpen}
- onClose={() => setIsMoreDrawerOpen(false)}
- />
+      {/* Mobile Bottom Navigation */}
+      <MobileNav
+        onOpenMore={() => setIsMoreDrawerOpen(true)}
+        onOpenAddTx={handleOpenAddTx}
+      />
 
- {/* Global Add/Edit Transaction Modal */}
- <TransactionModal
- isOpen={isAddTxOpen}
- onClose={() => setIsAddTxOpen(false)}
- initialTransaction={editingTx}
- />
- </div>
- );
+      {/* Mobile More Drawer */}
+      <MobileMoreDrawer
+        isOpen={isMoreDrawerOpen}
+        onClose={() => setIsMoreDrawerOpen(false)}
+      />
+
+      {/* Global Add/Edit Transaction Modal */}
+      <TransactionModal
+        isOpen={isAddTxOpen}
+        onClose={() => setIsAddTxOpen(false)}
+        initialTransaction={editingTx}
+      />
+    </div>
+  );
 };
 
 export default function App() {
- return (
- <FinanceProvider>
- <GamificationProvider>
- <ToastProvider>
- <MainContent />
- <BadgePopup />
- </ToastProvider>
- </GamificationProvider>
- </FinanceProvider>
- );
+  return (
+    <FinanceProvider>
+      <GamificationProvider>
+        <ToastProvider>
+          <MainContent />
+          <BadgePopup />
+        </ToastProvider>
+      </GamificationProvider>
+    </FinanceProvider>
+  );
 }

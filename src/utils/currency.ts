@@ -18,12 +18,12 @@ export function formatINR(
 
   const num = Number(amount);
   const showSymbol = options?.showSymbol !== false;
-  const symbol = showSymbol ? '₹' : '';
 
   if (options?.compact) {
-    return symbol + formatCompactINR(num);
+    return formatCompactINR(num, { showSymbol });
   }
 
+  const symbol = showSymbol ? '₹' : '';
   const maxFraction = options?.maximumFractionDigits !== undefined ? options.maximumFractionDigits : (Number.isInteger(num) ? 0 : 2);
   const minFraction = options?.minimumFractionDigits !== undefined ? options.minimumFractionDigits : 0;
 
@@ -41,29 +41,39 @@ export function formatINR(
 
 /**
  * Compact Indian Number format
- * ₹1K, ₹1.25 L (Lakhs), ₹2.50 Cr (Crores)
+ * ₹50K, ₹1.5L, ₹2.75Cr (no space between number and unit, always with ₹ symbol unless showSymbol: false, handles negative -₹50K, max 2 decimals)
  */
-export function formatCompactINR(amount: number): string {
-  const abs = Math.abs(amount);
-  const sign = amount < 0 ? '-' : '';
+export function formatCompactINR(
+  amount: number | string | undefined | null,
+  options?: {
+    showSymbol?: boolean;
+  }
+): string {
+  const showSymbol = options?.showSymbol !== false;
+  const symbol = showSymbol ? '₹' : '';
 
-  const formatNum = (val: number, maxDecimals: number): string => {
-    return parseFloat(val.toFixed(maxDecimals)).toString();
+  if (amount === undefined || amount === null || isNaN(Number(amount))) {
+    return `${symbol}0`;
+  }
+
+  const num = Number(amount);
+  const abs = Math.abs(num);
+  const sign = num < 0 && abs > 0 ? '-' : '';
+
+  const formatNum = (val: number): string => {
+    return parseFloat(val.toFixed(2)).toString();
   };
 
   if (abs >= 10000000) {
-    const cr = abs / 10000000;
-    return `${sign}${formatNum(cr, cr < 10 ? 2 : 1)} Cr`;
+    return `${sign}${symbol}${formatNum(abs / 10000000)}Cr`;
   }
   if (abs >= 100000) {
-    const lk = abs / 100000;
-    return `${sign}${formatNum(lk, lk < 10 ? 2 : 1)} L`;
+    return `${sign}${symbol}${formatNum(abs / 100000)}L`;
   }
   if (abs >= 1000) {
-    const k = abs / 1000;
-    return `${sign}${formatNum(k, k < 10 ? 1 : 0)} K`;
+    return `${sign}${symbol}${formatNum(abs / 1000)}K`;
   }
-  return `${sign}${abs.toFixed(0)}`;
+  return `${sign}${symbol}${formatNum(abs)}`;
 }
 
 /**

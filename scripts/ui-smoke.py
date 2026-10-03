@@ -15,12 +15,12 @@ import argparse, json, os, subprocess, sys, time, urllib.request
 from playwright.sync_api import sync_playwright
 
 VIEWS = [  # (sidebar/More label, Navbar title in src/components/layout/Navbar.tsx VIEW_TITLES)
-    ("Dashboard", "Financial Dashboard"), ("Transactions", "Transaction History"),
-    ("People / Splits", "People & Expense Splits"), ("Budgets", "Monthly Budgets"),
-    ("Recurring Payments", "Recurring Payments"), ("Categories", "Spending Categories"),
-    ("Emergency Fund", "Emergency Fund"), ("Investments", "Investments Portfolio"),
-    ("Goals & Dreams", "Dreams & Goals"), ("Achievements", "Achievements & Badges"),
-    ("AI Health Summary", "AI Financial Health Summary"), ("Settings", "App Settings & Backup"),
+    ("Dashboard", "Dashboard"), ("Transactions", "Transactions"),
+    ("People & Splits", "People & Splits"), ("Budgets", "Budgets"),
+    ("Recurring Payments", "Recurring Payments"), ("Categories", "Categories"),
+    ("Emergency Fund", "Emergency Fund"), ("Investments", "Investments"),
+    ("Goals & Dreams", "Goals & Dreams"), ("Achievements", "Achievements"),
+    ("AI Health Summary", "AI Health Summary"), ("Settings", "Settings"),
 ]
 KNOWN_NOISE = ("width(0) and height(0) of chart",)       # recharts first-paint warning, tracked as known
 FONT_HOSTS = ("fonts.googleapis.com", "fonts.gstatic.com")  # blocked in some sandboxes; not an app failure
@@ -170,7 +170,7 @@ if __name__ == "__main__":
     srv = None
     if a.serve:
         srv = subprocess.Popen(["npx", "vite", "preview", "--port", a.url.rsplit(":", 1)[-1].strip("/"), "--host", "127.0.0.1"],
-                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=(sys.platform == "win32"))
     try:
         if not wait_up(a.url): sys.exit("server not reachable at " + a.url)
         code = run(a)

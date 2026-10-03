@@ -13,6 +13,7 @@ import {
   PieChart,
   TrendingUp,
   Target,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { useFinance, AppView } from '../../context/FinanceContext';
 import { useOverlayTransition } from '../../hooks/useOverlayTransition';
@@ -33,7 +34,7 @@ const DRAWER_SECTIONS: DrawerSection[] = [
     title: 'Money',
     items: [
       { id: 'budgets', label: 'Budgets', desc: 'Category limits', icon: PieChart },
-      { id: 'recurring', label: 'Recurring', desc: 'Bills & EMIs', icon: CalendarClock },
+      { id: 'recurring', label: 'Recurring Payments', desc: 'Bills & EMIs', icon: CalendarClock },
       { id: 'categories', label: 'Categories', desc: 'Tags & colors', icon: Tags },
     ],
   },
@@ -41,21 +42,22 @@ const DRAWER_SECTIONS: DrawerSection[] = [
     title: 'Grow',
     items: [
       { id: 'investments', label: 'Investments', desc: 'Portfolio & assets', icon: TrendingUp },
-      { id: 'dreams', label: 'Goals', desc: 'Target milestones', icon: Target },
-      { id: 'emergency', label: 'Emergency', desc: 'Safety runway', icon: ShieldCheck },
+      { id: 'dreams', label: 'Goals & Dreams', desc: 'Target milestones', icon: Target },
+      { id: 'emergency', label: 'Emergency Fund', desc: 'Safety runway', icon: ShieldCheck },
     ],
   },
   {
     title: 'Insights',
     items: [
-      { id: 'ai', label: 'AI Health', desc: 'Smart advisor', icon: Sparkles },
-      { id: 'badges', label: 'Badges', desc: 'Milestones & XP', icon: Trophy },
+      { id: 'ai', label: 'AI Health Summary', desc: 'Smart advisor', icon: Sparkles },
+      { id: 'badges', label: 'Achievements', desc: 'Milestones & XP', icon: Trophy },
     ],
   },
   {
     title: '',
     items: [
-      { id: 'settings', label: 'Settings & Import', desc: 'Drive Sync, Backup & Statement Import', icon: Settings, fullWidth: true },
+      { id: 'import', label: 'Import Statement', desc: 'PDF & CSV bank statements', icon: FileSpreadsheet },
+      { id: 'settings', label: 'Settings', desc: 'Drive Sync & Backup', icon: Settings },
     ],
   },
 ];
@@ -74,7 +76,6 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ isOpen, onCl
   });
 
   if (!shouldRender || typeof document === 'undefined') return null;
-
 
   const handleSelect = (view: AppView) => {
     setCurrentView(view);

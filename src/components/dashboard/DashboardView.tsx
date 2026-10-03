@@ -9,8 +9,8 @@ import {
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { Transaction } from '../../types/finance';
-import { CashFlowChart } from './CashFlowChart';
-import { CategoryExpenseChart } from './CategoryExpenseChart';
+const CashFlowChart = React.lazy(() => import('./CashFlowChart').then(m => ({ default: m.CashFlowChart })));
+const CategoryExpenseChart = React.lazy(() => import('./CategoryExpenseChart').then(m => ({ default: m.CategoryExpenseChart })));
 import { BudgetHealthWidget } from './BudgetHealthWidget';
 import { RecentTransactions } from './RecentTransactions';
 import { AIInsightsWidget } from './AIInsightsWidget';
@@ -278,8 +278,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx, onEdi
       <div className="sm:hidden space-y-4">
         {mobileTab === 'overview' && (
           <>
-            <CashFlowChart />
-            <CategoryExpenseChart />
+            <React.Suspense fallback={null}>
+              <CashFlowChart />
+              <CategoryExpenseChart />
+            </React.Suspense>
             <HealthGaugeCompact />
             <BudgetHealthWidget />
             <RecentTransactions onEditTransaction={onEditTransaction} />
@@ -300,10 +302,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx, onEdi
         {/* LEVEL 2: CASH FLOW VELOCITY & CATEGORY ALLOCATION */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-7">
-            <CashFlowChart />
+            <React.Suspense fallback={null}>
+              <CashFlowChart />
+            </React.Suspense>
           </div>
           <div className="lg:col-span-5">
-            <CategoryExpenseChart />
+            <React.Suspense fallback={null}>
+              <CategoryExpenseChart />
+            </React.Suspense>
           </div>
         </div>
 

@@ -2,16 +2,49 @@
  * Date formatting and range utilities
  */
 
+export const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
 export function formatDate(dateString: string): string {
   if (!dateString) return '';
   try {
-    const date = new Date(dateString);
+    let date: Date;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      const [y, m, d] = dateString.split('-').map(Number);
+      date = new Date(y, m - 1, d);
+    } else {
+      date = new Date(dateString);
+    }
     if (isNaN(date.getTime())) return dateString;
-    return new Intl.DateTimeFormat('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    }).format(date);
+    const day = date.getDate();
+    const month = MONTHS_SHORT[date.getMonth()];
+    const year = date.getFullYear();
+    return `${day} ${month} ${year}`;
+  } catch {
+    return dateString;
+  }
+}
+
+export function formatMonth(dateString: string, options?: { shortYear?: boolean }): string {
+  if (!dateString) return '';
+  try {
+    let date: Date;
+    if (/^\d{4}-\d{2}$/.test(dateString)) {
+      const [y, m] = dateString.split('-').map(Number);
+      date = new Date(y, m - 1, 1);
+    } else if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      const [y, m, d] = dateString.split('-').map(Number);
+      date = new Date(y, m - 1, d);
+    } else {
+      date = new Date(dateString);
+    }
+    if (isNaN(date.getTime())) return dateString;
+    const month = MONTHS_SHORT[date.getMonth()];
+    const year = date.getFullYear();
+    if (options?.shortYear) {
+      const shortYearStr = String(year).slice(-2);
+      return `${month} '${shortYearStr}`;
+    }
+    return `${month} ${year}`;
   } catch {
     return dateString;
   }
@@ -22,13 +55,15 @@ export function formatDateTime(dateTimeString: string): string {
   try {
     const date = new Date(dateTimeString);
     if (isNaN(date.getTime())) return dateTimeString;
-    return new Intl.DateTimeFormat('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(date);
+    const day = date.getDate();
+    const month = MONTHS_SHORT[date.getMonth()];
+    const year = date.getFullYear();
+    let hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'pm' : 'am';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    return `${day} ${month} ${year}, ${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
   } catch {
     return dateTimeString;
   }
@@ -53,13 +88,7 @@ export function getCurrentMonthYear(): { month: number; year: number; monthName:
 
 export function getMonthName(yearMonth: string): string {
   // expects YYYY-MM
-  try {
-    const [y, m] = yearMonth.split('-');
-    const date = new Date(parseInt(y), parseInt(m) - 1, 1);
-    return date.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
-  } catch {
-    return yearMonth;
-  }
+  return formatMonth(yearMonth);
 }
 
 export function getRelativeMonthsList(count = 6): { key: string; label: string }[] {
@@ -68,7 +97,7 @@ export function getRelativeMonthsList(count = 6): { key: string; label: string }
   for (let i = count - 1; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    const label = d.toLocaleDateString('en-IN', { month: 'short', year: '2-digit' });
+    const label = `${MONTHS_SHORT[d.getMonth()]} '${String(d.getFullYear()).slice(-2)}`;
     list.push({ key, label });
   }
   return list;
