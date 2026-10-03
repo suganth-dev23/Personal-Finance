@@ -35,12 +35,15 @@ import {
  migrateFromLocalStorage,
  getAllFromStore,
  saveAllToStore,
+ persistDiff,
+ ArrayStoreName,
  getSingleRecord,
  saveSingleRecord,
  clearAllStores,
  addTombstone,
  UserPreferences,
 } from '../utils/db';
+import { PERSIST_MODE } from '../constants/uiFlags';
 import { googleAuthService } from '../services/googleAuth';
 import { driveSyncService } from '../services/driveSync';
 
@@ -77,39 +80,20 @@ export type FinanceEvent =
 
 export type FinanceEventListener = (event: FinanceEvent) => void;
 
-interface FinanceContextType {
- // State
+export interface FinanceUiContextType {
  currentView: AppView;
  setCurrentView: (view: AppView) => void;
  darkMode: boolean;
  setDarkMode: (val: boolean | ((prev: boolean) => boolean)) => void;
  isInitialized: boolean;
+}
 
+export interface FinanceActionsContextType {
  // Event Pub/Sub
  subscribeFinanceEvent: (listener: FinanceEventListener) => () => void;
  emitFinanceEvent: (event: FinanceEvent) => void;
- 
- transactions: Transaction[];
- categories: Category[];
- budgets: Budget[];
- emergencyFund: EmergencyFund;
- investments: Investment[];
- dreams: DreamGoal[];
- contacts: Contact[];
- settlements: SettlementRecord[];
- recurringPayments: RecurringPayment[];
- recurringPaymentLogs: RecurringPaymentLog[];
- aiSettings: AISettings;
- aiReports: AIHealthReport[];
- notRecurringTxIds: Set<string>;
- toggleNotRecurring: (txId: string | string[]) => void;
 
  // Google Drive Cross-Device Sync
- syncStatus: SyncStatus;
- lastSyncedAt: string | null;
- syncError: string | null;
- isDriveConnected: boolean;
- driveUserEmail: string | null;
  triggerSync: (showFeedback?: boolean) => Promise<boolean>;
  connectDrive: () => Promise<boolean>;
  disconnectDrive: () => Promise<void>;
@@ -127,14 +111,14 @@ interface FinanceContextType {
  updateContact: (id: string, contact: Partial<Contact>) => void;
  deleteContact: (id: string) => void;
  recordSettlement: (
- contactId: string,
- amount: number,
- note?: string,
- date?: string,
- sourceTransactionId?: string,
- sourceSplitEntryId?: string,
- linkedTransactionId?: string,
- direction?: OwedDirection
+  contactId: string,
+  amount: number,
+  note?: string,
+  date?: string,
+  sourceTransactionId?: string,
+  sourceSplitEntryId?: string,
+  linkedTransactionId?: string,
+  direction?: OwedDirection
  ) => SettlementRecord;
  updateSettlement: (id: string, updated: Partial<SettlementRecord>) => void;
  deleteSettlement: (id: string) => void;
@@ -142,15 +126,15 @@ interface FinanceContextType {
  quickToggleSettleTransaction: (transactionId: string, splitEntryId?: string) => SettlementRecord | undefined;
  assignSplitToContact: (transactionId: string, splitEntryId: string, contactId: string) => void;
  settleSplitEntry: (
- transactionId: string,
- splitEntryId: string,
- options: {
- settled: boolean;
- settledAmount?: number;
- linkedTransactionId?: string;
- note?: string;
- date?: string;
- }
+  transactionId: string,
+  splitEntryId: string,
+  options: {
+   settled: boolean;
+   settledAmount?: number;
+   linkedTransactionId?: string;
+   note?: string;
+   date?: string;
+  }
  ) => SettlementRecord | undefined;
 
  // Categories CRUD
@@ -183,33 +167,60 @@ interface FinanceContextType {
  deleteRecurringPayment: (id: string) => void;
  pauseRecurringPayment: (id: string) => void;
  markRecurringPaymentPaid: (
- recurringPaymentId: string,
- dueDate: string,
- actualAmount?: number,
- linkedTransactionId?: string,
- createTransaction?: boolean
+  recurringPaymentId: string,
+  dueDate: string,
+  actualAmount?: number,
+  linkedTransactionId?: string,
+  createTransaction?: boolean
  ) => void;
+
+ // Preferences
+ toggleNotRecurring: (txId: string | string[]) => void;
 
  // AI
  updateAISettings: (settings: Partial<AISettings>) => void;
  saveAIReport: (report: Omit<AIHealthReport, 'id' | 'createdAt'>) => void;
  deleteAIReport: (id: string) => void;
+ getAggregatesForAI: () => FinancialAggregates;
 
  // Backup & Reset
  resetToDemoData: () => void;
  clearAllData: () => void;
  exportBackupJSON: () => string;
  importBackupJSON: (jsonStr: string) => boolean;
+}
+
+export interface FinanceDataContextType {
+ transactions: Transaction[];
+ categories: Category[];
+ budgets: Budget[];
+ emergencyFund: EmergencyFund;
+ investments: Investment[];
+ dreams: DreamGoal[];
+ contacts: Contact[];
+ settlements: SettlementRecord[];
+ recurringPayments: RecurringPayment[];
+ recurringPaymentLogs: RecurringPaymentLog[];
+ aiSettings: AISettings;
+ aiReports: AIHealthReport[];
+ notRecurringTxIds: Set<string>;
+
+ // Google Drive Cross-Device Sync
+ syncStatus: SyncStatus;
+ lastSyncedAt: string | null;
+ syncError: string | null;
+ isDriveConnected: boolean;
+ driveUserEmail: string | null;
 
  // Calculated Metrics
  totalBalance: number;
  totalNetWorth: number;
  netSharedBalance: number;
  peerBalanceSummary: {
- totalOwedToMe: number;
- totalIOwe: number;
- net: number;
- displayText: string;
+  totalOwedToMe: number;
+  totalIOwe: number;
+  net: number;
+  displayText: string;
  };
  currentMonthIncome: number;
  currentMonthExpense: number;
@@ -229,10 +240,38 @@ interface FinanceContextType {
  upcomingRecurringPayments: Array<RecurringPayment & { nextDueDate: string; daysUntilDue: number }>;
  overdueRecurringPayments: Array<RecurringPayment & { dueDate: string; daysOverdue: number }>;
  totalMonthlyRecurringCommitment: number;
- getAggregatesForAI: () => FinancialAggregates;
 }
 
-const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
+export interface FinanceContextType extends FinanceUiContextType, FinanceActionsContextType, FinanceDataContextType {}
+
+export const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
+export const FinanceUiContext = createContext<FinanceUiContextType | undefined>(undefined);
+export const FinanceActionsContext = createContext<FinanceActionsContextType | undefined>(undefined);
+export const FinanceDataContext = createContext<FinanceDataContextType | undefined>(undefined);
+
+export const useFinanceUi = () => {
+  const context = useContext(FinanceUiContext);
+  if (!context) {
+    throw new Error('useFinanceUi must be used within a FinanceProvider');
+  }
+  return context;
+};
+
+export const useFinanceActions = () => {
+  const context = useContext(FinanceActionsContext);
+  if (!context) {
+    throw new Error('useFinanceActions must be used within a FinanceProvider');
+  }
+  return context;
+};
+
+export const useFinanceData = () => {
+  const context = useContext(FinanceDataContext);
+  if (!context) {
+    throw new Error('useFinanceData must be used within a FinanceProvider');
+  }
+  return context;
+};
 
 const EMPTY_EMERGENCY_FUND: EmergencyFund = {
  targetMonths: 6,
@@ -290,6 +329,92 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
  const dreamsRef = useRef(dreams);
  const recurringPaymentsRef = useRef(recurringPayments);
  const recurringPaymentLogsRef = useRef(recurringPaymentLogs);
+
+  // Previous persisted state refs for diff-based persistence
+  const prevTransactionsRef = useRef<Transaction[]>(transactions);
+  const prevCategoriesRef = useRef<Category[]>(categories);
+  const prevBudgetsRef = useRef<Budget[]>(budgets);
+  const prevInvestmentsRef = useRef<Investment[]>(investments);
+  const prevDreamsRef = useRef<DreamGoal[]>(dreams);
+  const prevContactsRef = useRef<Contact[]>(contacts);
+  const prevSettlementsRef = useRef<SettlementRecord[]>(settlements);
+  const prevRecurringPaymentsRef = useRef<RecurringPayment[]>(recurringPayments);
+  const prevRecurringPaymentLogsRef = useRef<RecurringPaymentLog[]>(recurringPaymentLogs);
+  const prevAiReportsRef = useRef<AIHealthReport[]>(aiReports);
+
+  const pendingWritesRef = useRef<Map<string, () => Promise<void>>>(new Map());
+  const debounceTimersRef = useRef<Map<string, any>>(new Map());
+
+  const flushPendingPersistence = useCallback(async () => {
+    for (const timer of debounceTimersRef.current.values()) {
+      clearTimeout(timer);
+    }
+    debounceTimersRef.current.clear();
+
+    const tasks = Array.from(pendingWritesRef.current.values());
+    pendingWritesRef.current.clear();
+    await Promise.all(tasks.map(fn => fn()));
+  }, []);
+
+  const scheduleArrayPersist = useCallback(<T extends { id: string }>(
+    storeName: ArrayStoreName,
+    currentItems: T[],
+    prevRef: React.MutableRefObject<T[]>
+  ) => {
+    const existingTimer = debounceTimersRef.current.get(storeName);
+    if (existingTimer) {
+      clearTimeout(existingTimer);
+    }
+
+    const persistTask = async () => {
+      pendingWritesRef.current.delete(storeName);
+      debounceTimersRef.current.delete(storeName);
+      try {
+        if (PERSIST_MODE === 'diff') {
+          const prev = prevRef.current;
+          prevRef.current = currentItems;
+          await persistDiff(storeName, prev, currentItems);
+        } else {
+          prevRef.current = currentItems;
+          await saveAllToStore(storeName, currentItems);
+        }
+      } catch (e) {
+        console.error(`Error saving ${storeName}:`, e);
+      }
+    };
+
+    pendingWritesRef.current.set(storeName, persistTask);
+    const timer = setTimeout(() => {
+      persistTask();
+    }, 200);
+    debounceTimersRef.current.set(storeName, timer);
+  }, []);
+
+  const scheduleSinglePersist = useCallback(<T extends { id: string }>(
+    storeName: 'emergencyFund' | 'aiSettings',
+    data: T
+  ) => {
+    const existingTimer = debounceTimersRef.current.get(storeName);
+    if (existingTimer) {
+      clearTimeout(existingTimer);
+    }
+
+    const persistTask = async () => {
+      pendingWritesRef.current.delete(storeName);
+      debounceTimersRef.current.delete(storeName);
+      try {
+        await saveSingleRecord(storeName, data);
+      } catch (e) {
+        console.error(`Error saving ${storeName}:`, e);
+      }
+    };
+
+    pendingWritesRef.current.set(storeName, persistTask);
+    const timer = setTimeout(() => {
+      persistTask();
+    }, 200);
+    debounceTimersRef.current.set(storeName, timer);
+  }, []);
 
  useEffect(() => {
  transactionsRef.current = transactions;
@@ -401,33 +526,57 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
  splitWith: splitWith && splitWith.length > 0 ? splitWith : undefined,
  };
  });
- setTransactions(normalized);
- }
- if (dbCat && Array.isArray(dbCat) && dbCat.length > 0) setCategories(dbCat);
- if (dbBudgets && Array.isArray(dbBudgets)) setBudgets(dbBudgets);
- if (dbEm) {
- const { id: _id, ...cleanEm } = dbEm;
- setEmergencyFund(cleanEm);
- }
- if (dbInv && Array.isArray(dbInv)) setInvestments(dbInv);
- if (dbDreams && Array.isArray(dbDreams)) setDreams(dbDreams);
- if (dbContacts && Array.isArray(dbContacts)) setContacts(dbContacts);
- if (dbSettlements && Array.isArray(dbSettlements)) setSettlements(dbSettlements);
- if (dbRecPay && Array.isArray(dbRecPay)) {
- setRecurringPayments(dbRecPay);
- }
- if (dbRecLogs && Array.isArray(dbRecLogs)) {
- setRecurringPaymentLogs(dbRecLogs);
- }
- if (dbAiSet) {
- const { id: _id, ...cleanAi } = dbAiSet;
- setAISettings({
- provider: cleanAi.provider || 'gemini',
- apiKey: cleanAi.apiKey || '',
- model: cleanAi.model || DEFAULT_AI_MODELS[cleanAi.provider || 'gemini'],
- });
- }
- if (dbAiReports && Array.isArray(dbAiReports)) setAIReports(dbAiReports);
+    setTransactions(normalized);
+    prevTransactionsRef.current = normalized;
+  }
+  if (dbCat && Array.isArray(dbCat) && dbCat.length > 0) {
+    setCategories(dbCat);
+    prevCategoriesRef.current = dbCat;
+  }
+  if (dbBudgets && Array.isArray(dbBudgets)) {
+    setBudgets(dbBudgets);
+    prevBudgetsRef.current = dbBudgets;
+  }
+  if (dbEm) {
+    const { id: _id, ...cleanEm } = dbEm;
+    setEmergencyFund(cleanEm);
+  }
+  if (dbInv && Array.isArray(dbInv)) {
+    setInvestments(dbInv);
+    prevInvestmentsRef.current = dbInv;
+  }
+  if (dbDreams && Array.isArray(dbDreams)) {
+    setDreams(dbDreams);
+    prevDreamsRef.current = dbDreams;
+  }
+  if (dbContacts && Array.isArray(dbContacts)) {
+    setContacts(dbContacts);
+    prevContactsRef.current = dbContacts;
+  }
+  if (dbSettlements && Array.isArray(dbSettlements)) {
+    setSettlements(dbSettlements);
+    prevSettlementsRef.current = dbSettlements;
+  }
+  if (dbRecPay && Array.isArray(dbRecPay)) {
+    setRecurringPayments(dbRecPay);
+    prevRecurringPaymentsRef.current = dbRecPay;
+  }
+  if (dbRecLogs && Array.isArray(dbRecLogs)) {
+    setRecurringPaymentLogs(dbRecLogs);
+    prevRecurringPaymentLogsRef.current = dbRecLogs;
+  }
+  if (dbAiSet) {
+    const { id: _id, ...cleanAi } = dbAiSet;
+    setAISettings({
+      provider: cleanAi.provider || 'gemini',
+      apiKey: cleanAi.apiKey || '',
+      model: cleanAi.model || DEFAULT_AI_MODELS[cleanAi.provider || 'gemini'],
+    });
+  }
+  if (dbAiReports && Array.isArray(dbAiReports)) {
+    setAIReports(dbAiReports);
+    prevAiReportsRef.current = dbAiReports;
+  }
  if (dbPrefs) {
  if (dbPrefs.darkMode !== undefined) setDarkMode(dbPrefs.darkMode);
  if (dbPrefs.notRecurringTxIds && Array.isArray(dbPrefs.notRecurringTxIds)) {
@@ -464,6 +613,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
  // Sync methods
  const triggerSync = useCallback(async (_showFeedback = true): Promise<boolean> => {
  try {
+    await flushPendingPersistence();
  // 1. Immediately flush all current in-memory React state to IndexedDB so driveSync reads 100% current data
  await Promise.all([
  saveAllToStore('transactions', transactionsRef.current),
@@ -585,66 +735,87 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
  return () => clearInterval(interval);
  }, [triggerSync]);
 
- // Sync to IndexedDB once initialized
- useEffect(() => {
- if (!isInitialized) return;
- saveAllToStore('transactions', transactions).catch(e => console.error('Error saving transactions:', e));
- }, [transactions, isInitialized]);
+  // Sync to IndexedDB once initialized (debounced & diff-based)
+  useEffect(() => {
+    if (!isInitialized) return;
+    scheduleArrayPersist('transactions', transactions, prevTransactionsRef);
+  }, [transactions, isInitialized, scheduleArrayPersist]);
 
- useEffect(() => {
- if (!isInitialized) return;
- saveAllToStore('categories', categories).catch(e => console.error('Error saving categories:', e));
- }, [categories, isInitialized]);
+  useEffect(() => {
+    if (!isInitialized) return;
+    scheduleArrayPersist('categories', categories, prevCategoriesRef);
+  }, [categories, isInitialized, scheduleArrayPersist]);
 
- useEffect(() => {
- if (!isInitialized) return;
- saveAllToStore('budgets', budgets).catch(e => console.error('Error saving budgets:', e));
- }, [budgets, isInitialized]);
+  useEffect(() => {
+    if (!isInitialized) return;
+    scheduleArrayPersist('budgets', budgets, prevBudgetsRef);
+  }, [budgets, isInitialized, scheduleArrayPersist]);
 
- useEffect(() => {
- if (!isInitialized) return;
- saveSingleRecord('emergencyFund', { ...emergencyFund, id: 'current' }).catch(e => console.error('Error saving emergency fund:', e));
- }, [emergencyFund, isInitialized]);
+  useEffect(() => {
+    if (!isInitialized) return;
+    scheduleSinglePersist('emergencyFund', { ...emergencyFund, id: 'current' });
+  }, [emergencyFund, isInitialized, scheduleSinglePersist]);
 
- useEffect(() => {
- if (!isInitialized) return;
- saveAllToStore('investments', investments).catch(e => console.error('Error saving investments:', e));
- }, [investments, isInitialized]);
+  useEffect(() => {
+    if (!isInitialized) return;
+    scheduleArrayPersist('investments', investments, prevInvestmentsRef);
+  }, [investments, isInitialized, scheduleArrayPersist]);
 
- useEffect(() => {
- if (!isInitialized) return;
- saveAllToStore('dreams', dreams).catch(e => console.error('Error saving dreams:', e));
- }, [dreams, isInitialized]);
+  useEffect(() => {
+    if (!isInitialized) return;
+    scheduleArrayPersist('dreams', dreams, prevDreamsRef);
+  }, [dreams, isInitialized, scheduleArrayPersist]);
 
- useEffect(() => {
- if (!isInitialized) return;
- saveAllToStore('contacts', contacts).catch(e => console.error('Error saving contacts:', e));
- }, [contacts, isInitialized]);
+  useEffect(() => {
+    if (!isInitialized) return;
+    scheduleArrayPersist('contacts', contacts, prevContactsRef);
+  }, [contacts, isInitialized, scheduleArrayPersist]);
 
- useEffect(() => {
- if (!isInitialized) return;
- saveAllToStore('settlements', settlements).catch(e => console.error('Error saving settlements:', e));
- }, [settlements, isInitialized]);
+  useEffect(() => {
+    if (!isInitialized) return;
+    scheduleArrayPersist('settlements', settlements, prevSettlementsRef);
+  }, [settlements, isInitialized, scheduleArrayPersist]);
 
- useEffect(() => {
- if (!isInitialized) return;
- saveAllToStore('recurringPayments', recurringPayments).catch(e => console.error('Error saving recurring payments:', e));
- }, [recurringPayments, isInitialized]);
+  useEffect(() => {
+    if (!isInitialized) return;
+    scheduleArrayPersist('recurringPayments', recurringPayments, prevRecurringPaymentsRef);
+  }, [recurringPayments, isInitialized, scheduleArrayPersist]);
 
- useEffect(() => {
- if (!isInitialized) return;
- saveAllToStore('recurringPaymentLogs', recurringPaymentLogs).catch(e => console.error('Error saving recurring payment logs:', e));
- }, [recurringPaymentLogs, isInitialized]);
+  useEffect(() => {
+    if (!isInitialized) return;
+    scheduleArrayPersist('recurringPaymentLogs', recurringPaymentLogs, prevRecurringPaymentLogsRef);
+  }, [recurringPaymentLogs, isInitialized, scheduleArrayPersist]);
 
- useEffect(() => {
- if (!isInitialized) return;
- saveSingleRecord('aiSettings', { ...aiSettings, id: 'current' }).catch(e => console.error('Error saving AI settings:', e));
- }, [aiSettings, isInitialized]);
+  useEffect(() => {
+    if (!isInitialized) return;
+    scheduleSinglePersist('aiSettings', { ...aiSettings, id: 'current' });
+  }, [aiSettings, isInitialized, scheduleSinglePersist]);
 
- useEffect(() => {
- if (!isInitialized) return;
- saveAllToStore('aiReports', aiReports).catch(e => console.error('Error saving AI reports:', e));
- }, [aiReports, isInitialized]);
+  useEffect(() => {
+    if (!isInitialized) return;
+    scheduleArrayPersist('aiReports', aiReports, prevAiReportsRef);
+  }, [aiReports, isInitialized, scheduleArrayPersist]);
+
+  // Flush pending changes on visibilitychange (when hidden) or pagehide
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        flushPendingPersistence();
+      }
+    };
+    const handlePageHide = () => {
+      flushPendingPersistence();
+    };
+
+    window.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pagehide', handlePageHide);
+
+    return () => {
+      window.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pagehide', handlePageHide);
+      flushPendingPersistence();
+    };
+  }, [flushPendingPersistence]);
 
  useEffect(() => {
  // Apply temporary .theme-anim class for smooth transition only during toggle (E.4)
@@ -1680,95 +1851,169 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
  };
 
  // Reset & Backup
- const resetToDemoData = () => {
- emitFinanceEvent({ type: 'bulk_data_loaded' });
- const rebased = rebaseDemoData({
- transactions: INITIAL_TRANSACTIONS,
- emergencyFund: INITIAL_EMERGENCY_FUND,
- investments: INITIAL_INVESTMENTS,
- dreams: INITIAL_DREAMS,
- recurringPayments: INITIAL_RECURRING_PAYMENTS,
- recurringPaymentLogs: INITIAL_RECURRING_PAYMENT_LOGS,
- });
- setTransactions(rebased.transactions);
- setCategories(DEFAULT_CATEGORIES);
- setBudgets(INITIAL_BUDGETS);
- setEmergencyFund(rebased.emergencyFund);
- setInvestments(rebased.investments);
- setDreams(rebased.dreams);
- setContacts([]);
- setSettlements([]);
- setRecurringPayments(rebased.recurringPayments);
- setRecurringPaymentLogs(rebased.recurringPaymentLogs);
- setAIReports([]);
- setNotRecurringTxIds(new Set());
- };
+  const resetToDemoData = () => {
+    emitFinanceEvent({ type: 'bulk_data_loaded' });
+    const rebased = rebaseDemoData({
+      transactions: INITIAL_TRANSACTIONS,
+      emergencyFund: INITIAL_EMERGENCY_FUND,
+      investments: INITIAL_INVESTMENTS,
+      dreams: INITIAL_DREAMS,
+      recurringPayments: INITIAL_RECURRING_PAYMENTS,
+      recurringPaymentLogs: INITIAL_RECURRING_PAYMENT_LOGS,
+    });
 
- const clearAllData = async () => {
- setTransactions([]);
- setBudgets([]);
- setInvestments([]);
- setDreams([]);
- setContacts([]);
- setSettlements([]);
- setRecurringPayments([]);
- setRecurringPaymentLogs([]);
- setAIReports([]);
- setEmergencyFund(EMPTY_EMERGENCY_FUND);
- setNotRecurringTxIds(new Set());
- await clearAllStores();
- };
+    saveAllToStore('transactions', rebased.transactions).catch(console.error);
+    saveAllToStore('categories', DEFAULT_CATEGORIES).catch(console.error);
+    saveAllToStore('budgets', INITIAL_BUDGETS).catch(console.error);
+    saveAllToStore('investments', rebased.investments).catch(console.error);
+    saveAllToStore('dreams', rebased.dreams).catch(console.error);
+    saveAllToStore('contacts', []).catch(console.error);
+    saveAllToStore('settlements', []).catch(console.error);
+    saveAllToStore('recurringPayments', rebased.recurringPayments).catch(console.error);
+    saveAllToStore('recurringPaymentLogs', rebased.recurringPaymentLogs).catch(console.error);
+    saveAllToStore('aiReports', []).catch(console.error);
 
- const exportBackupJSON = (): string => {
- const backupData = {
- version: '2.1',
- exportedAt: new Date().toISOString(),
- transactions,
- categories,
- budgets,
- emergencyFund,
- investments,
- dreams,
- contacts,
- settlements,
- recurringPayments,
- recurringPaymentLogs,
- aiReports,
- userPreferences: {
- darkMode,
- notRecurringTxIds: Array.from(notRecurringTxIds),
- },
- };
- return JSON.stringify(backupData, null, 2);
- };
+    prevTransactionsRef.current = rebased.transactions;
+    prevCategoriesRef.current = DEFAULT_CATEGORIES;
+    prevBudgetsRef.current = INITIAL_BUDGETS;
+    prevInvestmentsRef.current = rebased.investments;
+    prevDreamsRef.current = rebased.dreams;
+    prevContactsRef.current = [];
+    prevSettlementsRef.current = [];
+    prevRecurringPaymentsRef.current = rebased.recurringPayments;
+    prevRecurringPaymentLogsRef.current = rebased.recurringPaymentLogs;
+    prevAiReportsRef.current = [];
 
- const importBackupJSON = (jsonStr: string): boolean => {
- try {
- emitFinanceEvent({ type: 'bulk_data_loaded' });
- const data = JSON.parse(jsonStr);
- if (Array.isArray(data.transactions)) setTransactions(data.transactions);
- if (Array.isArray(data.categories)) setCategories(data.categories);
- if (Array.isArray(data.budgets)) setBudgets(data.budgets);
- if (data.emergencyFund) setEmergencyFund(data.emergencyFund);
- if (Array.isArray(data.investments)) setInvestments(data.investments);
- if (Array.isArray(data.dreams)) setDreams(data.dreams);
- if (Array.isArray(data.contacts)) setContacts(data.contacts);
- if (Array.isArray(data.settlements)) setSettlements(data.settlements);
- if (Array.isArray(data.recurringPayments)) setRecurringPayments(data.recurringPayments);
- if (Array.isArray(data.recurringPaymentLogs)) setRecurringPaymentLogs(data.recurringPaymentLogs);
- if (Array.isArray(data.aiReports)) setAIReports(data.aiReports);
- if (data.userPreferences) {
- if (data.userPreferences.darkMode !== undefined) setDarkMode(data.userPreferences.darkMode);
- if (Array.isArray(data.userPreferences.notRecurringTxIds)) {
- setNotRecurringTxIds(new Set(data.userPreferences.notRecurringTxIds));
- }
- }
- return true;
- } catch (e) {
- console.error('Failed to import backup JSON:', e);
- return false;
- }
- };
+    setTransactions(rebased.transactions);
+    setCategories(DEFAULT_CATEGORIES);
+    setBudgets(INITIAL_BUDGETS);
+    setEmergencyFund(rebased.emergencyFund);
+    setInvestments(rebased.investments);
+    setDreams(rebased.dreams);
+    setContacts([]);
+    setSettlements([]);
+    setRecurringPayments(rebased.recurringPayments);
+    setRecurringPaymentLogs(rebased.recurringPaymentLogs);
+    setAIReports([]);
+    setNotRecurringTxIds(new Set());
+  };
+
+  const clearAllData = async () => {
+    prevTransactionsRef.current = [];
+    prevCategoriesRef.current = [];
+    prevBudgetsRef.current = [];
+    prevInvestmentsRef.current = [];
+    prevDreamsRef.current = [];
+    prevContactsRef.current = [];
+    prevSettlementsRef.current = [];
+    prevRecurringPaymentsRef.current = [];
+    prevRecurringPaymentLogsRef.current = [];
+    prevAiReportsRef.current = [];
+
+    setTransactions([]);
+    setBudgets([]);
+    setInvestments([]);
+    setDreams([]);
+    setContacts([]);
+    setSettlements([]);
+    setRecurringPayments([]);
+    setRecurringPaymentLogs([]);
+    setAIReports([]);
+    setEmergencyFund(EMPTY_EMERGENCY_FUND);
+    setNotRecurringTxIds(new Set());
+    await clearAllStores();
+  };
+
+  const exportBackupJSON = (): string => {
+    const backupData = {
+      version: '2.1',
+      exportedAt: new Date().toISOString(),
+      transactions,
+      categories,
+      budgets,
+      emergencyFund,
+      investments,
+      dreams,
+      contacts,
+      settlements,
+      recurringPayments,
+      recurringPaymentLogs,
+      aiReports,
+      userPreferences: {
+        darkMode,
+        notRecurringTxIds: Array.from(notRecurringTxIds),
+      },
+    };
+    return JSON.stringify(backupData, null, 2);
+  };
+
+  const importBackupJSON = (jsonStr: string): boolean => {
+    try {
+      emitFinanceEvent({ type: 'bulk_data_loaded' });
+      const data = JSON.parse(jsonStr);
+      if (Array.isArray(data.transactions)) {
+        saveAllToStore('transactions', data.transactions).catch(console.error);
+        prevTransactionsRef.current = data.transactions;
+        setTransactions(data.transactions);
+      }
+      if (Array.isArray(data.categories)) {
+        saveAllToStore('categories', data.categories).catch(console.error);
+        prevCategoriesRef.current = data.categories;
+        setCategories(data.categories);
+      }
+      if (Array.isArray(data.budgets)) {
+        saveAllToStore('budgets', data.budgets).catch(console.error);
+        prevBudgetsRef.current = data.budgets;
+        setBudgets(data.budgets);
+      }
+      if (data.emergencyFund) setEmergencyFund(data.emergencyFund);
+      if (Array.isArray(data.investments)) {
+        saveAllToStore('investments', data.investments).catch(console.error);
+        prevInvestmentsRef.current = data.investments;
+        setInvestments(data.investments);
+      }
+      if (Array.isArray(data.dreams)) {
+        saveAllToStore('dreams', data.dreams).catch(console.error);
+        prevDreamsRef.current = data.dreams;
+        setDreams(data.dreams);
+      }
+      if (Array.isArray(data.contacts)) {
+        saveAllToStore('contacts', data.contacts).catch(console.error);
+        prevContactsRef.current = data.contacts;
+        setContacts(data.contacts);
+      }
+      if (Array.isArray(data.settlements)) {
+        saveAllToStore('settlements', data.settlements).catch(console.error);
+        prevSettlementsRef.current = data.settlements;
+        setSettlements(data.settlements);
+      }
+      if (Array.isArray(data.recurringPayments)) {
+        saveAllToStore('recurringPayments', data.recurringPayments).catch(console.error);
+        prevRecurringPaymentsRef.current = data.recurringPayments;
+        setRecurringPayments(data.recurringPayments);
+      }
+      if (Array.isArray(data.recurringPaymentLogs)) {
+        saveAllToStore('recurringPaymentLogs', data.recurringPaymentLogs).catch(console.error);
+        prevRecurringPaymentLogsRef.current = data.recurringPaymentLogs;
+        setRecurringPaymentLogs(data.recurringPaymentLogs);
+      }
+      if (Array.isArray(data.aiReports)) {
+        saveAllToStore('aiReports', data.aiReports).catch(console.error);
+        prevAiReportsRef.current = data.aiReports;
+        setAIReports(data.aiReports);
+      }
+      if (data.userPreferences) {
+        if (data.userPreferences.darkMode !== undefined) setDarkMode(data.userPreferences.darkMode);
+        if (Array.isArray(data.userPreferences.notRecurringTxIds)) {
+          setNotRecurringTxIds(new Set(data.userPreferences.notRecurringTxIds));
+        }
+      }
+      return true;
+    } catch (e) {
+      console.error('Failed to import backup JSON:', e);
+      return false;
+    }
+  };
 
  // Calculated Metrics
  const totalBalance = useMemo(() => {
@@ -2197,108 +2442,217 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
  };
  };
 
- return (
- <FinanceContext.Provider
- value={{
- currentView,
- setCurrentView,
- darkMode,
- setDarkMode,
- isInitialized,
- subscribeFinanceEvent,
- emitFinanceEvent,
- transactions,
- categories,
- budgets,
- emergencyFund,
- investments,
- dreams,
- contacts,
- settlements,
- recurringPayments,
- recurringPaymentLogs,
- aiSettings,
- aiReports,
- notRecurringTxIds,
- toggleNotRecurring,
- syncStatus,
- lastSyncedAt,
- syncError,
- isDriveConnected,
- driveUserEmail,
- triggerSync,
- connectDrive,
- disconnectDrive,
- reloadFromDB,
- addTransaction,
- addMultipleTransactions,
- updateTransaction,
- deleteTransaction,
- deleteMultipleTransactions,
- addContact,
- updateContact,
- deleteContact,
- recordSettlement,
- updateSettlement,
- deleteSettlement,
- linkSettlementToTransaction,
- quickToggleSettleTransaction,
- assignSplitToContact,
- settleSplitEntry,
- addCategory,
- updateCategory,
- deleteCategory,
- setBudgetForCategory,
- deleteBudget,
- updateEmergencySettings,
- addEmergencyContribution,
- addInvestment,
- updateInvestment,
- deleteInvestment,
- addDream,
- updateDream,
- deleteDream,
- addDreamContribution,
- addRecurringPayment,
- updateRecurringPayment,
- deleteRecurringPayment,
- pauseRecurringPayment,
- markRecurringPaymentPaid,
- updateAISettings,
- saveAIReport,
- deleteAIReport,
- resetToDemoData,
- clearAllData,
- exportBackupJSON,
- importBackupJSON,
- totalBalance,
- totalNetWorth,
- netSharedBalance,
- peerBalanceSummary,
- currentMonthIncome,
- currentMonthExpense,
- currentMonthNet,
- currentMonthSavingsRate,
- totalInvestedAmount,
- totalInvestmentValue,
- totalInvestmentGainLoss,
- totalInvestmentGainLossPct,
- emergencyFundRunwayMonths,
- totalGoalsTarget,
- totalGoalsSaved,
- contactBalances,
- totalOwedToMe,
- totalIOwe,
- categorySpendingThisMonth,
- upcomingRecurringPayments,
- overdueRecurringPayments,
- totalMonthlyRecurringCommitment,
- getAggregatesForAI,
- }}
- >
- {children}
- </FinanceContext.Provider>
- );
+  const uiValue = useMemo<FinanceUiContextType>(() => ({
+    currentView,
+    setCurrentView,
+    darkMode,
+    setDarkMode,
+    isInitialized,
+  }), [currentView, darkMode, isInitialized]);
+
+  const actionsValue = useMemo<FinanceActionsContextType>(() => ({
+    subscribeFinanceEvent,
+    emitFinanceEvent,
+    triggerSync,
+    connectDrive,
+    disconnectDrive,
+    reloadFromDB,
+    addTransaction,
+    addMultipleTransactions,
+    updateTransaction,
+    deleteTransaction,
+    deleteMultipleTransactions,
+    addContact,
+    updateContact,
+    deleteContact,
+    recordSettlement,
+    updateSettlement,
+    deleteSettlement,
+    linkSettlementToTransaction,
+    quickToggleSettleTransaction,
+    assignSplitToContact,
+    settleSplitEntry,
+    addCategory,
+    updateCategory,
+    deleteCategory,
+    setBudgetForCategory,
+    deleteBudget,
+    updateEmergencySettings,
+    addEmergencyContribution,
+    addInvestment,
+    updateInvestment,
+    deleteInvestment,
+    addDream,
+    updateDream,
+    deleteDream,
+    addDreamContribution,
+    addRecurringPayment,
+    updateRecurringPayment,
+    deleteRecurringPayment,
+    pauseRecurringPayment,
+    markRecurringPaymentPaid,
+    toggleNotRecurring,
+    updateAISettings,
+    saveAIReport,
+    deleteAIReport,
+    getAggregatesForAI,
+    resetToDemoData,
+    clearAllData,
+    exportBackupJSON,
+    importBackupJSON,
+  }), [
+    subscribeFinanceEvent,
+    emitFinanceEvent,
+    triggerSync,
+    connectDrive,
+    disconnectDrive,
+    reloadFromDB,
+    addTransaction,
+    addMultipleTransactions,
+    updateTransaction,
+    deleteTransaction,
+    deleteMultipleTransactions,
+    addContact,
+    updateContact,
+    deleteContact,
+    recordSettlement,
+    updateSettlement,
+    deleteSettlement,
+    linkSettlementToTransaction,
+    quickToggleSettleTransaction,
+    assignSplitToContact,
+    settleSplitEntry,
+    addCategory,
+    updateCategory,
+    deleteCategory,
+    setBudgetForCategory,
+    deleteBudget,
+    updateEmergencySettings,
+    addEmergencyContribution,
+    addInvestment,
+    updateInvestment,
+    deleteInvestment,
+    addDream,
+    updateDream,
+    deleteDream,
+    addDreamContribution,
+    addRecurringPayment,
+    updateRecurringPayment,
+    deleteRecurringPayment,
+    pauseRecurringPayment,
+    markRecurringPaymentPaid,
+    toggleNotRecurring,
+    updateAISettings,
+    saveAIReport,
+    deleteAIReport,
+    getAggregatesForAI,
+    resetToDemoData,
+    clearAllData,
+    exportBackupJSON,
+    importBackupJSON,
+  ]);
+
+  const dataValue = useMemo<FinanceDataContextType>(() => ({
+    transactions,
+    categories,
+    budgets,
+    emergencyFund,
+    investments,
+    dreams,
+    contacts,
+    settlements,
+    recurringPayments,
+    recurringPaymentLogs,
+    aiSettings,
+    aiReports,
+    notRecurringTxIds,
+    syncStatus,
+    lastSyncedAt,
+    syncError,
+    isDriveConnected,
+    driveUserEmail,
+    totalBalance,
+    totalNetWorth,
+    netSharedBalance,
+    peerBalanceSummary,
+    currentMonthIncome,
+    currentMonthExpense,
+    currentMonthNet,
+    currentMonthSavingsRate,
+    totalInvestedAmount,
+    totalInvestmentValue,
+    totalInvestmentGainLoss,
+    totalInvestmentGainLossPct,
+    emergencyFundRunwayMonths,
+    totalGoalsTarget,
+    totalGoalsSaved,
+    contactBalances,
+    totalOwedToMe,
+    totalIOwe,
+    categorySpendingThisMonth,
+    upcomingRecurringPayments,
+    overdueRecurringPayments,
+    totalMonthlyRecurringCommitment,
+  }), [
+    transactions,
+    categories,
+    budgets,
+    emergencyFund,
+    investments,
+    dreams,
+    contacts,
+    settlements,
+    recurringPayments,
+    recurringPaymentLogs,
+    aiSettings,
+    aiReports,
+    notRecurringTxIds,
+    syncStatus,
+    lastSyncedAt,
+    syncError,
+    isDriveConnected,
+    driveUserEmail,
+    totalBalance,
+    totalNetWorth,
+    netSharedBalance,
+    peerBalanceSummary,
+    currentMonthIncome,
+    currentMonthExpense,
+    currentMonthNet,
+    currentMonthSavingsRate,
+    totalInvestedAmount,
+    totalInvestmentValue,
+    totalInvestmentGainLoss,
+    totalInvestmentGainLossPct,
+    emergencyFundRunwayMonths,
+    totalGoalsTarget,
+    totalGoalsSaved,
+    contactBalances,
+    totalOwedToMe,
+    totalIOwe,
+    categorySpendingThisMonth,
+    upcomingRecurringPayments,
+    overdueRecurringPayments,
+    totalMonthlyRecurringCommitment,
+  ]);
+
+  const contextValue = useMemo<FinanceContextType>(() => ({
+    ...uiValue,
+    ...actionsValue,
+    ...dataValue,
+  }), [uiValue, actionsValue, dataValue]);
+
+  return (
+    <FinanceUiContext.Provider value={uiValue}>
+      <FinanceActionsContext.Provider value={actionsValue}>
+        <FinanceDataContext.Provider value={dataValue}>
+          <FinanceContext.Provider value={contextValue}>
+            {children}
+          </FinanceContext.Provider>
+        </FinanceDataContext.Provider>
+      </FinanceActionsContext.Provider>
+    </FinanceUiContext.Provider>
+  );
 };
 
 export const useFinance = () => {

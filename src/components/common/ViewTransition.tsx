@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { ENABLE_VIEW_TRANSITION } from '../../constants/uiFlags';
 
 interface ViewTransitionProps {
  viewKey: string;
@@ -22,8 +23,6 @@ const VIEW_ORDER: Record<string, number> = {
  settings: 12,
 };
 
-// Feature flag for instant bisect or fallback if needed
-const ENABLE_VIEW_TRANSITION = true;
 const EXIT_DURATION_MS = 140;
 const ENTER_SETTLE_MS = 160;
 const CEILING_TIMEOUT_MS = 600;
@@ -93,6 +92,16 @@ export const ViewTransition: React.FC<ViewTransitionProps> = ({ viewKey, childre
  if (typeof window !== 'undefined') {
  scrollMapRef.current[activeKey] = window.scrollY;
  }
+
+  // View Exit Optimization: skip exit animation delay when lite perf or outgoing tree > 3000 nodes
+  const isLitePerf = typeof document !== 'undefined' && document.body?.getAttribute('data-perf') === 'lite';
+  const outgoingNodes = containerRef.current?.getElementsByTagName('*').length ?? 0;
+  if (isLitePerf || outgoingNodes > 3000) {
+   clearAllTimers();
+   setActiveKey(viewKey);
+   setPhase('idle');
+   return;
+  }
 
  // 2. Determine slide direction from VIEW_ORDER (captured at exit start)
  const fromIdx = VIEW_ORDER[activeKey] ?? 0;

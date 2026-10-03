@@ -464,8 +464,20 @@ export async function getAllFromStore<T>(
   return (await db.getAll(storeName)) as T[];
 }
 
+export type ArrayStoreName =
+  | 'transactions'
+  | 'categories'
+  | 'budgets'
+  | 'investments'
+  | 'dreams'
+  | 'aiReports'
+  | 'contacts'
+  | 'settlements'
+  | 'recurringPayments'
+  | 'recurringPaymentLogs';
+
 export async function saveAllToStore<T extends { id: string }>(
-  storeName: 'transactions' | 'categories' | 'budgets' | 'investments' | 'dreams' | 'aiReports' | 'contacts' | 'settlements' | 'recurringPayments' | 'recurringPaymentLogs',
+  storeName: ArrayStoreName,
   items: T[]
 ): Promise<void> {
   if (!Array.isArray(items)) return;
@@ -478,6 +490,80 @@ export async function saveAllToStore<T extends { id: string }>(
   }
   await tx.done;
 }
+
+function hasItemChanged(a: any, b: any): boolean {
+  if (a === b) return false;
+  if (!a || !b || typeof a !== 'object' || typeof b !== 'object') return true;
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+  if (keysA.length !== keysB.length) return true;
+  for (const key of keysA) {
+    const valA = a[key];
+    const valB = b[key];
+    if (valA === valB) continue;
+    if (typeof valA === 'object' && valA !== null && typeof valB === 'object' && valB !== null) {
+      if (JSON.stringify(valA) !== JSON.stringify(valB)) return true;
+    } else {
+      return true;
+    }
+  }
+  return false;
+}
+
+export async function persistDiff<T extends { id: string }>(
+  storeName: ArrayStoreName,
+  prevItems: T[],
+  nextItems: T[]
+): Promise<void> {
+  const prev = Array.isArray(prevItems) ? prevItems : [];
+  const next = Array.isArray(nextItems) ? nextItems : [];
+
+  const prevMap = new Map<string, T>();
+  for (const item of prev) {
+    if (item && typeof item.id === 'string' && item.id.length > 0) {
+      prevMap.set(item.id, item);
+    }
+  }
+
+  const nextMap = new Map<string, T>();
+  for (const item of next) {
+    if (item && typeof item.id === 'string' && item.id.length > 0) {
+      nextMap.set(item.id, item);
+    }
+  }
+
+  const toDelete: string[] = [];
+  for (const [id] of prevMap) {
+    if (!nextMap.has(id)) {
+      toDelete.push(id);
+    }
+  }
+
+  const toPut: T[] = [];
+  for (const [id, nextItem] of nextMap) {
+    const prevItem = prevMap.get(id);
+    if (!prevItem) {
+      toPut.push(nextItem);
+    } else if (prevItem !== nextItem && hasItemChanged(prevItem, nextItem)) {
+      toPut.push(nextItem);
+    }
+  }
+
+  if (toDelete.length === 0 && toPut.length === 0) {
+    return;
+  }
+
+  const db = await getDB();
+  const tx = db.transaction(storeName, 'readwrite');
+  for (const id of toDelete) {
+    tx.store.delete(id);
+  }
+  for (const item of toPut) {
+    tx.store.put(item as any);
+  }
+  await tx.done;
+}
+
 
 export async function getSingleRecord<T>(
   storeName: 'emergencyFund' | 'aiSettings' | 'userPreferences' | 'gamification',
@@ -536,6 +622,9 @@ export async function clearAllStores(): Promise<void> {
  */
 export async function addTombstone(store: SyncableStoreName, id: string): Promise<void> {
   try {
+    if (typeof localStorage !== 'undefined' && localStorage.getItem('dhanveda_drive_sync_enabled') !== 'true') {
+      return;
+    }
     const db = await getDB();
     const tombstone: TombstoneRecord & { compositeId: string } = {
       compositeId: `${store}:${id}`,
