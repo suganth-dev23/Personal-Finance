@@ -19,7 +19,7 @@ def count(rx, paths):
 COLOR = r"\b(?:bg|text|border|ring|from|to|via|fill|stroke|shadow|divide|placeholder|outline)-(?:%s)-\d{2,3}"
 def metrics():
     tsx = files((".tsx",)); allf = files()
-    non_gami = [p for p in tsx if "gamification" not in p and "StreakBanner" not in p and "Toast" not in p]
+    non_gami = [p for p in tsx if "/gamification/" not in p and "StreakBanner" not in p and "Toast" not in p]
     m = {
         "hardcoded_hex_in_classes": count(r"\b(?:bg|text|border|ring|from|to|via|fill|stroke|divide)-\[#[0-9A-Fa-f]{3,8}\]", tsx),
         "amber_orange_classes_total": count(COLOR % "amber|orange", tsx),
@@ -35,6 +35,10 @@ def metrics():
         "radius_off_scale(2xl|3xl|lg|md)": count(r"\brounded-(?:2xl|3xl|lg|md)\b", tsx),
         "formatINR_call_sites": count(r"\bformatINR\(", tsx),
         "money_component_uses": count(r"<Money\b", tsx),
+        "backdrop_blur_classes": count(r"\bbackdrop-blur", tsx),
+        "infinite_animations": count(r"animate-(?:spin(?:-slow)?|pulse|ping|bounce)(?![\w-])|animate-[a-z-]+-infinite\b", tsx),
+        "react_memo_uses": count(r"\bmemo\(|React\.memo\(", tsx),
+        "deferred_or_transition_uses": count(r"useDeferredValue|startTransition|useTransition", tsx),
         "aria_attributes": count(r"\baria-[a-z]+", tsx),
         "role_progressbar": count(r'role="progressbar"', tsx),
         "buttons_total": count(r"<button\b", tsx),
@@ -55,18 +59,24 @@ def metrics():
         key = re.sub(r"-[A-Za-z0-9_]{6,}\.(js|css)$", r".\1", n)
         sizes[key] = {"raw_kB": round(len(raw)/1000, 1), "gzip_kB": round(len(gzip.compress(raw))/1000, 1)}
     m["_bundle"] = sizes
+    fl = 0
+    if os.path.exists("dist/index.html"):
+        for ref in re.findall(r'(?:src|href)="/(assets/[^"]+\.(?:js|css))"', read("dist/index.html")):
+            if os.path.exists("dist/" + ref): fl += len(gzip.compress(open("dist/" + ref, "rb").read()))
+    m["first_load_gzip_kB"] = round(fl / 1000, 1)
     return m
 
 # Proposed targets, keyed by the phase that must satisfy them. A target is (metric, op, value|"x*baseline").
 TARGETS = {
-    1: [("hardcoded_hex_in_classes", "<=", 0), ("text_under_12px", "<=", 0), ("jetbrains_mono_refs", "<=", 0)],
-    2: [("ui_primitives_dir_files", ">=", 8)],
-    3: [("aria_attributes", ">=", "1.5*baseline")],
-    4: [("money_component_uses", ">=", 25)],
-    5: [("amber_orange_outside_gamification", "<=", 0), ("transition_all", "<=", "0.3*baseline"),
+    1: [("first_load_gzip_kB", "<=", 150), ("backdrop_blur_classes", "<=", 2)],
+    2: [("react_memo_uses", ">=", 3), ("deferred_or_transition_uses", ">=", 1)],
+    3: [("hardcoded_hex_in_classes", "<=", 0), ("text_under_12px", "<=", 0), ("jetbrains_mono_refs", "<=", 0)],
+    4: [("ui_primitives_dir_files", ">=", 8)],
+    5: [("aria_attributes", ">=", "1.5*baseline")],
+    6: [("money_component_uses", ">=", 25), ("amber_orange_outside_gamification", "<=", 0), ("transition_all", "<=", "0.3*baseline"),
         ("money_component_uses", ">=", "0.8*formatINR_call_sites_baseline")],
-    8: [("amber_orange_outside_gamification", "<=", 0), ("transition_all", "<=", "0.1*baseline"),
-        ("light_text_slate_400_500", "<=", 0), ("role_progressbar", ">=", 8), ("lines_FinanceContext", "<=", 1200)],
+    9: [("amber_orange_outside_gamification", "<=", 0), ("transition_all", "<=", "0.1*baseline"),
+        ("light_text_slate_400_500", "<=", 0), ("role_progressbar", ">=", 8), ("first_load_gzip_kB", "<=", 150)],
 }
 def check(cur, base, phase):
     ok = True
@@ -89,7 +99,7 @@ if __name__ == "__main__":
     base = json.load(open(a.baseline)) if a.baseline and os.path.exists(a.baseline) else None
     for k, v in cur.items():
         if k.startswith("_"): continue
-        d = f"  (baseline {base[k]}, {cur[k]-base[k]:+d})" if base and k in base else ""
+        d = f"  (baseline {base[k]}, {cur[k]-base[k]:+g})" if base and k in base else ""
         print(f"{k:38s} {v}{d}")
     print("\nper-folder colour classes (amber/orange | emerald | rose):")
     for f, c in sorted(cur["_per_folder_colour"].items(), key=lambda x: -x[1]["amber_orange"]):

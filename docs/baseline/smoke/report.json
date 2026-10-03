@@ -1,0 +1,2076 @@
+{
+ "1280x800-light:Dashboard": {
+  "title": "Financial Dashboard",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 29,
+   "interactive": 37
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 271,
+   "failing": 17,
+   "topClasses": [
+    [
+     "(inherited)",
+     4
+    ],
+    [
+     "text-xs text-emerald-600",
+     3
+    ],
+    [
+     "text-emerald-600 dark:text-emerald-400",
+     3
+    ],
+    [
+     "text-xs text-emerald-700",
+     3
+    ],
+    [
+     "text-sm text-emerald-600",
+     2
+    ]
+   ],
+   "sample": [
+    {
+     "t": "\u2022",
+     "ratio": 1.49,
+     "cls": "text-slate-300 dark:text-slate-700"
+    },
+    {
+     "t": "6 Months",
+     "ratio": 3.31,
+     "cls": "text-xs text-emerald-600"
+    },
+    {
+     "t": "Wave",
+     "ratio": 3.65,
+     "cls": ""
+    }
+   ]
+  }
+ },
+ "1280x800-light:Transactions": {
+  "title": "Transaction History",
+  "a11y": {
+   "unnamedButtons": 26,
+   "unlabeledInputs": 7,
+   "tapTargetsUnder44": 96,
+   "interactive": 100
+  },
+  "errors": [
+   "The width(0) and height(0) of chart should be greater than 0,\n       please check the style of container, or the props width(100%) and heigh"
+  ],
+  "badRequests": [],
+  "contrast": {
+   "checked": 260,
+   "failing": 25,
+   "topClasses": [
+    [
+     "text-xs",
+     25
+    ]
+   ],
+   "sample": [
+    {
+     "t": "Food & Dining",
+     "ratio": 2.57,
+     "cls": "text-xs"
+    },
+    {
+     "t": "Cashback & Refunds",
+     "ratio": 2.02,
+     "cls": "text-xs"
+    },
+    {
+     "t": "Transport & Fuel",
+     "ratio": 3.36,
+     "cls": "text-xs"
+    }
+   ]
+  }
+ },
+ "1280x800-light:People / Splits": {
+  "title": "People & Expense Splits",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 22,
+   "interactive": 25
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 34,
+   "failing": 5,
+   "topClasses": [
+    [
+     "(inherited)",
+     3
+    ],
+    [
+     "text-lg text-emerald-600",
+     1
+    ],
+    [
+     "text-lg text-rose-600",
+     1
+    ]
+   ],
+   "sample": [
+    {
+     "t": "Add Person",
+     "ratio": 3.08,
+     "cls": ""
+    },
+    {
+     "t": "+",
+     "ratio": 3.15,
+     "cls": "text-lg text-emerald-600"
+    },
+    {
+     "t": "\u20b90",
+     "ratio": 3.15,
+     "cls": ""
+    }
+   ]
+  }
+ },
+ "1280x800-light:Budgets": {
+  "title": "Monthly Budgets",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 30,
+   "interactive": 33
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 108,
+   "failing": 9,
+   "topClasses": [
+    [
+     "text-emerald-600 dark:text-emerald-400",
+     7
+    ],
+    [
+     "text-sm text-emerald-600",
+     1
+    ],
+    [
+     "text-sm sm:text-lg",
+     1
+    ]
+   ],
+   "sample": [
+    {
+     "t": "remaining",
+     "ratio": 3.65,
+     "cls": "text-sm text-emerald-600"
+    },
+    {
+     "t": "Safe Velocity",
+     "ratio": 3.15,
+     "cls": "text-sm sm:text-lg"
+    },
+    {
+     "t": "On track",
+     "ratio": 3.65,
+     "cls": "text-emerald-600 dark:text-emerald-400"
+    }
+   ]
+  }
+ },
+ "1280x800-light:Recurring Payments": {
+  "title": "Recurring Payments",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 1,
+   "tapTargetsUnder44": 58,
+   "interactive": 61
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 179,
+   "failing": 4,
+   "topClasses": [
+    [
+     "text-rose-500",
+     2
+    ],
+    [
+     "(inherited)",
+     1
+    ],
+    [
+     "text-lg text-rose-600",
+     1
+    ]
+   ],
+   "sample": [
+    {
+     "t": "New Recurring Bill",
+     "ratio": 3.08,
+     "cls": ""
+    },
+    {
+     "t": "1",
+     "ratio": 3.91,
+     "cls": "text-lg text-rose-600"
+    },
+    {
+     "t": "Overdue:",
+     "ratio": 3.75,
+     "cls": "text-rose-500"
+    }
+   ]
+  }
+ },
+ "1280x800-light:Categories": {
+  "title": "Spending Categories",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 28,
+   "interactive": 31
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 100,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "1280x800-light:Emergency Fund": {
+  "title": "Emergency Fund",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 14,
+   "interactive": 18
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 48,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "1280x800-light:Investments": {
+  "title": "Investments Portfolio",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 1,
+   "tapTargetsUnder44": 31,
+   "interactive": 34
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 191,
+   "failing": 6,
+   "topClasses": [
+    [
+     "text-xs text-emerald-600",
+     6
+    ]
+   ],
+   "sample": [
+    {
+     "t": "SIP:",
+     "ratio": 3.65,
+     "cls": "text-xs text-emerald-600"
+    },
+    {
+     "t": "/mo",
+     "ratio": 3.65,
+     "cls": "text-xs text-emerald-600"
+    },
+    {
+     "t": "(Day 5)",
+     "ratio": 3.65,
+     "cls": "text-xs text-emerald-600"
+    }
+   ]
+  }
+ },
+ "1280x800-light:Goals & Dreams": {
+  "title": "Dreams & Goals",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 23,
+   "interactive": 26
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 92,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "1280x800-light:Achievements": {
+  "title": "Achievements & Badges",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 23,
+   "interactive": 25
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 252,
+   "failing": 19,
+   "topClasses": [
+    [
+     "text-xs text-emerald-600",
+     12
+    ],
+    [
+     "text-amber-700 dark:text-reward",
+     2
+    ],
+    [
+     "text-lg text-emerald-600",
+     2
+    ],
+    [
+     "text-xs text-amber-600",
+     1
+    ],
+    [
+     "(inherited)",
+     1
+    ]
+   ],
+   "sample": [
+    {
+     "t": "ACHIEVEMENT VAULT & TROPHIES",
+     "ratio": 3.2,
+     "cls": "text-xs text-amber-600"
+    },
+    {
+     "t": "Level",
+     "ratio": 4.34,
+     "cls": "text-amber-700 dark:text-reward"
+    },
+    {
+     "t": "6",
+     "ratio": 4.34,
+     "cls": ""
+    }
+   ]
+  }
+ },
+ "1280x800-light:AI Health Summary": {
+  "title": "AI Financial Health Summary",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 16,
+   "interactive": 23
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 48,
+   "failing": 14,
+   "topClasses": [
+    [
+     "(inherited)",
+     3
+    ],
+    [
+     "text-emerald-600 dark:text-emerald-400",
+     3
+    ],
+    [
+     "text-lg text-emerald-600",
+     2
+    ],
+    [
+     "text-lg text-rose-600",
+     2
+    ],
+    [
+     "text-lg text-teal-600",
+     2
+    ]
+   ],
+   "sample": [
+    {
+     "t": "100% private in-browser",
+     "ratio": 3.65,
+     "cls": "text-sm text-emerald-600"
+    },
+    {
+     "t": "Generate Health Assessment",
+     "ratio": 3.08,
+     "cls": ""
+    },
+    {
+     "t": "+",
+     "ratio": 3.15,
+     "cls": "text-lg text-emerald-600"
+    }
+   ]
+  }
+ },
+ "1280x800-light:Settings": {
+  "title": "App Settings & Backup",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 1,
+   "tapTargetsUnder44": 24,
+   "interactive": 30
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 79,
+   "failing": 2,
+   "topClasses": [
+    [
+     "text-sm text-emerald-600",
+     1
+    ],
+    [
+     "(inherited)",
+     1
+    ]
+   ],
+   "sample": [
+    {
+     "t": "Private IndexedDB",
+     "ratio": 3.65,
+     "cls": "text-sm text-emerald-600"
+    },
+    {
+     "t": "Export Full Backup",
+     "ratio": 3.08,
+     "cls": ""
+    }
+   ]
+  }
+ },
+ "1280x800-dark:Dashboard": {
+  "title": "Financial Dashboard",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 29,
+   "interactive": 37
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 271,
+   "failing": 1,
+   "topClasses": [
+    [
+     "text-slate-300 dark:text-slate-700",
+     1
+    ]
+   ],
+   "sample": [
+    {
+     "t": "\u2022",
+     "ratio": 1.72,
+     "cls": "text-slate-300 dark:text-slate-700"
+    }
+   ]
+  }
+ },
+ "1280x800-dark:Transactions": {
+  "title": "Transaction History",
+  "a11y": {
+   "unnamedButtons": 26,
+   "unlabeledInputs": 7,
+   "tapTargetsUnder44": 96,
+   "interactive": 100
+  },
+  "errors": [
+   "The width(0) and height(0) of chart should be greater than 0,\n       please check the style of container, or the props width(100%) and heigh"
+  ],
+  "badRequests": [],
+  "contrast": {
+   "checked": 260,
+   "failing": 6,
+   "topClasses": [
+    [
+     "text-xs",
+     6
+    ]
+   ],
+   "sample": [
+    {
+     "t": "Transport & Fuel",
+     "ratio": 4.39,
+     "cls": "text-xs"
+    },
+    {
+     "t": "Health & Medical",
+     "ratio": 4.38,
+     "cls": "text-xs"
+    },
+    {
+     "t": "Entertainment & OTT",
+     "ratio": 3.86,
+     "cls": "text-xs"
+    }
+   ]
+  }
+ },
+ "1280x800-dark:People / Splits": {
+  "title": "People & Expense Splits",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 22,
+   "interactive": 25
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 34,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "1280x800-dark:Budgets": {
+  "title": "Monthly Budgets",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 30,
+   "interactive": 33
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 108,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "1280x800-dark:Recurring Payments": {
+  "title": "Recurring Payments",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 1,
+   "tapTargetsUnder44": 58,
+   "interactive": 61
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 179,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "1280x800-dark:Categories": {
+  "title": "Spending Categories",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 28,
+   "interactive": 31
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 100,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "1280x800-dark:Emergency Fund": {
+  "title": "Emergency Fund",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 14,
+   "interactive": 18
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 48,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "1280x800-dark:Investments": {
+  "title": "Investments Portfolio",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 1,
+   "tapTargetsUnder44": 31,
+   "interactive": 34
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 191,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "1280x800-dark:Goals & Dreams": {
+  "title": "Dreams & Goals",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 23,
+   "interactive": 26
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 92,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "1280x800-dark:Achievements": {
+  "title": "Achievements & Badges",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 23,
+   "interactive": 25
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 252,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "1280x800-dark:AI Health Summary": {
+  "title": "AI Financial Health Summary",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 16,
+   "interactive": 23
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 48,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "1280x800-dark:Settings": {
+  "title": "App Settings & Backup",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 1,
+   "tapTargetsUnder44": 24,
+   "interactive": 30
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 79,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "390x844-light:Dashboard": {
+  "title": "Financial Dashboard",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 8,
+   "interactive": 20
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 165,
+   "failing": 5,
+   "topClasses": [
+    [
+     "(inherited)",
+     2
+    ],
+    [
+     "text-emerald-600 dark:text-emerald-400",
+     2
+    ],
+    [
+     "text-xs text-emerald-600",
+     1
+    ]
+   ],
+   "sample": [
+    {
+     "t": "6 Months",
+     "ratio": 3.31,
+     "cls": "text-xs text-emerald-600"
+    },
+    {
+     "t": "Manage",
+     "ratio": 3.65,
+     "cls": ""
+    },
+    {
+     "t": "View all",
+     "ratio": 3.65,
+     "cls": ""
+    }
+   ]
+  }
+ },
+ "390x844-light:Transactions": {
+  "title": "Transaction History",
+  "a11y": {
+   "unnamedButtons": 25,
+   "unlabeledInputs": 7,
+   "tapTargetsUnder44": 83,
+   "interactive": 90
+  },
+  "errors": [
+   "The width(0) and height(0) of chart should be greater than 0,\n       please check the style of container, or the props width(100%) and heigh"
+  ],
+  "badRequests": [],
+  "contrast": {
+   "checked": 173,
+   "failing": 25,
+   "topClasses": [
+    [
+     "text-xs",
+     25
+    ]
+   ],
+   "sample": [
+    {
+     "t": "Food & Dining",
+     "ratio": 2.57,
+     "cls": "text-xs"
+    },
+    {
+     "t": "Cashback & Refunds",
+     "ratio": 2.02,
+     "cls": "text-xs"
+    },
+    {
+     "t": "Transport & Fuel",
+     "ratio": 3.36,
+     "cls": "text-xs"
+    }
+   ]
+  }
+ },
+ "390x844-light:People / Splits": {
+  "title": "People & Expense Splits",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 10,
+   "interactive": 16
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 34,
+   "failing": 5,
+   "topClasses": [
+    [
+     "(inherited)",
+     3
+    ],
+    [
+     "text-lg text-emerald-600",
+     1
+    ],
+    [
+     "text-lg text-rose-600",
+     1
+    ]
+   ],
+   "sample": [
+    {
+     "t": "Add Person",
+     "ratio": 3.08,
+     "cls": ""
+    },
+    {
+     "t": "+",
+     "ratio": 3.15,
+     "cls": "text-lg text-emerald-600"
+    },
+    {
+     "t": "\u20b90",
+     "ratio": 3.15,
+     "cls": ""
+    }
+   ]
+  }
+ },
+ "390x844-light:Budgets": {
+  "title": "Monthly Budgets",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 18,
+   "interactive": 24
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 108,
+   "failing": 9,
+   "topClasses": [
+    [
+     "text-emerald-600 dark:text-emerald-400",
+     7
+    ],
+    [
+     "text-sm text-emerald-600",
+     1
+    ],
+    [
+     "text-sm sm:text-lg",
+     1
+    ]
+   ],
+   "sample": [
+    {
+     "t": "remaining",
+     "ratio": 3.65,
+     "cls": "text-sm text-emerald-600"
+    },
+    {
+     "t": "Safe Velocity",
+     "ratio": 3.15,
+     "cls": "text-sm sm:text-lg"
+    },
+    {
+     "t": "On track",
+     "ratio": 3.65,
+     "cls": "text-emerald-600 dark:text-emerald-400"
+    }
+   ]
+  }
+ },
+ "390x844-light:Recurring Payments": {
+  "title": "Recurring Payments",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 1,
+   "tapTargetsUnder44": 46,
+   "interactive": 52
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 173,
+   "failing": 4,
+   "topClasses": [
+    [
+     "text-rose-500",
+     2
+    ],
+    [
+     "(inherited)",
+     1
+    ],
+    [
+     "text-lg text-rose-600",
+     1
+    ]
+   ],
+   "sample": [
+    {
+     "t": "New Recurring Bill",
+     "ratio": 3.08,
+     "cls": ""
+    },
+    {
+     "t": "1",
+     "ratio": 3.91,
+     "cls": "text-lg text-rose-600"
+    },
+    {
+     "t": "Overdue:",
+     "ratio": 3.75,
+     "cls": "text-rose-500"
+    }
+   ]
+  }
+ },
+ "390x844-light:Categories": {
+  "title": "Spending Categories",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 16,
+   "interactive": 22
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 100,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "390x844-light:Emergency Fund": {
+  "title": "Emergency Fund",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 2,
+   "interactive": 9
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 48,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "390x844-light:Investments": {
+  "title": "Investments Portfolio",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 1,
+   "tapTargetsUnder44": 19,
+   "interactive": 25
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 191,
+   "failing": 6,
+   "topClasses": [
+    [
+     "text-xs text-emerald-600",
+     6
+    ]
+   ],
+   "sample": [
+    {
+     "t": "SIP:",
+     "ratio": 3.65,
+     "cls": "text-xs text-emerald-600"
+    },
+    {
+     "t": "/mo",
+     "ratio": 3.65,
+     "cls": "text-xs text-emerald-600"
+    },
+    {
+     "t": "(Day 5)",
+     "ratio": 3.65,
+     "cls": "text-xs text-emerald-600"
+    }
+   ]
+  }
+ },
+ "390x844-light:Goals & Dreams": {
+  "title": "Dreams & Goals",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 11,
+   "interactive": 17
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 92,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "390x844-light:Achievements": {
+  "title": "Achievements & Badges",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 11,
+   "interactive": 16
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 252,
+   "failing": 19,
+   "topClasses": [
+    [
+     "text-xs text-emerald-600",
+     12
+    ],
+    [
+     "text-amber-700 dark:text-reward",
+     2
+    ],
+    [
+     "text-lg text-emerald-600",
+     2
+    ],
+    [
+     "text-xs text-amber-600",
+     1
+    ],
+    [
+     "(inherited)",
+     1
+    ]
+   ],
+   "sample": [
+    {
+     "t": "ACHIEVEMENT VAULT & TROPHIES",
+     "ratio": 3.2,
+     "cls": "text-xs text-amber-600"
+    },
+    {
+     "t": "Level",
+     "ratio": 4.34,
+     "cls": "text-amber-700 dark:text-reward"
+    },
+    {
+     "t": "6",
+     "ratio": 4.34,
+     "cls": ""
+    }
+   ]
+  }
+ },
+ "390x844-light:AI Health Summary": {
+  "title": "AI Financial Health Summary",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 6,
+   "interactive": 15
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 48,
+   "failing": 14,
+   "topClasses": [
+    [
+     "(inherited)",
+     3
+    ],
+    [
+     "text-emerald-600 dark:text-emerald-400",
+     3
+    ],
+    [
+     "text-lg text-emerald-600",
+     2
+    ],
+    [
+     "text-lg text-rose-600",
+     2
+    ],
+    [
+     "text-lg text-teal-600",
+     2
+    ]
+   ],
+   "sample": [
+    {
+     "t": "100% private in-browser",
+     "ratio": 3.65,
+     "cls": "text-sm text-emerald-600"
+    },
+    {
+     "t": "Generate Health Assessment",
+     "ratio": 3.08,
+     "cls": ""
+    },
+    {
+     "t": "+",
+     "ratio": 3.15,
+     "cls": "text-lg text-emerald-600"
+    }
+   ]
+  }
+ },
+ "390x844-light:Settings": {
+  "title": "App Settings & Backup",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 1,
+   "tapTargetsUnder44": 12,
+   "interactive": 21
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 79,
+   "failing": 2,
+   "topClasses": [
+    [
+     "text-sm text-emerald-600",
+     1
+    ],
+    [
+     "(inherited)",
+     1
+    ]
+   ],
+   "sample": [
+    {
+     "t": "Private IndexedDB",
+     "ratio": 3.65,
+     "cls": "text-sm text-emerald-600"
+    },
+    {
+     "t": "Export Full Backup",
+     "ratio": 3.08,
+     "cls": ""
+    }
+   ]
+  }
+ },
+ "390x844-dark:Dashboard": {
+  "title": "Financial Dashboard",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 8,
+   "interactive": 20
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 165,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "390x844-dark:Transactions": {
+  "title": "Transaction History",
+  "a11y": {
+   "unnamedButtons": 25,
+   "unlabeledInputs": 7,
+   "tapTargetsUnder44": 83,
+   "interactive": 90
+  },
+  "errors": [
+   "The width(0) and height(0) of chart should be greater than 0,\n       please check the style of container, or the props width(100%) and heigh"
+  ],
+  "badRequests": [],
+  "contrast": {
+   "checked": 173,
+   "failing": 6,
+   "topClasses": [
+    [
+     "text-xs",
+     6
+    ]
+   ],
+   "sample": [
+    {
+     "t": "Transport & Fuel",
+     "ratio": 4.39,
+     "cls": "text-xs"
+    },
+    {
+     "t": "Health & Medical",
+     "ratio": 4.38,
+     "cls": "text-xs"
+    },
+    {
+     "t": "Entertainment & OTT",
+     "ratio": 3.86,
+     "cls": "text-xs"
+    }
+   ]
+  }
+ },
+ "390x844-dark:People / Splits": {
+  "title": "People & Expense Splits",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 10,
+   "interactive": 16
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 34,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "390x844-dark:Budgets": {
+  "title": "Monthly Budgets",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 18,
+   "interactive": 24
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 108,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "390x844-dark:Recurring Payments": {
+  "title": "Recurring Payments",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 1,
+   "tapTargetsUnder44": 46,
+   "interactive": 52
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 173,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "390x844-dark:Categories": {
+  "title": "Spending Categories",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 16,
+   "interactive": 22
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 100,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "390x844-dark:Emergency Fund": {
+  "title": "Emergency Fund",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 2,
+   "interactive": 9
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 48,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "390x844-dark:Investments": {
+  "title": "Investments Portfolio",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 1,
+   "tapTargetsUnder44": 19,
+   "interactive": 25
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 191,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "390x844-dark:Goals & Dreams": {
+  "title": "Dreams & Goals",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 11,
+   "interactive": 17
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 92,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "390x844-dark:Achievements": {
+  "title": "Achievements & Badges",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 11,
+   "interactive": 16
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 252,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "390x844-dark:AI Health Summary": {
+  "title": "AI Financial Health Summary",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 6,
+   "interactive": 15
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 48,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "390x844-dark:Settings": {
+  "title": "App Settings & Backup",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 1,
+   "tapTargetsUnder44": 12,
+   "interactive": 21
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 79,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "320x640-light:Dashboard": {
+  "title": "Financial Dashboard",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 8,
+   "interactive": 20
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 165,
+   "failing": 5,
+   "topClasses": [
+    [
+     "(inherited)",
+     2
+    ],
+    [
+     "text-emerald-600 dark:text-emerald-400",
+     2
+    ],
+    [
+     "text-xs text-emerald-600",
+     1
+    ]
+   ],
+   "sample": [
+    {
+     "t": "6 Months",
+     "ratio": 3.31,
+     "cls": "text-xs text-emerald-600"
+    },
+    {
+     "t": "Manage",
+     "ratio": 3.65,
+     "cls": ""
+    },
+    {
+     "t": "View all",
+     "ratio": 3.65,
+     "cls": ""
+    }
+   ]
+  }
+ },
+ "320x640-light:Transactions": {
+  "title": "Transaction History",
+  "a11y": {
+   "unnamedButtons": 25,
+   "unlabeledInputs": 7,
+   "tapTargetsUnder44": 83,
+   "interactive": 90
+  },
+  "errors": [
+   "The width(0) and height(0) of chart should be greater than 0,\n       please check the style of container, or the props width(100%) and heigh"
+  ],
+  "badRequests": [],
+  "contrast": {
+   "checked": 173,
+   "failing": 25,
+   "topClasses": [
+    [
+     "text-xs",
+     25
+    ]
+   ],
+   "sample": [
+    {
+     "t": "Food & Dining",
+     "ratio": 2.57,
+     "cls": "text-xs"
+    },
+    {
+     "t": "Cashback & Refunds",
+     "ratio": 2.02,
+     "cls": "text-xs"
+    },
+    {
+     "t": "Transport & Fuel",
+     "ratio": 3.36,
+     "cls": "text-xs"
+    }
+   ]
+  }
+ },
+ "320x640-light:People / Splits": {
+  "title": "People & Expense Splits",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 10,
+   "interactive": 16
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 34,
+   "failing": 5,
+   "topClasses": [
+    [
+     "(inherited)",
+     3
+    ],
+    [
+     "text-lg text-emerald-600",
+     1
+    ],
+    [
+     "text-lg text-rose-600",
+     1
+    ]
+   ],
+   "sample": [
+    {
+     "t": "Add Person",
+     "ratio": 3.08,
+     "cls": ""
+    },
+    {
+     "t": "+",
+     "ratio": 3.15,
+     "cls": "text-lg text-emerald-600"
+    },
+    {
+     "t": "\u20b90",
+     "ratio": 3.15,
+     "cls": ""
+    }
+   ]
+  }
+ },
+ "320x640-light:Budgets": {
+  "title": "Monthly Budgets",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 18,
+   "interactive": 24
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 108,
+   "failing": 9,
+   "topClasses": [
+    [
+     "text-emerald-600 dark:text-emerald-400",
+     7
+    ],
+    [
+     "text-sm text-emerald-600",
+     1
+    ],
+    [
+     "text-sm sm:text-lg",
+     1
+    ]
+   ],
+   "sample": [
+    {
+     "t": "remaining",
+     "ratio": 3.65,
+     "cls": "text-sm text-emerald-600"
+    },
+    {
+     "t": "Safe Velocity",
+     "ratio": 3.15,
+     "cls": "text-sm sm:text-lg"
+    },
+    {
+     "t": "On track",
+     "ratio": 3.65,
+     "cls": "text-emerald-600 dark:text-emerald-400"
+    }
+   ]
+  }
+ },
+ "320x640-light:Recurring Payments": {
+  "title": "Recurring Payments",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 1,
+   "tapTargetsUnder44": 46,
+   "interactive": 52
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 173,
+   "failing": 4,
+   "topClasses": [
+    [
+     "text-rose-500",
+     2
+    ],
+    [
+     "(inherited)",
+     1
+    ],
+    [
+     "text-lg text-rose-600",
+     1
+    ]
+   ],
+   "sample": [
+    {
+     "t": "New Recurring Bill",
+     "ratio": 3.08,
+     "cls": ""
+    },
+    {
+     "t": "1",
+     "ratio": 3.91,
+     "cls": "text-lg text-rose-600"
+    },
+    {
+     "t": "Overdue:",
+     "ratio": 3.75,
+     "cls": "text-rose-500"
+    }
+   ]
+  }
+ },
+ "320x640-light:Categories": {
+  "title": "Spending Categories",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 16,
+   "interactive": 22
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 100,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "320x640-light:Emergency Fund": {
+  "title": "Emergency Fund",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 2,
+   "interactive": 9
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 48,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "320x640-light:Investments": {
+  "title": "Investments Portfolio",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 1,
+   "tapTargetsUnder44": 19,
+   "interactive": 25
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 191,
+   "failing": 6,
+   "topClasses": [
+    [
+     "text-xs text-emerald-600",
+     6
+    ]
+   ],
+   "sample": [
+    {
+     "t": "SIP:",
+     "ratio": 3.65,
+     "cls": "text-xs text-emerald-600"
+    },
+    {
+     "t": "/mo",
+     "ratio": 3.65,
+     "cls": "text-xs text-emerald-600"
+    },
+    {
+     "t": "(Day 5)",
+     "ratio": 3.65,
+     "cls": "text-xs text-emerald-600"
+    }
+   ]
+  }
+ },
+ "320x640-light:Goals & Dreams": {
+  "title": "Dreams & Goals",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 11,
+   "interactive": 17
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 92,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "320x640-light:Achievements": {
+  "title": "Achievements & Badges",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 11,
+   "interactive": 16
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 252,
+   "failing": 19,
+   "topClasses": [
+    [
+     "text-xs text-emerald-600",
+     12
+    ],
+    [
+     "text-amber-700 dark:text-reward",
+     2
+    ],
+    [
+     "text-lg text-emerald-600",
+     2
+    ],
+    [
+     "text-xs text-amber-600",
+     1
+    ],
+    [
+     "(inherited)",
+     1
+    ]
+   ],
+   "sample": [
+    {
+     "t": "ACHIEVEMENT VAULT & TROPHIES",
+     "ratio": 3.2,
+     "cls": "text-xs text-amber-600"
+    },
+    {
+     "t": "Level",
+     "ratio": 4.34,
+     "cls": "text-amber-700 dark:text-reward"
+    },
+    {
+     "t": "6",
+     "ratio": 4.34,
+     "cls": ""
+    }
+   ]
+  }
+ },
+ "320x640-light:AI Health Summary": {
+  "title": "AI Financial Health Summary",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 5,
+   "interactive": 15
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 48,
+   "failing": 14,
+   "topClasses": [
+    [
+     "(inherited)",
+     3
+    ],
+    [
+     "text-emerald-600 dark:text-emerald-400",
+     3
+    ],
+    [
+     "text-lg text-emerald-600",
+     2
+    ],
+    [
+     "text-lg text-rose-600",
+     2
+    ],
+    [
+     "text-lg text-teal-600",
+     2
+    ]
+   ],
+   "sample": [
+    {
+     "t": "100% private in-browser",
+     "ratio": 3.65,
+     "cls": "text-sm text-emerald-600"
+    },
+    {
+     "t": "Generate Health Assessment",
+     "ratio": 3.08,
+     "cls": ""
+    },
+    {
+     "t": "+",
+     "ratio": 3.15,
+     "cls": "text-lg text-emerald-600"
+    }
+   ]
+  }
+ },
+ "320x640-light:Settings": {
+  "title": "App Settings & Backup",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 1,
+   "tapTargetsUnder44": 12,
+   "interactive": 21
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 79,
+   "failing": 2,
+   "topClasses": [
+    [
+     "text-sm text-emerald-600",
+     1
+    ],
+    [
+     "(inherited)",
+     1
+    ]
+   ],
+   "sample": [
+    {
+     "t": "Private IndexedDB",
+     "ratio": 3.65,
+     "cls": "text-sm text-emerald-600"
+    },
+    {
+     "t": "Export Full Backup",
+     "ratio": 3.08,
+     "cls": ""
+    }
+   ]
+  }
+ },
+ "320x640-dark:Dashboard": {
+  "title": "Financial Dashboard",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 8,
+   "interactive": 20
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 165,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "320x640-dark:Transactions": {
+  "title": "Transaction History",
+  "a11y": {
+   "unnamedButtons": 25,
+   "unlabeledInputs": 7,
+   "tapTargetsUnder44": 83,
+   "interactive": 90
+  },
+  "errors": [
+   "The width(0) and height(0) of chart should be greater than 0,\n       please check the style of container, or the props width(100%) and heigh"
+  ],
+  "badRequests": [],
+  "contrast": {
+   "checked": 173,
+   "failing": 6,
+   "topClasses": [
+    [
+     "text-xs",
+     6
+    ]
+   ],
+   "sample": [
+    {
+     "t": "Transport & Fuel",
+     "ratio": 4.39,
+     "cls": "text-xs"
+    },
+    {
+     "t": "Health & Medical",
+     "ratio": 4.38,
+     "cls": "text-xs"
+    },
+    {
+     "t": "Entertainment & OTT",
+     "ratio": 3.86,
+     "cls": "text-xs"
+    }
+   ]
+  }
+ },
+ "320x640-dark:People / Splits": {
+  "title": "People & Expense Splits",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 10,
+   "interactive": 16
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 34,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "320x640-dark:Budgets": {
+  "title": "Monthly Budgets",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 18,
+   "interactive": 24
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 108,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "320x640-dark:Recurring Payments": {
+  "title": "Recurring Payments",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 1,
+   "tapTargetsUnder44": 46,
+   "interactive": 52
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 173,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "320x640-dark:Categories": {
+  "title": "Spending Categories",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 16,
+   "interactive": 22
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 100,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "320x640-dark:Emergency Fund": {
+  "title": "Emergency Fund",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 2,
+   "interactive": 9
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 48,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "320x640-dark:Investments": {
+  "title": "Investments Portfolio",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 1,
+   "tapTargetsUnder44": 19,
+   "interactive": 25
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 191,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "320x640-dark:Goals & Dreams": {
+  "title": "Dreams & Goals",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 11,
+   "interactive": 17
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 92,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "320x640-dark:Achievements": {
+  "title": "Achievements & Badges",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 11,
+   "interactive": 16
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 252,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "320x640-dark:AI Health Summary": {
+  "title": "AI Financial Health Summary",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 0,
+   "tapTargetsUnder44": 5,
+   "interactive": 15
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 48,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ },
+ "320x640-dark:Settings": {
+  "title": "App Settings & Backup",
+  "a11y": {
+   "unnamedButtons": 0,
+   "unlabeledInputs": 1,
+   "tapTargetsUnder44": 12,
+   "interactive": 21
+  },
+  "errors": [],
+  "badRequests": [],
+  "contrast": {
+   "checked": 79,
+   "failing": 0,
+   "topClasses": [],
+   "sample": []
+  }
+ }
+}

@@ -1,0 +1,179 @@
+{
+ "hardcoded_hex_in_classes": 0,
+ "amber_orange_classes_total": 115,
+ "amber_orange_outside_gamification": 73,
+ "emerald_classes": 458,
+ "rose_classes": 231,
+ "light_text_slate_400_500": 0,
+ "text_under_12px": 0,
+ "transition_all": 0,
+ "bg_gradient_classes": 29,
+ "font_numeric_uses": 206,
+ "jetbrains_mono_refs": 0,
+ "radius_off_scale(2xl|3xl|lg|md)": 255,
+ "formatINR_call_sites": 89,
+ "money_component_uses": 38,
+ "backdrop_blur_classes": 8,
+ "infinite_animations": 13,
+ "react_memo_uses": 0,
+ "deferred_or_transition_uses": 0,
+ "aria_attributes": 69,
+ "role_progressbar": 9,
+ "buttons_total": 207,
+ "ui_primitives_dir_files": 11,
+ "lines_FinanceContext": 2289,
+ "_per_folder_colour": {
+  "": {
+   "amber_orange": 0,
+   "emerald": 0,
+   "rose": 0
+  }
+ },
+ "_bundle": {
+  "AIHealthSummaryView.js": {
+   "raw_kB": 14.5,
+   "gzip_kB": 4.2
+  },
+  "arrow-right.js": {
+   "raw_kB": 0.2,
+   "gzip_kB": 0.2
+  },
+  "arrow-up-right.js": {
+   "raw_kB": 0.3,
+   "gzip_kB": 0.2
+  },
+  "BadgeShowcase.js": {
+   "raw_kB": 11.0,
+   "gzip_kB": 3.2
+  },
+  "BudgetsView.js": {
+   "raw_kB": 11.8,
+   "gzip_kB": 3.6
+  },
+  "CategoriesView-PWOK_9f-.js": {
+   "raw_kB": 9.9,
+   "gzip_kB": 3.0
+  },
+  "circle-check-big.js": {
+   "raw_kB": 0.2,
+   "gzip_kB": 0.2
+  },
+  "clipboard.js": {
+   "raw_kB": 1.0,
+   "gzip_kB": 0.6
+  },
+  "createLucideIcon.js": {
+   "raw_kB": 82.1,
+   "gzip_kB": 22.9
+  },
+  "DashboardView.js": {
+   "raw_kB": 58.9,
+   "gzip_kB": 13.1
+  },
+  "download.js": {
+   "raw_kB": 0.2,
+   "gzip_kB": 0.2
+  },
+  "DreamsView.js": {
+   "raw_kB": 18.4,
+   "gzip_kB": 4.6
+  },
+  "EmergencyFundView.js": {
+   "raw_kB": 13.3,
+   "gzip_kB": 3.7
+  },
+  "EmptyState.js": {
+   "raw_kB": 1.0,
+   "gzip_kB": 0.6
+  },
+  "file-check.js": {
+   "raw_kB": 0.3,
+   "gzip_kB": 0.2
+  },
+  "index.js": {
+   "raw_kB": 302.4,
+   "gzip_kB": 91.7
+  },
+  "InvestmentsView-DX7ob-kc.js": {
+   "raw_kB": 23.0,
+   "gzip_kB": 5.7
+  },
+  "key.js": {
+   "raw_kB": 0.3,
+   "gzip_kB": 0.2
+  },
+  "pdfParser.worker.js": {
+   "raw_kB": 453.4,
+   "gzip_kB": 135.4
+  },
+  "pen-line.js": {
+   "raw_kB": 0.3,
+   "gzip_kB": 0.2
+  },
+  "PeopleView-afS0-M83.js": {
+   "raw_kB": 68.4,
+   "gzip_kB": 13.3
+  },
+  "ProgressBar.js": {
+   "raw_kB": 2.6,
+   "gzip_kB": 1.2
+  },
+  "RecurringPaymentsView.js": {
+   "raw_kB": 32.5,
+   "gzip_kB": 7.0
+  },
+  "rolldown-runtime.js": {
+   "raw_kB": 0.7,
+   "gzip_kB": 0.4
+  },
+  "rotate-ccw-clock-CdL-y_xh.js": {
+   "raw_kB": 0.2,
+   "gzip_kB": 0.2
+  },
+  "search.js": {
+   "raw_kB": 0.2,
+   "gzip_kB": 0.2
+  },
+  "SettingsView.js": {
+   "raw_kB": 29.6,
+   "gzip_kB": 6.8
+  },
+  "square.js": {
+   "raw_kB": 0.3,
+   "gzip_kB": 0.2
+  },
+  "StatementImportView.js": {
+   "raw_kB": 47.2,
+   "gzip_kB": 15.2
+  },
+  "TransactionListView.js": {
+   "raw_kB": 25.2,
+   "gzip_kB": 6.1
+  },
+  "ui.js": {
+   "raw_kB": 10.3,
+   "gzip_kB": 3.1
+  },
+  "useStaggerChildren.js": {
+   "raw_kB": 1.0,
+   "gzip_kB": 0.6
+  },
+  "vendor-charts.js": {
+   "raw_kB": 429.3,
+   "gzip_kB": 119.4
+  },
+  "vendor-pdf.js": {
+   "raw_kB": 427.2,
+   "gzip_kB": 125.7
+  },
+  "workbox-window.prod.es5.js": {
+   "raw_kB": 5.7,
+   "gzip_kB": 2.2
+  },
+  "index.css": {
+   "raw_kB": 115.6,
+   "gzip_kB": 17.2
+  }
+ },
+ "first_load_gzip_kB": 377.2
+}
