@@ -35,6 +35,7 @@ export type WorkerPDFResponse =
   | {
       type: 'error';
       error: string;
+      isPasswordProtected?: boolean;
     };
 
 /**
@@ -220,9 +221,14 @@ self.onmessage = async (e: MessageEvent<WorkerPDFMessage>) => {
       rawExtractedText: lines.slice(0, 100).join('\n'),
     } as WorkerPDFResponse);
   } catch (err: any) {
+    const isPassword = err?.name === 'PasswordException' || /password/i.test(err?.message || '');
+    const errorMessage = isPassword
+      ? 'This PDF statement is password-protected or encrypted. Please decrypt or unlock the file before uploading.'
+      : (err?.message || 'Failed to parse PDF document.');
     self.postMessage({
       type: 'error',
-      error: err?.message || 'Failed to parse PDF document.',
+      error: errorMessage,
+      isPasswordProtected: isPassword,
     } as WorkerPDFResponse);
   }
 };

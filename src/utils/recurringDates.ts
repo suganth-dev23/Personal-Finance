@@ -43,20 +43,29 @@ export function parseDateISO(dateStr: string): [number, number, number] {
 
 /**
  * Normalizes payment amount to a monthly financial commitment figure.
+ * Supports weekly, bi-weekly, monthly, quarterly, semi-annually, yearly, daily.
  */
-export function calculateMonthlyEquivalent(amount: number, frequency: RecurrenceFrequency): number {
-  if (amount <= 0) return 0;
+export function calculateMonthlyEquivalent(amount: number, frequency: RecurrenceFrequency | string): number {
+  if (amount <= 0 || isNaN(amount)) return 0;
   switch (frequency) {
     case 'weekly':
       return Math.round((amount * 52) / 12);
+    case 'bi-weekly':
+    case 'biweekly':
+      return Math.round((amount * 26) / 12);
     case 'monthly':
-      return amount;
+      return Math.round(amount);
     case 'quarterly':
       return Math.round(amount / 3);
+    case 'semi-annually':
+    case 'half-yearly':
+      return Math.round(amount / 6);
     case 'yearly':
       return Math.round(amount / 12);
+    case 'daily':
+      return Math.round((amount * 365) / 12);
     default:
-      return amount;
+      return Math.round(amount);
   }
 }
 
@@ -114,6 +123,34 @@ export function getPaymentSchedule(
   // Monthly frequency handling (most common for bills, rent, SIP, subscriptions)
   if (payment.frequency === 'monthly') {
     const targetDay = payment.dayOfMonth || startDay || 1;
+
+    // Check candidate for previous month first to catch overdue payments across month boundaries
+    let prevM = refMonth - 1;
+    let prevY = refYear;
+    if (prevM < 1) {
+      prevM = 12;
+      prevY -= 1;
+    }
+    const prevMonthDay = clampDayOfMonth(prevY, prevM, targetDay);
+    const prevMonthDueDate = formatDateISO(prevY, prevM, prevMonthDay);
+    const isPrevMonthPaid = isOccurrencePaid(payment.id, prevMonthDueDate, logs);
+
+    // If previous month's due date is after startDate, and is UNPAID, it is OVERDUE!
+    if (prevMonthDueDate >= payment.startDate && !isPrevMonthPaid) {
+      const daysDiff = Math.round(
+        (new Date(prevMonthDueDate).getTime() - new Date(todayStr).getTime()) / (1000 * 60 * 60 * 24)
+      );
+      if (!payment.endDate || prevMonthDueDate <= payment.endDate) {
+        const thisMonthDay = clampDayOfMonth(refYear, refMonth, targetDay);
+        const thisMonthDueDate = formatDateISO(refYear, refMonth, thisMonthDay);
+        return {
+          activeDueDate: prevMonthDueDate,
+          isOverdue: true,
+          daysDiff,
+          nextCycleDueDate: (!payment.endDate || thisMonthDueDate <= payment.endDate) ? thisMonthDueDate : null,
+        };
+      }
+    }
 
     // Check candidate for current month
     const thisMonthDay = clampDayOfMonth(refYear, refMonth, targetDay);
@@ -261,45 +298,61 @@ export function getPaymentSchedule(
     };
   }
 
-  // Weekly frequency (every 7 days from startDate)
-  if (payment.frequency === 'weekly') {
-    const startObj = new Date(payment.startDate);
-    const dayOfWeek = startObj.getDay(); // 0-6
+  // Weekly or Bi-weekly frequency (every 7 or 14 days from startDate)
+  if (payment.frequency === 'weekly' || (payment.frequency as string) === 'bi-weekly' || (payment.frequency as string) === 'biweekly') {
+    const intervalDays = payment.frequency === 'weekly' ? 7 : 14;
+    const msPerDay = 1000 * 60 * 60 * 24;
+    const daysSinceStart = Math.round((new Date(todayStr).getTime() - new Date(payment.startDate).getTime()) / msPerDay);
 
-    // Find candidate date in current week
-    const refObj = new Date(refYear, refMonth - 1, refDay);
-    const diff = (dayOfWeek - refObj.getDay() + 7) % 7;
-    const candidateObj = new Date(refObj);
-    candidateObj.setDate(refObj.getDate() + diff);
-
-    let candidateStr = formatDateISO(
-      candidateObj.getFullYear(),
-      candidateObj.getMonth() + 1,
-      candidateObj.getDate()
+    const periodsElapsed = Math.floor(daysSinceStart / intervalDays);
+    const prevOccurrenceObj = new Date(payment.startDate);
+    prevOccurrenceObj.setDate(prevOccurrenceObj.getDate() + periodsElapsed * intervalDays);
+    const prevOccurrenceStr = formatDateISO(
+      prevOccurrenceObj.getFullYear(),
+      prevOccurrenceObj.getMonth() + 1,
+      prevOccurrenceObj.getDate()
     );
 
-    // If this week's occurrence is already paid, advance to next week
-    let isPaid = isOccurrencePaid(payment.id, candidateStr, logs);
-    if (isPaid) {
-      const nextWeekObj = new Date(candidateObj);
-      nextWeekObj.setDate(candidateObj.getDate() + 7);
-      candidateStr = formatDateISO(
-        nextWeekObj.getFullYear(),
-        nextWeekObj.getMonth() + 1,
-        nextWeekObj.getDate()
+    const nextOccurrenceObj = new Date(payment.startDate);
+    nextOccurrenceObj.setDate(nextOccurrenceObj.getDate() + (periodsElapsed + 1) * intervalDays);
+    const nextOccurrenceStr = formatDateISO(
+      nextOccurrenceObj.getFullYear(),
+      nextOccurrenceObj.getMonth() + 1,
+      nextOccurrenceObj.getDate()
+    );
+
+    const isPrevPaid = isOccurrencePaid(payment.id, prevOccurrenceStr, logs);
+
+    // If previous occurrence is on or after startDate and is unpaid
+    if (prevOccurrenceStr >= payment.startDate && !isPrevPaid) {
+      const daysDiff = Math.round(
+        (new Date(prevOccurrenceStr).getTime() - new Date(todayStr).getTime()) / msPerDay
       );
-      isPaid = isOccurrencePaid(payment.id, candidateStr, logs);
+      if (!payment.endDate || prevOccurrenceStr <= payment.endDate) {
+        return {
+          activeDueDate: prevOccurrenceStr,
+          isOverdue: daysDiff < 0,
+          daysDiff,
+          nextCycleDueDate: (!payment.endDate || nextOccurrenceStr <= payment.endDate) ? nextOccurrenceStr : null,
+        };
+      }
     }
 
+    // Otherwise, previous occurrence is paid (or before startDate), candidate is next occurrence
+    if (payment.endDate && nextOccurrenceStr > payment.endDate) {
+      return { activeDueDate: null, isOverdue: false, daysDiff: 0, nextCycleDueDate: null };
+    }
+
+    const isNextPaid = isOccurrencePaid(payment.id, nextOccurrenceStr, logs);
     const daysDiff = Math.round(
-      (new Date(candidateStr).getTime() - new Date(todayStr).getTime()) / (1000 * 60 * 60 * 24)
+      (new Date(nextOccurrenceStr).getTime() - new Date(todayStr).getTime()) / msPerDay
     );
 
     return {
-      activeDueDate: candidateStr,
-      isOverdue: !isPaid && daysDiff < 0,
+      activeDueDate: nextOccurrenceStr,
+      isOverdue: !isNextPaid && daysDiff < 0,
       daysDiff,
-      nextCycleDueDate: candidateStr,
+      nextCycleDueDate: nextOccurrenceStr,
     };
   }
 

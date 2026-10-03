@@ -36,20 +36,31 @@ const CEILING_TIMEOUT_MS = 600;
  * - Hard ceiling timer and single unified cleanup preventing hung transitions
  */
 export const ViewTransition: React.FC<ViewTransitionProps> = ({ viewKey, children }) => {
- const reducedMotion = useReducedMotion();
- const [phase, setPhase] = useState<'idle' | 'exit' | 'enter'>('idle');
- const [activeKey, setActiveKey] = useState<string>(viewKey);
- const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
+  const reducedMotion = useReducedMotion();
+  const [phase, setPhase] = useState<'idle' | 'exit' | 'enter'>('idle');
+  const [activeKey, setActiveKey] = useState<string>(viewKey);
+  const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
 
- // Children of the view currently on screen. Only refreshed while NOT switching,
- // so during exit it still holds the OUTGOING view (not the incoming one).
- const displayedChildrenRef = useRef<React.ReactNode>(children);
- const scrollMapRef = useRef<Record<string, number>>({});
- const transitionTimerRef = useRef<number | null>(null);
- const ceilingTimerRef = useRef<number | null>(null);
- const rafRef = useRef<number | null>(null);
- const containerRef = useRef<HTMLDivElement>(null);
- const isFirstMount = useRef(true);
+  // Snapshot of previous view during transition so outgoing view remains visible
+  const [currentView, setCurrentView] = useState({ key: viewKey, children });
+  const [previousView, setPreviousView] = useState<{ key: string; children: React.ReactNode } | null>(null);
+
+  if (viewKey !== currentView.key) {
+    setPreviousView(currentView);
+    setCurrentView({ key: viewKey, children });
+  }
+
+  if ((!ENABLE_VIEW_TRANSITION || reducedMotion) && (activeKey !== viewKey || phase !== 'idle')) {
+    setActiveKey(viewKey);
+    setPhase('idle');
+  }
+
+  const scrollMapRef = useRef<Record<string, number>>({});
+  const transitionTimerRef = useRef<number | null>(null);
+  const ceilingTimerRef = useRef<number | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isFirstMount = useRef(true);
 
  const clearAllTimers = () => {
  if (transitionTimerRef.current !== null) {
@@ -72,20 +83,16 @@ export const ViewTransition: React.FC<ViewTransitionProps> = ({ viewKey, childre
  };
  }, []);
 
- useEffect(() => {
- if (!ENABLE_VIEW_TRANSITION || reducedMotion) {
- clearAllTimers();
- setActiveKey(viewKey);
- setPhase('idle');
- return;
- }
+  useEffect(() => {
+    if (!ENABLE_VIEW_TRANSITION || reducedMotion) {
+      clearAllTimers();
+      return;
+    }
 
- if (isFirstMount.current) {
- isFirstMount.current = false;
- setActiveKey(viewKey);
- setPhase('idle');
- return;
- }
+    if (isFirstMount.current) {
+      isFirstMount.current = false;
+      return;
+    }
 
  if (viewKey !== activeKey) {
  // 1. Capture current scroll position for the exiting view
@@ -167,10 +174,8 @@ export const ViewTransition: React.FC<ViewTransitionProps> = ({ viewKey, childre
  return <div className="w-full">{children}</div>;
  }
 
- // Switching = the requested view differs from the one on screen, or exit is running.
- const isSwitching = viewKey !== activeKey || phase === 'exit';
- if (!isSwitching) displayedChildrenRef.current = children;
- const contentToRender = isSwitching ? displayedChildrenRef.current : children;
+  const isSwitching = viewKey !== activeKey || phase === 'exit';
+  const contentToRender = isSwitching ? (previousView?.children ?? children) : children;
 
  // No transform at rest: a resting transform creates a containing block for fixed
  // descendants and an extra compositor layer. Enter uses a one-shot keyframe instead.

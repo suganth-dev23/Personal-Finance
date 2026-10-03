@@ -32,7 +32,9 @@ export const StreakBanner: React.FC<StreakBannerProps> = ({ compact = false }) =
  if (compact) {
  return (
  <button
+ type="button"
  onClick={() => setCurrentView('badges')}
+ aria-label={`Current streak: ${streak.currentStreak} days. Best: ${streak.longestStreak} days. View Achievements.`}
  className={`group flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-colors duration-200 cursor-pointer ${
  isStreakBroken
  ? 'bg-sunken border-line text-ink-3 hover:bg-line'
@@ -65,8 +67,17 @@ export const StreakBanner: React.FC<StreakBannerProps> = ({ compact = false }) =
 
  return (
  <div
+ role="button"
+ tabIndex={0}
  onClick={() => setCurrentView('badges')}
- className={`group relative overflow-hidden rounded-2xl p-4 sm:p-5 border transition-[transform,box-shadow,background-color] duration-200 cursor-pointer shadow-xs hover:shadow-md ${
+ onKeyDown={(e) => {
+   if (e.key === 'Enter' || e.key === ' ') {
+     e.preventDefault();
+     setCurrentView('badges');
+   }
+ }}
+ aria-label={`Current streak: ${streak.currentStreak} days. Best: ${streak.longestStreak} days. View Achievements.`}
+ className={`group relative overflow-hidden rounded-2xl p-4 sm:p-5 border transition-[transform,box-shadow,background-color] duration-200 cursor-pointer shadow-xs hover:shadow-md focus:outline-none focus:ring-2 focus:ring-amber-500/40 ${
  isStreakBroken
  ? 'bg-surface border-line hover:border-amber-500/30'
  : isTitan

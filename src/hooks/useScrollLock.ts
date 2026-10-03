@@ -21,7 +21,26 @@ export function unlockScroll(): void {
   lockCount = Math.max(0, lockCount - 1);
   if (lockCount === 0) {
     document.body.style.overflow = originalOverflow || '';
+    originalOverflow = '';
   }
+}
+
+/**
+ * Emergency reset to safely unlock body scroll if an unhandled error occurs
+ * or all overlays are unmounted unexpectedly.
+ */
+export function forceResetScrollLock(): void {
+  if (typeof document === 'undefined') return;
+  lockCount = 0;
+  document.body.style.overflow = originalOverflow || '';
+  originalOverflow = '';
+}
+
+/**
+ * Returns current lock count (useful for testing and monitoring).
+ */
+export function getScrollLockCount(): number {
+  return lockCount;
 }
 
 /**

@@ -4,6 +4,7 @@ import { useFinance } from '../../context/FinanceContext';
 import { Contact, Transaction, SplitEntry } from '../../types/finance';
 import { Money } from '../ui';
 import { formatDate, getTodayString } from '../../utils/date';
+import { roundCurrency } from '../../utils/currency';
 import {
  Link as LinkIcon,
  Unlink,
@@ -71,8 +72,8 @@ export const SettleSplitModal: React.FC<SettleSplitModalProps> = ({
 
  // Expected type: if they owe me, bank repayment is a credit
  const expectedTxType = splitEntry.direction === 'they_owe_me' ? 'credit' : 'debit';
- const parsedSettledAmount = parseFloat(settledAmount) || 0;
- const remainingAfterSettlement = Math.max(0, splitEntry.amount - parsedSettledAmount);
+ const parsedSettledAmount = roundCurrency(parseFloat(settledAmount) || 0);
+ const remainingAfterSettlement = Math.max(0, roundCurrency(splitEntry.amount - parsedSettledAmount));
 
  // Count how many times each transaction is linked across all settlements
  const txUsageCountMap = useMemo(() => {

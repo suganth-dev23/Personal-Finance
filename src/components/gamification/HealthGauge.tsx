@@ -5,6 +5,45 @@ import { useFinance } from '../../context/FinanceContext';
 import { AnimatedNumber } from '../common/AnimatedNumber';
 import { useAnimatedProgress } from '../../hooks/useAnimatedProgress';
 
+/**
+ * Converts polar coordinates to Cartesian coordinates for SVG arc rendering.
+ * Strictly guarantees finite, valid numbers for x and y, preventing NaN in SVG paths.
+ */
+export function polarToCartesian(centerX: number, centerY: number, radius: number, angleInDegrees: number) {
+  const safeCenterX = Number.isFinite(centerX) ? centerX : 120;
+  const safeCenterY = Number.isFinite(centerY) ? centerY : 120;
+  const safeRadius = Number.isFinite(radius) && radius > 0 ? radius : 85;
+  const safeAngle = Number.isFinite(angleInDegrees) ? angleInDegrees : 0;
+
+  const angleInRadians = ((safeAngle - 90) * Math.PI) / 180.0;
+  const x = safeCenterX + safeRadius * Math.cos(angleInRadians);
+  const y = safeCenterY + safeRadius * Math.sin(angleInRadians);
+
+  return {
+    x: Number.isFinite(x) ? Number(x.toFixed(2)) : safeCenterX,
+    y: Number.isFinite(y) ? Number(y.toFixed(2)) : safeCenterY,
+  };
+}
+
+/**
+ * Generates an SVG path string for an arc.
+ * Always produces a valid SVG path d string even if score is 0, 100, or NaN.
+ */
+export function describeArc(x: number, y: number, radius: number, startAngle: number, endAngle: number): string {
+  const safeX = Number.isFinite(x) ? x : 120;
+  const safeY = Number.isFinite(y) ? y : 120;
+  const safeRadius = Number.isFinite(radius) && radius > 0 ? radius : 85;
+  const safeStart = Number.isFinite(startAngle) ? startAngle : 0;
+  const safeEnd = Number.isFinite(endAngle) ? endAngle : 0;
+
+  const start = polarToCartesian(safeX, safeY, safeRadius, safeEnd);
+  const end = polarToCartesian(safeX, safeY, safeRadius, safeStart);
+
+  const arcSweep = safeEnd - safeStart <= 180 ? '0' : '1';
+
+  return `M ${start.x} ${start.y} A ${safeRadius} ${safeRadius} 0 ${arcSweep} 0 ${end.x} ${end.y}`;
+}
+
 export const HealthGauge: React.FC = () => {
  const { healthScore, unlockedCount, badges } = useGamification();
  const { setCurrentView } = useFinance();
@@ -24,8 +63,11 @@ export const HealthGauge: React.FC = () => {
  // Half-circle arc length = PI * 85 ~= 267.04
  const ARC_LENGTH = 267.04;
  const { displayPercent } = useAnimatedProgress(overallScore, { animateOnMount: true });
- const clampedScore = Math.min(100, Math.max(0, displayPercent));
- const strokeOffset = ARC_LENGTH - (ARC_LENGTH * clampedScore) / 100;
+ const rawScore = Number.isFinite(displayPercent) ? displayPercent : (Number.isFinite(overallScore) ? overallScore : 0);
+ const clampedScore = Math.min(100, Math.max(0, rawScore));
+ const strokeOffset = Number.isFinite(clampedScore)
+   ? Math.max(0, ARC_LENGTH - (ARC_LENGTH * clampedScore) / 100)
+   : ARC_LENGTH;
 
  const statusColor =
  grade === 'Excellent'
@@ -150,14 +192,15 @@ export const HealthGauge: React.FC = () => {
  strokeLinecap="round"
  strokeDasharray={ARC_LENGTH}
  strokeDashoffset={strokeOffset}
+ opacity={clampedScore > 0 ? 1 : 0}
  />
 
  {/* Glowing Endpoint Indicator Bead on the Arc Track */}
  {(() => {
- const scoreFraction = clampedScore / 100;
- const rad = Math.PI * (1 - scoreFraction);
- const indX = 120 + 85 * Math.cos(rad);
- const indY = 120 - 85 * Math.sin(rad);
+ const safeFraction = Number.isFinite(clampedScore) ? clampedScore / 100 : 0;
+ const rad = Math.PI * (1 - safeFraction);
+ const indX = Number.isFinite(120 + 85 * Math.cos(rad)) ? Number((120 + 85 * Math.cos(rad)).toFixed(2)) : 35;
+ const indY = Number.isFinite(120 - 85 * Math.sin(rad)) ? Number((120 - 85 * Math.sin(rad)).toFixed(2)) : 120;
  return (
  <g transform={`translate(${indX}, ${indY})`}>
  <circle
@@ -223,7 +266,9 @@ export const HealthGauge: React.FC = () => {
  {/* Right: 5 Pillar breakdown */}
  <div className="lg:col-span-7 space-y-2.5">
  {pillars.map(pillar => {
- const pct = Math.min(100, Math.round((pillar.score / pillar.max) * 100));
+ const safePillarScore = Number.isFinite(pillar.score) ? pillar.score : 0;
+ const safeMax = Number.isFinite(pillar.max) && pillar.max > 0 ? pillar.max : 1;
+ const pct = Math.max(0, Math.min(100, Math.round((safePillarScore / safeMax) * 100)));
  return (
  <div key={pillar.label} className="space-y-1">
  <div className="flex justify-between items-center text-xs">

@@ -693,15 +693,15 @@ export const RecurringPaymentsView: React.FC = () => {
  onClose={() => setIsMarkPaidModalOpen(false)}
  payment={paymentForMarkPaid}
  targetDueDate={targetDueDateForMarkPaid}
- onConfirm={(paymentId, dueDate, actualAmount, createTransaction) => {
- markRecurringPaymentPaid(
- paymentId,
- dueDate,
- actualAmount,
- undefined,
- createTransaction
- );
- }}
+		onConfirm={(paymentId, dueDate, actualAmount, createTransaction) => {
+			markRecurringPaymentPaid(
+				paymentId,
+				dueDate,
+				actualAmount,
+				undefined,
+				createTransaction
+			);
+		}}
  />
  </div>
  );

@@ -3,6 +3,13 @@
  * e.g., 125000 -> ₹1,25,000
  * e.g., 1550000.75 -> ₹15,50,000.75
  */
+/**
+ * Rounds a number to 2 decimal places to prevent floating point inaccuracies like 33.330000000000005.
+ */
+export function roundCurrency(val: number): number {
+  return Math.round((val + Number.EPSILON) * 100) / 100;
+}
+
 export function formatINR(
   amount: number | string | undefined | null,
   options?: {
@@ -88,12 +95,13 @@ export function parseINR(value: string | number): number {
 
   const isParenNegative = /^\(.*\)$/.test(str);
   const isExplicitMinus = str.startsWith('-') || str.endsWith('-');
+  const isDr = /\b(dr|debit)\b/i.test(str);
 
   const cleaned = str.replace(/,/g, '').replace(/[^0-9.]/g, '');
   const parsed = parseFloat(cleaned);
   if (isNaN(parsed)) return 0;
 
-  if (isParenNegative || isExplicitMinus) {
+  if (isParenNegative || isExplicitMinus || isDr) {
     return -Math.abs(parsed);
   }
   return parsed;

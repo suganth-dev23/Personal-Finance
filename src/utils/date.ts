@@ -119,3 +119,39 @@ export function calculateMonthsDiff(startDate: string, endDate: string): number 
     return 1;
   }
 }
+
+/**
+ * Sanitizes and validates a date string, returning ISO YYYY-MM-DD or null if invalid.
+ * Prevents invalid dates (e.g. 2026-02-31, NaN) and normalizes input.
+ */
+export function sanitizeDateString(input: string): string | null {
+  if (!input || !input.trim()) return null;
+  const trimmed = input.trim();
+
+  // Check YYYY-MM-DD
+  const ymdMatch = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(trimmed);
+  if (ymdMatch) {
+    const y = parseInt(ymdMatch[1], 10);
+    const m = parseInt(ymdMatch[2], 10);
+    const d = parseInt(ymdMatch[3], 10);
+    if (m >= 1 && m <= 12 && d >= 1 && d <= 31) {
+      const testDate = new Date(y, m - 1, d);
+      if (testDate.getFullYear() === y && testDate.getMonth() === m - 1 && testDate.getDate() === d) {
+        return `${String(y).padStart(4, '0')}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      }
+    }
+    return null;
+  }
+
+  // Fallback for valid Date strings
+  const parsed = new Date(trimmed);
+  if (!isNaN(parsed.getTime())) {
+    const y = parsed.getFullYear();
+    const m = String(parsed.getMonth() + 1).padStart(2, '0');
+    const d = String(parsed.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  return null;
+}
+

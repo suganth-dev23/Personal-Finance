@@ -16,7 +16,7 @@ import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { useWindowVirtualizer } from '../../hooks/useWindowVirtualizer';
 import { Button, Card, Money, Stat } from '../ui';
 import { TransactionTableRow, TransactionCardRow } from './TransactionRow';
-import { useToast } from '../common/ToastProvider';
+import { useToast } from '../../context/ToastContext';
 
 interface TransactionListViewProps {
   onOpenAddModal: () => void;
@@ -127,7 +127,9 @@ const TransactionGroupCard: React.FC<TransactionGroupCardProps> = React.memo(fun
             </thead>
             <tbody className="divide-y divide-line text-sm">
               {virtualizer.topSpacerHeight > 0 && (
-                <tr style={{ height: virtualizer.topSpacerHeight }} aria-hidden="true" />
+                <tr style={{ height: virtualizer.topSpacerHeight }} aria-hidden="true">
+                  <td colSpan={8} className="p-0 border-0" />
+                </tr>
               )}
               {visibleItems.map((tx, idx) => {
                 const actualIndex = virtualizer.startIndex + idx;
@@ -148,7 +150,9 @@ const TransactionGroupCard: React.FC<TransactionGroupCardProps> = React.memo(fun
                 );
               })}
               {virtualizer.bottomSpacerHeight > 0 && (
-                <tr style={{ height: virtualizer.bottomSpacerHeight }} aria-hidden="true" />
+                <tr style={{ height: virtualizer.bottomSpacerHeight }} aria-hidden="true">
+                  <td colSpan={8} className="p-0 border-0" />
+                </tr>
               )}
             </tbody>
           </table>
@@ -198,6 +202,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = React.mem
     categories,
     contacts,
     addTransaction,
+    addMultipleTransactions,
     deleteTransaction,
     deleteMultipleTransactions,
     subscribeFinanceEvent,
@@ -207,6 +212,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = React.mem
   // Highlight newly added transaction
   const [highlightedTxId, setHighlightedTxId] = useState<string | null>(null);
   const [deletingTxIds, setDeletingTxIds] = useState<Set<string>>(new Set());
+  const [selectedTxIds, setSelectedTxIds] = useState<Set<string>>(new Set());
 
   const handleDeleteTransaction = useCallback((txId: string, desc: string) => {
     const txToDelete = transactions.find(t => t.id === txId);
@@ -216,6 +222,12 @@ export const TransactionListView: React.FC<TransactionListViewProps> = React.mem
       window.setTimeout(() => {
         deleteTransaction(txId);
         setDeletingTxIds(prev => {
+          const next = new Set(prev);
+          next.delete(txId);
+          return next;
+        });
+        setSelectedTxIds(prev => {
+          if (!prev.has(txId)) return prev;
           const next = new Set(prev);
           next.delete(txId);
           return next;
@@ -257,7 +269,6 @@ export const TransactionListView: React.FC<TransactionListViewProps> = React.mem
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
   const [groupBy, setGroupBy] = useState<GroupByMode>('none');
-  const [selectedTxIds, setSelectedTxIds] = useState<Set<string>>(new Set());
 
   // Distinct person suggestions across all transactions
   const distinctPersons = useMemo(() => {
@@ -370,16 +381,32 @@ export const TransactionListView: React.FC<TransactionListViewProps> = React.mem
 
   const filteredNet = filteredIncome - filteredExpense;
 
+  // Prune selection when filters change so hidden transactions are not deleted unintentionally
+  useEffect(() => {
+    setSelectedTxIds(prev => {
+      if (prev.size === 0) return prev;
+      const visibleIds = new Set(filteredTransactions.map(t => t.id));
+      const next = new Set<string>();
+      prev.forEach(id => {
+        if (visibleIds.has(id)) {
+          next.add(id);
+        }
+      });
+      if (next.size === prev.size) return prev;
+      return next;
+    });
+  }, [filteredTransactions]);
+
   // Selection toggle callbacks (memoized)
   const toggleSelectAll = useCallback(() => {
     setSelectedTxIds(prev => {
-      if (prev.size === filteredTransactions.length) {
+      if (prev.size === filteredTransactions.length && filteredTransactions.length > 0) {
         return new Set();
       } else {
         return new Set(filteredTransactions.map(t => t.id));
       }
     });
-  }, [filteredTransactions]);
+  }, [filteredTransactions, setSelectedTxIds]);
 
   const toggleSelectOne = useCallback((id: string) => {
     setSelectedTxIds(prev => {
@@ -391,19 +418,54 @@ export const TransactionListView: React.FC<TransactionListViewProps> = React.mem
       }
       return next;
     });
-  }, []);
+  }, [setSelectedTxIds]);
 
   const handleEdit = useCallback((tx: Transaction) => {
     onEditTransaction(tx);
   }, [onEditTransaction]);
 
   const handleBulkDelete = useCallback(() => {
-    if (selectedTxIds.size === 0) return;
-    if (window.confirm(`Are you sure you want to delete ${selectedTxIds.size} transactions?`)) {
-      deleteMultipleTransactions(Array.from(selectedTxIds));
-      setSelectedTxIds(new Set());
+    // Only target selected transactions that match current filter/view
+    const visibleIds = new Set(filteredTransactions.map(t => t.id));
+    const targetTxs = transactions.filter(t => selectedTxIds.has(t.id) && visibleIds.has(t.id));
+    if (targetTxs.length === 0) return;
+    const targetIds = targetTxs.map(t => t.id);
+
+    if (window.confirm(`Are you sure you want to delete ${targetIds.length} transaction${targetIds.length > 1 ? 's' : ''}?`)) {
+      setDeletingTxIds(prev => {
+        const next = new Set(prev);
+        targetIds.forEach(id => next.add(id));
+        return next;
+      });
+
+      window.setTimeout(() => {
+        deleteMultipleTransactions(targetIds);
+        setDeletingTxIds(prev => {
+          const next = new Set(prev);
+          targetIds.forEach(id => next.delete(id));
+          return next;
+        });
+        setSelectedTxIds(prev => {
+          const next = new Set(prev);
+          targetIds.forEach(id => next.delete(id));
+          return next;
+        });
+
+        showToast(
+          'info',
+          'Transactions Removed',
+          `${targetIds.length} transaction${targetIds.length > 1 ? 's' : ''} deleted`,
+          5000,
+          {
+            label: 'Undo',
+            onClick: () => {
+              addMultipleTransactions(targetTxs);
+            },
+          }
+        );
+      }, 200);
     }
-  }, [selectedTxIds, deleteMultipleTransactions]);
+  }, [filteredTransactions, transactions, selectedTxIds, deleteMultipleTransactions, addMultipleTransactions, showToast, setSelectedTxIds]);
 
   const exportToCSV = useCallback(() => {
     if (filteredTransactions.length === 0) {
@@ -862,50 +924,63 @@ export const TransactionListView: React.FC<TransactionListViewProps> = React.mem
       )}
 
       {/* Grouped or Flat Transaction Tables */}
-      <div ref={containerRef} className="space-y-6">
-        {groupedTransactions.map(group => {
-          if (group.items.length === 0) {
-            return (
-              <Card
-                key={group.groupKey}
-                variant="surface"
-                padding="lg"
-                className="rounded-2xl p-12 text-center"
+      {filteredTransactions.length === 0 ? (
+        <Card
+          variant="surface"
+          padding="lg"
+          className="rounded-2xl p-12 text-center"
+        >
+          <div className="w-12 h-12 rounded-full bg-sunken flex items-center justify-center mx-auto text-ink-3">
+            <Search className="w-5 h-5" />
+          </div>
+          <h3 className="mt-3 text-sm font-bold text-ink-1">
+            {transactions.length === 0 ? 'No transactions yet' : 'No transactions match your filters'}
+          </h3>
+          <p className="text-xs text-ink-3 mt-1 max-w-sm mx-auto">
+            {transactions.length === 0
+              ? 'Start by recording your first expense or importing a bank statement.'
+              : 'Try clearing your search query, adjusting the timeframe, or changing the person/category filter.'}
+          </p>
+          {transactions.length === 0 && (
+            <div className="mt-4 flex justify-center">
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={onOpenAddModal}
+                leftIcon={<Plus className="w-4 h-4 stroke-[2.5]" />}
               >
-                <div className="w-12 h-12 rounded-full bg-sunken flex items-center justify-center mx-auto text-ink-3">
-                  <Search className="w-5 h-5" />
-                </div>
-                <h3 className="mt-3 text-sm font-bold text-ink-1">
-                  No transactions match your filters
-                </h3>
-                <p className="text-xs text-ink-3 mt-1">
-                  Try clearing your search query, adjusting the timeframe, or changing the person/category filter.
-                </p>
-              </Card>
-            );
-          }
+                Add First Transaction
+              </Button>
+            </div>
+          )}
+        </Card>
+      ) : (
+        <div ref={containerRef} className="space-y-6">
+          {groupedTransactions.map(group => {
+            if (group.items.length === 0) return null;
 
-          return (
-            <TransactionGroupCard
-              key={group.groupKey}
-              group={group}
-              groupBy={groupBy}
-              isDesktop={isDesktop}
-              selectedTxIds={selectedTxIds}
-              highlightedTxId={highlightedTxId}
-              deletingTxIds={deletingTxIds}
-              categoryMap={categoryMap}
-              contactMap={contactMap}
-              filteredTransactionsLength={filteredTransactions.length}
-              onToggleSelect={toggleSelectOne}
-              onEdit={handleEdit}
-              onDelete={handleDeleteTransaction}
-              onToggleSelectAll={toggleSelectAll}
-              getChildStyle={getChildStyle}
-            />
-          );
-        })}
-      </div>
+            return (
+              <TransactionGroupCard
+                key={group.groupKey}
+                group={group}
+                groupBy={groupBy}
+                isDesktop={isDesktop}
+                selectedTxIds={selectedTxIds}
+                highlightedTxId={highlightedTxId}
+                deletingTxIds={deletingTxIds}
+                categoryMap={categoryMap}
+                contactMap={contactMap}
+                filteredTransactionsLength={filteredTransactions.length}
+                onToggleSelect={toggleSelectOne}
+                onEdit={handleEdit}
+                onDelete={handleDeleteTransaction}
+                onToggleSelectAll={toggleSelectAll}
+                getChildStyle={getChildStyle}
+              />
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 });

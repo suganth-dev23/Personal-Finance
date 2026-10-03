@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal } from '../common/Modal';
 import { useFinance } from '../../context/FinanceContext';
 import { Transaction, SplitEntry, OwedDirection } from '../../types/finance';
-import { formatINR } from '../../utils/currency';
+import { formatINR, roundCurrency } from '../../utils/currency';
 import { Money } from '../ui';
 
 interface EditSplitModalProps {
@@ -43,17 +43,20 @@ export const EditSplitModal: React.FC<EditSplitModalProps> = ({
 
  if (!transaction || !splitEntry) return null;
 
- const otherSplitsTotal = (transaction.splitWith || [])
+ const otherSplitsTotal = roundCurrency(
+ (transaction.splitWith || [])
  .filter(s => s.id !== splitEntry.id)
- .reduce((sum, s) => sum + s.amount, 0);
+ .reduce((sum, s) => sum + s.amount, 0)
+ );
 
  const handleSubmit = (e: React.FormEvent) => {
  e.preventDefault();
- const parsedAmount = parseFloat(amount);
- if (isNaN(parsedAmount) || parsedAmount <= 0) {
+ const rawAmount = parseFloat(amount);
+ if (isNaN(rawAmount) || rawAmount <= 0) {
  alert('Please enter a valid split amount greater than ₹0');
  return;
  }
+ const parsedAmount = roundCurrency(rawAmount);
 
  if (otherSplitsTotal + parsedAmount > transaction.amount + 0.01) {
  alert(
@@ -134,8 +137,8 @@ export const EditSplitModal: React.FC<EditSplitModalProps> = ({
  }
  };
 
- const parsedAmount = parseFloat(amount) || 0;
- const yourShare = Math.max(0, transaction.amount - otherSplitsTotal - parsedAmount);
+ const parsedAmount = roundCurrency(parseFloat(amount) || 0);
+ const yourShare = Math.max(0, roundCurrency(transaction.amount - otherSplitsTotal - parsedAmount));
 
  return (
  <Modal

@@ -19,7 +19,8 @@ export const HealthGaugeCompact: React.FC = () => {
  trend,
  } = healthScore;
 
- const clampedScore = Math.min(100, Math.max(0, overallScore || 0));
+ const safeOverallScore = Number.isFinite(overallScore) ? overallScore : 0;
+ const clampedScore = Math.min(100, Math.max(0, safeOverallScore));
 
  const statusColor =
  grade === 'Excellent'
@@ -99,7 +100,11 @@ export const HealthGaugeCompact: React.FC = () => {
 
  {/* Row 3: Compact 5-Pillar Mini-Bars */}
  <div className="space-y-1.5">
- {pillars.map(p => (
+ {pillars.map(p => {
+ const safeScore = Number.isFinite(p.score) ? p.score : 0;
+ const safeMax = Number.isFinite(p.max) && p.max > 0 ? p.max : 1;
+ const pct = Math.max(0, Math.min(100, Math.round((safeScore / safeMax) * 100)));
+ return (
  <div key={p.label} className="flex items-center gap-2">
  <span className="text-xs font-medium text-ink-3 w-12 shrink-0 truncate">
  {p.label}
@@ -107,21 +112,22 @@ export const HealthGaugeCompact: React.FC = () => {
  <div
  className="flex-1 h-1 bg-sunken rounded-full overflow-hidden"
  role="progressbar"
- aria-valuenow={p.score}
+ aria-valuenow={safeScore}
  aria-valuemin={0}
- aria-valuemax={p.max}
- aria-label={`${p.label} score: ${p.score} out of ${p.max}`}
+ aria-valuemax={safeMax}
+ aria-label={`${p.label} score: ${safeScore} out of ${safeMax}`}
  >
  <div
  className={`h-full rounded-full transition-[width] duration-500 ease-out ${p.color}`}
- style={{ width: `${Math.max(0, Math.min(100, Math.round(((p.score ?? 0) / (p.max || 1)) * 100)))}%` }}
+ style={{ width: `${pct}%` }}
  />
  </div>
  <span className="text-xs font-numeric font-bold text-ink-2 w-8 text-right shrink-0">
- {p.score}/{p.max}
+ {safeScore}/{safeMax}
  </span>
  </div>
- ))}
+ );
+ })}
  </div>
  </button>
  );

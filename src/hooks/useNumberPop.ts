@@ -33,8 +33,6 @@ export function useNumberPop(value: number): UseNumberPopResult {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
       }
-      // Momentarily toggle active state if already active to force keyframe restart
-      setActive(false);
       const raf = requestAnimationFrame(() => {
         setDirection(dir);
         setActive(true);

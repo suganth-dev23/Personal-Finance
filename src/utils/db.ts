@@ -1,4 +1,15 @@
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
+export function isQuotaExceededError(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false;
+  const error = err as Record<string, any>;
+  return (
+    error.name === 'QuotaExceededError' ||
+    error.code === 22 ||
+    error.number === -2147024882 ||
+    error.name === 'NS_ERROR_DOM_QUOTA_REACHED'
+  );
+}
+
 import {
   Transaction,
   Category,
@@ -112,6 +123,10 @@ let dbPromise: Promise<IDBPDatabase<DhanVedaDBSchema>> | null = null;
 export function getDB(): Promise<IDBPDatabase<DhanVedaDBSchema>> {
   if (!dbPromise) {
     dbPromise = openDB<DhanVedaDBSchema>(DB_NAME, DB_VERSION, {
+      terminated() {
+        console.error('[DB] IndexedDB connection terminated abnormally');
+        dbPromise = null;
+      },
       upgrade(db, oldVersion) {
         // Transactions store
         if (!db.objectStoreNames.contains('transactions')) {
@@ -200,6 +215,9 @@ export function getDB(): Promise<IDBPDatabase<DhanVedaDBSchema>> {
           db.createObjectStore('gamification', { keyPath: 'id' });
         }
       },
+    }).catch(err => {
+      dbPromise = null;
+      throw err;
     });
   }
   return dbPromise;
@@ -482,13 +500,22 @@ export async function saveAllToStore<T extends { id: string }>(
 ): Promise<void> {
   if (!Array.isArray(items)) return;
   const validItems = items.filter(item => item && typeof item.id === 'string' && item.id.length > 0);
-  const db = await getDB();
-  const tx = db.transaction(storeName, 'readwrite');
-  await tx.store.clear();
-  for (const item of validItems) {
-    await tx.store.put(item as any);
+  try {
+    const db = await getDB();
+    const tx = db.transaction(storeName, 'readwrite');
+    await tx.store.clear();
+    for (const item of validItems) {
+      await tx.store.put(item as any);
+    }
+    await tx.done;
+  } catch (err) {
+    if (isQuotaExceededError(err)) {
+      console.error(`[DB] Storage quota exceeded while saving to "${storeName}":`, err);
+    } else {
+      console.error(`[DB] Error saving to "${storeName}":`, err);
+    }
+    throw err;
   }
-  await tx.done;
 }
 
 function hasItemChanged(a: any, b: any): boolean {
@@ -553,15 +580,24 @@ export async function persistDiff<T extends { id: string }>(
     return;
   }
 
-  const db = await getDB();
-  const tx = db.transaction(storeName, 'readwrite');
-  for (const id of toDelete) {
-    tx.store.delete(id);
+  try {
+    const db = await getDB();
+    const tx = db.transaction(storeName, 'readwrite');
+    for (const id of toDelete) {
+      await tx.store.delete(id);
+    }
+    for (const item of toPut) {
+      await tx.store.put(item as any);
+    }
+    await tx.done;
+  } catch (err) {
+    if (isQuotaExceededError(err)) {
+      console.error(`[DB] Storage quota exceeded while persisting diff to "${storeName}":`, err);
+    } else {
+      console.error(`[DB] Error persisting diff to "${storeName}":`, err);
+    }
+    throw err;
   }
-  for (const item of toPut) {
-    tx.store.put(item as any);
-  }
-  await tx.done;
 }
 
 
@@ -577,8 +613,17 @@ export async function saveSingleRecord<T extends { id: string }>(
   storeName: 'emergencyFund' | 'aiSettings' | 'userPreferences' | 'gamification',
   data: T
 ): Promise<void> {
-  const db = await getDB();
-  await db.put(storeName, data as any);
+  try {
+    const db = await getDB();
+    await db.put(storeName, data as any);
+  } catch (err) {
+    if (isQuotaExceededError(err)) {
+      console.error(`[DB] Storage quota exceeded while saving "${storeName}":`, err);
+    } else {
+      console.error(`[DB] Error saving "${storeName}":`, err);
+    }
+    throw err;
+  }
 }
 
 export async function getGamificationState(): Promise<GamificationState | null> {
@@ -684,7 +729,8 @@ export async function purgeOldTombstones(retentionDays = 90): Promise<void> {
     const tx = db.transaction('tombstones', 'readwrite');
     for (const t of allTombstones) {
       if (t.deletedAt < cutoffTime) {
-        await tx.store.delete(t.id);
+        const key = (t as any).compositeId || `${t.store}:${t.id}`;
+        await tx.store.delete(key);
       }
     }
     await tx.done;

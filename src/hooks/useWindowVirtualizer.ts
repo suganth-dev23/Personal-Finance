@@ -23,12 +23,15 @@ export interface WindowVirtualizerResult {
  * Calculates visible range [startIndex, endIndex] and spacer heights
  * based on window scroll position and the container element's offset.
  */
-export function useWindowVirtualizer(options: UseWindowVirtualizerOptions): WindowVirtualizerResult {
-  const total = options.itemCount ?? options.count ?? 0;
-  const estimateHeight = options.estimateHeight ?? 52;
-  const overscan = options.overscan ?? 10;
-  const threshold = options.threshold ?? 40;
-  const containerRef = options.containerRef;
+export function useWindowVirtualizer({
+  itemCount,
+  count,
+  estimateHeight = 52,
+  overscan = 10,
+  threshold = 40,
+  containerRef,
+}: UseWindowVirtualizerOptions): WindowVirtualizerResult {
+  const total = itemCount ?? count ?? 0;
 
   const [range, setRange] = useState<{
     startIndex: number;
@@ -102,9 +105,6 @@ export function useWindowVirtualizer(options: UseWindowVirtualizerOptions): Wind
   }, [total, threshold, estimateHeight, overscan, containerRef]);
 
   useEffect(() => {
-    const initial = computeRange();
-    setRange(initial);
-
     if (total <= threshold) return;
 
     let rafId: number | null = null;
@@ -126,6 +126,8 @@ export function useWindowVirtualizer(options: UseWindowVirtualizerOptions): Wind
         });
       });
     };
+
+    onScrollOrResize();
 
     window.addEventListener('scroll', onScrollOrResize, { passive: true });
     window.addEventListener('resize', onScrollOrResize);

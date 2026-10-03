@@ -36,6 +36,15 @@ export const BudgetsView: React.FC = () => {
   const overallPercent = totalBudgeted > 0 ? Math.min(100, Math.round((totalSpentInBudgeted / totalBudgeted) * 100)) : 0;
   const isOverTotal = remainingBudget < 0;
 
+  // Spending velocity and pacing calculations with strict Day 1 division-by-zero protection
+  const now = useMemo(() => new Date(), []);
+  const currentDay = now.getDate();
+  const totalDays = useMemo(() => new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate(), [now]);
+  // Strictly guard daysPassed so it never equals 0 (e.g. Day 1 of month, or time boundary edge cases)
+  const daysPassed = Math.max(1, currentDay);
+  const projectedTotalSpend = Math.round((totalSpentInBudgeted / daysPassed) * totalDays);
+  const isPacingFast = !isOverTotal && totalBudgeted > 0 && projectedTotalSpend > totalBudgeted && daysPassed >= 3;
+
   const categoryMap = useMemo(() => {
     return new Map(categories.map(c => [c.name.toLowerCase(), c]));
   }, [categories]);
@@ -137,8 +146,27 @@ export const BudgetsView: React.FC = () => {
             <Stat
               label="Velocity Status"
               value={
-                <span className={`text-sm sm:text-lg font-bold font-numeric ${isOverTotal ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                  {isOverTotal ? 'Over Budget' : overallPercent >= 85 ? 'Near Ceiling' : 'Safe Velocity'}
+                <span className={`text-sm sm:text-lg font-bold font-numeric ${
+                  isOverTotal
+                    ? 'text-rose-600 dark:text-rose-400'
+                    : isPacingFast
+                    ? 'text-ink-1'
+                    : overallPercent >= 85
+                    ? 'text-ink-1'
+                    : 'text-emerald-600 dark:text-emerald-400'
+                }`}>
+                  {isOverTotal
+                    ? 'Over Budget'
+                    : isPacingFast
+                    ? 'Pacing Over'
+                    : overallPercent >= 85
+                    ? 'Near Ceiling'
+                    : 'Safe Velocity'}
+                </span>
+              }
+              sub={
+                <span className="text-xs text-ink-3">
+                  Day {currentDay}/{totalDays} • Proj: <Money value={projectedTotalSpend} size="xs" />
                 </span>
               }
             />
@@ -179,6 +207,8 @@ export const BudgetsView: React.FC = () => {
             const percentUsed = b.monthlyLimit > 0 ? (spent / b.monthlyLimit) * 100 : 0;
             const isOver = spent > b.monthlyLimit;
             const isNear = !isOver && percentUsed >= 80;
+            const catProjectedSpend = Math.round((spent / daysPassed) * totalDays);
+            const isCategoryPacingFast = !isOver && b.monthlyLimit > 0 && catProjectedSpend > b.monthlyLimit && daysPassed >= 3;
 
             return (
               <div
@@ -273,9 +303,14 @@ export const BudgetsView: React.FC = () => {
                           Exceeded by <Money value={spent - b.monthlyLimit} size="xs" className="text-inherit" />
                         </span>
                       ) : isNear ? (
-                        <span className="font-bold text-ink-3 flex items-center gap-1">
+                        <span className="font-bold text-ink-2 flex items-center gap-1">
                           <AlertCircle className="w-3.5 h-3.5" />
                           Near limit
+                        </span>
+                      ) : isCategoryPacingFast ? (
+                        <span className="font-semibold text-ink-2 flex items-center gap-1 font-numeric" title={`Projected: ₹${catProjectedSpend} by month-end`}>
+                          <AlertCircle className="w-3.5 h-3.5" />
+                          Pacing high
                         </span>
                       ) : (
                         <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">

@@ -24,6 +24,16 @@ export const EmergencyFundView: React.FC = () => {
   const percentFunded = effectiveTarget > 0 ? Math.min(100, Math.round((emergencyFund.currentSaved / effectiveTarget) * 100)) : 0;
   const deficit = Math.max(0, effectiveTarget - emergencyFund.currentSaved);
 
+  const formatRunwayMonths = (months: number, saved: number): string => {
+    if (!Number.isFinite(months) || isNaN(months)) {
+      return saved > 0 ? '> 24' : '0.0';
+    }
+    if (months > 24) {
+      return '> 24';
+    }
+    return months.toFixed(1);
+  };
+
   const handleSaveSettings = (e: React.FormEvent) => {
     e.preventDefault();
     const parsedTarget = manualTarget ? parseFloat(manualTarget) : undefined;
@@ -73,7 +83,7 @@ export const EmergencyFundView: React.FC = () => {
               </div>
               <p className="mt-2 text-xs text-ink-3 flex items-center gap-1 flex-wrap">
                 <span>Secures</span>
-                <span className="font-numeric font-bold">{emergencyFundRunwayMonths.toFixed(1)}</span>
+                <span className="font-numeric font-bold">{formatRunwayMonths(emergencyFundRunwayMonths, emergencyFund.currentSaved)}</span>
                 <span>months of baseline expenses • Goal: {emergencyFund.targetMonths} months (</span>
                 <Money value={effectiveTarget} size="xs" />
                 <span>)</span>
@@ -198,7 +208,7 @@ export const EmergencyFundView: React.FC = () => {
           </div>
           <div style={getChildStyle(2)} className="animate-slide-up">
             <Card variant="sunken" padding="sm" className="rounded-2xl h-full">
-              <Stat label="Runway Secured" value={`${emergencyFundRunwayMonths.toFixed(1)} Months`} />
+              <Stat label="Runway Secured" value={`${formatRunwayMonths(emergencyFundRunwayMonths, emergencyFund.currentSaved)} Months`} />
             </Card>
           </div>
           <div style={getChildStyle(3)} className="animate-slide-up">

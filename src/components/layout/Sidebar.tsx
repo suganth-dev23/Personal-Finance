@@ -127,8 +127,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTx }) => {
 
         {/* Gamification Level Status */}
         <div
+          role="button"
+          tabIndex={0}
           onClick={() => setCurrentView('badges')}
-          className="hidden xl:block relative mt-2.5 p-2.5 bg-reward-tint hover:bg-reward-fill/20 rounded-xl border border-reward/20 transition-colors cursor-pointer group press"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setCurrentView('badges');
+            }
+          }}
+          aria-label={`Level ${levelInfo.level} Wealth Architect. ${levelInfo.xpToNext} XP to Level ${levelInfo.level + 1}. Click to view Achievements.`}
+          className="hidden xl:block relative mt-2.5 p-2.5 bg-reward-tint hover:bg-reward-fill/20 rounded-xl border border-reward/20 transition-colors cursor-pointer group press focus:outline-none focus:ring-2 focus:ring-reward"
           title={`Level ${levelInfo.level} Wealth Architect. ${levelInfo.xpToNext} XP to Level ${levelInfo.level + 1}. Click to view Achievements.`}
         >
           {xpDelta !== null && (

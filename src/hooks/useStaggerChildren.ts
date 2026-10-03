@@ -29,11 +29,12 @@ export function useStaggerChildren<T extends HTMLElement = HTMLDivElement>(
 
   const containerRef = useRef<T>(null);
   const reducedMotion = useReducedMotion();
-  const [isVisible, setIsVisible] = useState(reducedMotion);
+  const [isVisible, setIsVisible] = useState(
+    () => reducedMotion || typeof IntersectionObserver === 'undefined'
+  );
 
   useEffect(() => {
-    if (reducedMotion) {
-      setIsVisible(true);
+    if (reducedMotion || typeof IntersectionObserver === 'undefined') {
       return;
     }
 
@@ -48,12 +49,6 @@ export function useStaggerChildren<T extends HTMLElement = HTMLDivElement>(
     const fallbackTimer = setTimeout(() => {
       setIsVisible(true);
     }, fallbackTimeoutMs);
-
-    if (typeof IntersectionObserver === 'undefined') {
-      setIsVisible(true);
-      clearTimeout(fallbackTimer);
-      return;
-    }
 
     const observer = new IntersectionObserver(
       ([entry]) => {

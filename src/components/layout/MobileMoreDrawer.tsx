@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import {
   X,
@@ -78,12 +78,13 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ isOpen, onCl
     onEscape: onClose,
   });
 
-  // Reset search query when drawer closes
-  useEffect(() => {
-    if (!isOpen) {
-      setSearchQuery('');
-    }
-  }, [isOpen]);
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+  if (!isOpen && prevIsOpen) {
+    setPrevIsOpen(false);
+    setSearchQuery('');
+  } else if (isOpen && !prevIsOpen) {
+    setPrevIsOpen(true);
+  }
 
   const filteredSections = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -113,6 +114,7 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ isOpen, onCl
           isAnimatingIn ? 'opacity-100' : 'opacity-0'
         }`}
         onClick={onClose}
+        aria-hidden="true"
       />
 
       {/* Drawer with slide-up transition */}
@@ -227,6 +229,7 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ isOpen, onCl
           <button
             type="button"
             onClick={() => setDarkMode((prev: boolean) => !prev)}
+            aria-label={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-sunken hover:bg-line text-xs font-semibold text-ink-2 transition-colors press"
           >
             {darkMode ? <Sun className="w-3.5 h-3.5 text-reward" /> : <Moon className="w-3.5 h-3.5 text-ink-2" />}

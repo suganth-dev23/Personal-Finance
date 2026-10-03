@@ -15,6 +15,7 @@ interface ReviewStagingTableProps {
  onUpdateRow: (tempId: string, updated: Partial<StagedTransaction>) => void;
  onRemoveRow: (tempId: string) => void;
  onExcludeDuplicates: () => void;
+ onInvertAllTypes?: () => void;
 }
 
 const PAYMENT_METHODS: PaymentMethod[] = [
@@ -36,6 +37,7 @@ export const ReviewStagingTable: React.FC<ReviewStagingTableProps> = ({
  onUpdateRow,
  onRemoveRow,
  onExcludeDuplicates,
+ onInvertAllTypes,
 }) => {
  const selectedCount = stagedList.filter(t => t.selected).length;
  const duplicateCount = stagedList.filter(t => t.isDuplicate).length;
@@ -63,6 +65,17 @@ export const ReviewStagingTable: React.FC<ReviewStagingTableProps> = ({
  )}
  </div>
 
+ <div className="flex items-center gap-2 flex-wrap">
+ {onInvertAllTypes && (
+ <button
+ type="button"
+ onClick={onInvertAllTypes}
+ className="px-3 py-1.5 rounded-xl bg-sunken hover:bg-line text-ink-2 hover:text-ink-1 text-xs font-bold transition-colors border border-line"
+ title="Invert income (credit) and expense (debit) for all transactions if the bank statement columns were reversed"
+ >
+ Flip Income / Expense
+ </button>
+ )}
  {duplicateCount > 0 && (
  <button
  type="button"
@@ -72,6 +85,7 @@ export const ReviewStagingTable: React.FC<ReviewStagingTableProps> = ({
  Deselect All {duplicateCount} Duplicates
  </button>
  )}
+ </div>
  </div>
 
  {/* Staging Table */}

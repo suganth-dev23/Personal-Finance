@@ -15,6 +15,7 @@ interface RecurringPaymentModalProps {
 const FREQUENCIES: { label: string; value: RecurrenceFrequency }[] = [
  { label: 'Monthly', value: 'monthly' },
  { label: 'Weekly', value: 'weekly' },
+ { label: 'Bi-weekly (Fortnightly)', value: 'bi-weekly' },
  { label: 'Quarterly', value: 'quarterly' },
  { label: 'Yearly', value: 'yearly' },
 ];
@@ -96,7 +97,7 @@ export const RecurringPaymentModal: React.FC<RecurringPaymentModalProps> = ({
  amount: parsedAmount,
  category: category || categories[0]?.name || 'Bills & Utilities',
  frequency,
- dayOfMonth: frequency !== 'weekly' ? dayOfMonth : undefined,
+ dayOfMonth: (frequency !== 'weekly' && frequency !== 'bi-weekly') ? dayOfMonth : undefined,
  startDate,
  endDate: endDate ? endDate : undefined,
  isActive: initialPayment ? initialPayment.isActive : true,
@@ -180,10 +181,10 @@ export const RecurringPaymentModal: React.FC<RecurringPaymentModalProps> = ({
 
  {/* Due Day of Month & Category */}
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
- {frequency !== 'weekly' ? (
+ {frequency !== 'weekly' && frequency !== 'bi-weekly' ? (
  <div>
  <label className="block text-xs font-bold uppercase tracking-wider text-ink-3 mb-1.5">
- Due Day of Month (1 – 31) *
+ Due Day of Month (1 - 31) *
  </label>
  <div className="flex items-center gap-2.5">
  <input
@@ -206,7 +207,7 @@ export const RecurringPaymentModal: React.FC<RecurringPaymentModalProps> = ({
  Recurrence Cycle
  </label>
  <p className="text-xs text-ink-3 py-2.5">
- Calculated weekly from start date
+ {frequency === 'weekly' ? 'Calculated weekly from start date' : 'Calculated every 14 days from start date'}
  </p>
  </div>
  )}

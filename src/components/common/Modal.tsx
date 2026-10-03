@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { useOverlayTransition } from '../../hooks/useOverlayTransition';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
-import { useScrollLock } from '../../hooks/useScrollLock';
+import { getOverlayZIndex } from '../../utils/overlayStack';
 
 export interface ModalProps {
   isOpen: boolean;
@@ -22,13 +22,11 @@ export const Modal: React.FC<ModalProps> = ({
   children,
   maxWidth = 'lg',
 }) => {
-  const { shouldRender, isAnimatingIn } = useOverlayTransition({
+  const { shouldRender, isAnimatingIn, overlayId } = useOverlayTransition({
     isOpen,
     onClose,
     duration: 200,
   });
-
-  useScrollLock(Boolean(shouldRender));
 
   const focusTrapRef = useFocusTrap<HTMLDivElement>({
     isActive: Boolean(shouldRender && isAnimatingIn),
@@ -73,7 +71,10 @@ export const Modal: React.FC<ModalProps> = ({
   }[maxWidth];
 
   const modalContent = (
-    <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 md:p-6 overflow-hidden">
+    <div
+      style={{ zIndex: getOverlayZIndex(overlayId) }}
+      className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4 md:p-6 overflow-hidden"
+    >
       {/* Backdrop with fade transition */}
       <div
         className={`fixed inset-0 bg-black/60 transition-opacity duration-200 ease-out ${

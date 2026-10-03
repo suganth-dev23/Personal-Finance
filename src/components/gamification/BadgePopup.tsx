@@ -62,36 +62,44 @@ export const BadgePopup: React.FC = () => {
  return unsubscribe;
  }, [subscribeFinanceEvent]);
 
- // Handle queue progression
- useEffect(() => {
- if (!currentBadge && badgeQueue.length > 0) {
- const nextBadge = badgeQueue[0];
- setBadgeQueue(prev => prev.slice(1));
- setCurrentBadge(nextBadge);
- setIsExiting(false);
- dualSideCannons();
+  const handleDismiss = useCallback(() => {
+    if (autoDismissTimerRef.current) {
+      clearTimeout(autoDismissTimerRef.current);
+      autoDismissTimerRef.current = null;
+    }
+    setIsExiting(true);
+    if (dismissTimeoutRef.current) clearTimeout(dismissTimeoutRef.current);
+    dismissTimeoutRef.current = setTimeout(() => {
+      setCurrentBadge(null);
+      setIsExiting(false);
+    }, 180);
+  }, []);
 
- if (autoDismissTimerRef.current) {
- clearTimeout(autoDismissTimerRef.current);
- }
- autoDismissTimerRef.current = setTimeout(() => {
- handleDismiss();
- }, 5000);
- }
- }, [currentBadge, badgeQueue]);
+  // Handle queue progression
+  useEffect(() => {
+    if (!currentBadge && badgeQueue.length > 0) {
+      const nextBadge = badgeQueue[0];
+      setBadgeQueue(prev => prev.slice(1));
+      setCurrentBadge(nextBadge);
+      setIsExiting(false);
+      dualSideCannons();
 
- const handleDismiss = useCallback(() => {
- if (autoDismissTimerRef.current) {
- clearTimeout(autoDismissTimerRef.current);
- autoDismissTimerRef.current = null;
- }
- setIsExiting(true);
- if (dismissTimeoutRef.current) clearTimeout(dismissTimeoutRef.current);
- dismissTimeoutRef.current = setTimeout(() => {
- setCurrentBadge(null);
- setIsExiting(false);
- }, 180);
- }, []);
+      if (autoDismissTimerRef.current) {
+        clearTimeout(autoDismissTimerRef.current);
+      }
+      autoDismissTimerRef.current = setTimeout(() => {
+        handleDismiss();
+      }, 5000);
+    }
+  }, [currentBadge, badgeQueue, handleDismiss]);
+
+  // Clean up timers on unmount
+  useEffect(() => {
+    return () => {
+      if (autoDismissTimerRef.current) clearTimeout(autoDismissTimerRef.current);
+      if (dismissTimeoutRef.current) clearTimeout(dismissTimeoutRef.current);
+    };
+  }, []);
 
  const handleViewVault = useCallback(() => {
  handleDismiss();

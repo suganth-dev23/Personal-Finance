@@ -89,7 +89,9 @@ export async function parseCSVStatement(file: File): Promise<CSVParseResult> {
   const errors: string[] = [];
   const transactions: StagedTransaction[] = [];
 
-  if (!fileText || !fileText.trim()) {
+  const cleanText = (fileText || '').replace(/^\uFEFF/, '').trim();
+
+  if (!cleanText) {
     return {
       transactions: [],
       totalRows: 0,
@@ -99,8 +101,9 @@ export async function parseCSVStatement(file: File): Promise<CSVParseResult> {
   }
 
   // Parse raw 2D array without expecting row 0 to be the header
-  const parseResult = Papa.parse<string[]>(fileText, {
+  const parseResult = Papa.parse<string[]>(cleanText, {
     skipEmptyLines: 'greedy',
+    dynamicTyping: false,
   });
 
   const rawRows = parseResult.data;
@@ -116,8 +119,8 @@ export async function parseCSVStatement(file: File): Promise<CSVParseResult> {
   // Header keyword patterns for Indian & global bank statements
   const datePatterns = [/date/i, /txn.*dt/i, /trans.*dt/i, /value.*dt/i, /posting.*dt/i, /tran.*dt/i, /^dt$/i, /time/i];
   const descPatterns = [/narration/i, /description/i, /particular/i, /remark/i, /detail/i, /merchant/i, /payee/i, /paid to/i, /transaction details/i, /note/i, /info/i, /name/i, /party/i];
-  const debitPatterns = [/withdrawal/i, /debit/i, /^dr$/i, /paid out/i, /expense/i, /spent/i];
-  const creditPatterns = [/deposit/i, /credit/i, /^cr$/i, /paid in/i, /income/i, /received/i];
+  const debitPatterns = [/withdrawal/i, /debit/i, /\bdr\b/i, /paid out/i, /expense/i, /spent/i];
+  const creditPatterns = [/deposit/i, /credit/i, /\bcr\b/i, /paid in/i, /income/i, /received/i];
   const amountPatterns = [/^amount/i, /txn.*amount/i, /trans.*amount/i, /net.*amount/i, /sum/i, /inr/i, /total/i];
   const typePatterns = [/^type$/i, /cr\/dr/i, /dr\/cr/i, /txn.*type/i, /d\/c/i, /c\/d/i];
   const refPatterns = [/ref/i, /chq/i, /cheque/i, /utr/i, /txn.*id/i, /rrn/i, /reference/i, /id/i];
@@ -196,6 +199,7 @@ export async function parseCSVStatement(file: File): Promise<CSVParseResult> {
     // Fallback: Pattern-based column discovery
     startDataRow = 0;
     const colCount = Math.max(...rawRows.slice(0, 15).map(r => r.length));
+    const numericCols: number[] = [];
 
     // Test columns across rows to see which column has dates, numbers, strings
     for (let c = 0; c < colCount; c++) {
@@ -211,7 +215,7 @@ export async function parseCSVStatement(file: File): Promise<CSVParseResult> {
         if (/(\d{1,2}[./-]\d{1,2}[./-]\d{2,4}|\d{1,2}[-\s.][A-Za-z]{3,9}[-\s.]\d{2,4}|\d{4}-\d{2}-\d{2})/.test(cell)) {
           dateMatches++;
         }
-        if (parseINR(cell) > 0) {
+        if (Math.abs(parseINR(cell)) > 0) {
           numberMatches++;
         }
       }
@@ -219,12 +223,19 @@ export async function parseCSVStatement(file: File): Promise<CSVParseResult> {
       if (sampleCount > 0) {
         if (dateMatches / sampleCount > 0.4 && dateColIdx === -1) {
           dateColIdx = c;
-        } else if (numberMatches / sampleCount > 0.4 && amountColIdx === -1) {
-          amountColIdx = c;
+        } else if (numberMatches / sampleCount > 0.4) {
+          numericCols.push(c);
         } else if (descColIdx === -1) {
           descColIdx = c;
         }
       }
+    }
+
+    if (numericCols.length >= 2) {
+      debitColIdx = numericCols[0];
+      creditColIdx = numericCols[1];
+    } else if (numericCols.length === 1) {
+      amountColIdx = numericCols[0];
     }
   }
 
@@ -232,6 +243,9 @@ export async function parseCSVStatement(file: File): Promise<CSVParseResult> {
   for (let r = startDataRow; r < rawRows.length; r++) {
     const row = rawRows[r];
     if (!Array.isArray(row) || row.length === 0) continue;
+
+    // Skip empty rows where all cells are blank
+    if (row.every(cell => !cell || !String(cell).trim())) continue;
 
     try {
       const rawDate = dateColIdx !== -1 ? String(row[dateColIdx] || '').trim() : '';
@@ -244,25 +258,44 @@ export async function parseCSVStatement(file: File): Promise<CSVParseResult> {
       let type: TransactionType = 'debit';
       let amount = 0;
 
-      const debitVal = debitColIdx !== -1 ? parseINR(row[debitColIdx] || '') : 0;
-      const creditVal = creditColIdx !== -1 ? parseINR(row[creditColIdx] || '') : 0;
+      const rawDebitStr = debitColIdx !== -1 ? String(row[debitColIdx] || '').trim() : '';
+      const rawCreditStr = creditColIdx !== -1 ? String(row[creditColIdx] || '').trim() : '';
+
+      const debitVal = rawDebitStr ? parseINR(rawDebitStr) : 0;
+      const creditVal = rawCreditStr ? parseINR(rawCreditStr) : 0;
+
+      const absDebit = Math.abs(debitVal);
+      const absCredit = Math.abs(creditVal);
 
       if (debitColIdx !== -1 && creditColIdx !== -1) {
-        if (creditVal > 0) {
+        if (absCredit > 0 && absDebit === 0) {
           type = 'credit';
-          amount = creditVal;
-        } else if (debitVal > 0) {
+          amount = absCredit;
+        } else if (absDebit > 0 && absCredit === 0) {
           type = 'debit';
-          amount = debitVal;
+          amount = absDebit;
+        } else if (absCredit > 0 && absDebit > 0) {
+          if (absCredit >= absDebit) {
+            type = 'credit';
+            amount = absCredit;
+          } else {
+            type = 'debit';
+            amount = absDebit;
+          }
         }
       } else if (amountColIdx !== -1) {
-        const parsedAmt = parseINR(row[amountColIdx] || '');
+        const rawAmtCell = String(row[amountColIdx] || '').trim();
+        const parsedAmt = parseINR(rawAmtCell);
         amount = Math.abs(parsedAmt);
 
         if (parsedAmt < 0) {
           type = 'debit';
+        } else if (/\b(cr|credit)\b/i.test(rawAmtCell)) {
+          type = 'credit';
+        } else if (/\b(dr|debit)\b/i.test(rawAmtCell)) {
+          type = 'debit';
         } else if (typeColIdx !== -1) {
-          const tStr = String(row[typeColIdx] || '').toLowerCase();
+          const tStr = String(row[typeColIdx] || '').toLowerCase().trim();
           if (tStr.includes('cr') || tStr.includes('credit') || tStr.includes('deposit') || tStr.includes('income')) {
             type = 'credit';
           } else {
@@ -271,7 +304,9 @@ export async function parseCSVStatement(file: File): Promise<CSVParseResult> {
         } else {
           // Check for CR / DR hints in description or line
           const fullLine = row.join(' ').toLowerCase();
-          if (/\b(cr|credit|deposit|salary|refund|cashback)\b/.test(fullLine)) {
+          if (/\b(refund|salary|cashback|interest|dividend)\b/.test(fullLine)) {
+            type = 'credit';
+          } else if (/\b(cr|credit)\b/.test(fullLine) && !/\b(credit\s*card|cc\s*payment|cc\s*bill)\b/.test(fullLine)) {
             type = 'credit';
           } else {
             type = 'debit';
@@ -282,8 +317,9 @@ export async function parseCSVStatement(file: File): Promise<CSVParseResult> {
         for (let c = 0; c < row.length; c++) {
           if (c === dateColIdx || c === descColIdx) continue;
           const val = parseINR(row[c] || '');
-          if (val > 0) {
-            amount = val;
+          if (Math.abs(val) > 0) {
+            amount = Math.abs(val);
+            type = val < 0 ? 'debit' : 'debit';
             break;
           }
         }

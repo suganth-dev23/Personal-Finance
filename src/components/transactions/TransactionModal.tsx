@@ -3,7 +3,7 @@ import { Modal } from '../common/Modal';
 import { useFinance } from '../../context/FinanceContext';
 import { Transaction, TransactionType, PaymentMethod, OwedDirection, SplitEntry } from '../../types/finance';
 import { numberToWordsINR, formatINR } from '../../utils/currency';
-import { getTodayString } from '../../utils/date';
+import { getTodayString, sanitizeDateString } from '../../utils/date';
 import { suggestCategory } from '../../utils/categoryMatcher';
 import { Sparkles, Users, Check, X, Lock, Unlock, Plus, Trash2, CheckCircle2, Circle } from 'lucide-react';
 
@@ -119,15 +119,26 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
  return;
  }
 
+ const sanitizedDate = sanitizeDateString(date);
+ if (!sanitizedDate) {
+ alert('Please enter a valid date in YYYY-MM-DD format');
+ return;
+ }
+
+ if (!category || !category.trim()) {
+ alert('Please select a valid category');
+ return;
+ }
+
  const trimmedDesc = description.trim() || `Repayment with ${matchingRepaymentContact.contact.name}`;
  const trimmedPerson = person.trim() || matchingRepaymentContact.contact.name;
 
  // 1. Add ledger transaction
  const newTx = addTransaction({
- date,
+ date: sanitizedDate,
  amount: parsedAmount,
  type,
- category,
+ category: category.trim(),
  paymentMethod,
  description: trimmedDesc,
  person: trimmedPerson,
@@ -140,7 +151,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
  matchingRepaymentContact.contact.id,
  parsedAmount,
  `Repayment: ${trimmedDesc}`,
- date,
+ sanitizedDate,
  undefined,
  undefined,
  newTx.id,
@@ -444,15 +455,31 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
  return;
  }
 
+ if (!category || !category.trim()) {
+ alert('Please select a valid category');
+ return;
+ }
+
+ const sanitizedDate = sanitizeDateString(date);
+ if (!sanitizedDate) {
+ alert('Please enter a valid date in YYYY-MM-DD format');
+ return;
+ }
+
  let splitPayload: SplitEntry[] | undefined = undefined;
- if (isSplitEnabled && splitRows.length > 0) {
- // Validate sum of splits (with 0.02 float tolerance)
+ if (isSplitEnabled) {
+ if (splitRows.length === 0) {
+ alert('Please add at least one person to split this transaction with, or disable the split option.');
+ return;
+ }
+
+ // Validate sum of splits (with 0.01 float tolerance)
  const totalSplitSum = splitRows.reduce((sum, r) => {
  const val = typeof r.amount === 'number' ? r.amount : parseFloat(r.amount as any) || 0;
- return sum + val;
+ return sum + (isNaN(val) ? 0 : val);
  }, 0);
 
- if (totalSplitSum > parsedAmount + 0.02) {
+ if (totalSplitSum > parsedAmount + 0.01) {
  alert(`Total split amounts (₹${totalSplitSum.toFixed(2)}) cannot exceed the transaction amount (₹${parsedAmount.toFixed(2)}).`);
  return;
  }
@@ -460,8 +487,8 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
  // Check for any split row with invalid or zero amount
  for (const row of splitRows) {
  const rowAmt = typeof row.amount === 'number' ? row.amount : parseFloat(row.amount as any) || 0;
- if (rowAmt <= 0) {
- alert('Each split row must have an owed amount greater than ₹0.');
+ if (isNaN(rowAmt) || rowAmt <= 0) {
+ alert('Each split participant must have an owed amount greater than ₹0.');
  return;
  }
  }
@@ -483,10 +510,10 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 
  if (initialTransaction) {
  updateTransaction(initialTransaction.id, {
- date,
+ date: sanitizedDate,
  amount: parsedAmount,
  type,
- category,
+ category: category.trim(),
  paymentMethod,
  description: description.trim(),
  person: trimmedPerson,
@@ -495,10 +522,10 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
  });
  } else {
  addTransaction({
- date,
+ date: sanitizedDate,
  amount: parsedAmount,
  type,
- category,
+ category: category.trim(),
  paymentMethod,
  description: description.trim(),
  person: trimmedPerson,
@@ -513,7 +540,9 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 
  const sumOfSplits = splitRows.reduce((acc, r) => acc + (r.amount || 0), 0);
  const yourShare = Math.max(0, numAmount - sumOfSplits);
- const isOverAllocated = sumOfSplits > numAmount + 0.01;
+ const isOverAllocated = isSplitEnabled && sumOfSplits > numAmount + 0.01;
+ const isSplitEmpty = isSplitEnabled && splitRows.length === 0;
+ const isSubmitDisabled = isOverAllocated || isSplitEmpty;
  const words = numAmount > 0 ? numberToWordsINR(numAmount) : '';
 
  return (
@@ -819,7 +848,14 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 
  {/* Rows List */}
  <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
- {splitRows.map((row, index) => {
+ {splitRows.length === 0 ? (
+ <div className="p-4 rounded-xl bg-surface border border-line border-dashed text-center">
+ <p className="text-xs text-ink-3 font-medium">
+ No split participants added yet. Click <strong className="text-ink-1">&quot;Add Person&quot;</strong> above to allocate shares.
+ </p>
+ </div>
+ ) : (
+ splitRows.map((row, index) => {
  return (
  <div
  key={row.id}
@@ -944,7 +980,8 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
  </div>
  </div>
  );
- })}
+ })
+ )}
  </div>
 
  {/* Running Breakdown Readout */}
@@ -1011,9 +1048,9 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
  </button>
  <button
  type="submit"
- disabled={isOverAllocated}
+ disabled={isSubmitDisabled}
  className={`px-6 py-2.5 rounded-xl text-sm font-bold text-on-primary shadow-xs transition-colors duration-150 ${
- isOverAllocated
+ isSubmitDisabled
  ? 'bg-ink-3/40 cursor-not-allowed opacity-50'
  : 'bg-primary hover:opacity-95 active:scale-95'
  }`}

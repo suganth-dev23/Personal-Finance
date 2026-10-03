@@ -1,29 +1,9 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { ToastCard, ToastItem, ToastVariant } from './Toast';
 import { useFinance } from '../../context/FinanceContext';
 import { mapFinanceEventToFeedback } from '../../constants/feedbackManifest';
-
-interface ToastContextType {
-  showToast: (
-    variant: ToastVariant,
-    title: string,
-    message?: string,
-    duration?: number,
-    action?: { label: string; onClick: () => void }
-  ) => void;
-  dismissToast: (id: string) => void;
-}
-
-const ToastContext = createContext<ToastContextType | undefined>(undefined);
-
-export const useToast = () => {
-  const context = useContext(ToastContext);
-  if (!context) {
-    throw new Error('useToast must be used within a ToastProvider');
-  }
-  return context;
-};
+import { ToastContext } from '../../context/ToastContext';
 
 interface ToastProviderProps {
   children: React.ReactNode;

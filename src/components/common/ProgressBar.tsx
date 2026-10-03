@@ -50,18 +50,21 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
  if (displayPercent >= 100 && !firedMilestones.current.has(100)) {
  firedMilestones.current.add(100);
  firedMilestones.current.add(50);
- if (alertThresholds && rawPercentage > 100) {
- setGlowClass('animate-pulse-danger');
- } else {
- setGlowClass('animate-pulse-gold');
- }
+ const targetGlow = (alertThresholds && rawPercentage > 100) ? 'animate-pulse-danger' : 'animate-pulse-gold';
+ const raf = requestAnimationFrame(() => setGlowClass(targetGlow));
  const timer = setTimeout(() => setGlowClass(''), 1200);
- return () => clearTimeout(timer);
+ return () => {
+ cancelAnimationFrame(raf);
+ clearTimeout(timer);
+ };
  } else if (displayPercent >= 50 && !firedMilestones.current.has(50)) {
  firedMilestones.current.add(50);
- setGlowClass('animate-pulse-success');
+ const raf = requestAnimationFrame(() => setGlowClass('animate-pulse-success'));
  const timer = setTimeout(() => setGlowClass(''), 1000);
- return () => clearTimeout(timer);
+ return () => {
+ cancelAnimationFrame(raf);
+ clearTimeout(timer);
+ };
  }
  }, [displayPercent, glowOnMilestone, alertThresholds, rawPercentage]);
 

@@ -45,6 +45,11 @@ export function useFocusTrap<T extends HTMLElement = HTMLElement>({
     });
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      // If focus is inside a different container (e.g. a stacked child modal), do not intercept
+      if (container && document.activeElement && !container.contains(document.activeElement) && document.activeElement !== document.body) {
+        return;
+      }
+
       if (e.key === 'Escape') {
         if (onEscape) {
           e.stopPropagation();

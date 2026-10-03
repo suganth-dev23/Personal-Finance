@@ -28,7 +28,7 @@ function canTriggerSparkle(): boolean {
   return true;
 }
 
-function isCalmMode(): boolean {
+export function isCalmMode(): boolean {
   if (typeof window === 'undefined') return false;
   try {
     return localStorage.getItem('dhanveda_calm_mode') === 'true';
@@ -36,6 +36,7 @@ function isCalmMode(): boolean {
     return false;
   }
 }
+
 
 /**
  * Elegant non-intrusive alternative visual feedback for users with prefers-reduced-motion

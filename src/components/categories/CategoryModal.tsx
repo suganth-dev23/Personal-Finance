@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Modal } from '../common/Modal';
 import { useFinance } from '../../context/FinanceContext';
 import { Category } from '../../types/finance';
-import { IconRenderer, AVAILABLE_CATEGORY_ICONS, CATEGORY_COLORS } from '../common/IconRenderer';
+import { IconRenderer } from '../common/IconRenderer';
+import { AVAILABLE_CATEGORY_ICONS, CATEGORY_COLORS } from '../../constants/categoryTheme';
 
 interface CategoryModalProps {
  isOpen: boolean;

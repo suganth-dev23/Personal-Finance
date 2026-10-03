@@ -23,7 +23,9 @@ export function useCountUp(target: number, arg?: number | UseCountUpOptions): nu
 
   const reducedMotion = useReducedMotion();
   const onCompleteRef = useRef(onComplete);
-  onCompleteRef.current = onComplete;
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   const isFirstMount = useRef(true);
   const initialValue = (!reducedMotion && animateOnMount) ? from : target;
@@ -33,7 +35,6 @@ export function useCountUp(target: number, arg?: number | UseCountUpOptions): nu
 
   useEffect(() => {
     if (reducedMotion) {
-      setValue(target);
       prevRef.current = target;
       onCompleteRef.current?.();
       return;
@@ -43,7 +44,6 @@ export function useCountUp(target: number, arg?: number | UseCountUpOptions): nu
     if (isFirstMount.current) {
       isFirstMount.current = false;
       if (!animateOnMount) {
-        setValue(target);
         prevRef.current = target;
         return;
       }

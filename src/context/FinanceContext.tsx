@@ -2306,31 +2306,42 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
  return result.sort((a, b) => b.spent - a.spent);
  }, [currentMonthTransactions, budgets, categories]);
 
- // Budget exceeded detector (fires when percentUsed crosses 100)
- const prevSpendingRef = useRef<Map<string, number>>(new Map());
- useEffect(() => {
- if (!isInitialized) return;
+  // Budget exceeded detector (fires when percentUsed crosses 100 during active session)
+  const prevSpendingRef = useRef<Map<string, number>>(new Map());
+  const isBudgetDetectorInitializedRef = useRef<boolean>(false);
+  useEffect(() => {
+    if (!isInitialized) return;
 
- categorySpendingThisMonth.forEach(cat => {
- if (cat.budget > 0) {
- const prevPercent = prevSpendingRef.current.get(cat.category.toLowerCase()) ?? 0;
- if (prevPercent <= 100 && cat.percentUsed > 100) {
- emitFinanceEvent({
- type: 'budget_exceeded',
- category: cat.category,
- spent: cat.spent,
- limit: cat.budget,
- });
- }
- }
- });
+    if (!isBudgetDetectorInitializedRef.current) {
+      isBudgetDetectorInitializedRef.current = true;
+      const initMap = new Map<string, number>();
+      categorySpendingThisMonth.forEach(cat => {
+        initMap.set(cat.category.toLowerCase(), cat.percentUsed);
+      });
+      prevSpendingRef.current = initMap;
+      return;
+    }
 
- const newMap = new Map<string, number>();
- categorySpendingThisMonth.forEach(cat => {
- newMap.set(cat.category.toLowerCase(), cat.percentUsed);
- });
- prevSpendingRef.current = newMap;
- }, [categorySpendingThisMonth, isInitialized, emitFinanceEvent]);
+    categorySpendingThisMonth.forEach(cat => {
+      if (cat.budget > 0) {
+        const prevPercent = prevSpendingRef.current.get(cat.category.toLowerCase()) ?? 0;
+        if (prevPercent <= 100 && cat.percentUsed > 100) {
+          emitFinanceEvent({
+            type: 'budget_exceeded',
+            category: cat.category,
+            spent: cat.spent,
+            limit: cat.budget,
+          });
+        }
+      }
+    });
+
+    const newMap = new Map<string, number>();
+    categorySpendingThisMonth.forEach(cat => {
+      newMap.set(cat.category.toLowerCase(), cat.percentUsed);
+    });
+    prevSpendingRef.current = newMap;
+  }, [categorySpendingThisMonth, isInitialized, emitFinanceEvent]);
 
  // Derived Recurring Payments
  const totalMonthlyRecurringCommitment = useMemo(() => {

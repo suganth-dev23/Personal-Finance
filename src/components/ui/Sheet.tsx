@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { useOverlayTransition } from '../../hooks/useOverlayTransition';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
+import { getOverlayZIndex } from '../../utils/overlayStack';
 
 export interface SheetProps {
  isOpen: boolean;
@@ -23,7 +24,7 @@ export const Sheet: React.FC<SheetProps> = ({
  footer,
  maxWidth = 'lg',
 }) => {
- const { shouldRender, isAnimatingIn } = useOverlayTransition({
+ const { shouldRender, isAnimatingIn, overlayId } = useOverlayTransition({
  isOpen,
  onClose,
  duration: 200,
@@ -46,13 +47,17 @@ export const Sheet: React.FC<SheetProps> = ({
  }[maxWidth];
 
  const content = (
- <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 md:p-6 overflow-hidden">
+ <div
+ style={{ zIndex: getOverlayZIndex(overlayId) }}
+ className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4 md:p-6 overflow-hidden"
+ >
  {/* Backdrop */}
  <div
  className={`fixed inset-0 bg-black/60 transition-opacity duration-200 ease-out ${
  isAnimatingIn ? 'opacity-100' : 'opacity-0'
  }`}
  onClick={onClose}
+ aria-hidden="true"
  />
 
  {/* Sheet / Modal Container */}

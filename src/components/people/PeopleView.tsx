@@ -21,6 +21,7 @@ import { useFinance } from '../../context/FinanceContext';
 import { Contact, Transaction, SplitEntry, SettlementRecord } from '../../types/finance';
 import { Money } from '../ui';
 import { formatDate } from '../../utils/date';
+import { roundCurrency } from '../../utils/currency';
 import { EmptyState } from '../common/EmptyState';
 import { SettleUpModal } from './SettleUpModal';
 import { EditSplitModal } from './EditSplitModal';
@@ -81,6 +82,19 @@ export const PeopleView: React.FC = () => {
  const transactionMap = useMemo(() => {
  return new Map(transactions.map(t => [t.id, t]));
  }, [transactions]);
+
+ const handleDeleteContact = (contact: Contact) => {
+ const bal = balanceMap.get(contact.id) || 0;
+ const hasUnsettled = Math.abs(bal) > 0.01;
+ const unsettledWarning = hasUnsettled
+ ? `\n\n⚠️ WARNING: "${contact.name}" has an unsettled balance of ₹${Math.abs(bal).toFixed(2)} (${bal > 0 ? 'they owe you' : 'you owe them'})!\n`
+ : '';
+ const confirmMsg = `Are you sure you want to delete "${contact.name}"?${unsettledWarning}\nAll their split entries will be unlinked (preserved in Unassigned Splits) and their settlement history will be removed. This cannot be undone.`;
+
+ if (window.confirm(confirmMsg)) {
+ deleteContact(contact.id);
+ }
+ };
 
  // Split contacts into active (non-zero balance) and settled (zero balance)
  const { activeContacts, settledContacts } = useMemo(() => {
@@ -832,7 +846,7 @@ export const PeopleView: React.FC = () => {
  {isPartial && (
  <div className="flex items-center gap-1.5 mt-1 text-xs text-ink-3 font-bold">
  <span>
- Partial: <Money value={split.settledAmount || 0} size="xs" /> paid • <Money value={split.amount - (split.settledAmount || 0)} size="xs" /> open
+ Partial: <Money value={split.settledAmount || 0} size="xs" /> paid • <Money value={roundCurrency(split.amount - (split.settledAmount || 0))} size="xs" /> open
  </span>
  </div>
  )}
@@ -951,11 +965,7 @@ export const PeopleView: React.FC = () => {
  {/* Delete Contact Action */}
  <div className="pt-2 flex justify-end">
  <button
- onClick={() => {
- if (window.confirm(`Delete "${contact.name}" and unlink all their splits? This cannot be undone.`)) {
- deleteContact(contact.id);
- }
- }}
+ onClick={() => handleDeleteContact(contact)}
  className="text-xs font-semibold text-rose-600 hover:underline flex items-center gap-1"
  >
  <Trash2 className="w-3 h-3" />
@@ -1014,11 +1024,7 @@ export const PeopleView: React.FC = () => {
                     <span>Split Bill</span>
                   </button>
                   <button
-                    onClick={() => {
-                      if (window.confirm(`Delete "${contact.name}"? This cannot be undone.`)) {
-                        deleteContact(contact.id);
-                      }
-                    }}
+                    onClick={() => handleDeleteContact(contact)}
                     className="p-1.5 text-ink-3 hover:text-rose-600 rounded-xl"
  title="Delete Contact"
  >

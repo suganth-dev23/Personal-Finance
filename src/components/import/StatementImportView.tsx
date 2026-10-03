@@ -11,6 +11,7 @@ import {
  FileCheck,
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
+import { useToast } from '../../context/ToastContext';
 import { StagedTransaction } from '../../types/finance';
 import { parseCSVStatement } from '../../utils/csvParser';
 import { parsePDFStatement } from '../../utils/pdfParser';
@@ -24,6 +25,7 @@ export const StatementImportView: React.FC = () => {
  addMultipleTransactions,
  setCurrentView,
  } = useFinance();
+ const { showToast } = useToast();
 
  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -41,7 +43,9 @@ export const StatementImportView: React.FC = () => {
  const isPdf = file.name.endsWith('.pdf') || file.type.includes('pdf');
 
  if (!isCsv && !isPdf) {
- setParseError('Please upload a valid .CSV or .PDF statement file.');
+ const err = 'Please upload a valid .CSV or .PDF statement file.';
+ setParseError(err);
+ showToast('danger', 'Unsupported File', err);
  return;
  }
 
@@ -76,8 +80,11 @@ export const StatementImportView: React.FC = () => {
  // Check duplicates against existing state
  const flagged = flagDuplicates(rawParsed, transactions);
  setStagedList(flagged);
+ showToast('success', 'Statement Parsed', `${flagged.length} transactions ready for review`, 3000);
  } catch (err: any) {
- setParseError(err?.message || 'Failed to parse file.');
+ const msg = err?.message || 'Failed to parse file.';
+ setParseError(msg);
+ showToast('danger', 'Import Failed', msg, 6000);
  } finally {
  setParsing(false);
  setPdfProgress(null);
@@ -128,6 +135,16 @@ export const StatementImportView: React.FC = () => {
  );
  };
 
+ const handleInvertAllTypes = () => {
+ setStagedList(prev =>
+ prev ? prev.map(t => ({
+ ...t,
+ type: t.type === 'credit' ? 'debit' : 'credit',
+ })) : null
+ );
+ showToast('info', 'Flipped Transaction Types', 'Inverted inflow (credit) and outflow (debit) across all staged rows', 3000);
+ };
+
  const handleFinalImport = () => {
  if (!stagedList) return;
  const selected = stagedList.filter(t => t.selected);
@@ -149,6 +166,7 @@ export const StatementImportView: React.FC = () => {
  }));
 
  addMultipleTransactions(payload);
+ showToast('success', 'Import Successful', `Imported ${selected.length} transactions into your ledger`, 4000);
  setSuccessMessage(`Successfully imported ${selected.length} transactions!`);
  setStagedList(null);
  setTimeout(() => {
@@ -399,6 +417,7 @@ export const StatementImportView: React.FC = () => {
  onUpdateRow={handleUpdateRow}
  onRemoveRow={handleRemoveRow}
  onExcludeDuplicates={handleExcludeDuplicates}
+ onInvertAllTypes={handleInvertAllTypes}
  />
  </div>
  )}

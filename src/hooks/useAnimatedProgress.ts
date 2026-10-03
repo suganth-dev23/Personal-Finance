@@ -35,9 +35,7 @@ export function useAnimatedProgress(
 
   useEffect(() => {
     if (reducedMotion) {
-      setDisplayPercent(clamped);
       prevRef.current = clamped;
-      setIsAnimating(false);
       return;
     }
 
@@ -45,7 +43,6 @@ export function useAnimatedProgress(
     if (isFirstMount.current) {
       isFirstMount.current = false;
       if (!animateOnMount) {
-        setDisplayPercent(clamped);
         prevRef.current = clamped;
         return;
       }

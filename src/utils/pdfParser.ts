@@ -35,65 +35,78 @@ export async function parsePDFInThread(
 ): Promise<PDFParseResult> {
   const errors: string[] = [];
 
-  const pdf = await pdfjsLib.getDocument({
-    data: arrayBuffer,
-    useWorkerFetch: false,
-  }).promise;
+  try {
+    const pdf = await pdfjsLib.getDocument({
+      data: arrayBuffer,
+      useWorkerFetch: false,
+    }).promise;
 
-  const lines: string[] = [];
-  const totalPages = pdf.numPages;
+    const lines: string[] = [];
+    const totalPages = pdf.numPages;
 
-  for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
-    const page = await pdf.getPage(pageNum);
-    const textContent = await page.getTextContent();
+    for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+      const page = await pdf.getPage(pageNum);
+      const textContent = await page.getTextContent();
 
-    if (onProgress) {
-      onProgress({ page: pageNum, totalPages });
+      if (onProgress) {
+        onProgress({ page: pageNum, totalPages });
+      }
+
+      const lineMap: Map<number, { x: number; text: string }[]> = new Map();
+
+      textContent.items.forEach((item: any) => {
+        if (!item.str || item.str.trim() === '') return;
+        const y = Math.round(item.transform[5]);
+        const x = item.transform[4];
+
+        let foundKey: number | null = null;
+        for (const k of lineMap.keys()) {
+          if (Math.abs(k - y) <= 4) {
+            foundKey = k;
+            break;
+          }
+        }
+
+        if (foundKey !== null) {
+          lineMap.get(foundKey)!.push({ x, text: item.str });
+        } else {
+          lineMap.set(y, [{ x, text: item.str }]);
+        }
+      });
+
+      const sortedYKeys = Array.from(lineMap.keys()).sort((a, b) => b - a);
+
+      sortedYKeys.forEach((y) => {
+        const rowItems = lineMap.get(y)!;
+        rowItems.sort((a, b) => a.x - b.x);
+        const lineStr = rowItems.map(i => i.text.trim()).join('   ').trim();
+        if (lineStr.length > 0) {
+          lines.push(lineStr);
+        }
+      });
     }
 
-    const lineMap: Map<number, { x: number; text: string }[]> = new Map();
+    const transactions = extractTransactionsFromPDFLines(lines);
 
-    textContent.items.forEach((item: any) => {
-      if (!item.str || item.str.trim() === '') return;
-      const y = Math.round(item.transform[5]);
-      const x = item.transform[4];
-
-      let foundKey: number | null = null;
-      for (const k of lineMap.keys()) {
-        if (Math.abs(k - y) <= 4) {
-          foundKey = k;
-          break;
-        }
-      }
-
-      if (foundKey !== null) {
-        lineMap.get(foundKey)!.push({ x, text: item.str });
-      } else {
-        lineMap.set(y, [{ x, text: item.str }]);
-      }
-    });
-
-    const sortedYKeys = Array.from(lineMap.keys()).sort((a, b) => b - a);
-
-    sortedYKeys.forEach((y) => {
-      const rowItems = lineMap.get(y)!;
-      rowItems.sort((a, b) => a.x - b.x);
-      const lineStr = rowItems.map(i => i.text.trim()).join('   ').trim();
-      if (lineStr.length > 0) {
-        lines.push(lineStr);
-      }
-    });
+    return {
+      transactions,
+      totalPages,
+      extractedLinesCount: lines.length,
+      errors,
+      rawExtractedText: lines.slice(0, 100).join('\n'),
+    };
+  } catch (err: any) {
+    const isPassword = err?.name === 'PasswordException' || /password/i.test(err?.message || '');
+    const errorMsg = isPassword
+      ? 'This PDF statement is password-protected or encrypted. Please decrypt or unlock the file before uploading.'
+      : (err?.message || 'Failed to parse PDF document.');
+    return {
+      transactions: [],
+      totalPages: 0,
+      extractedLinesCount: 0,
+      errors: [errorMsg],
+    };
   }
-
-  const transactions = extractTransactionsFromPDFLines(lines);
-
-  return {
-    transactions,
-    totalPages,
-    extractedLinesCount: lines.length,
-    errors,
-    rawExtractedText: lines.slice(0, 100).join('\n'),
-  };
 }
 
 /**
@@ -156,6 +169,17 @@ export async function parsePDFStatement(
             rawExtractedText: data.rawExtractedText,
           });
         } else if (data.type === 'error') {
+          if (data.isPasswordProtected) {
+            hasResolved = true;
+            worker?.terminate();
+            resolve({
+              transactions: [],
+              totalPages: 0,
+              extractedLinesCount: 0,
+              errors: [data.error],
+            });
+            return;
+          }
           // Attempt main thread fallback if worker errored
           console.warn('PDF Worker failed, falling back to in-thread parsing:', data.error);
           runFallback();

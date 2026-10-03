@@ -3,7 +3,8 @@ import { Modal } from '../common/Modal';
 import { useFinance } from '../../context/FinanceContext';
 import { DreamGoal } from '../../types/finance';
 import { numberToWordsINR } from '../../utils/currency';
-import { IconRenderer, AVAILABLE_CATEGORY_ICONS, CATEGORY_COLORS } from '../common/IconRenderer';
+import { IconRenderer } from '../common/IconRenderer';
+import { AVAILABLE_CATEGORY_ICONS, CATEGORY_COLORS } from '../../constants/categoryTheme';
 
 interface DreamModalProps {
  isOpen: boolean;
