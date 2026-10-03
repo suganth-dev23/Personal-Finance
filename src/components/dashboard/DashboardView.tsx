@@ -245,7 +245,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx, onEdi
       </Card>
 
       {/* MOBILE SEGMENTED VIEW SWITCHER (sm:hidden) - Sticky beneath top navbar */}
-      <div className="sm:hidden sticky top-14 z-20 -mx-4 px-4 py-2 bg-app/95 dark:bg-app/95 backdrop-blur-md transition-colors">
+      <div className="sm:hidden sticky top-14 z-20 -mx-4 px-4 py-2 bg-app transition-colors">
         <div className="flex items-center p-1 rounded-2xl bg-sunken border border-line text-xs font-bold shadow-xs">
           <button
             type="button"

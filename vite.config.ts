@@ -59,8 +59,18 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,mjs,css,html,ico,png,svg,woff,woff2}'],
+        globIgnores: ['**/pdf.worker*', '**/pdfParser.worker*', '**/vendor-pdf*', '**/StatementImportView*', '**/PieChart*'],
         maximumFileSizeToCacheInBytes: 3500000,
         runtimeCaching: [
+          {
+            urlPattern: /\/(pdf\.worker|pdfParser\.worker|vendor-pdf|StatementImportView|PieChart).*\.(js|mjs)$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'lazy-heavy-chunks',
+              expiration: { maxEntries: 15, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: 'CacheFirst',
@@ -93,18 +103,4 @@ export default defineConfig({
       },
     }),
   ],
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks(id: string) {
-          if (id.includes('node_modules/recharts') || id.includes('node_modules/d3-') || id.includes('node_modules/victory-vendor')) {
-            return 'vendor-charts';
-          }
-          if (id.includes('node_modules/pdfjs-dist')) {
-            return 'vendor-pdf';
-          }
-        },
-      },
-    },
-  },
 })

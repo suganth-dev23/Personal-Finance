@@ -45,7 +45,7 @@ export const CashFlowChart: React.FC = () => {
  const CustomTooltip = ({ active, payload, label }: any) => {
  if (active && payload && payload.length) {
  return (
- <div className="bg-surface/95 backdrop-blur-md p-3.5 rounded-xl shadow-xl border border-line text-xs space-y-1.5">
+ <div className="bg-surface p-3.5 rounded-xl shadow-xl border border-line text-xs space-y-1.5">
  <p className="font-bold text-ink-1 border-b border-line pb-1">
  {label}
  </p>

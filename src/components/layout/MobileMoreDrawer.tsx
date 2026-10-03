@@ -85,7 +85,7 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ isOpen, onCl
     <div className="lg:hidden fixed inset-0 z-50 flex flex-col justify-end">
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 bg-black/60 backdrop-blur-md transition-opacity duration-200 ease-out ${
+        className={`fixed inset-0 bg-black/60 transition-opacity duration-200 ease-out ${
           isAnimatingIn ? 'opacity-100' : 'opacity-0'
         }`}
         onClick={onClose}

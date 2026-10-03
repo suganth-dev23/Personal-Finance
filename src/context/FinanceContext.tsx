@@ -541,11 +541,21 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
  });
  }, []);
 
- // Sync Triggers: on app start (if enabled)
+ // Sync Triggers: on app start (if enabled) - deferred to idle
  useEffect(() => {
  if (!isInitialized) return;
  if (googleAuthService.isSyncEnabled()) {
+ const scheduleIdle = typeof window !== 'undefined' && 'requestIdleCallback' in window
+ ? (cb: () => void) => window.requestIdleCallback(cb, { timeout: 2000 })
+ : (cb: () => void) => setTimeout(cb, 1000);
+ const cancelIdle = typeof window !== 'undefined' && 'cancelIdleCallback' in window
+ ? (id: any) => window.cancelIdleCallback(id)
+ : (id: any) => clearTimeout(id);
+
+ const handle = scheduleIdle(() => {
  triggerSync(false);
+ });
+ return () => cancelIdle(handle);
  }
  }, [isInitialized, triggerSync]);
 
@@ -2116,11 +2126,20 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
  return { upcomingRecurringPayments: upcoming, overdueRecurringPayments: overdue };
  }, [recurringPayments, recurringPaymentLogs]);
 
- // Overdue recurring payments alert on app load
+ // Overdue recurring payments alert on app load - deferred to idle
  const hasAlertedOverdueRef = useRef(false);
  useEffect(() => {
  if (!isInitialized || hasAlertedOverdueRef.current) return;
  if (overdueRecurringPayments.length > 0) {
+ const scheduleIdle = typeof window !== 'undefined' && 'requestIdleCallback' in window
+ ? (cb: () => void) => window.requestIdleCallback(cb, { timeout: 1500 })
+ : (cb: () => void) => setTimeout(cb, 500);
+ const cancelIdle = typeof window !== 'undefined' && 'cancelIdleCallback' in window
+ ? (id: any) => window.cancelIdleCallback(id)
+ : (id: any) => clearTimeout(id);
+
+ const handle = scheduleIdle(() => {
+ if (hasAlertedOverdueRef.current) return;
  hasAlertedOverdueRef.current = true;
  const first = overdueRecurringPayments[0];
  emitFinanceEvent({
@@ -2128,6 +2147,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
  count: overdueRecurringPayments.length,
  paymentName: first ? first.name : undefined,
  });
+ });
+ return () => cancelIdle(handle);
  }
  }, [isInitialized, overdueRecurringPayments, emitFinanceEvent]);
 

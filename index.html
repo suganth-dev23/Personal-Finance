@@ -19,15 +19,10 @@
 
     <title>DhanVeda — INR Personal Finance & Wealth Tracker</title>
     
-    <!-- Google Fonts: Plus Jakarta Sans (UI) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Preload Self-hosted Latin Font (Phase 1.4) -->
+    <link rel="preload" href="/fonts/plus-jakarta-sans-latin.woff2" as="font" type="font/woff2" crossorigin />
     
-    <!-- Google Identity Services client script for OAuth 2.0 Token Client -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    
-    <!-- Prevent theme flash on page load -->
+    <!-- Prevent theme flash and initialize perf mode on page load -->
     <script>
       (function() {
         try {
@@ -37,6 +32,15 @@
             document.documentElement.classList.add('dark');
           } else {
             document.documentElement.classList.remove('dark');
+          }
+        } catch (e) {}
+
+        try {
+          const perf = localStorage.getItem('dhanveda_perf');
+          const isLowEnd = (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) ||
+                           (navigator.deviceMemory && navigator.deviceMemory <= 4);
+          if (perf === 'lite' || (perf !== 'full' && isLowEnd)) {
+            document.documentElement.setAttribute('data-perf', 'lite');
           }
         } catch (e) {}
       })();

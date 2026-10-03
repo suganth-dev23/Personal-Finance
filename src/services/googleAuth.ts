@@ -61,13 +61,47 @@ class GoogleAuthService {
   }
 
   /**
+   * Dynamically injects the Google Identity Services script on-demand if window.google is not present.
+   */
+  private async loadGsiScript(): Promise<void> {
+    if (typeof window === 'undefined') return;
+    if (window.google?.accounts?.oauth2) return;
+
+    const GSI_URL = 'https://accounts.google.com/gsi/client';
+    const existingScript = document.querySelector<HTMLScriptElement>(`script[src="${GSI_URL}"]`);
+    if (existingScript) {
+      if (window.google?.accounts?.oauth2) return;
+      return new Promise<void>((resolve) => {
+        existingScript.addEventListener('load', () => resolve(), { once: true });
+        existingScript.addEventListener('error', () => resolve(), { once: true });
+        setTimeout(resolve, 500);
+      });
+    }
+
+    return new Promise<void>((resolve) => {
+      const script = document.createElement('script');
+      script.src = GSI_URL;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => resolve();
+      script.onerror = () => resolve();
+      document.head.appendChild(script);
+    });
+  }
+
+  /**
    * Initializes the GIS Token Client if the google script has loaded.
    */
   public async ensureTokenClient(): Promise<boolean> {
     if (this.tokenClient) return true;
     if (!this.hasClientId()) return false;
 
-    // Wait up to 5 seconds for google.accounts.oauth2 to be available from <script src="https://accounts.google.com/gsi/client">
+    // Dynamically inject Google Identity Services script on-demand if window.google is not present
+    if (typeof window !== 'undefined' && !window.google?.accounts?.oauth2) {
+      await this.loadGsiScript();
+    }
+
+    // Wait up to 5 seconds for google.accounts.oauth2 to be available
     let attempts = 0;
     while (attempts < 50) {
       if (typeof window !== 'undefined' && window.google?.accounts?.oauth2) {

@@ -41,9 +41,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAddTx }) => {
  const { monthName, year } = getCurrentMonthYear();
  const meta = VIEW_TITLES[currentView] || { title: 'DhanVeda', subtitle: '' };
 
- return (
- <header className="sticky top-0 z-20 bg-surface/90 backdrop-blur-md border-b border-line px-4 sm:px-8 py-4 flex items-center justify-between transition-colors">
- {/* Title info */}
+  return (
+    <header className="sticky top-0 z-20 bg-surface/95 border-b border-line px-4 sm:px-8 py-4 flex items-center justify-between transition-colors">
+      {/* Title info */}
  <div>
  <div className="flex items-center gap-2 min-w-0">
  <h1 className="text-lg sm:text-2xl font-black text-ink-1 tracking-tight leading-none truncate max-w-[180px] sm:max-w-none">
