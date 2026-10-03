@@ -81,8 +81,8 @@ const MainContent: React.FC = () => {
 
  {/* Dynamic Lazy-Loaded View Router */}
  <main className="flex-1 px-4 sm:px-8 py-6 w-full">
- <Suspense fallback={<ViewSkeleton view={currentView} />}>
  <ViewTransition viewKey={currentView}>
+ <Suspense fallback={<ViewSkeleton view={currentView} />}>
  {currentView === 'dashboard' && (
  <DashboardView
  onOpenAddTx={handleOpenAddTx}
@@ -106,8 +106,8 @@ const MainContent: React.FC = () => {
  {currentView === 'import' && <StatementImportView />}
  {currentView === 'settings' && <SettingsView />}
  {currentView === 'badges' && <BadgeShowcase />}
- </ViewTransition>
  </Suspense>
+ </ViewTransition>
  </main>
  </div>
 
