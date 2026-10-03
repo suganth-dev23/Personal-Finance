@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { useFinance, AppView } from '../../context/FinanceContext';
 import { useGamification } from '../../context/GamificationContext';
-import { formatINR } from '../../utils/currency';
+import { Money } from '../ui/Money';
 import { useAnimatedProgress } from '../../hooks/useAnimatedProgress';
 
 interface NavItem {
@@ -120,9 +120,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTx }) => {
           <p className="text-xs font-semibold text-ink-3">
             Bank &amp; Cash (Liquid)
           </p>
-          <p className="text-base font-bold font-numeric text-ink-1 mt-0.5">
-            {formatINR(totalBalance)}
-          </p>
+          <div className="mt-0.5">
+            <Money value={totalBalance} size="md" />
+          </div>
         </div>
 
         {/* Gamification Level Status */}

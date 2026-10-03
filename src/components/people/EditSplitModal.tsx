@@ -3,6 +3,7 @@ import { Modal } from '../common/Modal';
 import { useFinance } from '../../context/FinanceContext';
 import { Transaction, SplitEntry, OwedDirection } from '../../types/finance';
 import { formatINR } from '../../utils/currency';
+import { Money } from '../ui';
 
 interface EditSplitModalProps {
  isOpen: boolean;
@@ -208,9 +209,13 @@ export const EditSplitModal: React.FC<EditSplitModalProps> = ({
  onChange={e => setAmount(e.target.value)}
  className="font-numeric tabular-nums w-full rounded-xl border border-line bg-sunken px-3.5 py-2.5 text-sm font-bold text-ink-1 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
  />
- <p className="mt-1 text-xs text-ink-3 font-numeric">
- Total transaction: {formatINR(transaction.amount)} · Your share: <span className="font-bold text-ink-1">{formatINR(yourShare)}</span>
- </p>
+ <div className="mt-1 text-xs text-ink-3 flex items-center gap-1.5 flex-wrap">
+ <span>Total transaction:</span>
+ <Money value={transaction.amount} size="xs" />
+ <span>·</span>
+ <span>Your share:</span>
+ <Money value={yourShare} size="xs" tone="neutral" />
+ </div>
  </div>
 
  {/* Status Toggle */}

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Plus, Sparkles, Sun, Moon, RefreshCw } from 'lucide-react';
 import { useFinance, AppView } from '../../context/FinanceContext';
-import { formatINR } from '../../utils/currency';
+import { Money } from '../ui/Money';
 import { getCurrentMonthYear } from '../../utils/date';
 import { StreakBanner } from '../common/StreakBanner';
 
@@ -86,14 +86,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAddTx }) => {
 
         {/* Month flow pill */}
         <div className="hidden xl:flex items-center gap-3 px-3 py-1.5 rounded-xl bg-sunken border border-line text-xs">
-          <div>
-            <span className="text-ink-3">In:</span>{' '}
-            <span className="font-semibold font-numeric text-positive">+{formatINR(currentMonthIncome)}</span>
+          <div className="flex items-center gap-1">
+            <span className="text-ink-3">In:</span>
+            <Money value={currentMonthIncome} tone="positive" size="xs" sign="always" />
           </div>
           <div className="w-px h-3 bg-line"></div>
-          <div>
-            <span className="text-ink-3">Out:</span>{' '}
-            <span className="font-semibold font-numeric text-ink-1">-{formatINR(currentMonthExpense)}</span>
+          <div className="flex items-center gap-1">
+            <span className="text-ink-3">Out:</span>
+            <Money value={currentMonthExpense} tone="expense" size="xs" sign="always" />
           </div>
         </div>
 

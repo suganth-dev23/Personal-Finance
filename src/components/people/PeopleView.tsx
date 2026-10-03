@@ -19,9 +19,8 @@ import {
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { Contact, Transaction, SplitEntry, SettlementRecord } from '../../types/finance';
-import { formatINR } from '../../utils/currency';
+import { Money } from '../ui';
 import { formatDate } from '../../utils/date';
-import { AnimatedNumber } from '../common/AnimatedNumber';
 import { EmptyState } from '../common/EmptyState';
 import { SettleUpModal } from './SettleUpModal';
 import { EditSplitModal } from './EditSplitModal';
@@ -265,9 +264,7 @@ export const PeopleView: React.FC = () => {
  Net Peer Aggregate Balance
  </p>
  <div className="flex items-baseline gap-3">
- <h2 className="text-3xl sm:text-4xl font-black font-numeric tracking-tight text-ink-1">
- {netOverall >= 0 ? '+' : ''}<AnimatedNumber value={netOverall} animateOnMount={true} />
- </h2>
+ <Money value={netOverall} size="2xl" tone={netOverall >= 0 ? 'positive' : 'negative'} sign="always" />
  <span
  className={`text-sm font-semibold ${
  netOverall > 0
@@ -332,16 +329,16 @@ export const PeopleView: React.FC = () => {
  <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-line">
  <div className="rounded-2xl bg-sunken p-3.5 border border-line">
  <span className="text-xs text-ink-3">You Are Owed</span>
- <p className="text-lg font-bold font-numeric text-emerald-600 dark:text-emerald-400 mt-0.5">
- +<AnimatedNumber value={totalOwedToMe} animateOnMount={true} />
- </p>
+ <div className="mt-0.5">
+ <Money value={totalOwedToMe} size="lg" tone="positive" sign="always" />
+ </div>
  </div>
 
  <div className="rounded-2xl bg-sunken p-3.5 border border-line">
  <span className="text-xs text-ink-3">You Owe</span>
- <p className="text-lg font-bold font-numeric text-rose-600 dark:text-rose-400 mt-0.5">
- -<AnimatedNumber value={totalIOwe} animateOnMount={true} />
- </p>
+ <div className="mt-0.5">
+ <Money value={-totalIOwe} size="lg" tone="negative" sign="always" />
+ </div>
  </div>
 
  <div className="rounded-2xl bg-sunken p-3.5 border border-line">
@@ -372,7 +369,7 @@ export const PeopleView: React.FC = () => {
  Found a matching bank transaction for {linkSuggestionPrompt.contactName}!
  </p>
  <p className="text-xs text-ink-2 mt-0.5">
- <span className="font-extrabold text-ink-1">{linkSuggestionPrompt.transaction.description}</span> ({formatINR(linkSuggestionPrompt.transaction.amount)} on {formatDate(linkSuggestionPrompt.transaction.date)})
+ <span className="font-extrabold text-ink-1">{linkSuggestionPrompt.transaction.description}</span> (<Money value={linkSuggestionPrompt.transaction.amount} size="xs" /> on {formatDate(linkSuggestionPrompt.transaction.date)})
  </p>
  </div>
  </div>
@@ -528,9 +525,7 @@ export const PeopleView: React.FC = () => {
  <span className="text-xs font-semibold text-ink-3 block uppercase tracking-wider">
  Owed to You
  </span>
- <span className="text-sm font-bold font-numeric text-emerald-600 dark:text-emerald-400">
- +{formatINR(unassignedTotals.owedToMe)}
- </span>
+ <Money value={unassignedTotals.owedToMe} tone="positive" size="sm" sign="always" />
  </div>
  )}
  {unassignedTotals.iOwe > 0 && (
@@ -538,9 +533,7 @@ export const PeopleView: React.FC = () => {
  <span className="text-xs font-semibold text-ink-3 block uppercase tracking-wider">
  You Owe
  </span>
- <span className="text-sm font-bold font-numeric text-rose-600 dark:text-rose-400">
- -{formatINR(unassignedTotals.iOwe)}
- </span>
+ <Money value={-unassignedTotals.iOwe} tone="negative" size="sm" sign="always" />
  </div>
  )}
  </div>
@@ -606,17 +599,13 @@ export const PeopleView: React.FC = () => {
  </div>
 
  <div className="flex items-center gap-2.5 self-end sm:self-center flex-shrink-0">
- <span
- className={`font-numeric font-bold text-sm ${
- split.settled
- ? 'text-ink-3 line-through'
- : isTheyOweMe
- ? 'text-emerald-600 dark:text-emerald-400'
- : 'text-rose-600 dark:text-rose-400'
- }`}
- >
- {isTheyOweMe ? '+' : '-'}{formatINR(split.amount)}
- </span>
+ <Money
+ value={isTheyOweMe ? split.amount : -split.amount}
+ size="sm"
+ tone={split.settled ? 'neutral' : (isTheyOweMe ? 'positive' : 'negative')}
+ sign="always"
+ className={split.settled ? 'line-through opacity-60' : ''}
+ />
 
  {/* Assign to Contact Dropdown */}
  <select
@@ -704,15 +693,11 @@ export const PeopleView: React.FC = () => {
  <div className="flex items-center justify-between sm:justify-end gap-2.5 sm:gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-line">
  {/* Balance Badge */}
  <div className="text-left sm:text-right">
- <span
- className={`text-sm sm:text-lg font-black tracking-tight font-numeric ${
- isOwedToMe
- ? 'text-emerald-600 dark:text-emerald-400'
- : 'text-rose-600 dark:text-rose-400'
- }`}
- >
- {isOwedToMe ? `+${formatINR(netAmount)}` : `-${formatINR(Math.abs(netAmount))}`}
- </span>
+ {isOwedToMe ? (
+ <Money value={Math.abs(netAmount)} tone="positive" size="sm" />
+ ) : (
+ <Money value={Math.abs(netAmount)} tone="neutral" size="sm" />
+ )}
  <p className="text-xs sm:text-xs font-bold text-ink-3">
  {isOwedToMe ? 'Owes You' : 'You Owe'}
  </p>
@@ -820,7 +805,7 @@ export const PeopleView: React.FC = () => {
  <div className="flex items-center gap-2 text-xs text-ink-3 flex-wrap">
  <span>{formatDate(tx.date)}</span>
  <span>•</span>
- <span className="font-numeric">Total: {formatINR(tx.amount)}</span>
+ <span>Total: <Money value={tx.amount} size="xs" /></span>
  <span>•</span>
  <span
  className={`font-semibold ${
@@ -838,7 +823,7 @@ export const PeopleView: React.FC = () => {
  <div className="flex items-center gap-1.5 mt-1 text-xs text-emerald-600 dark:text-emerald-400 font-bold">
  <CheckCircle2 className="w-3 h-3 flex-shrink-0" />
  <span className="truncate">
- Linked: {linkedTx.description} (<span className="font-numeric">{formatINR(linkedTx.amount)}</span>)
+ Linked: {linkedTx.description} (<Money value={linkedTx.amount} size="xs" />)
  </span>
  </div>
  )}
@@ -847,7 +832,7 @@ export const PeopleView: React.FC = () => {
  {isPartial && (
  <div className="flex items-center gap-1.5 mt-1 text-xs text-ink-3 font-bold">
  <span>
- Partial: <span className="font-numeric">{formatINR(split.settledAmount || 0)}</span> paid • <span className="font-numeric">{formatINR(split.amount - (split.settledAmount || 0))}</span> open
+ Partial: <Money value={split.settledAmount || 0} size="xs" /> paid • <Money value={split.amount - (split.settledAmount || 0)} size="xs" /> open
  </span>
  </div>
  )}
@@ -855,17 +840,12 @@ export const PeopleView: React.FC = () => {
  </div>
 
  <div className="flex items-center gap-2 flex-shrink-0">
- <span
- className={`text-xs font-extrabold font-numeric ${
- isSettled
- ? 'text-ink-3 line-through'
- : split.direction === 'they_owe_me'
- ? 'text-emerald-600 dark:text-emerald-400'
- : 'text-rose-600 dark:text-rose-400'
- }`}
- >
- {formatINR(split.amount)}
- </span>
+ <Money
+ value={split.amount}
+ size="sm"
+ tone={split.direction === 'they_owe_me' ? 'positive' : 'negative'}
+ className={isSettled ? 'line-through opacity-60' : ''}
+ />
 
  {/* Direct Connect / Settle Modal Button */}
  <button
@@ -926,9 +906,7 @@ export const PeopleView: React.FC = () => {
  className="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 rounded-xl bg-surface border border-line text-xs gap-2"
  >
  <div className="flex items-center gap-2 min-w-0 flex-wrap">
- <span className="text-emerald-600 dark:text-emerald-400 font-bold font-numeric">
- {formatINR(set.amount)}
- </span>
+ <Money value={set.amount} size="sm" tone="positive" />
  <span className="text-ink-2">
  {set.note || 'Settlement'}
  </span>
@@ -1023,8 +1001,9 @@ export const PeopleView: React.FC = () => {
  </div>
 
  <div className="flex items-center gap-2">
- <span className="px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-extrabold text-xs font-numeric">
- ₹0 (Square)
+ <span className="px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-extrabold text-xs inline-flex items-center gap-1">
+ <Money value={0} tone="neutral" size="sm" />
+ <span>(Square)</span>
  </span>
                   <button
                     onClick={() => setSplitModalContact(contact)}

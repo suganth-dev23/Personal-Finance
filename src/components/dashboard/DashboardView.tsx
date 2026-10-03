@@ -189,7 +189,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx, onEdi
               label="Bank & Cash"
               icon={<span className="text-xs text-positive font-bold">Liquid</span>}
               value={<Money value={totalBalance} size="2xl" />}
-              sub={<>+<Money value={currentMonthIncome} size="xs" /> in this mo</>}
+              sub={<><Money value={currentMonthIncome} tone="positive" size="xs" sign="always" /> in this mo</>}
             />
           </Card>
 

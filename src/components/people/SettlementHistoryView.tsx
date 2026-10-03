@@ -16,6 +16,7 @@ import {
 import { useFinance } from '../../context/FinanceContext';
 import { SettlementRecord, Contact } from '../../types/finance';
 import { formatINR } from '../../utils/currency';
+import { Money } from '../ui';
 import { formatDate } from '../../utils/date';
 import { SettleUpModal } from './SettleUpModal';
 
@@ -134,9 +135,7 @@ export const SettlementHistoryView: React.FC<SettlementHistoryViewProps> = () =>
  </div>
  </div>
  <div>
- <p className="text-2xl font-black text-ink-1 tracking-tight font-numeric">
- {formatINR(stats.totalAmount)}
- </p>
+ <Money value={stats.totalAmount} size="2xl" />
  <p className="text-xs text-ink-3 mt-0.5">Across {stats.totalCount} settlements recorded</p>
  </div>
  </div>
@@ -293,7 +292,7 @@ export const SettlementHistoryView: React.FC<SettlementHistoryViewProps> = () =>
  <div className="flex items-center gap-1.5 text-xs text-ink-3">
  <Receipt className="w-3 h-3 text-indigo-500 flex-shrink-0" />
  <span className="truncate">
- Original expense: <span className="font-semibold text-ink-2">{sourceTx.description}</span> (<span className="font-numeric">{formatINR(sourceTx.amount)}</span>)
+ Original expense: <span className="font-semibold text-ink-2">{sourceTx.description}</span> (<Money value={sourceTx.amount} size="xs" />)
  </span>
  </div>
  )}
@@ -303,15 +302,11 @@ export const SettlementHistoryView: React.FC<SettlementHistoryViewProps> = () =>
  {/* Right: Amount & Bank Ledger Link Badge */}
  <div className="flex flex-col sm:items-end justify-between sm:justify-center gap-2 flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-line">
  <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
- <span
- className={`text-base sm:text-lg font-black tracking-tight font-numeric ${
- isTheyPaidMe
- ? 'text-emerald-600 dark:text-emerald-400'
- : 'text-rose-600 dark:text-rose-400'
- }`}
- >
- {isTheyPaidMe ? `+${formatINR(settlement.amount)}` : `-${formatINR(settlement.amount)}`}
- </span>
+ <Money
+ value={settlement.amount}
+ size="sm"
+ tone="positive"
+ />
 
  <button
  onClick={() => {
@@ -340,7 +335,7 @@ export const SettlementHistoryView: React.FC<SettlementHistoryViewProps> = () =>
  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/60 text-xs">
  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
  <span className="font-medium text-emerald-900 dark:text-emerald-300 truncate max-w-xs">
- Linked: {linkedTx.description} (<span className="font-numeric">{formatINR(linkedTx.amount)}</span>)
+ Linked: {linkedTx.description} (<Money value={linkedTx.amount} size="xs" />)
  </span>
  <button
  type="button"

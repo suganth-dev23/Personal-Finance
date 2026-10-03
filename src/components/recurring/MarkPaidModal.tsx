@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { CheckCircle2, Receipt } from 'lucide-react';
 import { Modal } from '../common/Modal';
 import { RecurringPayment } from '../../types/finance';
-import { formatINR, numberToWordsINR } from '../../utils/currency';
+import { numberToWordsINR } from '../../utils/currency';
+import { Money } from '../ui';
 import { formatDate } from '../../utils/date';
 
 interface MarkPaidModalProps {
@@ -78,9 +79,9 @@ export const MarkPaidModal: React.FC<MarkPaidModalProps> = ({
  </div>
  <div className="text-right">
  <span className="text-xs text-ink-3">Scheduled</span>
- <p className="text-sm font-bold font-numeric text-ink-2">
- {formatINR(payment.amount)}
- </p>
+ <div>
+ <Money value={payment.amount} size="sm" tone="neutral" />
+ </div>
  </div>
  </div>
  </div>

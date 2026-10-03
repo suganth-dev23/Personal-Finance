@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Modal } from '../common/Modal';
 import { useFinance } from '../../context/FinanceContext';
 import { Contact, SettlementRecord, Transaction, TransactionType } from '../../types/finance';
-import { formatINR } from '../../utils/currency';
+import { Money } from '../ui';
 import { formatDate, getTodayString } from '../../utils/date';
 import { HandCoins, Link as LinkIcon, Unlink, Search, Check, ChevronDown, ChevronUp } from 'lucide-react';
 
@@ -178,8 +178,9 @@ export const SettleUpModal: React.FC<SettleUpModalProps> = ({
  <span className="text-emerald-800 dark:text-emerald-300 font-medium">
  Current Open Balance:
  </span>
- <span className="font-extrabold text-emerald-700 dark:text-emerald-400">
- {formatINR(suggestedAmount)} ({isTheyOweMe ? 'They owe you' : 'You owe them'})
+ <span className="font-extrabold text-emerald-700 dark:text-emerald-400 inline-flex items-center gap-1">
+ <Money value={suggestedAmount} size="sm" tone={isTheyOweMe ? 'positive' : 'neutral'} />
+ <span>({isTheyOweMe ? 'They owe you' : 'You owe them'})</span>
  </span>
  </div>
  )}
@@ -280,11 +281,9 @@ export const SettleUpModal: React.FC<SettleUpModalProps> = ({
  <p className="text-xs font-bold text-ink-1 truncate">
  {selectedTransaction.description}
  </p>
- <p className="text-xs text-ink-3 font-numeric">
+ <p className="text-xs text-ink-3">
  {formatDate(selectedTransaction.date)} • {selectedTransaction.paymentMethod} •{' '}
- <span className="font-extrabold text-emerald-600 dark:text-emerald-400">
- {formatINR(selectedTransaction.amount)}
- </span>
+ <Money value={selectedTransaction.amount} size="sm" tone="positive" />
  </p>
  </div>
  </div>
@@ -355,9 +354,7 @@ export const SettleUpModal: React.FC<SettleUpModalProps> = ({
  </div>
 
  <div className="text-right flex-shrink-0">
- <span className="font-numeric font-black text-ink-1">
- {formatINR(tx.amount)}
- </span>
+ <Money value={tx.amount} size="sm" />
  </div>
  </div>
  );

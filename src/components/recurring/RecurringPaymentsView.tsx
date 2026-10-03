@@ -15,11 +15,10 @@ import {
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { RecurringPayment } from '../../types/finance';
-import { formatINR } from '../../utils/currency';
+import { Money } from '../ui';
 import { formatDate, getCurrentMonthYear } from '../../utils/date';
 import { calculateMonthlyEquivalent, getPaymentSchedule } from '../../utils/recurringDates';
 import { IconRenderer } from '../common/IconRenderer';
-import { AnimatedNumber } from '../common/AnimatedNumber';
 import { EmptyState } from '../common/EmptyState';
 import { RecurringPaymentModal } from './RecurringPaymentModal';
 import { MarkPaidModal } from './MarkPaidModal';
@@ -155,15 +154,13 @@ export const RecurringPaymentsView: React.FC = () => {
  Normalized Monthly Obligation
  </p>
  <div className="flex items-baseline gap-3">
- <h2 className="text-3xl sm:text-4xl font-black font-numeric tracking-tight text-ink-1">
- <AnimatedNumber value={totalMonthlyRecurringCommitment} animateOnMount={true} />
- </h2>
+ <Money value={totalMonthlyRecurringCommitment} size="2xl" />
  <span className="text-sm font-semibold text-ink-3">
  / month
  </span>
  </div>
  <p className="mt-2 text-xs text-ink-3">
- {recurringPayments.filter(p => p.isActive).length} active commitments • {formatINR(paidThisMonthTotal)} paid so far in {monthName}
+ {recurringPayments.filter(p => p.isActive).length} active commitments • <Money value={paidThisMonthTotal} size="xs" /> paid so far in {monthName}
  </p>
  </div>
 
@@ -257,9 +254,7 @@ export const RecurringPaymentsView: React.FC = () => {
 
  <div className="flex items-center gap-3 shrink-0">
  <div className="text-right">
- <p className="font-bold text-base font-numeric text-ink-1">
- {formatINR(item.amount)}
- </p>
+ <Money value={item.amount} size="sm" tone="negative" />
  </div>
  <button
  onClick={() => handleOpenMarkPaid(item, item.dueDate)}
@@ -361,9 +356,7 @@ export const RecurringPaymentsView: React.FC = () => {
 
  <div className="text-right">
  <span className="text-xs text-ink-3 block">Amount</span>
- <span className="text-base font-bold font-numeric text-ink-1">
- {formatINR(item.amount)}
- </span>
+ <Money value={item.amount} size="sm" tone={isDueToday ? 'negative' : 'neutral'} />
  </div>
  </div>
 
@@ -547,13 +540,15 @@ export const RecurringPaymentsView: React.FC = () => {
  {/* Right: Amount, Schedule, and Actions */}
  <div className="flex flex-wrap items-center justify-between sm:justify-end gap-x-4 gap-y-3 sm:shrink-0 pl-14 sm:pl-0">
  <div className="text-left sm:text-right">
- <p className="text-base font-bold font-numeric text-ink-1">
- {formatINR(payment.amount)}
- </p>
+ <div>
+ <Money value={payment.amount} size="sm" />
+ </div>
  {payment.frequency !== 'monthly' && (
- <span className="text-xs font-numeric text-ink-3">
- ≈ {formatINR(monthlyEquivalent)}/mo
- </span>
+ <div className="text-xs text-ink-3 flex items-center justify-start sm:justify-end gap-1">
+ <span>≈</span>
+ <Money value={monthlyEquivalent} size="xs" />
+ <span>/mo</span>
+ </div>
  )}
  {schedule.activeDueDate && payment.isActive && (
  <p className="text-xs text-ink-3">
@@ -665,9 +660,7 @@ export const RecurringPaymentsView: React.FC = () => {
  </div>
 
  <div className="text-right">
- <span className="font-bold font-numeric text-ink-1">
- {formatINR(log.amount)}
- </span>
+ <Money value={log.amount} size="sm" />
  {log.linkedTransactionId && (
  <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
  Ledger Linked

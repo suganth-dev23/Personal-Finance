@@ -54,7 +54,7 @@ export const SplitDetailsBadge: React.FC<SplitDetailsBadgeProps> = React.memo(fu
               : 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300'
           }`}
         >
-          Split with {personName} · {formatINR(split.amount)} {split.settled ? '(Settled)' : isTheyOweMe ? 'owed' : 'you owe'}
+          Split with {personName} · <Money value={split.amount} size="xs" className="inline text-inherit font-medium" /> {split.settled ? '(Settled)' : isTheyOweMe ? 'owed' : 'you owe'}
         </span>
       </div>
     );
@@ -83,7 +83,7 @@ export const SplitDetailsBadge: React.FC<SplitDetailsBadgeProps> = React.memo(fu
             : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
         }`}
       >
-        Split with {splits.length} people · {formatINR(totalSplit)} owed{' '}
+        Split with {splits.length} people · <Money value={totalSplit} size="xs" className="inline text-inherit font-medium" /> owed{' '}
         {isSettled ? '(Settled)' : ''}
       </span>
     </div>
@@ -204,7 +204,7 @@ export const TransactionTableRow: React.FC<TransactionRowProps> = React.memo(fun
         <Money
           value={tx.amount}
           tone={isCredit ? 'income' : 'expense'}
-          size="md"
+          size="sm"
         />
       </td>
 
@@ -328,8 +328,7 @@ export const TransactionCardRow: React.FC<TransactionRowProps> = React.memo(func
           <Money
             value={tx.amount}
             tone={isCredit ? 'income' : 'expense'}
-            size="md"
-            className="font-extrabold"
+            size="sm"
           />
           <div className="flex items-center justify-end gap-1 mt-1">
             <button

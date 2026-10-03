@@ -19,7 +19,7 @@ def count(rx, paths):
 COLOR = r"\b(?:bg|text|border|ring|from|to|via|fill|stroke|shadow|divide|placeholder|outline)-(?:%s)-\d{2,3}"
 def metrics():
     tsx = files((".tsx",)); allf = files()
-    non_gami = [p for p in tsx if "/gamification/" not in p and "StreakBanner" not in p and "Toast" not in p]
+    non_gami = [p for p in tsx if "/gamification/" not in p.replace(os.sep, "/") and "StreakBanner" not in p and "Toast" not in p]
     m = {
         "hardcoded_hex_in_classes": count(r"\b(?:bg|text|border|ring|from|to|via|fill|stroke|divide)-\[#[0-9A-Fa-f]{3,8}\]", tsx),
         "amber_orange_classes_total": count(COLOR % "amber|orange", tsx),

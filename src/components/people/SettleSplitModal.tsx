@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Modal } from '../common/Modal';
 import { useFinance } from '../../context/FinanceContext';
 import { Contact, Transaction, SplitEntry } from '../../types/finance';
-import { formatINR } from '../../utils/currency';
+import { Money } from '../ui';
 import { formatDate, getTodayString } from '../../utils/date';
 import {
  Link as LinkIcon,
@@ -184,16 +184,18 @@ export const SettleSplitModal: React.FC<SettleSplitModalProps> = ({
  <p className="font-bold text-ink-1 truncate">
  {transaction.description}
  </p>
- <p className="text-xs text-ink-3 font-numeric">
- {formatDate(transaction.date)} • Total Bill: {formatINR(transaction.amount)}
+ <p className="text-xs text-ink-3">
+ {formatDate(transaction.date)} • Total Bill: <Money value={transaction.amount} size="xs" />
  </p>
  </div>
  </div>
 
  <div className="text-right flex-shrink-0">
- <span className="font-black font-numeric text-sm text-emerald-600 dark:text-emerald-400">
- {formatINR(splitEntry.amount)}
- </span>
+ <Money
+ value={splitEntry.amount}
+ size="sm"
+ tone={splitEntry.direction === 'they_owe_me' ? 'positive' : 'negative'}
+ />
  <p className="text-xs font-bold text-ink-3">
  {splitEntry.direction === 'they_owe_me' ? 'They Owe' : 'You Owe'}
  </p>
@@ -209,9 +211,9 @@ export const SettleSplitModal: React.FC<SettleSplitModalProps> = ({
  <button
  type="button"
  onClick={() => setSettledAmount(splitEntry.amount.toString())}
- className="text-xs font-bold font-numeric text-primary hover:underline"
+ className="text-xs font-bold text-primary hover:underline inline-flex items-center gap-0.5"
  >
- Full ({formatINR(splitEntry.amount)})
+ <span>Full (</span><Money value={splitEntry.amount} size="xs" /><span>)</span>
  </button>
  </div>
 
@@ -235,7 +237,7 @@ export const SettleSplitModal: React.FC<SettleSplitModalProps> = ({
  <div className="mt-2 p-2.5 rounded-xl bg-sunken/50 border border-warning/30 flex items-center gap-2 text-xs text-warning dark:text-warning font-numeric">
  <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 text-primary" />
  <span>
- Partial settlement: <strong className="font-extrabold">{formatINR(remainingAfterSettlement)}</strong> will stay open as pending balance for {contact.name}.
+ Partial settlement: <strong className="font-extrabold"><Money value={remainingAfterSettlement} size="xs" /></strong> will stay open as pending balance for {contact.name}.
  </span>
  </div>
  )}
@@ -309,11 +311,9 @@ export const SettleSplitModal: React.FC<SettleSplitModalProps> = ({
  <p className="font-bold text-ink-1 truncate">
  {selectedTransaction.description}
  </p>
- <p className="text-xs text-ink-3 font-numeric">
+ <p className="text-xs text-ink-3">
  {formatDate(selectedTransaction.date)} • {selectedTransaction.paymentMethod} •{' '}
- <span className="font-black text-emerald-600 dark:text-emerald-400">
- {formatINR(selectedTransaction.amount)}
- </span>
+ <Money value={selectedTransaction.amount} size="sm" tone="positive" />
  </p>
  </div>
  </div>
@@ -364,7 +364,7 @@ export const SettleSplitModal: React.FC<SettleSplitModalProps> = ({
  : 'text-ink-3'
  }`}
  >
- Exact ({formatINR(parsedSettledAmount)})
+ Exact (<Money value={parsedSettledAmount} size="xs" />)
  </button>
  <button
  type="button"
@@ -425,9 +425,11 @@ export const SettleSplitModal: React.FC<SettleSplitModalProps> = ({
  </div>
 
  <div className="text-right flex-shrink-0">
- <span className={`font-numeric font-black ${tx.type === 'credit' ? 'text-emerald-600 dark:text-emerald-400' : 'text-ink-1'}`}>
- {formatINR(tx.amount)}
- </span>
+ <Money
+ value={tx.amount}
+ size="sm"
+ tone={tx.type === 'credit' ? 'positive' : 'neutral'}
+ />
  </div>
  </div>
  );
