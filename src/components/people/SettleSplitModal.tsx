@@ -3,7 +3,7 @@ import { Modal } from '../common/Modal';
 import { useFinance } from '../../context/FinanceContext';
 import { Contact, Transaction, SplitEntry } from '../../types/finance';
 import { Money } from '../ui';
-import { formatDate, getTodayString } from '../../utils/date';
+import { formatDate, getTodayString, sanitizeDateString } from '../../utils/date';
 import { roundCurrency } from '../../utils/currency';
 import {
  Link as LinkIcon,
@@ -144,17 +144,17 @@ export const SettleSplitModal: React.FC<SettleSplitModalProps> = ({
  return;
  }
 
- if (parsedSettledAmount > splitEntry.amount + 0.01) {
- alert(`Settled amount (₹${parsedSettledAmount}) cannot exceed the owed share (₹${splitEntry.amount})`);
- return;
+ if (parsedSettledAmount > roundCurrency(splitEntry.amount) + 0.01) {
+  alert(`Settled amount (₹${parsedSettledAmount}) cannot exceed the owed share (₹${splitEntry.amount})`);
+  return;
  }
 
  settleSplitEntry(transaction.id, splitEntry.id, {
- settled: true,
- settledAmount: parsedSettledAmount,
- linkedTransactionId: selectedTxId || undefined,
- note: note.trim(),
- date,
+  settled: true,
+  settledAmount: roundCurrency(parsedSettledAmount),
+  linkedTransactionId: selectedTxId || undefined,
+  note: note.trim(),
+  date: sanitizeDateString(date) || getTodayString(),
  });
 
  onClose();

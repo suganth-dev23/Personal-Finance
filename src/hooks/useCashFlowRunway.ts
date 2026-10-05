@@ -26,15 +26,17 @@ export function useCashFlowRunway(
   return useMemo(() => {
     const monthlyData: Record<string, { income: number; expense: number }> = {};
 
-    transactions.forEach(tx => {
+    (transactions || []).forEach(tx => {
+      if (!tx || !tx.date) return;
       const ym = tx.date.substring(0, 7);
       if (!monthlyData[ym]) {
         monthlyData[ym] = { income: 0, expense: 0 };
       }
+      const amt = Number.isFinite(tx.amount) ? tx.amount : 0;
       if (tx.type === 'credit') {
-        monthlyData[ym].income += tx.amount;
+        monthlyData[ym].income += amt;
       } else {
-        monthlyData[ym].expense += tx.amount;
+        monthlyData[ym].expense += amt;
       }
     });
 
@@ -55,7 +57,8 @@ export function useCashFlowRunway(
 
     const monthlyBurnRate = netMonthlyCashFlow < 0 ? Math.abs(netMonthlyCashFlow) : 0;
 
-    const liquidBalance = Math.max(0, currentBalance);
+    const safeCurrentBalance = Number.isFinite(currentBalance) ? currentBalance : 0;
+    const liquidBalance = Math.max(0, safeCurrentBalance);
 
     const expenseOnlyRunwayMonths =
       averageMonthlyExpense > 0 ? Number((liquidBalance / averageMonthlyExpense).toFixed(1)) : 0;

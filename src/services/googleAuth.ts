@@ -24,9 +24,10 @@ class GoogleAuthService {
   private tokenExpiresAt: number | null = null;
   private userProfile: UserProfile | null = null;
   private authStateListeners: Array<(connected: boolean, profile: UserProfile | null) => void> = [];
-  private tokenRequestResolve: ((token: string) => void) | null = null;
-  private tokenRequestReject: ((error: Error) => void) | null = null;
+  private pendingRequests: Array<{ resolve: (token: string) => void; reject: (error: Error) => void }> = [];
   private isConnecting: boolean = false;
+  private connectionTimeoutTimer: ReturnType<typeof setTimeout> | null = null;
+  private lastSilentRefreshAttempt: number = 0;
 
   constructor() {
     // Load Client ID from Vite env if available
@@ -126,11 +127,14 @@ class GoogleAuthService {
         error_callback: (err: any) => {
           console.error('[GoogleAuth] Token client error:', err);
           this.isConnecting = false;
-          if (this.tokenRequestReject) {
-            this.tokenRequestReject(new Error(err?.message || 'Google Auth Error'));
-            this.tokenRequestReject = null;
-            this.tokenRequestResolve = null;
+          if (this.connectionTimeoutTimer) {
+            clearTimeout(this.connectionTimeoutTimer);
+            this.connectionTimeoutTimer = null;
           }
+          const errorObj = new Error(err?.message || 'Google Auth Error');
+          const toReject = [...this.pendingRequests];
+          this.pendingRequests = [];
+          toReject.forEach(r => r.reject(errorObj));
         },
       });
       return true;
@@ -140,15 +144,24 @@ class GoogleAuthService {
     }
   }
 
+  public clearCachedToken(): void {
+    this.accessToken = null;
+    this.tokenExpiresAt = null;
+  }
+
   private async handleTokenCallback(tokenResponse: any) {
     this.isConnecting = false;
+    if (this.connectionTimeoutTimer) {
+      clearTimeout(this.connectionTimeoutTimer);
+      this.connectionTimeoutTimer = null;
+    }
+
     if (tokenResponse.error) {
       console.error('[GoogleAuth] Token response error:', tokenResponse.error);
-      if (this.tokenRequestReject) {
-        this.tokenRequestReject(new Error(tokenResponse.error));
-      }
-      this.tokenRequestResolve = null;
-      this.tokenRequestReject = null;
+      const err = new Error(tokenResponse.error);
+      const toReject = [...this.pendingRequests];
+      this.pendingRequests = [];
+      toReject.forEach(r => r.reject(err));
       return;
     }
 
@@ -170,11 +183,9 @@ class GoogleAuthService {
 
       this.notifyListeners(true, this.userProfile);
 
-      if (this.tokenRequestResolve) {
-        this.tokenRequestResolve(this.accessToken!);
-        this.tokenRequestResolve = null;
-        this.tokenRequestReject = null;
-      }
+      const toResolve = [...this.pendingRequests];
+      this.pendingRequests = [];
+      toResolve.forEach(r => r.resolve(this.accessToken!));
     }
   }
 
@@ -196,16 +207,25 @@ class GoogleAuthService {
     if (this.isConnecting) {
       // Already a pending request
       return new Promise((resolve, reject) => {
-        this.tokenRequestResolve = resolve;
-        this.tokenRequestReject = reject;
+        this.pendingRequests.push({ resolve, reject });
       });
     }
 
     this.isConnecting = true;
 
     return new Promise((resolve, reject) => {
-      this.tokenRequestResolve = resolve;
-      this.tokenRequestReject = reject;
+      this.pendingRequests.push({ resolve, reject });
+
+      // 45s safety timeout for interactive/silent prompt
+      this.connectionTimeoutTimer = setTimeout(() => {
+        if (this.isConnecting) {
+          this.isConnecting = false;
+          const timeoutErr = new Error('Google authentication request timed out.');
+          const toReject = [...this.pendingRequests];
+          this.pendingRequests = [];
+          toReject.forEach(r => r.reject(timeoutErr));
+        }
+      }, 45000);
 
       try {
         // 'select_account' or empty prompt
@@ -214,7 +234,13 @@ class GoogleAuthService {
         });
       } catch (err: any) {
         this.isConnecting = false;
-        reject(err);
+        if (this.connectionTimeoutTimer) {
+          clearTimeout(this.connectionTimeoutTimer);
+          this.connectionTimeoutTimer = null;
+        }
+        const toReject = [...this.pendingRequests];
+        this.pendingRequests = [];
+        toReject.forEach(r => r.reject(err));
       }
     });
   }
@@ -229,8 +255,15 @@ class GoogleAuthService {
       return this.accessToken;
     }
 
-    // 2. If sync was previously connected by the user, try silent refresh
-    if (this.isSyncEnabled()) {
+    // 2. If offline, don't attempt network call
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      return null;
+    }
+
+    // 3. Silent refresh with cooldown to prevent rapid retry loops
+    const now = Date.now();
+    if (this.isSyncEnabled() && now - this.lastSilentRefreshAttempt > 60000) {
+      this.lastSilentRefreshAttempt = now;
       try {
         return await this.requestAccessToken(false);
       } catch (err) {

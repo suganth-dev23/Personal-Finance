@@ -21,6 +21,8 @@ export type OwedDirection = 'they_owe_me' | 'i_owe_them';
 export interface Contact {
   id: string;
   name: string;
+  phone?: string;
+  email?: string;
   createdAt: string;
   updatedAt?: string;
   notes?: string;

@@ -24,8 +24,10 @@ import { DEFAULT_AI_MODELS } from '../../services/aiService';
 import { googleAuthService } from '../../services/googleAuth';
 import { GoogleSyncSetupModal } from './GoogleSyncSetupModal';
 import { StatementImportView } from '../import/StatementImportView';
+import { useToast } from '../../context/ToastContext';
 
 export const SettingsView: React.FC = () => {
+ const { showToast } = useToast();
  const {
  aiSettings,
  updateAISettings,
@@ -118,11 +120,39 @@ export const SettingsView: React.FC = () => {
    const handleCalmEvent = () => {
      setIsCalmMode(typeof window !== 'undefined' && localStorage.getItem('dhanveda_calm_mode') === 'true');
    };
+   const handleStorageEvent = (e: StorageEvent) => {
+     if (e.key === 'dhanveda_privacy') {
+       const on = e.newValue === 'on';
+       setIsPrivacy(on);
+       if (on) {
+         document.documentElement.setAttribute('data-privacy', 'on');
+       } else {
+         document.documentElement.removeAttribute('data-privacy');
+       }
+     }
+     if (e.key === 'dhanveda_calm_mode') {
+       const calm = e.newValue === 'true';
+       setIsCalmMode(calm);
+       if (calm) {
+         document.documentElement.setAttribute('data-calm', 'true');
+       } else {
+         document.documentElement.removeAttribute('data-calm');
+       }
+     }
+     if (e.key === 'dhanveda_motion') {
+       const val = e.newValue;
+       if (val === 'off') setMotionPref('reduced');
+       else if (val === 'on') setMotionPref('standard');
+       else setMotionPref('system');
+     }
+   };
    window.addEventListener('dhanveda-privacy-change', handlePrivacyEvent);
    window.addEventListener('dhanveda-calm-change', handleCalmEvent);
+   window.addEventListener('storage', handleStorageEvent);
    return () => {
      window.removeEventListener('dhanveda-privacy-change', handlePrivacyEvent);
      window.removeEventListener('dhanveda-calm-change', handleCalmEvent);
+     window.removeEventListener('storage', handleStorageEvent);
    };
  }, []);
 
@@ -148,6 +178,11 @@ export const SettingsView: React.FC = () => {
    setIsCalmMode(next);
    try {
      localStorage.setItem('dhanveda_calm_mode', next ? 'true' : 'false');
+     if (next) {
+       document.documentElement.setAttribute('data-calm', 'true');
+     } else {
+       document.documentElement.removeAttribute('data-calm');
+     }
      window.dispatchEvent(new CustomEvent('dhanveda-calm-change'));
    } catch (err) {
      console.error('Failed to toggle calm mode:', err);
@@ -176,24 +211,55 @@ export const SettingsView: React.FC = () => {
  URL.revokeObjectURL(url);
  };
 
+ const MAX_BACKUP_SIZE_BYTES = 15 * 1024 * 1024; // 15MB limit
+
  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
- if (e.target.files && e.target.files[0]) {
+ const file = e.target.files?.[0];
+ if (!file) return;
+
+ if (file.size > MAX_BACKUP_SIZE_BYTES) {
+ showToast('danger', 'File Too Large', 'Backup file exceeds 15MB limit to prevent browser memory exhaustion.');
+ setImportStatus('Backup file exceeds 15MB limit.');
+ if (fileInputRef.current) fileInputRef.current.value = '';
+ return;
+ }
+
  const reader = new FileReader();
  reader.onload = event => {
  try {
- const content = event.target?.result as string;
+ const content = event.target?.result;
+ if (typeof content !== 'string' || !content.trim()) {
+ showToast('danger', 'Invalid Backup', 'The selected backup file is empty.');
+ setImportStatus('Backup file is empty.');
+ return;
+ }
+
  const ok = importBackupJSON(content);
  if (ok) {
  setImportStatus('Backup restored successfully!');
+ showToast('success', 'Backup Restored', 'All transactions, categories, and settings were restored.');
  } else {
  setImportStatus('Failed to parse backup JSON file. Format not recognized.');
+ showToast('danger', 'Restore Failed', 'Corrupt or incompatible DhanVeda backup format.');
  }
- } catch {
+ } catch (err) {
+ console.error('Restore error:', err);
  setImportStatus('Invalid JSON file format.');
+ showToast('danger', 'Parse Error', 'The selected file could not be parsed as valid JSON.');
+ } finally {
+ if (fileInputRef.current) {
+ fileInputRef.current.value = '';
+ }
  }
  };
- reader.readAsText(e.target.files[0]);
+ reader.onerror = () => {
+ setImportStatus('Failed to read file from disk.');
+ showToast('danger', 'Read Error', 'Could not read backup file from disk.');
+ if (fileInputRef.current) {
+ fileInputRef.current.value = '';
  }
+ };
+ reader.readAsText(file);
  };
 
  const handleManualSync = async () => {

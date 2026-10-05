@@ -2,11 +2,47 @@
  * Smart Indian merchant & keyword classifier for auto-categorization
  */
 
+import { PaymentMethod } from '../types/finance';
+
 export interface KeywordRule {
   keywords: string[];
   category: string;
   suggestedType?: 'credit' | 'debit';
-  paymentMethod?: 'UPI' | 'Credit Card' | 'Debit Card' | 'Net Banking' | 'Bank Transfer' | 'Cash';
+  paymentMethod?: PaymentMethod;
+}
+
+export interface AutoRule {
+  id: string;
+  name?: string;
+  patternType: 'keywords' | 'regex';
+  pattern: string; // comma-separated keywords or regex string
+  category: string;
+  suggestedType?: 'credit' | 'debit';
+  paymentMethod?: PaymentMethod;
+  enabled: boolean;
+}
+
+const CUSTOM_RULES_KEY = 'dhanveda_custom_auto_rules';
+
+export function getCustomAutoRules(): AutoRule[] {
+  try {
+    const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(CUSTOM_RULES_KEY) : null;
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveCustomAutoRules(rules: AutoRule[]): void {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(CUSTOM_RULES_KEY, JSON.stringify(rules));
+    }
+  } catch (e) {
+    console.error('Failed to save custom auto rules', e);
+  }
 }
 
 export const DEFAULT_CATEGORY_RULES: KeywordRule[] = [
@@ -130,9 +166,14 @@ export const DEFAULT_CATEGORY_RULES: KeywordRule[] = [
 /**
  * Categorize a transaction based on description or narration
  */
-export function suggestCategory(description: string, defaultFallback = 'Others'): {
+export function suggestCategory(
+  description: string,
+  defaultFallback = 'Others',
+  customRules?: AutoRule[]
+): {
   category: string;
   suggestedType?: 'credit' | 'debit';
+  paymentMethod?: PaymentMethod;
   confidence: 'high' | 'medium' | 'low';
 } {
   if (!description) {
@@ -141,6 +182,44 @@ export function suggestCategory(description: string, defaultFallback = 'Others')
 
   const cleanText = description.toLowerCase().replace(/[^a-z0-9\s]/g, ' ');
 
+  // 1. Check user-defined custom rules first
+  const activeCustomRules = customRules ?? getCustomAutoRules();
+  for (const rule of activeCustomRules) {
+    if (!rule.enabled || !rule.pattern?.trim()) continue;
+
+    if (rule.patternType === 'regex') {
+      try {
+        const rx = new RegExp(rule.pattern, 'i');
+        if (rx.test(description)) {
+          return {
+            category: rule.category,
+            suggestedType: rule.suggestedType,
+            paymentMethod: rule.paymentMethod,
+            confidence: 'high',
+          };
+        }
+      } catch {
+        // Safe catch against invalid regex
+      }
+    } else {
+      // Keywords mode
+      const keywords = rule.pattern.split(',').map(k => k.trim()).filter(Boolean);
+      for (const kw of keywords) {
+        const escapedKw = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`\\b${escapedKw}\\b`, 'i');
+        if (regex.test(cleanText)) {
+          return {
+            category: rule.category,
+            suggestedType: rule.suggestedType,
+            paymentMethod: rule.paymentMethod,
+            confidence: 'high',
+          };
+        }
+      }
+    }
+  }
+
+  // 2. Check built-in default rules
   for (const rule of DEFAULT_CATEGORY_RULES) {
     for (const kw of rule.keywords) {
       // Check whole word or phrase with word boundaries

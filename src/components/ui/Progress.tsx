@@ -22,7 +22,10 @@ export const Progress: React.FC<ProgressProps> = ({
  className = '',
  type = 'linear',
 }) => {
- const percent = max > 0 ? (value / max) * 100 : 0;
+ const safeVal = Number.isFinite(value) ? value : 0;
+ const safeMax = Number.isFinite(max) && max > 0 ? max : 0;
+ const rawPercent = safeMax > 0 ? (safeVal / safeMax) * 100 : 0;
+ const percent = Number.isFinite(rawPercent) ? rawPercent : 0;
  const clampedPercent = Math.min(Math.max(percent, 0), 100);
 
  // Auto tone calculation:

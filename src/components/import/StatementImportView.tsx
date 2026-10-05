@@ -9,6 +9,7 @@ import {
  Download,
  RefreshCw,
  FileCheck,
+ SlidersHorizontal,
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { useToast } from '../../context/ToastContext';
@@ -16,7 +17,10 @@ import { StagedTransaction } from '../../types/finance';
 import { parseCSVStatement } from '../../utils/csvParser';
 import { parsePDFStatement } from '../../utils/pdfParser';
 import { flagDuplicates } from '../../utils/deduplicator';
+import { sanitizeDateString, getTodayString } from '../../utils/date';
+import { roundCurrency } from '../../utils/currency';
 import { ReviewStagingTable } from './ReviewStagingTable';
+import { AutoRuleManagerModal } from './AutoRuleManagerModal';
 
 export const StatementImportView: React.FC = () => {
  const {
@@ -36,6 +40,7 @@ export const StatementImportView: React.FC = () => {
  const [stagedList, setStagedList] = useState<StagedTransaction[] | null>(null);
  const [fileName, setFileName] = useState<string>('');
  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+ const [isAutoRuleModalOpen, setIsAutoRuleModalOpen] = useState<boolean>(false);
 
  const handleFileProcess = async (file: File) => {
  if (!file) return;
@@ -142,36 +147,54 @@ export const StatementImportView: React.FC = () => {
  type: t.type === 'credit' ? 'debit' : 'credit',
  })) : null
  );
- showToast('info', 'Flipped Transaction Types', 'Inverted inflow (credit) and outflow (debit) across all staged rows', 3000);
+  showToast('info', 'Flipped Transaction Types', 'Inverted inflow (credit) and outflow (debit) across all staged rows', 3000);
+ };
+
+ const handleRemoveSelected = () => {
+  setStagedList(prev => (prev ? prev.filter(t => !t.selected) : null));
+  showToast('info', 'Rows Excluded', 'Excluded selected rows from staging', 3000);
+ };
+
+ const handleBulkSetCategory = (catName: string) => {
+  setStagedList(prev =>
+   prev ? prev.map(t => (t.selected ? { ...t, category: catName } : t)) : null
+  );
+  showToast('success', 'Categories Updated', `Updated category to "${catName}" for selected transactions`, 3000);
  };
 
  const handleFinalImport = () => {
- if (!stagedList) return;
- const selected = stagedList.filter(t => t.selected);
+  if (!stagedList) return;
+  const selected = stagedList.filter(t => t.selected);
 
- if (selected.length === 0) {
- alert('Please select at least one transaction row to import.');
- return;
- }
+  if (selected.length === 0) {
+   alert('Please select at least one transaction row to import.');
+   return;
+  }
 
- const payload = selected.map(s => ({
- date: s.date,
- amount: s.amount,
- type: s.type,
- category: s.category,
- paymentMethod: s.paymentMethod,
- description: s.description,
- source: 'imported' as const,
- referenceId: s.referenceId,
- }));
+  const invalidRow = selected.find(s => isNaN(s.amount) || s.amount <= 0);
+  if (invalidRow) {
+   alert('All transactions to import must have an amount greater than ₹0.');
+   return;
+  }
 
- addMultipleTransactions(payload);
- showToast('success', 'Import Successful', `Imported ${selected.length} transactions into your ledger`, 4000);
- setSuccessMessage(`Successfully imported ${selected.length} transactions!`);
- setStagedList(null);
- setTimeout(() => {
- setCurrentView('transactions');
- }, 1500);
+  const payload = selected.map(s => ({
+   date: sanitizeDateString(s.date) || getTodayString(),
+   amount: roundCurrency(s.amount),
+   type: s.type,
+   category: s.category,
+   paymentMethod: s.paymentMethod,
+   description: s.description.trim() || 'Imported Transaction',
+   source: 'imported' as const,
+   referenceId: s.referenceId,
+  }));
+
+  addMultipleTransactions(payload);
+  showToast('success', 'Import Successful', `Imported ${selected.length} transactions into your ledger`, 4000);
+  setSuccessMessage(`Successfully imported ${selected.length} transactions!`);
+  setStagedList(null);
+  setTimeout(() => {
+   setCurrentView('transactions');
+  }, 1500);
  };
 
  const handleDownloadSampleCSV = () => {
@@ -226,6 +249,14 @@ export const StatementImportView: React.FC = () => {
  </div>
 
  <div className="flex flex-wrap items-center gap-3">
+ <button
+ onClick={() => setIsAutoRuleModalOpen(true)}
+ className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-sunken hover:bg-line text-ink-2 border border-line text-xs sm:text-sm font-bold transition-colors"
+ title="Manage keyword and regex auto-categorization rules"
+ >
+ <SlidersHorizontal className="w-4 h-4 text-primary" />
+ <span>Auto-Rules</span>
+ </button>
  <button
  onClick={handleDownloadSampleCSV}
  className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-sunken hover:bg-line text-ink-2 border border-line text-xs sm:text-sm font-bold transition-colors"
@@ -410,17 +441,25 @@ export const StatementImportView: React.FC = () => {
  </div>
 
  <ReviewStagingTable
- stagedList={stagedList}
- categories={categories}
- onToggleSelect={handleToggleSelect}
- onToggleSelectAll={handleToggleSelectAll}
- onUpdateRow={handleUpdateRow}
- onRemoveRow={handleRemoveRow}
- onExcludeDuplicates={handleExcludeDuplicates}
- onInvertAllTypes={handleInvertAllTypes}
+  stagedList={stagedList}
+  categories={categories}
+  onToggleSelect={handleToggleSelect}
+  onToggleSelectAll={handleToggleSelectAll}
+  onUpdateRow={handleUpdateRow}
+  onRemoveRow={handleRemoveRow}
+  onExcludeDuplicates={handleExcludeDuplicates}
+  onInvertAllTypes={handleInvertAllTypes}
+  onRemoveSelected={handleRemoveSelected}
+  onBulkSetCategory={handleBulkSetCategory}
  />
  </div>
  )}
+
+ <AutoRuleManagerModal
+  isOpen={isAutoRuleModalOpen}
+  onClose={() => setIsAutoRuleModalOpen(false)}
+  categories={categories}
+ />
  </div>
  );
 };

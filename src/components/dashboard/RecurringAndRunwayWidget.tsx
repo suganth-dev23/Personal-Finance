@@ -14,7 +14,7 @@ import { Money } from '../ui/Money';
 
 export const CashFlowRunwayCard: React.FC = () => {
   const { transactions, totalBalance } = useFinance();
-  const runway = useCashFlowRunway(transactions, totalBalance);
+  const runway = useCashFlowRunway(transactions || [], totalBalance || 0);
 
   return (
     <div className="bg-surface rounded-2xl p-4 sm:p-6 border border-line shadow-xs flex flex-col justify-between h-full space-y-4">
@@ -56,7 +56,7 @@ export const CashFlowRunwayCard: React.FC = () => {
             <span className="text-2xl sm:text-3xl font-bold font-numeric text-ink-1 tracking-tight">
               {runway.runwayMonths === Infinity
                 ? 'Sustainable'
-                : `${runway.runwayMonths.toFixed(1)} mos`}
+                : `${(Number.isFinite(runway.runwayMonths) ? runway.runwayMonths : 0).toFixed(1)} mos`}
             </span>
             {runway.runwayMonths === Infinity && (
               <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold font-numeric bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
@@ -96,12 +96,12 @@ export const RecurringBillsCard: React.FC = () => {
   const { transactions, notRecurringTxIds, toggleNotRecurring, setCurrentView } = useFinance();
 
   const {
-    recurringExpenses,
-    recurringIncomes,
-    totalMonthlyRecurringExpenses,
-  } = useRecurringTransactions(transactions, notRecurringTxIds);
+    recurringExpenses = [],
+    recurringIncomes = [],
+    totalMonthlyRecurringExpenses = 0,
+  } = useRecurringTransactions(transactions || [], notRecurringTxIds);
 
-  const totalStreamCount = recurringExpenses.length + recurringIncomes.length;
+  const totalStreamCount = (recurringExpenses?.length || 0) + (recurringIncomes?.length || 0);
 
   return (
     <div className="bg-surface rounded-2xl p-4 sm:p-6 border border-line shadow-xs flex flex-col justify-between h-full space-y-4">

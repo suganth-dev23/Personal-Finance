@@ -33,8 +33,23 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAddTx }) => {
     const handlePrivacyChange = () => {
       setIsPrivacy(typeof window !== 'undefined' && localStorage.getItem('dhanveda_privacy') === 'on');
     };
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'dhanveda_privacy') {
+        const on = e.newValue === 'on';
+        setIsPrivacy(on);
+        if (on) {
+          document.documentElement.setAttribute('data-privacy', 'on');
+        } else {
+          document.documentElement.removeAttribute('data-privacy');
+        }
+      }
+    };
     window.addEventListener('dhanveda-privacy-change', handlePrivacyChange);
-    return () => window.removeEventListener('dhanveda-privacy-change', handlePrivacyChange);
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('dhanveda-privacy-change', handlePrivacyChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   const togglePrivacy = () => {

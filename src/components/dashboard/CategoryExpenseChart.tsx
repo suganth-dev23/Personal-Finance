@@ -26,15 +26,17 @@ export const CategoryExpenseChart: React.FC = () => {
  const { categorySpendingThisMonth, currentMonthExpense } = useFinance();
  const reducedMotion = useReducedMotion();
 
- const expenseCategories = categorySpendingThisMonth.filter(c => c.spent > 0);
+ const safeSpending = Array.isArray(categorySpendingThisMonth) ? categorySpendingThisMonth : [];
+ const safeCurrentMonthExpense = Number.isFinite(currentMonthExpense) && currentMonthExpense > 0 ? currentMonthExpense : 0;
+ const expenseCategories = safeSpending.filter(c => Number.isFinite(c.spent) && c.spent > 0);
  const otherCategories = expenseCategories.slice(5);
- const otherSpent = otherCategories.reduce((sum, c) => sum + c.spent, 0);
- const otherPct = currentMonthExpense > 0 ? (otherSpent / currentMonthExpense) * 100 : 0;
+ const otherSpent = otherCategories.reduce((sum, c) => sum + (Number.isFinite(c.spent) ? c.spent : 0), 0);
+ const otherPct = safeCurrentMonthExpense > 0 ? (otherSpent / safeCurrentMonthExpense) * 100 : 0;
 
  const CustomTooltip = ({ active, payload }: any) => {
  if (active && payload && payload.length) {
  const data = payload[0].payload;
- const pct = currentMonthExpense > 0 ? (data.spent / currentMonthExpense) * 100 : 0;
+ const pct = safeCurrentMonthExpense > 0 ? (data.spent / safeCurrentMonthExpense) * 100 : 0;
  return (
  <div className="bg-surface/95 p-3 rounded-xl shadow-xl border border-line text-xs">
  <p className="font-bold text-ink-1 flex items-center gap-2">
@@ -117,7 +119,7 @@ export const CategoryExpenseChart: React.FC = () => {
  {/* Top categories legend list */}
  <div className="w-full sm:w-1/2 space-y-2 max-h-[220px] overflow-y-auto pr-1">
  {expenseCategories.slice(0, 5).map((cat, idx) => {
- const pct = currentMonthExpense > 0 ? (cat.spent / currentMonthExpense) * 100 : 0;
+ const pct = safeCurrentMonthExpense > 0 ? (cat.spent / safeCurrentMonthExpense) * 100 : 0;
  const swatch = cat.color || PALETTE_FALLBACK[idx % PALETTE_FALLBACK.length];
  return (
  <div key={cat.category} className="flex items-center justify-between text-xs">

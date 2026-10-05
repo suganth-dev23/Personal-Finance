@@ -16,12 +16,13 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
  onClose,
  initialCategory,
 }) => {
- const { addCategory, updateCategory } = useFinance();
+ const { categories, addCategory, updateCategory } = useFinance();
 
  const [name, setName] = useState('');
  const [icon, setIcon] = useState('Tag');
  const [color, setColor] = useState('#3b82f6');
  const [type, setType] = useState<'expense' | 'income' | 'both'>('expense');
+ const [nameError, setNameError] = useState<string | null>(null);
 
  useEffect(() => {
  if (initialCategory) {
@@ -35,25 +36,43 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
  setColor('#3b82f6');
  setType('expense');
  }
+ setNameError(null);
  }, [initialCategory, isOpen]);
+
+ const handleNameChange = (val: string) => {
+ setName(val);
+ if (nameError) {
+ setNameError(null);
+ }
+ };
 
  const handleSubmit = (e: React.FormEvent) => {
  e.preventDefault();
- if (!name.trim()) {
- alert('Please enter a category name');
+ const trimmed = name.trim();
+ if (!trimmed) {
+ setNameError('Please enter a category name');
+ return;
+ }
+
+ const isDuplicate = categories.some(
+ c => c.id !== initialCategory?.id && c.name.trim().toLowerCase() === trimmed.toLowerCase()
+ );
+
+ if (isDuplicate) {
+ setNameError(`A category named "${trimmed}" already exists.`);
  return;
  }
 
  if (initialCategory) {
  updateCategory(initialCategory.id, {
- name: name.trim(),
+ name: trimmed,
  icon,
  color,
  type,
  });
  } else {
  addCategory({
- name: name.trim(),
+ name: trimmed,
  icon,
  color,
  type,
@@ -79,10 +98,19 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
  type="text"
  required
  value={name}
- onChange={e => setName(e.target.value)}
+ onChange={e => handleNameChange(e.target.value)}
  placeholder="e.g. Pet Care, Subscriptions, Fitness"
- className="w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm text-ink-1 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+ className={`w-full rounded-xl border px-3.5 py-2.5 text-sm text-ink-1 focus:outline-none transition-colors ${
+ nameError
+ ? 'border-negative bg-negative/5 focus:border-negative focus:ring-1 focus:ring-negative'
+ : 'border-line bg-surface focus:border-primary focus:ring-1 focus:ring-primary'
+ }`}
  />
+ {nameError && (
+ <p className="mt-1.5 text-xs font-semibold text-negative" role="alert">
+ {nameError}
+ </p>
+ )}
  </div>
 
  {/* Type */}

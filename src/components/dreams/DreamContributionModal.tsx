@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Modal } from '../common/Modal';
 import { useFinance } from '../../context/FinanceContext';
 import { DreamGoal } from '../../types/finance';
-import { getTodayString } from '../../utils/date';
+import { getTodayString, sanitizeDateString } from '../../utils/date';
 import { formatINR, numberToWordsINR } from '../../utils/currency';
 
 interface DreamContributionModalProps {
@@ -20,26 +20,37 @@ export const DreamContributionModal: React.FC<DreamContributionModalProps> = ({
  const [amount, setAmount] = useState('');
  const [date, setDate] = useState(getTodayString());
  const [note, setNote] = useState('');
+ const [formError, setFormError] = useState<string | null>(null);
 
  if (!dream) return null;
 
  const handleSubmit = (e: React.FormEvent) => {
  e.preventDefault();
+ setFormError(null);
+
  const num = parseFloat(amount);
- if (isNaN(num) || num <= 0) {
- alert('Please enter a valid contribution amount');
+ if (!amount.trim() || isNaN(num) || num <= 0) {
+ setFormError('Please enter a valid contribution amount greater than 0');
  return;
  }
 
- addDreamContribution(dream.id, num, note.trim() || undefined, date);
+ const validDate = sanitizeDateString(date);
+ if (!validDate) {
+ setFormError('Please enter a valid date (YYYY-MM-DD)');
+ return;
+ }
+
+ addDreamContribution(dream.id, num, note.trim() || undefined, validDate);
 
  setAmount('');
  setNote('');
+ setFormError(null);
  onClose();
  };
 
  const parsedAmount = parseFloat(amount) || 0;
  const remaining = Math.max(0, dream.targetAmount - dream.currentSaved);
+ const isOverAchieving = parsedAmount > remaining && remaining > 0;
 
  return (
  <Modal
@@ -49,6 +60,18 @@ export const DreamContributionModal: React.FC<DreamContributionModalProps> = ({
  subtitle={`Goal Target: ${formatINR(dream.targetAmount)} • Remaining: ${formatINR(remaining)}`}
  >
  <form onSubmit={handleSubmit} className="space-y-4">
+ {formError && (
+ <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs font-semibold text-rose-600 dark:text-rose-400">
+ {formError}
+ </div>
+ )}
+
+ {isOverAchieving && (
+ <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1.5">
+ <span>🎉 This savings amount will complete and exceed your goal target by {formatINR(parsedAmount - remaining)}!</span>
+ </div>
+ )}
+
  {/* Amount */}
  <div>
  <label className="block text-xs font-bold uppercase tracking-wider text-ink-3 mb-1.5">

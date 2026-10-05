@@ -23,13 +23,15 @@ export const CashFlowChart: React.FC = () => {
  const reducedMotion = useReducedMotion();
  const [chartMode, setChartMode] = useState<'wave' | 'bars'>('wave');
 
+ const safeTransactions = Array.isArray(transactions) ? transactions : [];
+
  const chartData = useMemo(() => {
  const months = getRelativeMonthsList(6); // last 6 months
 
  return months.map(m => {
- const monthTxs = transactions.filter(t => t.date.startsWith(m.key));
- const income = monthTxs.filter(t => t.type === 'credit').reduce((a, b) => a + b.amount, 0);
- const expense = monthTxs.filter(t => t.type === 'debit').reduce((a, b) => a + b.amount, 0);
+ const monthTxs = safeTransactions.filter(t => t.date && t.date.startsWith(m.key));
+ const income = monthTxs.filter(t => t.type === 'credit').reduce((a, b) => a + (Number.isFinite(b.amount) ? b.amount : 0), 0);
+ const expense = monthTxs.filter(t => t.type === 'debit').reduce((a, b) => a + (Number.isFinite(b.amount) ? b.amount : 0), 0);
  const net = income - expense;
 
  return {
@@ -40,7 +42,11 @@ export const CashFlowChart: React.FC = () => {
  NetSavings: net,
  };
  });
- }, [transactions]);
+ }, [safeTransactions]);
+
+ const hasActivity = useMemo(() => {
+ return safeTransactions.length > 0 && chartData.some(d => d.Income > 0 || d.Expenses > 0);
+ }, [safeTransactions.length, chartData]);
 
  const CustomTooltip = ({ active, payload, label }: any) => {
  if (active && payload && payload.length) {
@@ -112,6 +118,15 @@ export const CashFlowChart: React.FC = () => {
  </div>
  </div>
 
+ {!hasActivity ? (
+ <div className="w-full h-[260px] sm:h-[300px] flex flex-col items-center justify-center text-center p-6 bg-sunken/40 rounded-2xl border border-dashed border-line text-ink-3">
+ <Waves className="w-10 h-10 stroke-1 text-ink-3/40 mb-2.5" />
+ <p className="text-sm font-semibold text-ink-2">No cash flow activity yet</p>
+ <p className="text-xs text-ink-3 max-w-xs mt-1">
+ Log your income and expenses to visualize your 6-month cash flow trajectory.
+ </p>
+ </div>
+ ) : (
  <div key={chartMode} className="w-full h-[260px] sm:h-[300px] animate-fade-in">
  <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={100}>
  {chartMode === 'wave' ? (
@@ -240,6 +255,7 @@ export const CashFlowChart: React.FC = () => {
  )}
  </ResponsiveContainer>
  </div>
+ )}
  </div>
  );
 };

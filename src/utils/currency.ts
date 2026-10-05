@@ -160,3 +160,23 @@ export function numberToWordsINR(amount: number): string {
 
   return (result.trim() + ' Rupees');
 }
+
+/**
+ * Splits an amount into N equal parts, distributing remainder cents across the first
+ * remainder parts to guarantee the sum equals totalAmount exactly with 0 epsilon mismatch.
+ * e.g. splitAmountEqually(100, 3) => [33.34, 33.33, 33.33], sum = 100.00
+ */
+export function splitAmountEqually(totalAmount: number, shares: number): number[] {
+  if (shares <= 0) return [];
+  const roundedTotal = roundCurrency(totalAmount);
+  const totalCents = Math.round(roundedTotal * 100);
+  const baseCents = Math.floor(totalCents / shares);
+  const remainderCents = totalCents % shares;
+
+  const results: number[] = [];
+  for (let i = 0; i < shares; i++) {
+    const shareCents = baseCents + (i < remainderCents ? 1 : 0);
+    results.push(roundCurrency(shareCents / 100));
+  }
+  return results;
+}

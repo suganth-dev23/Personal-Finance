@@ -19,17 +19,22 @@ export const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEditTr
 
   // Sort descending (newest transaction first)
   const recentList = useMemo(() => {
-    return [...transactions]
+    return [...(transactions || [])]
       .sort((a, b) => {
-        const dateDiff = new Date(b.date).getTime() - new Date(a.date).getTime();
+        const dateDiff = (new Date(b.date).getTime() || 0) - (new Date(a.date).getTime() || 0);
         if (dateDiff !== 0) return dateDiff;
         return (b.createdAt || '').localeCompare(a.createdAt || '');
       })
       .slice(0, 6);
   }, [transactions]);
 
-  const categoryMap = new Map(categories.map(c => [c.name.toLowerCase(), c]));
-  const contactMap = new Map(contacts.map(c => [c.id, c]));
+  const categoryMap = useMemo(() => {
+    return new Map((categories || []).map(c => [(c.name || '').toLowerCase(), c]));
+  }, [categories]);
+
+  const contactMap = useMemo(() => {
+    return new Map((contacts || []).map(c => [c.id, c]));
+  }, [contacts]);
 
   return (
     <div className="bg-surface rounded-2xl p-4 sm:p-6 shadow-xs border border-line flex flex-col justify-between h-full">

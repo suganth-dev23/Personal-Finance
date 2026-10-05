@@ -3,7 +3,7 @@ import { Modal } from '../common/Modal';
 import { useFinance } from '../../context/FinanceContext';
 import { Contact, SettlementRecord, Transaction, TransactionType, OwedDirection } from '../../types/finance';
 import { Money } from '../ui';
-import { formatDate, getTodayString } from '../../utils/date';
+import { formatDate, getTodayString, sanitizeDateString } from '../../utils/date';
 import { roundCurrency } from '../../utils/currency';
 import { HandCoins, Link as LinkIcon, Unlink, Search, Check, ChevronDown, ChevronUp } from 'lucide-react';
 
@@ -138,11 +138,12 @@ export const SettleUpModal: React.FC<SettleUpModalProps> = ({
       return;
     }
     const parsed = roundCurrency(rawParsed);
+    const sanitizedDate = sanitizeDateString(date) || getTodayString();
 
     if (initialSettlement) {
       updateSettlement(initialSettlement.id, {
         amount: parsed,
-        date,
+        date: sanitizedDate,
         note: note.trim(),
         linkedTransactionId: selectedTxId || undefined,
         direction,
@@ -152,7 +153,7 @@ export const SettleUpModal: React.FC<SettleUpModalProps> = ({
         contact.id,
         parsed,
         note.trim(),
-        date,
+        sanitizedDate,
         undefined,
         undefined,
         selectedTxId || undefined,

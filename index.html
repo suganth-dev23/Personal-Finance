@@ -49,6 +49,12 @@
             document.documentElement.setAttribute('data-privacy', 'on');
           }
         } catch (_) {}
+
+        try {
+          if (localStorage.getItem('dhanveda_calm_mode') === 'true') {
+            document.documentElement.setAttribute('data-calm', 'true');
+          }
+        } catch (_) {}
       })();
     </script>
   </head>

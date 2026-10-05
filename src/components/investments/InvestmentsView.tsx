@@ -15,6 +15,17 @@ import { INDIAN_WEALTH_PALETTE } from '../../constants/theme';
 import { useStaggerChildren } from '../../hooks/useStaggerChildren';
 import { Button, Card, Money, Stat } from '../ui';
 
+export function calculateCAGR(investedAmount: number, currentValue: number, years: number): number | null {
+ if (!Number.isFinite(investedAmount) || !Number.isFinite(currentValue) || !Number.isFinite(years)) return null;
+ if (investedAmount <= 0 || currentValue <= 0 || years <= 0) return null;
+ try {
+ const cagr = Math.pow(currentValue / investedAmount, 1 / years) - 1;
+ return Number.isFinite(cagr) ? cagr * 100 : null;
+ } catch {
+ return null;
+ }
+}
+
 export const InvestmentsView: React.FC = () => {
  const { containerRef: assetGridRef, getChildStyle } = useStaggerChildren(50);
  const {
@@ -26,12 +37,17 @@ export const InvestmentsView: React.FC = () => {
  deleteInvestment,
  } = useFinance();
 
+ const safeTotalValue = Number.isFinite(totalInvestmentValue) ? totalInvestmentValue : 0;
+ const safeTotalInvested = Number.isFinite(totalInvestedAmount) ? totalInvestedAmount : 0;
+ const safeTotalGainLoss = Number.isFinite(totalInvestmentGainLoss) ? totalInvestmentGainLoss : 0;
+ const safeTotalGainLossPct = Number.isFinite(totalInvestmentGainLossPct) ? totalInvestmentGainLossPct : 0;
+
  const [isModalOpen, setIsModalOpen] = useState(false);
  const [selectedInvestment, setSelectedInvestment] = useState<Investment | null>(null);
  const [filterType, setFilterType] = useState<string>('all');
 
  const totalMonthlySIP = useMemo(() => {
- return investments.reduce((sum, i) => sum + (i.sipAmount || 0), 0);
+ return investments.reduce((sum, i) => sum + (Number.isFinite(i.sipAmount) && i.sipAmount ? i.sipAmount : 0), 0);
  }, [investments]);
 
  const filteredList = useMemo(() => {
@@ -58,27 +74,30 @@ export const InvestmentsView: React.FC = () => {
  if (!map[i.type]) {
  map[i.type] = { value: 0, invested: 0, count: 0 };
  }
- map[i.type].value += i.currentValue;
- map[i.type].invested += i.investedAmount;
+ const val = Number.isFinite(i.currentValue) ? i.currentValue : 0;
+ const inv = Number.isFinite(i.investedAmount) ? i.investedAmount : 0;
+ map[i.type].value += val;
+ map[i.type].invested += inv;
  map[i.type].count += 1;
  });
 
- const total = totalInvestmentValue || 1;
+ const total = safeTotalValue > 0 ? safeTotalValue : 1;
  return Object.entries(map).map(([type, data]) => {
  const gain = data.value - data.invested;
  const gainPct = data.invested > 0 ? (gain / data.invested) * 100 : 0;
+ const safeGainPct = Number.isFinite(gainPct) ? gainPct : 0;
  return {
  type,
  value: data.value,
  invested: data.invested,
  gain,
- gainPct,
+ gainPct: safeGainPct,
  count: data.count,
- percentage: totalInvestmentValue > 0 ? (data.value / total) * 100 : 0,
+ percentage: safeTotalValue > 0 ? (data.value / total) * 100 : 0,
  color: CATEGORY_COLORS[type] || '#64748b',
  };
  }).sort((a, b) => b.value - a.value);
- }, [investments, totalInvestmentValue, CATEGORY_COLORS]);
+ }, [investments, safeTotalValue, CATEGORY_COLORS]);
 
  return (
  <div className="space-y-6 max-w-7xl mx-auto pb-16">
@@ -100,20 +119,20 @@ export const InvestmentsView: React.FC = () => {
  </p>
  <div className="flex flex-wrap items-baseline gap-3">
  <h2 className="text-3xl sm:text-4xl font-black font-numeric tracking-tight text-ink-1">
- <AnimatedNumber value={totalInvestmentValue} animateOnMount={true} />
+ <AnimatedNumber value={safeTotalValue} animateOnMount={true} />
  </h2>
  <span
  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold font-numeric ${
- totalInvestmentGainLoss >= 0
+ safeTotalGainLoss >= 0
  ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-500/20'
  : 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400 border border-rose-500/20'
  }`}
  >
- {totalInvestmentGainLoss >= 0 ? '+' : ''}<AnimatedNumber value={totalInvestmentGainLoss} animateOnMount={true} /> ({totalInvestmentGainLossPct >= 0 ? '+' : ''}{totalInvestmentGainLossPct.toFixed(1)}%)
+ {safeTotalGainLoss >= 0 ? '+' : ''}<AnimatedNumber value={safeTotalGainLoss} animateOnMount={true} /> ({safeTotalGainLossPct >= 0 ? '+' : ''}{safeTotalGainLossPct.toFixed(1)}%)
  </span>
  </div>
  <p className="mt-2 text-xs text-ink-3">
- Invested: <span className="font-semibold font-numeric text-ink-1"><AnimatedNumber value={totalInvestedAmount} animateOnMount={true} /></span> • Monthly SIPs: <span className="font-semibold font-numeric text-reward dark:text-reward"><AnimatedNumber value={totalMonthlySIP} animateOnMount={true} /></span>
+ Invested: <span className="font-semibold font-numeric text-ink-1"><AnimatedNumber value={safeTotalInvested} animateOnMount={true} /></span> • Monthly SIPs: <span className="font-semibold font-numeric text-reward dark:text-reward"><AnimatedNumber value={totalMonthlySIP} animateOnMount={true} /></span>
  </p>
  </div>
 
@@ -134,7 +153,7 @@ export const InvestmentsView: React.FC = () => {
  <Card variant="sunken" padding="sm" className="rounded-xl sm:rounded-2xl">
  <Stat
  label="Invested Capital"
- value={totalInvestedAmount}
+ value={safeTotalInvested}
  moneyProps={{ tone: 'neutral', size: 'lg' }}
  />
  </Card>
@@ -142,13 +161,13 @@ export const InvestmentsView: React.FC = () => {
  <Card variant="sunken" padding="sm" className="rounded-xl sm:rounded-2xl">
  <Stat
  label="Total Returns"
- value={totalInvestmentGainLoss}
+ value={safeTotalGainLoss}
  moneyProps={{
- tone: totalInvestmentGainLoss >= 0 ? 'positive' : 'negative',
+ tone: safeTotalGainLoss >= 0 ? 'positive' : 'negative',
  sign: 'always',
  size: 'lg',
  }}
- delta={totalInvestmentGainLossPct}
+ delta={safeTotalGainLossPct}
  />
  </Card>
 
@@ -355,9 +374,24 @@ export const InvestmentsView: React.FC = () => {
  </thead>
  <tbody className="divide-y divide-line text-sm">
  {filteredList.map(inv => {
- const gain = inv.currentValue - inv.investedAmount;
- const gainPct = inv.investedAmount > 0 ? (gain / inv.investedAmount) * 100 : 0;
+ const safeInv = Number.isFinite(inv.investedAmount) ? inv.investedAmount : 0;
+ const safeVal = Number.isFinite(inv.currentValue) ? inv.currentValue : 0;
+ const gain = safeVal - safeInv;
+ const gainPct = safeInv > 0 ? (gain / safeInv) * 100 : 0;
+ const safeGainPct = Number.isFinite(gainPct) ? gainPct : 0;
  const isProfitable = gain >= 0;
+
+ // Safe CAGR calculation if holding date is recorded (min 90 days)
+ let cagrPct: number | null = null;
+ if (inv.lastUpdated && safeInv > 0 && safeVal > 0) {
+ const updatedTime = new Date(inv.lastUpdated).getTime();
+ if (!isNaN(updatedTime)) {
+ const daysHeld = Math.max(1, (new Date().getTime() - updatedTime) / (1000 * 60 * 60 * 24));
+ if (daysHeld >= 90) {
+ cagrPct = calculateCAGR(safeInv, safeVal, daysHeld / 365.25);
+ }
+ }
+ }
 
  return (
  <tr key={inv.id} className="hover:bg-sunken/60 transition-colors">
@@ -383,14 +417,15 @@ export const InvestmentsView: React.FC = () => {
  </td>
 
  <td className="py-3.5 px-4 text-right whitespace-nowrap font-semibold font-numeric text-ink-2">
- <Money value={inv.investedAmount} size="sm" tone="neutral" />
+ <Money value={safeInv} size="sm" tone="neutral" />
  </td>
 
  <td className="py-3.5 px-4 text-right whitespace-nowrap font-bold font-numeric text-ink-1">
- <Money value={inv.currentValue} size="sm" tone="neutral" />
+ <Money value={safeVal} size="sm" tone="neutral" />
  </td>
 
  <td className="py-3.5 px-4 text-right whitespace-nowrap font-numeric">
+ <div className="flex flex-col items-end gap-0.5">
  <span
  className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-xs font-semibold ${
  isProfitable
@@ -398,8 +433,14 @@ export const InvestmentsView: React.FC = () => {
  : 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400'
  }`}
  >
- {isProfitable ? '+' : ''}{gainPct.toFixed(1)}% (<Money value={gain} sign="always" tone={isProfitable ? 'positive' : 'negative'} size="xs" />)
+ {isProfitable ? '+' : ''}{safeGainPct.toFixed(1)}% (<Money value={gain} sign="always" tone={isProfitable ? 'positive' : 'negative'} size="xs" />)
  </span>
+ {cagrPct !== null && (
+ <span className="text-xs text-ink-3 font-medium">
+ CAGR: {cagrPct >= 0 ? '+' : ''}{cagrPct.toFixed(1)}% p.a.
+ </span>
+ )}
+ </div>
  </td>
 
  <td className="py-3.5 px-4 text-center whitespace-nowrap">

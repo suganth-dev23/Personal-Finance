@@ -7,13 +7,14 @@ import { Money } from '../ui/Money';
 export const BudgetHealthWidget: React.FC = () => {
   const { categorySpendingThisMonth, setCurrentView } = useFinance();
 
-  const budgetedCategories = categorySpendingThisMonth.filter(c => c.budget > 0);
+  const safeSpending = Array.isArray(categorySpendingThisMonth) ? categorySpendingThisMonth : [];
+  const budgetedCategories = safeSpending.filter(c => Number.isFinite(c.budget) && c.budget > 0);
 
-  const overBudgetCategories = budgetedCategories.filter(c => c.spent > c.budget);
-  const nearBudgetCategories = budgetedCategories.filter(c => c.spent <= c.budget && c.percentUsed >= 80);
+  const overBudgetCategories = budgetedCategories.filter(c => (c.spent || 0) > c.budget);
+  const nearBudgetCategories = budgetedCategories.filter(c => (c.spent || 0) <= c.budget && (c.percentUsed || 0) >= 80);
 
-  const totalBudget = budgetedCategories.reduce((acc, c) => acc + c.budget, 0);
-  const totalSpent = budgetedCategories.reduce((acc, c) => acc + c.spent, 0);
+  const totalBudget = budgetedCategories.reduce((acc, c) => acc + (Number.isFinite(c.budget) ? c.budget : 0), 0);
+  const totalSpent = budgetedCategories.reduce((acc, c) => acc + (Number.isFinite(c.spent) ? c.spent : 0), 0);
   const overallPct = totalBudget > 0 ? Math.min(100, Math.round((totalSpent / totalBudget) * 100)) : 0;
 
   return (

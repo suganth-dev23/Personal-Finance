@@ -44,6 +44,33 @@ const SYNC_FILE_NAME = 'dhanveda-sync.json';
 const DRIVE_FILES_URL = 'https://www.googleapis.com/drive/v3/files';
 const DRIVE_UPLOAD_URL = 'https://www.googleapis.com/upload/drive/v3/files';
 
+export const CLOCK_SKEW_WINDOW_MS = 3000; // 3 seconds tolerance window for device clock skew
+
+export function compareTimestampsWithSkew(
+  timeAStr?: string,
+  timeBStr?: string
+): { diffMs: number; isSkewTied: boolean } {
+  const timeA = new Date(timeAStr || '1970-01-01').getTime();
+  const timeB = new Date(timeBStr || '1970-01-01').getTime();
+  const validA = !isNaN(timeA) ? timeA : 0;
+  const validB = !isNaN(timeB) ? timeB : 0;
+  const diffMs = validA - validB;
+  const isSkewTied = Math.abs(diffMs) <= CLOCK_SKEW_WINDOW_MS;
+  return { diffMs, isSkewTied };
+}
+
+export function isRecordDeletedByTombstone(recordTimeStr?: string, tombstone?: TombstoneRecord): boolean {
+  if (!tombstone || !tombstone.deletedAt) return false;
+  const tombTime = new Date(tombstone.deletedAt).getTime();
+  const recTime = new Date(recordTimeStr || '1970-01-01').getTime();
+  if (isNaN(tombTime)) return false;
+  if (isNaN(recTime)) return true;
+
+  // If tombstone deletedAt is later OR within clock skew tolerance (3s) of record updatedAt,
+  // deletion wins to avoid resurrecting deleted records due to device clock skew.
+  return tombTime >= (recTime - CLOCK_SKEW_WINDOW_MS);
+}
+
 export class DriveSyncService {
   private syncInProgress = false;
   private lastSyncedAt: string | null = null;
@@ -80,6 +107,61 @@ export class DriveSyncService {
   }
 
   /**
+   * Resilient HTTP fetch helper with exponential backoff and finite retries (max 3).
+   * Fast-fails immediately on 401/403 or offline state to prevent infinite retry loops.
+   */
+  private async fetchWithRetry(url: string, options: RequestInit, maxRetries = 3): Promise<Response> {
+    const initialDelay = 1000;
+    let attempt = 0;
+
+    while (attempt < maxRetries) {
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        throw new Error('Device is offline');
+      }
+
+      try {
+        const res = await fetch(url, options);
+
+        // Fast-fail on auth errors (401 / 403)
+        if (res.status === 401) {
+          googleAuthService.clearCachedToken();
+          throw new Error('Google Drive authorization expired (401). Please re-authenticate.');
+        }
+
+        if (res.status === 403) {
+          throw new Error('Google Drive permission denied (403).');
+        }
+
+        // Retry on 429 (rate limit) or 5xx server errors
+        if ((res.status === 429 || res.status >= 500) && attempt < maxRetries - 1) {
+          attempt++;
+          const backoff = initialDelay * Math.pow(2, attempt - 1) + Math.random() * 200;
+          await new Promise(r => setTimeout(r, backoff));
+          continue;
+        }
+
+        return res;
+      } catch (err: any) {
+        // Fast-fail without retry on 401, 403, or offline
+        if (
+          err?.message?.includes('401') ||
+          err?.message?.includes('403') ||
+          err?.message?.includes('offline') ||
+          attempt >= maxRetries - 1
+        ) {
+          throw err;
+        }
+
+        attempt++;
+        const backoff = initialDelay * Math.pow(2, attempt - 1) + Math.random() * 200;
+        await new Promise(r => setTimeout(r, backoff));
+      }
+    }
+
+    throw new Error(`Drive request failed after ${maxRetries} attempts.`);
+  }
+
+  /**
    * Find existing dhanveda-sync.json in appDataFolder
    */
   public async findSyncFile(token: string): Promise<string | null> {
@@ -88,7 +170,7 @@ export class DriveSyncService {
     const query = encodeURIComponent(`name = '${SYNC_FILE_NAME}' and trashed = false`);
     const url = `${DRIVE_FILES_URL}?spaces=appDataFolder&q=${query}&fields=files(id,name,modifiedTime)`;
 
-    const res = await fetch(url, {
+    const res = await this.fetchWithRetry(url, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -111,7 +193,7 @@ export class DriveSyncService {
    * Download remote sync file
    */
   public async downloadSyncFile(fileId: string, token: string): Promise<SyncPayload | null> {
-    const res = await fetch(`${DRIVE_FILES_URL}/${fileId}?alt=media`, {
+    const res = await this.fetchWithRetry(`${DRIVE_FILES_URL}/${fileId}?alt=media`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -141,7 +223,7 @@ export class DriveSyncService {
 
     if (fileId) {
       // Update existing file
-      const res = await fetch(`${DRIVE_UPLOAD_URL}/${fileId}?uploadType=media`, {
+      const res = await this.fetchWithRetry(`${DRIVE_UPLOAD_URL}/${fileId}?uploadType=media`, {
         method: 'PATCH',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -176,7 +258,7 @@ export class DriveSyncService {
         content +
         closeDelim;
 
-      const res = await fetch(`${DRIVE_UPLOAD_URL}?uploadType=multipart`, {
+      const res = await this.fetchWithRetry(`${DRIVE_UPLOAD_URL}?uploadType=multipart`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -321,19 +403,28 @@ export class DriveSyncService {
       // 3. MERGE ENGINE
       const remoteDeviceId = remotePayload.deviceId || 'unknown';
 
-      // Merge tombstones (union by id, keep newer deletedAt)
+      // Merge tombstones (union by key, keep newer or tie-break deterministically)
       const mergedTombstonesMap = new Map<string, TombstoneRecord>();
       for (const t of [...localTombstones, ...(remotePayload.tombstones || [])]) {
         if (!t || !t.id) continue;
         const key = `${t.store}:${t.id}`;
         const existing = mergedTombstonesMap.get(key);
-        if (!existing || t.deletedAt > existing.deletedAt) {
+        if (!existing) {
           mergedTombstonesMap.set(key, t);
+        } else {
+          const { diffMs, isSkewTied } = compareTimestampsWithSkew(t.deletedAt, existing.deletedAt);
+          if (!isSkewTied) {
+            if (diffMs > 0) mergedTombstonesMap.set(key, t);
+          } else {
+            if (t.deletedAt > existing.deletedAt) {
+              mergedTombstonesMap.set(key, t);
+            }
+          }
         }
       }
       const mergedTombstones = Array.from(mergedTombstonesMap.values());
 
-      // Helper to merge array stores using LWW and tombstone checks
+      // Helper to merge array stores using LWW and tombstone checks with clock skew handling
       const mergeArrayStore = <T extends { id: string; updatedAt?: string; createdAt?: string }>(
         storeName: SyncableStoreName,
         localItems: T[],
@@ -350,17 +441,17 @@ export class DriveSyncService {
           const tombstone = mergedTombstonesMap.get(`${storeName}:${id}`);
 
           if (localItem && remoteItem) {
-            // Compare timestamps
+            // Compare timestamps with clock skew tolerance
             const localTime = localItem.updatedAt || localItem.createdAt || '1970-01-01';
             const remoteTime = remoteItem.updatedAt || remoteItem.createdAt || '1970-01-01';
+            const { diffMs, isSkewTied } = compareTimestampsWithSkew(localTime, remoteTime);
 
             let winner: T;
-            if (localTime > remoteTime) {
-              winner = localItem;
-            } else if (remoteTime > localTime) {
-              winner = remoteItem;
+            if (!isSkewTied) {
+              winner = diffMs > 0 ? localItem : remoteItem;
             } else {
-              // If timestamps are tied, preserve record that contains splits
+              // If timestamps are tied or within clock skew tolerance (3s):
+              // 1. Preserve record that contains splits
               const localSplits = (localItem as any).splitWith;
               const remoteSplits = (remoteItem as any).splitWith;
               const localHasSplits = Array.isArray(localSplits) && localSplits.length > 0;
@@ -370,24 +461,24 @@ export class DriveSyncService {
               } else if (!localHasSplits && remoteHasSplits) {
                 winner = remoteItem;
               } else {
-                // Deterministic tie-breaker using deviceId
-                winner = localDeviceId >= remoteDeviceId ? localItem : remoteItem;
+                // 2. Deterministic tie-breaker using deviceId
+                winner = localDeviceId.localeCompare(remoteDeviceId) >= 0 ? localItem : remoteItem;
               }
             }
 
-            // Check if tombstone is newer than winner
+            // Check if tombstone is newer than or within skew of winner
             const winnerTime = winner.updatedAt || winner.createdAt || '1970-01-01';
-            if (!tombstone || tombstone.deletedAt < winnerTime) {
+            if (!isRecordDeletedByTombstone(winnerTime, tombstone)) {
               itemMap.set(id, winner);
             }
           } else if (localItem) {
             const localTime = localItem.updatedAt || localItem.createdAt || '1970-01-01';
-            if (!tombstone || tombstone.deletedAt < localTime) {
+            if (!isRecordDeletedByTombstone(localTime, tombstone)) {
               itemMap.set(id, localItem);
             }
           } else if (remoteItem) {
             const remoteTime = remoteItem.updatedAt || remoteItem.createdAt || '1970-01-01';
-            if (!tombstone || tombstone.deletedAt < remoteTime) {
+            if (!isRecordDeletedByTombstone(remoteTime, tombstone)) {
               itemMap.set(id, remoteItem);
             }
           }
@@ -439,7 +530,8 @@ export class DriveSyncService {
             } else {
               const cTime = c.updatedAt || c.createdAt || '1970-01-01';
               const eTime = existing.updatedAt || existing.createdAt || '1970-01-01';
-              if (cTime > eTime) {
+              const { diffMs, isSkewTied } = compareTimestampsWithSkew(cTime, eTime);
+              if (!isSkewTied ? diffMs > 0 : cTime > eTime) {
                 contribMap.set(key, c);
               }
             }
@@ -473,7 +565,11 @@ export class DriveSyncService {
       if (remoteEmergency) {
         const localTime = localEmergency?.updatedAt || '1970-01-01';
         const remoteTime = remoteEmergency.updatedAt || '1970-01-01';
-        const winner = (remoteTime > localTime || (remoteTime === localTime && remoteDeviceId > localDeviceId))
+        const { diffMs, isSkewTied } = compareTimestampsWithSkew(remoteTime, localTime);
+        const remoteWins = !isSkewTied
+          ? diffMs > 0
+          : remoteDeviceId.localeCompare(localDeviceId) > 0;
+        const winner = remoteWins
           ? remoteEmergency
           : (localEmergency || remoteEmergency);
 
@@ -491,7 +587,8 @@ export class DriveSyncService {
           } else {
             const cTime = c.updatedAt || c.createdAt || '1970-01-01';
             const eTime = existing.updatedAt || existing.createdAt || '1970-01-01';
-            if (cTime > eTime) {
+            const { diffMs: cDiff, isSkewTied: cSkew } = compareTimestampsWithSkew(cTime, eTime);
+            if (!cSkew ? cDiff > 0 : cTime > eTime) {
               contribMap.set(key, c);
             }
           }
@@ -523,7 +620,11 @@ export class DriveSyncService {
       if (remotePrefs) {
         const localTime = localPrefs?.updatedAt || '1970-01-01';
         const remoteTime = remotePrefs.updatedAt || '1970-01-01';
-        if (remoteTime > localTime || (remoteTime === localTime && remoteDeviceId > localDeviceId)) {
+        const { diffMs, isSkewTied } = compareTimestampsWithSkew(remoteTime, localTime);
+        const remoteWins = !isSkewTied
+          ? diffMs > 0
+          : remoteDeviceId.localeCompare(localDeviceId) > 0;
+        if (remoteWins) {
           mergedPrefs = remotePrefs;
         }
       }
@@ -540,7 +641,11 @@ export class DriveSyncService {
       if (remoteAISettings) {
         const localTime = localAISettings?.updatedAt || '1970-01-01';
         const remoteTime = remoteAISettings.updatedAt || '1970-01-01';
-        if (remoteTime > localTime || (remoteTime === localTime && remoteDeviceId > localDeviceId)) {
+        const { diffMs, isSkewTied } = compareTimestampsWithSkew(remoteTime, localTime);
+        const remoteWins = !isSkewTied
+          ? diffMs > 0
+          : remoteDeviceId.localeCompare(localDeviceId) > 0;
+        if (remoteWins) {
           mergedAiProvider = remoteAISettings.provider || mergedAiProvider;
           mergedAiModel = remoteAISettings.model || mergedAiModel;
           mergedAiPrompt = remoteAISettings.customPromptPrefix || '';

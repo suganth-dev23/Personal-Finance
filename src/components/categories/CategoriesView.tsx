@@ -11,6 +11,7 @@ export const CategoriesView: React.FC = () => {
  const { containerRef: catGridRef, getChildStyle } = useStaggerChildren(40);
  const {
  categories,
+ transactions,
  deleteCategory,
  categorySpendingThisMonth,
  } = useFinance();
@@ -31,6 +32,30 @@ export const CategoriesView: React.FC = () => {
  const handleOpenAdd = () => {
  setSelectedCategory(null);
  setIsModalOpen(true);
+ };
+
+ const handleDeleteCategory = (cat: Category) => {
+ if (!cat.isCustom) {
+ alert(`Default system category "${cat.name}" cannot be deleted.`);
+ return;
+ }
+
+ const txCount = transactions.filter(
+ t => t.category && t.category.trim().toLowerCase() === cat.name.trim().toLowerCase()
+ ).length;
+
+ let confirmMsg: string;
+ if (txCount > 0) {
+ confirmMsg = `Warning: "${cat.name}" is used in ${txCount} existing transaction${
+ txCount > 1 ? 's' : ''
+ }. Deleting it will leave those transactions without a defined category. Are you sure you want to proceed?`;
+ } else {
+ confirmMsg = `Delete custom category "${cat.name}"?`;
+ }
+
+ if (window.confirm(confirmMsg)) {
+ deleteCategory(cat.id);
+ }
  };
 
  return (
@@ -155,11 +180,7 @@ export const CategoriesView: React.FC = () => {
  </button>
  {cat.isCustom && (
  <button
- onClick={() => {
- if (window.confirm(`Delete custom category "${cat.name}"?`)) {
- deleteCategory(cat.id);
- }
- }}
+ onClick={() => handleDeleteCategory(cat)}
  className="flex h-8 w-8 items-center justify-center rounded-xl border border-line text-ink-3 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
  title="Delete Category"
  >

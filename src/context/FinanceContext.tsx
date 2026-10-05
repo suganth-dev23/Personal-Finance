@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useLayoutEffect, useMemo, useCallback, useRef } from 'react';
 import {
  Transaction,
  Category,
@@ -28,6 +28,7 @@ import {
  INITIAL_RECURRING_PAYMENT_LOGS,
 } from '../utils/sampleData';
 import { getCurrentMonthYear, getTodayString } from '../utils/date';
+import { roundCurrency } from '../utils/currency';
 import { rebaseDemoData } from '../utils/rebaseDemoDates';
 import { getPaymentSchedule, calculateMonthlyEquivalent } from '../utils/recurringDates';
 import { DEFAULT_AI_MODELS, FinancialAggregates } from '../services/aiService';
@@ -608,7 +609,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
  return () => {
  isMounted = false;
  };
- }, [reloadFromDB]);
+ }, [flushPendingPersistence, reloadFromDB]);
 
  // Sync methods
  const triggerSync = useCallback(async (_showFeedback = true): Promise<boolean> => {
@@ -637,7 +638,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
  console.error('[FinanceContext] triggerSync error:', err);
  return false;
  }
- }, [reloadFromDB]);
+ }, [flushPendingPersistence, reloadFromDB]);
 
  const connectDrive = useCallback(async (): Promise<boolean> => {
  try {
@@ -1094,10 +1095,10 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
  const currentSettled = entry.settledAmount || 0;
  const openAmt = Math.max(0, entry.amount - currentSettled);
  if (openAmt > 0) {
- const allocation = Math.min(openAmt, remainingToReconcile);
- const newSettledAmt = currentSettled + allocation;
+ const allocation = roundCurrency(Math.min(openAmt, remainingToReconcile));
+ const newSettledAmt = roundCurrency(currentSettled + allocation);
  const isFull = newSettledAmt >= entry.amount - 0.01;
- remainingToReconcile -= allocation;
+ remainingToReconcile = Math.max(0, roundCurrency(remainingToReconcile - allocation));
  txModified = true;
  reconciledSplits.push({
  transactionId: t.id,
@@ -1447,9 +1448,18 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
  // Category operations
  const addCategory = (catData: Omit<Category, 'id'>): Category => {
+ const trimmedName = catData.name.trim();
+ const existing = categoriesRef.current.find(
+ c => c.name.trim().toLowerCase() === trimmedName.toLowerCase()
+ );
+ if (existing) {
+ console.warn(`[FinanceContext] Category "${trimmedName}" already exists.`);
+ return existing;
+ }
  const now = new Date().toISOString();
  const newCat: Category = {
  ...catData,
+ name: trimmedName,
  id: `cat-${Date.now()}`,
  isCustom: true,
  updatedAt: now,
@@ -1460,16 +1470,37 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
  };
 
  const updateCategory = (id: string, updated: Partial<Category>) => {
+ if (updated.name) {
+ const trimmedName = updated.name.trim();
+ const duplicate = categoriesRef.current.find(
+ c => c.id !== id && c.name.trim().toLowerCase() === trimmedName.toLowerCase()
+ );
+ if (duplicate) {
+ console.warn(`[FinanceContext] Cannot rename: category "${trimmedName}" already exists.`);
+ return;
+ }
+ }
  const now = new Date().toISOString();
+ const cleanUpdated = {
+ ...updated,
+ ...(updated.name ? { name: updated.name.trim() } : {}),
+ updatedAt: now,
+ };
  categoriesRef.current = categoriesRef.current.map(c =>
- c.id === id ? { ...c, ...updated, updatedAt: now } : c
+ c.id === id ? { ...c, ...cleanUpdated } : c
  );
  setCategories(prev =>
- prev.map(c => (c.id === id ? { ...c, ...updated, updatedAt: now } : c))
+ prev.map(c => (c.id === id ? { ...c, ...cleanUpdated } : c))
  );
  };
 
  const deleteCategory = (id: string) => {
+ const targetCat = categoriesRef.current.find(c => c.id === id);
+ if (!targetCat) return;
+ if (!targetCat.isCustom) {
+ console.warn(`[FinanceContext] Default category "${targetCat.name}" cannot be deleted.`);
+ return;
+ }
  addTombstone('categories', id);
  categoriesRef.current = categoriesRef.current.filter(c => c.id !== id);
  setCategories(prev => prev.filter(c => c.id !== id));
@@ -1896,6 +1927,10 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setRecurringPaymentLogs(rebased.recurringPaymentLogs);
     setAIReports([]);
     setNotRecurringTxIds(new Set());
+    try {
+      localStorage.removeItem('dhanveda_setup_checklist_dismissed');
+      window.dispatchEvent(new CustomEvent('dhanveda-checklist-reset'));
+    } catch {}
   };
 
   const clearAllData = async () => {
@@ -1921,6 +1956,10 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setAIReports([]);
     setEmergencyFund(EMPTY_EMERGENCY_FUND);
     setNotRecurringTxIds(new Set());
+    try {
+      localStorage.removeItem('dhanveda_setup_checklist_dismissed');
+      window.dispatchEvent(new CustomEvent('dhanveda-checklist-reset'));
+    } catch {}
     await clearAllStores();
   };
 
@@ -1949,63 +1988,164 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const importBackupJSON = (jsonStr: string): boolean => {
     try {
+      if (!jsonStr || typeof jsonStr !== 'string' || !jsonStr.trim()) {
+        return false;
+      }
+
+      // Safe parse stripping dangerous prototype keys during parsing
+      const parsed = JSON.parse(jsonStr, (key, value) => {
+        if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+          return undefined;
+        }
+        return value;
+      });
+
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        return false;
+      }
+
+      // Recursive sanitizer to ensure absolutely no dangerous keys slip through
+      const sanitize = (val: any): any => {
+        if (val === null || typeof val !== 'object') return val;
+        if (Array.isArray(val)) return val.map(sanitize);
+        const clean: Record<string, any> = {};
+        for (const k of Object.keys(val)) {
+          if (k === '__proto__' || k === 'constructor' || k === 'prototype') continue;
+          clean[k] = sanitize(val[k]);
+        }
+        return clean;
+      };
+
+      const data = sanitize(parsed);
+
+      // Structure check: ensure at least one recognized store exists and all present store arrays/objects are valid
+      const arrayStoreKeys = [
+        'transactions',
+        'categories',
+        'budgets',
+        'investments',
+        'dreams',
+        'contacts',
+        'settlements',
+        'recurringPayments',
+        'recurringPaymentLogs',
+        'aiReports',
+      ] as const;
+
+      let recognizedDataFound = false;
+
+      // Validate each array store
+      for (const key of arrayStoreKeys) {
+        if (key in data) {
+          if (!Array.isArray(data[key])) {
+            console.warn(`[FinanceContext] Invalid backup store: "${key}" is not an array`);
+            return false;
+          }
+          recognizedDataFound = true;
+        }
+      }
+
+      if ('emergencyFund' in data && data.emergencyFund) {
+        if (typeof data.emergencyFund !== 'object' || Array.isArray(data.emergencyFund)) {
+          console.warn('[FinanceContext] Invalid backup: emergencyFund is not an object');
+          return false;
+        }
+        recognizedDataFound = true;
+      }
+
+      if ('userPreferences' in data && data.userPreferences) {
+        if (typeof data.userPreferences !== 'object' || Array.isArray(data.userPreferences)) {
+          console.warn('[FinanceContext] Invalid backup: userPreferences is not an object');
+          return false;
+        }
+        recognizedDataFound = true;
+      }
+
+      if (!recognizedDataFound) {
+        console.warn('[FinanceContext] Invalid backup: No recognized DhanVeda store structures found.');
+        return false;
+      }
+
+      // Helper to validate and sanitize an array of items requiring string id
+      const filterValidItems = <T extends { id: string }>(items: any[]): T[] => {
+        return items.filter(
+          item => item && typeof item === 'object' && !Array.isArray(item) && typeof item.id === 'string' && item.id.trim().length > 0
+        );
+      };
+
+      // Only emit bulk_data_loaded after validation succeeded
       emitFinanceEvent({ type: 'bulk_data_loaded' });
-      const data = JSON.parse(jsonStr);
+
       if (Array.isArray(data.transactions)) {
-        saveAllToStore('transactions', data.transactions).catch(console.error);
-        prevTransactionsRef.current = data.transactions;
-        setTransactions(data.transactions);
+        const validTransactions = filterValidItems<Transaction>(data.transactions);
+        saveAllToStore('transactions', validTransactions).catch(console.error);
+        prevTransactionsRef.current = validTransactions;
+        setTransactions(validTransactions);
       }
       if (Array.isArray(data.categories)) {
-        saveAllToStore('categories', data.categories).catch(console.error);
-        prevCategoriesRef.current = data.categories;
-        setCategories(data.categories);
+        const validCategories = filterValidItems<Category>(data.categories);
+        saveAllToStore('categories', validCategories).catch(console.error);
+        prevCategoriesRef.current = validCategories;
+        setCategories(validCategories);
       }
       if (Array.isArray(data.budgets)) {
-        saveAllToStore('budgets', data.budgets).catch(console.error);
-        prevBudgetsRef.current = data.budgets;
-        setBudgets(data.budgets);
+        const validBudgets = filterValidItems<Budget>(data.budgets);
+        saveAllToStore('budgets', validBudgets).catch(console.error);
+        prevBudgetsRef.current = validBudgets;
+        setBudgets(validBudgets);
       }
-      if (data.emergencyFund) setEmergencyFund(data.emergencyFund);
+      if (data.emergencyFund && typeof data.emergencyFund === 'object' && !Array.isArray(data.emergencyFund)) {
+        const em = { ...data.emergencyFund, id: 'current' };
+        saveSingleRecord('emergencyFund', em).catch(console.error);
+        setEmergencyFund(em);
+      }
       if (Array.isArray(data.investments)) {
-        saveAllToStore('investments', data.investments).catch(console.error);
-        prevInvestmentsRef.current = data.investments;
-        setInvestments(data.investments);
+        const validInvestments = filterValidItems<Investment>(data.investments);
+        saveAllToStore('investments', validInvestments).catch(console.error);
+        prevInvestmentsRef.current = validInvestments;
+        setInvestments(validInvestments);
       }
       if (Array.isArray(data.dreams)) {
-        saveAllToStore('dreams', data.dreams).catch(console.error);
-        prevDreamsRef.current = data.dreams;
-        setDreams(data.dreams);
+        const validDreams = filterValidItems<DreamGoal>(data.dreams);
+        saveAllToStore('dreams', validDreams).catch(console.error);
+        prevDreamsRef.current = validDreams;
+        setDreams(validDreams);
       }
       if (Array.isArray(data.contacts)) {
-        saveAllToStore('contacts', data.contacts).catch(console.error);
-        prevContactsRef.current = data.contacts;
-        setContacts(data.contacts);
+        const validContacts = filterValidItems<Contact>(data.contacts);
+        saveAllToStore('contacts', validContacts).catch(console.error);
+        prevContactsRef.current = validContacts;
+        setContacts(validContacts);
       }
       if (Array.isArray(data.settlements)) {
-        saveAllToStore('settlements', data.settlements).catch(console.error);
-        prevSettlementsRef.current = data.settlements;
-        setSettlements(data.settlements);
+        const validSettlements = filterValidItems<SettlementRecord>(data.settlements);
+        saveAllToStore('settlements', validSettlements).catch(console.error);
+        prevSettlementsRef.current = validSettlements;
+        setSettlements(validSettlements);
       }
       if (Array.isArray(data.recurringPayments)) {
-        saveAllToStore('recurringPayments', data.recurringPayments).catch(console.error);
-        prevRecurringPaymentsRef.current = data.recurringPayments;
-        setRecurringPayments(data.recurringPayments);
+        const validRecurring = filterValidItems<RecurringPayment>(data.recurringPayments);
+        saveAllToStore('recurringPayments', validRecurring).catch(console.error);
+        prevRecurringPaymentsRef.current = validRecurring;
+        setRecurringPayments(validRecurring);
       }
       if (Array.isArray(data.recurringPaymentLogs)) {
-        saveAllToStore('recurringPaymentLogs', data.recurringPaymentLogs).catch(console.error);
-        prevRecurringPaymentLogsRef.current = data.recurringPaymentLogs;
-        setRecurringPaymentLogs(data.recurringPaymentLogs);
+        const validLogs = filterValidItems<RecurringPaymentLog>(data.recurringPaymentLogs);
+        saveAllToStore('recurringPaymentLogs', validLogs).catch(console.error);
+        prevRecurringPaymentLogsRef.current = validLogs;
+        setRecurringPaymentLogs(validLogs);
       }
       if (Array.isArray(data.aiReports)) {
-        saveAllToStore('aiReports', data.aiReports).catch(console.error);
-        prevAiReportsRef.current = data.aiReports;
-        setAIReports(data.aiReports);
+        const validAiReports = filterValidItems<AIHealthReport>(data.aiReports);
+        saveAllToStore('aiReports', validAiReports).catch(console.error);
+        prevAiReportsRef.current = validAiReports;
+        setAIReports(validAiReports);
       }
-      if (data.userPreferences) {
-        if (data.userPreferences.darkMode !== undefined) setDarkMode(data.userPreferences.darkMode);
+      if (data.userPreferences && typeof data.userPreferences === 'object') {
+        if (data.userPreferences.darkMode !== undefined) setDarkMode(Boolean(data.userPreferences.darkMode));
         if (Array.isArray(data.userPreferences.notRecurringTxIds)) {
-          setNotRecurringTxIds(new Set(data.userPreferences.notRecurringTxIds));
+          const validIds = data.userPreferences.notRecurringTxIds.filter((id: any) => typeof id === 'string');
+          setNotRecurringTxIds(new Set(validIds));
         }
       }
       return true;
@@ -2461,107 +2601,114 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     isInitialized,
   }), [currentView, darkMode, isInitialized]);
 
+  const actionsCurrent: FinanceActionsContextType = {
+    subscribeFinanceEvent,
+    emitFinanceEvent,
+    triggerSync,
+    connectDrive,
+    disconnectDrive,
+    reloadFromDB,
+    addTransaction,
+    addMultipleTransactions,
+    updateTransaction,
+    deleteTransaction,
+    deleteMultipleTransactions,
+    addContact,
+    updateContact,
+    deleteContact,
+    recordSettlement,
+    updateSettlement,
+    deleteSettlement,
+    linkSettlementToTransaction,
+    quickToggleSettleTransaction,
+    assignSplitToContact,
+    settleSplitEntry,
+    addCategory,
+    updateCategory,
+    deleteCategory,
+    setBudgetForCategory,
+    deleteBudget,
+    updateEmergencySettings,
+    addEmergencyContribution,
+    addInvestment,
+    updateInvestment,
+    deleteInvestment,
+    addDream,
+    updateDream,
+    deleteDream,
+    addDreamContribution,
+    addRecurringPayment,
+    updateRecurringPayment,
+    deleteRecurringPayment,
+    pauseRecurringPayment,
+    markRecurringPaymentPaid,
+    toggleNotRecurring,
+    updateAISettings,
+    saveAIReport,
+    deleteAIReport,
+    getAggregatesForAI,
+    resetToDemoData,
+    clearAllData,
+    exportBackupJSON,
+    importBackupJSON,
+  };
+
+  const actionsRef = useRef<FinanceActionsContextType>(actionsCurrent);
+  useLayoutEffect(() => {
+    actionsRef.current = actionsCurrent;
+  });
+
   const actionsValue = useMemo<FinanceActionsContextType>(() => ({
-    subscribeFinanceEvent,
-    emitFinanceEvent,
-    triggerSync,
-    connectDrive,
-    disconnectDrive,
-    reloadFromDB,
-    addTransaction,
-    addMultipleTransactions,
-    updateTransaction,
-    deleteTransaction,
-    deleteMultipleTransactions,
-    addContact,
-    updateContact,
-    deleteContact,
-    recordSettlement,
-    updateSettlement,
-    deleteSettlement,
-    linkSettlementToTransaction,
-    quickToggleSettleTransaction,
-    assignSplitToContact,
-    settleSplitEntry,
-    addCategory,
-    updateCategory,
-    deleteCategory,
-    setBudgetForCategory,
-    deleteBudget,
-    updateEmergencySettings,
-    addEmergencyContribution,
-    addInvestment,
-    updateInvestment,
-    deleteInvestment,
-    addDream,
-    updateDream,
-    deleteDream,
-    addDreamContribution,
-    addRecurringPayment,
-    updateRecurringPayment,
-    deleteRecurringPayment,
-    pauseRecurringPayment,
-    markRecurringPaymentPaid,
-    toggleNotRecurring,
-    updateAISettings,
-    saveAIReport,
-    deleteAIReport,
-    getAggregatesForAI,
-    resetToDemoData,
-    clearAllData,
-    exportBackupJSON,
-    importBackupJSON,
-  }), [
-    subscribeFinanceEvent,
-    emitFinanceEvent,
-    triggerSync,
-    connectDrive,
-    disconnectDrive,
-    reloadFromDB,
-    addTransaction,
-    addMultipleTransactions,
-    updateTransaction,
-    deleteTransaction,
-    deleteMultipleTransactions,
-    addContact,
-    updateContact,
-    deleteContact,
-    recordSettlement,
-    updateSettlement,
-    deleteSettlement,
-    linkSettlementToTransaction,
-    quickToggleSettleTransaction,
-    assignSplitToContact,
-    settleSplitEntry,
-    addCategory,
-    updateCategory,
-    deleteCategory,
-    setBudgetForCategory,
-    deleteBudget,
-    updateEmergencySettings,
-    addEmergencyContribution,
-    addInvestment,
-    updateInvestment,
-    deleteInvestment,
-    addDream,
-    updateDream,
-    deleteDream,
-    addDreamContribution,
-    addRecurringPayment,
-    updateRecurringPayment,
-    deleteRecurringPayment,
-    pauseRecurringPayment,
-    markRecurringPaymentPaid,
-    toggleNotRecurring,
-    updateAISettings,
-    saveAIReport,
-    deleteAIReport,
-    getAggregatesForAI,
-    resetToDemoData,
-    clearAllData,
-    exportBackupJSON,
-    importBackupJSON,
-  ]);
+    subscribeFinanceEvent: (...args) => actionsRef.current.subscribeFinanceEvent(...args),
+    emitFinanceEvent: (...args) => actionsRef.current.emitFinanceEvent(...args),
+    triggerSync: (...args) => actionsRef.current.triggerSync(...args),
+    connectDrive: (...args) => actionsRef.current.connectDrive(...args),
+    disconnectDrive: (...args) => actionsRef.current.disconnectDrive(...args),
+    reloadFromDB: (...args) => actionsRef.current.reloadFromDB(...args),
+    addTransaction: (...args) => actionsRef.current.addTransaction(...args),
+    addMultipleTransactions: (...args) => actionsRef.current.addMultipleTransactions(...args),
+    updateTransaction: (...args) => actionsRef.current.updateTransaction(...args),
+    deleteTransaction: (...args) => actionsRef.current.deleteTransaction(...args),
+    deleteMultipleTransactions: (...args) => actionsRef.current.deleteMultipleTransactions(...args),
+    addContact: (...args) => actionsRef.current.addContact(...args),
+    updateContact: (...args) => actionsRef.current.updateContact(...args),
+    deleteContact: (...args) => actionsRef.current.deleteContact(...args),
+    recordSettlement: (...args) => actionsRef.current.recordSettlement(...args),
+    updateSettlement: (...args) => actionsRef.current.updateSettlement(...args),
+    deleteSettlement: (...args) => actionsRef.current.deleteSettlement(...args),
+    linkSettlementToTransaction: (...args) => actionsRef.current.linkSettlementToTransaction(...args),
+    quickToggleSettleTransaction: (...args) => actionsRef.current.quickToggleSettleTransaction(...args),
+    assignSplitToContact: (...args) => actionsRef.current.assignSplitToContact(...args),
+    settleSplitEntry: (...args) => actionsRef.current.settleSplitEntry(...args),
+    addCategory: (...args) => actionsRef.current.addCategory(...args),
+    updateCategory: (...args) => actionsRef.current.updateCategory(...args),
+    deleteCategory: (...args) => actionsRef.current.deleteCategory(...args),
+    setBudgetForCategory: (...args) => actionsRef.current.setBudgetForCategory(...args),
+    deleteBudget: (...args) => actionsRef.current.deleteBudget(...args),
+    updateEmergencySettings: (...args) => actionsRef.current.updateEmergencySettings(...args),
+    addEmergencyContribution: (...args) => actionsRef.current.addEmergencyContribution(...args),
+    addInvestment: (...args) => actionsRef.current.addInvestment(...args),
+    updateInvestment: (...args) => actionsRef.current.updateInvestment(...args),
+    deleteInvestment: (...args) => actionsRef.current.deleteInvestment(...args),
+    addDream: (...args) => actionsRef.current.addDream(...args),
+    updateDream: (...args) => actionsRef.current.updateDream(...args),
+    deleteDream: (...args) => actionsRef.current.deleteDream(...args),
+    addDreamContribution: (...args) => actionsRef.current.addDreamContribution(...args),
+    addRecurringPayment: (...args) => actionsRef.current.addRecurringPayment(...args),
+    updateRecurringPayment: (...args) => actionsRef.current.updateRecurringPayment(...args),
+    deleteRecurringPayment: (...args) => actionsRef.current.deleteRecurringPayment(...args),
+    pauseRecurringPayment: (...args) => actionsRef.current.pauseRecurringPayment(...args),
+    markRecurringPaymentPaid: (...args) => actionsRef.current.markRecurringPaymentPaid(...args),
+    toggleNotRecurring: (...args) => actionsRef.current.toggleNotRecurring(...args),
+    updateAISettings: (...args) => actionsRef.current.updateAISettings(...args),
+    saveAIReport: (...args) => actionsRef.current.saveAIReport(...args),
+    deleteAIReport: (...args) => actionsRef.current.deleteAIReport(...args),
+    getAggregatesForAI: (...args) => actionsRef.current.getAggregatesForAI(...args),
+    resetToDemoData: (...args) => actionsRef.current.resetToDemoData(...args),
+    clearAllData: (...args) => actionsRef.current.clearAllData(...args),
+    exportBackupJSON: (...args) => actionsRef.current.exportBackupJSON(...args),
+    importBackupJSON: (...args) => actionsRef.current.importBackupJSON(...args),
+  }), []);
 
   const dataValue = useMemo<FinanceDataContextType>(() => ({
     transactions,

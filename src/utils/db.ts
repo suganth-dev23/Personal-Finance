@@ -704,7 +704,7 @@ export async function saveTombstones(records: TombstoneRecord[]): Promise<void> 
     const db = await getDB();
     const tx = db.transaction('tombstones', 'readwrite');
     for (const record of records) {
-      if (record && record.id) {
+      if (record && record.id && record.store) {
         const item = {
           ...record,
           compositeId: `${record.store}:${record.id}`,

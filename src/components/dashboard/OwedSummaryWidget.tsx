@@ -15,16 +15,16 @@ export const OwedSummaryWidget: React.FC = () => {
   } = useFinance();
 
   const balanceMap = useMemo(() => {
-    return new Map(contactBalances.map(b => [b.contactId, b.netAmount]));
+    return new Map((contactBalances || []).map(b => [b.contactId, Number.isFinite(b.netAmount) ? b.netAmount : 0]));
   }, [contactBalances]);
 
   const contactMap = useMemo(() => {
-    return new Map(contacts.map(c => [c.id, c]));
+    return new Map((contacts || []).map(c => [c.id, c]));
   }, [contacts]);
 
   // Top 3 contacts with highest absolute balance
   const topDebts = useMemo(() => {
-    const list = contacts
+    const list = (contacts || [])
       .map(c => ({
         contact: c,
         balance: balanceMap.get(c.id) || 0,
@@ -37,14 +37,16 @@ export const OwedSummaryWidget: React.FC = () => {
 
   // Most recent settlement record
   const latestSettlement = useMemo(() => {
-    if (settlements.length === 0) return null;
+    if (!settlements || settlements.length === 0) return null;
     return [...settlements].sort((a, b) => {
-      if (b.date !== a.date) return b.date.localeCompare(a.date);
-      return b.createdAt.localeCompare(a.createdAt);
+      if (b.date !== a.date) return (b.date || '').localeCompare(a.date || '');
+      return (b.createdAt || '').localeCompare(a.createdAt || '');
     })[0];
   }, [settlements]);
 
-  const netBalance = totalOwedToMe - totalIOwe;
+  const safeTotalOwedToMe = Number.isFinite(totalOwedToMe) ? totalOwedToMe : 0;
+  const safeTotalIOwe = Number.isFinite(totalIOwe) ? totalIOwe : 0;
+  const netBalance = safeTotalOwedToMe - safeTotalIOwe;
 
   return (
     <div className="bg-surface rounded-2xl p-4 sm:p-6 border border-line shadow-xs flex flex-col justify-between h-full space-y-4">

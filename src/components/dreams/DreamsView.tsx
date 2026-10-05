@@ -28,8 +28,11 @@ export const DreamsView: React.FC = () => {
   const [isContributionOpen, setIsContributionOpen] = useState(false);
   const [targetContributionDream, setTargetContributionDream] = useState<DreamGoal | null>(null);
 
-  const overallPercent = totalGoalsTarget > 0 ? Math.min(100, Math.round((totalGoalsSaved / totalGoalsTarget) * 100)) : 0;
-  const completedGoalsCount = dreams.filter(d => d.targetAmount > 0 && d.currentSaved >= d.targetAmount).length;
+  const safeTotalGoalsTarget = Number.isFinite(totalGoalsTarget) && totalGoalsTarget > 0 ? totalGoalsTarget : 0;
+  const safeTotalGoalsSaved = Number.isFinite(totalGoalsSaved) && totalGoalsSaved > 0 ? totalGoalsSaved : 0;
+  const rawOverallPercent = safeTotalGoalsTarget > 0 ? Math.round((safeTotalGoalsSaved / safeTotalGoalsTarget) * 100) : 0;
+  const overallPercent = Number.isFinite(rawOverallPercent) ? Math.max(0, rawOverallPercent) : 0;
+  const completedGoalsCount = dreams.filter(d => (d.targetAmount || 0) > 0 && (d.currentSaved || 0) >= d.targetAmount).length;
 
   const handleEdit = (dream: DreamGoal) => {
     setSelectedDream(dream);
@@ -66,7 +69,7 @@ export const DreamsView: React.FC = () => {
             </p>
             <div className="flex items-baseline gap-3">
               <h2 className="text-3xl sm:text-4xl font-black font-numeric tracking-tight text-ink-1">
-                <AnimatedNumber value={totalGoalsSaved} animateOnMount={true} />
+                <AnimatedNumber value={safeTotalGoalsSaved} animateOnMount={true} />
               </h2>
               <span className="text-sm font-semibold text-positive">
                 {overallPercent}% reached
@@ -74,7 +77,7 @@ export const DreamsView: React.FC = () => {
             </div>
             <p className="mt-2 text-xs text-ink-3 flex items-center gap-1 flex-wrap">
               <span>Target across all goals:</span>
-              <Money value={totalGoalsTarget} size="xs" />
+              <Money value={safeTotalGoalsTarget} size="xs" />
               <span>• {completedGoalsCount} of {dreams.length} completed</span>
             </p>
           </div>
@@ -97,13 +100,13 @@ export const DreamsView: React.FC = () => {
             <span className="font-numeric">Overall Progress: {overallPercent}%</span>
             <span className="font-numeric flex items-center gap-1">
               <span>Target:</span>
-              <Money value={totalGoalsTarget} size="xs" />
+              <Money value={safeTotalGoalsTarget} size="xs" />
             </span>
           </div>
           <Progress
-            value={totalGoalsSaved}
-            max={totalGoalsTarget}
-            tone="auto"
+            value={Math.min(safeTotalGoalsSaved, safeTotalGoalsTarget)}
+            max={safeTotalGoalsTarget > 0 ? safeTotalGoalsTarget : 1}
+            tone={safeTotalGoalsSaved >= safeTotalGoalsTarget && safeTotalGoalsTarget > 0 ? 'reward' : 'primary'}
             size="md"
           />
         </div>
@@ -163,9 +166,13 @@ export const DreamsView: React.FC = () => {
       ) : (
         <div ref={dreamGridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {dreams.map((dream, idx) => {
-            const percent = dream.targetAmount > 0 ? Math.min(100, Math.round((dream.currentSaved / dream.targetAmount) * 100)) : 0;
-            const remaining = Math.max(0, dream.targetAmount - dream.currentSaved);
-            const isCompleted = percent >= 100;
+            const safeTarget = Number.isFinite(dream.targetAmount) && dream.targetAmount > 0 ? dream.targetAmount : 0;
+            const safeSaved = Number.isFinite(dream.currentSaved) && dream.currentSaved > 0 ? dream.currentSaved : 0;
+            const rawPercent = safeTarget > 0 ? Math.round((safeSaved / safeTarget) * 100) : 0;
+            const percent = Number.isFinite(rawPercent) ? Math.max(0, rawPercent) : 0;
+            const remaining = Math.max(0, safeTarget - safeSaved);
+            const isCompleted = safeTarget > 0 && safeSaved >= safeTarget;
+            const isOverAchieved = safeTarget > 0 && safeSaved > safeTarget;
 
             // Suggested monthly savings calculation
             let monthsLeft: number | null = null;
@@ -256,7 +263,7 @@ export const DreamsView: React.FC = () => {
                           Saved
                         </span>
                         <div>
-                          <Money value={dream.currentSaved} size="lg" className="font-extrabold" />
+                          <Money value={safeSaved} size="lg" className="font-extrabold" />
                         </div>
                       </div>
                       <div className="text-right">
@@ -264,7 +271,7 @@ export const DreamsView: React.FC = () => {
                           Target
                         </span>
                         <div>
-                          <Money value={dream.targetAmount} size="sm" className="font-bold text-ink-3" />
+                          <Money value={safeTarget} size="sm" className="font-bold text-ink-3" />
                         </div>
                       </div>
                     </div>
@@ -274,7 +281,9 @@ export const DreamsView: React.FC = () => {
                       <div className="flex justify-between text-xs font-semibold">
                         <span className="text-ink-3 font-numeric">{percent}% Complete</span>
                         <span className={isCompleted ? 'text-positive font-bold animate-pulse-success-infinite inline-block' : 'text-ink-3'}>
-                          {isCompleted ? (
+                          {isOverAchieved ? (
+                            `Accomplished 🎉 (+${percent - 100}% extra)`
+                          ) : isCompleted ? (
                             'Accomplished 🎉'
                           ) : (
                             <span className="inline-flex items-center gap-1 font-numeric">
@@ -285,9 +294,9 @@ export const DreamsView: React.FC = () => {
                         </span>
                       </div>
                       <Progress
-                        value={dream.currentSaved}
-                        max={dream.targetAmount}
-                        tone="auto"
+                        value={Math.min(safeSaved, safeTarget)}
+                        max={safeTarget > 0 ? safeTarget : 1}
+                        tone={isCompleted ? 'reward' : 'primary'}
                         size="sm"
                       />
                     </div>

@@ -2,10 +2,12 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { Modal } from '../common/Modal';
 import { useFinance } from '../../context/FinanceContext';
 import { Transaction, TransactionType, PaymentMethod, OwedDirection, SplitEntry } from '../../types/finance';
-import { numberToWordsINR, formatINR } from '../../utils/currency';
+import { numberToWordsINR, formatINR, roundCurrency, splitAmountEqually } from '../../utils/currency';
 import { getTodayString, sanitizeDateString } from '../../utils/date';
 import { suggestCategory } from '../../utils/categoryMatcher';
 import { Sparkles, Users, Check, X, Lock, Unlock, Plus, Trash2, CheckCircle2, Circle } from 'lucide-react';
+
+export type TransactionTab = 'expense' | 'income' | 'transfer';
 
 interface TransactionModalProps {
  isOpen: boolean;
@@ -56,6 +58,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
  const [date, setDate] = useState<string>(getTodayString());
  const [amount, setAmount] = useState<string>('');
  const [type, setType] = useState<TransactionType>('debit');
+ const [activeTab, setActiveTab] = useState<TransactionTab>('expense');
  const [category, setCategory] = useState<string>('Food & Dining');
  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('UPI');
  const [description, setDescription] = useState<string>('');
@@ -108,6 +111,35 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
  }
  return null;
  }, [initialTransaction, isSplitEnabled, dismissedSettlementSuggestion, numAmount, contacts, balanceMap, type]);
+  const handleTabChange = (newTab: TransactionTab) => {
+  setActiveTab(newTab);
+  if (newTab === 'expense') {
+   setType('debit');
+   const curCat = categories.find(c => c.name.toLowerCase() === category.toLowerCase());
+   if (!curCat || curCat.type === 'income') {
+    const defaultExp = categories.find(c => c.type === 'expense');
+    setCategory(defaultExp ? defaultExp.name : 'Food & Dining');
+   }
+   if (paymentMethod === 'Bank Transfer') {
+    setPaymentMethod('UPI');
+   }
+  } else if (newTab === 'income') {
+   setType('credit');
+   const curCat = categories.find(c => c.name.toLowerCase() === category.toLowerCase());
+   if (!curCat || curCat.type === 'expense') {
+    const defaultInc = categories.find(c => c.type === 'income');
+    setCategory(defaultInc ? defaultInc.name : 'Salary & Income');
+   }
+  } else if (newTab === 'transfer') {
+   setType('debit');
+   const bothCat = categories.find(c => c.name === 'Others') || categories.find(c => c.type === 'both');
+   setCategory(bothCat ? bothCat.name : 'Others');
+   setPaymentMethod('Bank Transfer');
+   if (!description.trim()) {
+    setDescription('Account Transfer');
+   }
+  }
+ };
 
  const handleSaveAsSettlement = (e: React.MouseEvent) => {
  e.preventDefault();
@@ -161,32 +193,35 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
  onClose();
  };
 
- // Re-calculate auto splits helper
+ // Re-calculate auto splits helper with exact cent distribution
  const computeAutoSplits = useCallback(
- (rows: SplitRowState[], totalAmount: number, isAuto: boolean): SplitRowState[] => {
- if (!isAuto || rows.length === 0) return rows;
+  (rows: SplitRowState[], totalAmount: number, isAuto: boolean): SplitRowState[] => {
+   if (!isAuto || rows.length === 0) return rows;
 
- const pinnedSum = rows
- .filter(r => r.isPinned)
- .reduce((sum, r) => sum + (r.amount || 0), 0);
+   const pinnedSum = roundCurrency(
+    rows.filter(r => r.isPinned).reduce((sum, r) => sum + (r.amount || 0), 0)
+   );
 
- const leftover = Math.max(0, totalAmount - pinnedSum);
- const unpinnedRows = rows.filter(r => !r.isPinned);
+   const leftover = Math.max(0, roundCurrency(totalAmount - pinnedSum));
+   const unpinnedRows = rows.filter(r => !r.isPinned);
 
- if (unpinnedRows.length === 0) return rows;
+   if (unpinnedRows.length === 0) return rows;
 
- // Total shares = unpinned rows + your share (1)
- const shares = unpinnedRows.length + 1;
- const shareAmount = Number((leftover / shares).toFixed(2));
+   // Total shares = unpinned rows + your share (1)
+   const shares = unpinnedRows.length + 1;
+   const distributions = splitAmountEqually(leftover, shares);
 
- return rows.map(r => {
- if (!r.isPinned) {
- return { ...r, amount: shareAmount };
- }
- return r;
- });
- },
- []
+   let unpinnedIdx = 0;
+   return rows.map(r => {
+    if (!r.isPinned) {
+     const alloc = distributions[unpinnedIdx] ?? 0;
+     unpinnedIdx++;
+     return { ...r, amount: alloc };
+    }
+    return r;
+   });
+  },
+  []
  );
 
  const prevIsOpenRef = useRef(false);
@@ -206,6 +241,18 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
  setDate(initialTransaction.date);
  setAmount(initialTransaction.amount.toString());
  setType(initialTransaction.type);
+ if (initialTransaction.type === 'credit') {
+  setActiveTab('income');
+ } else if (
+  initialTransaction.paymentMethod === 'Bank Transfer' &&
+  (initialTransaction.category.toLowerCase().includes('transfer') ||
+   initialTransaction.category === 'Others' ||
+   initialTransaction.description.toLowerCase().includes('transfer'))
+ ) {
+  setActiveTab('transfer');
+ } else {
+  setActiveTab('expense');
+ }
  setCategory(initialTransaction.category);
  setPaymentMethod(initialTransaction.paymentMethod);
  setDescription(initialTransaction.description);
@@ -235,6 +282,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
  setDate(getTodayString());
  setAmount('');
  setType('debit');
+ setActiveTab('expense');
  setCategory('Food & Dining');
  setPaymentMethod('UPI');
  setDescription('');
@@ -310,19 +358,32 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
  };
 
  const handleCreateNewPerson = () => {
- if (!newPersonName.trim()) return;
- const created = addContact({ name: newPersonName.trim() });
+ const trimmed = newPersonName.trim();
+ if (!trimmed) return;
+ const existing = contacts.find(c => c.name.trim().toLowerCase() === trimmed.toLowerCase());
+ if (existing) {
+  alert(`A contact named "${existing.name}" already exists.`);
+  const targetRowId = creatingContactForRowId;
+  setIsCreatingContact(false);
+  setNewPersonName('');
+  setCreatingContactForRowId(null);
+  if (targetRowId) {
+   handleRowChange(targetRowId, { contactId: existing.id, label: undefined });
+  }
+  return;
+ }
+ const created = addContact({ name: trimmed });
  const targetRowId = creatingContactForRowId;
  setIsCreatingContact(false);
  setNewPersonName('');
  setCreatingContactForRowId(null);
 
  if (targetRowId) {
- // Direct update to the split row where user chose "+ Add new contact..."
- handleRowChange(targetRowId, { contactId: created.id, label: undefined });
+  // Direct update to the split row where user chose "+ Add new contact..."
+  handleRowChange(targetRowId, { contactId: created.id, label: undefined });
  } else {
- // Added from "+ Add Person" button
- handleAddNamedPerson(created.id);
+  // Added from "+ Add Person" button
+  handleAddNamedPerson(created.id);
  }
  };
 
@@ -538,51 +599,62 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
  onClose();
  };
 
- const sumOfSplits = splitRows.reduce((acc, r) => acc + (r.amount || 0), 0);
- const yourShare = Math.max(0, numAmount - sumOfSplits);
+ const sumOfSplits = roundCurrency(splitRows.reduce((acc, r) => acc + (r.amount || 0), 0));
+ const yourShare = Math.max(0, roundCurrency(numAmount - sumOfSplits));
  const isOverAllocated = isSplitEnabled && sumOfSplits > numAmount + 0.01;
  const isSplitEmpty = isSplitEnabled && splitRows.length === 0;
  const isSubmitDisabled = isOverAllocated || isSplitEmpty;
  const words = numAmount > 0 ? numberToWordsINR(numAmount) : '';
 
  return (
- <Modal
- isOpen={isOpen}
- onClose={onClose}
- title={initialTransaction ? 'Edit Transaction' : 'Add New Transaction'}
- subtitle={initialTransaction ? 'Update transaction details' : 'Log an expense or income entry'}
- >
- <form onSubmit={handleSubmit} className="space-y-4">
- {/* Type Toggle: Debit (Expense) vs Credit (Income) */}
- <div>
- <label className="block text-xs font-bold uppercase tracking-wider text-ink-3 mb-1.5">
- Transaction Type
- </label>
- <div className="grid grid-cols-2 gap-2 p-1 bg-sunken rounded-xl border border-transparent dark:border-line">
- <button
- type="button"
- onClick={() => setType('debit')}
- className={`py-2 px-3 rounded-xl text-sm font-bold transition-colors ${
- type === 'debit'
- ? 'bg-rose-500 text-white shadow-sm'
- : 'text-ink-2 hover:text-ink-1'
- }`}
- >
- Debit (Expense)
- </button>
- <button
- type="button"
- onClick={() => setType('credit')}
- className={`py-2 px-3 rounded-xl text-sm font-bold transition-colors ${
- type === 'credit'
- ? 'bg-emerald-600 text-white shadow-sm'
- : 'text-ink-2 hover:text-ink-1'
- }`}
- >
- Credit (Income)
- </button>
- </div>
- </div>
+  <Modal
+   isOpen={isOpen}
+   onClose={onClose}
+   title={initialTransaction ? 'Edit Transaction' : 'Add New Transaction'}
+   subtitle={initialTransaction ? 'Update transaction details' : 'Log an expense, income, or transfer entry'}
+  >
+   <form onSubmit={handleSubmit} className="space-y-4">
+    {/* Type Toggle: Expense / Income / Transfer */}
+    <div>
+     <label className="block text-xs font-bold uppercase tracking-wider text-ink-3 mb-1.5">
+      Transaction Type
+     </label>
+     <div className="grid grid-cols-3 gap-1.5 p-1 bg-sunken rounded-xl border border-transparent dark:border-line">
+      <button
+       type="button"
+       onClick={() => handleTabChange('expense')}
+       className={`py-2 px-2 rounded-xl text-xs sm:text-sm font-bold transition-colors ${
+        activeTab === 'expense'
+         ? 'bg-rose-500 text-white shadow-xs'
+         : 'text-ink-2 hover:text-ink-1'
+       }`}
+      >
+       Expense
+      </button>
+      <button
+       type="button"
+       onClick={() => handleTabChange('income')}
+       className={`py-2 px-2 rounded-xl text-xs sm:text-sm font-bold transition-colors ${
+        activeTab === 'income'
+         ? 'bg-emerald-600 text-white shadow-xs'
+         : 'text-ink-2 hover:text-ink-1'
+       }`}
+      >
+       Income
+      </button>
+      <button
+       type="button"
+       onClick={() => handleTabChange('transfer')}
+       className={`py-2 px-2 rounded-xl text-xs sm:text-sm font-bold transition-colors ${
+        activeTab === 'transfer'
+         ? 'bg-primary text-on-primary shadow-xs'
+         : 'text-ink-2 hover:text-ink-1'
+       }`}
+      >
+       Transfer
+      </button>
+     </div>
+    </div>
 
  {/* Amount Input */}
  <div>
@@ -694,6 +766,14 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
  required
  value={date}
  onChange={e => setDate(e.target.value)}
+ onBlur={() => {
+  const sanitized = sanitizeDateString(date);
+  if (!sanitized) {
+   setDate(getTodayString());
+  } else {
+   setDate(sanitized);
+  }
+ }}
  className="font-numeric tabular-nums w-full rounded-xl border border-line bg-sunken px-3.5 py-2.5 text-sm text-ink-1 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
  />
  </div>

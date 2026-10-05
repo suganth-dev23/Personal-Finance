@@ -182,9 +182,9 @@ export const PeopleView: React.FC = () => {
  }
  });
  return {
- owedToMe: Number(owedToMe.toFixed(2)),
- iOwe: Number(iOwe.toFixed(2)),
- net: Number((owedToMe - iOwe).toFixed(2)),
+ owedToMe: roundCurrency(owedToMe),
+ iOwe: roundCurrency(iOwe),
+ net: roundCurrency(owedToMe - iOwe),
  };
  }, [unassignedSplits]);
 
@@ -219,7 +219,7 @@ export const PeopleView: React.FC = () => {
  }
  };
 
- const netOverall = totalOwedToMe - totalIOwe;
+ const netOverall = roundCurrency(totalOwedToMe - totalIOwe);
 
  // Handle quick tick auto-settle with link suggestion prompt
  const handleQuickTickSettle = (tx: Transaction, split: SplitEntry, contact: Contact) => {

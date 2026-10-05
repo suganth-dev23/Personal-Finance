@@ -43,21 +43,45 @@ export const SetupChecklistCard: React.FC<SetupChecklistCardProps> = ({ onOpenAd
 
   useEffect(() => {
     const handleReset = () => {
+      try {
+        localStorage.removeItem('dhanveda_setup_checklist_dismissed');
+      } catch {}
       setIsDismissed(false);
     };
 
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'dhanveda_setup_checklist_dismissed') {
+        setIsDismissed(e.newValue === 'true');
+      }
+    };
+
     window.addEventListener('dhanveda-checklist-reset', handleReset);
+    window.addEventListener('storage', handleStorage);
     return () => {
       window.removeEventListener('dhanveda-checklist-reset', handleReset);
+      window.removeEventListener('storage', handleStorage);
     };
   }, []);
+
+  const safeTransactions = Array.isArray(transactions) ? transactions : [];
+  const safeBudgets = Array.isArray(budgets) ? budgets : [];
+  const safeDreams = Array.isArray(dreams) ? dreams : [];
+
+  const isEmergencyConfigured = Boolean(
+    emergencyFund && (
+      (emergencyFund.manualTargetAmount && emergencyFund.manualTargetAmount > 0) ||
+      (Array.isArray(emergencyFund.contributions) && emergencyFund.contributions.length > 0) ||
+      (emergencyFund.currentSaved > 0) ||
+      !!emergencyFund.updatedAt
+    )
+  );
 
   const items: ChecklistItem[] = useMemo(() => [
     {
       id: 'transaction',
       title: 'Log your first transaction',
       description: 'Track income, expense, or transfers to activate cash flow charts.',
-      isCompleted: transactions.length > 0,
+      isCompleted: safeTransactions.length > 0,
       action: () => {
         if (onOpenAddTx) {
           onOpenAddTx();
@@ -71,7 +95,7 @@ export const SetupChecklistCard: React.FC<SetupChecklistCardProps> = ({ onOpenAd
       id: 'budget',
       title: 'Set a category budget',
       description: 'Establish spending limits to keep monthly discretionary expenses under control.',
-      isCompleted: budgets.length > 0,
+      isCompleted: safeBudgets.length > 0,
       action: () => setCurrentView('budgets'),
       actionLabel: 'Set Budget',
     },
@@ -79,7 +103,7 @@ export const SetupChecklistCard: React.FC<SetupChecklistCardProps> = ({ onOpenAd
       id: 'emergency',
       title: 'Set emergency fund target',
       description: 'Calibrate your 3–6 month reserve runway baseline for peace of mind.',
-      isCompleted: (((emergencyFund as any)?.targetAmount ?? emergencyFund?.manualTargetAmount ?? 0) > 0) || (emergencyFund?.targetMonths ?? 0) > 0,
+      isCompleted: isEmergencyConfigured,
       action: () => setCurrentView('emergency'),
       actionLabel: 'Configure Target',
     },
@@ -87,11 +111,11 @@ export const SetupChecklistCard: React.FC<SetupChecklistCardProps> = ({ onOpenAd
       id: 'dream',
       title: 'Create a milestone dream',
       description: 'Define an aspirational financial goal to unlock target-date tracking.',
-      isCompleted: dreams.length > 0,
+      isCompleted: safeDreams.length > 0,
       action: () => setCurrentView('dreams'),
       actionLabel: 'Create Dream',
     },
-  ], [transactions.length, budgets.length, emergencyFund, dreams.length, onOpenAddTx, setCurrentView]);
+  ], [safeTransactions.length, safeBudgets.length, isEmergencyConfigured, safeDreams.length, onOpenAddTx, setCurrentView]);
 
   const completedCount = useMemo(() => items.filter(i => i.isCompleted).length, [items]);
   const totalCount = items.length;

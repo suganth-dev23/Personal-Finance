@@ -54,6 +54,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx, onEdi
     resetToDemoData,
   } = useFinance();
 
+  const safeGainLoss = Number.isFinite(totalInvestmentGainLoss) ? totalInvestmentGainLoss : 0;
+  const safeGainLossPct = Number.isFinite(totalInvestmentGainLossPct) ? totalInvestmentGainLossPct : 0;
+  const safeSavingsRate = Number.isFinite(currentMonthSavingsRate) ? currentMonthSavingsRate : 0;
+  const safeRunwayMonths = Number.isFinite(emergencyFundRunwayMonths)
+    ? `${emergencyFundRunwayMonths.toFixed(1)} mos`
+    : emergencyFundRunwayMonths === Infinity
+    ? '∞ mos'
+    : '0.0 mos';
+
   return (
     <div className="space-y-6">
       {/* Welcome Banner when starting fresh (Mineral Card with Gold Accent) */}
@@ -153,7 +162,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx, onEdi
               <p className="hidden sm:flex text-xs text-ink-3 mt-2 items-center gap-2 flex-wrap">
                 <span>Monthly savings rate:</span>
                 <span className="font-numeric font-bold text-ink-1 dark:text-slate-200">
-                  {currentMonthSavingsRate.toFixed(1)}%
+                  {safeSavingsRate.toFixed(1)}%
                 </span>
                 <span className="text-slate-300 dark:text-slate-700">•</span>
                 <button
@@ -223,7 +232,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx, onEdi
               label="Invested assets"
               icon={
                 <span className="text-xs font-numeric font-bold text-reward dark:text-reward">
-                  {totalInvestmentGainLoss >= 0 ? '+' : ''}{totalInvestmentGainLossPct.toFixed(1)}%
+                  {safeGainLoss >= 0 ? '+' : ''}{safeGainLossPct.toFixed(1)}%
                 </span>
               }
               value={<Money value={totalInvestmentValue} size="2xl" />}
@@ -241,7 +250,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx, onEdi
             <Stat
               label="Liquid runway"
               icon={<span className="text-xs font-semibold text-ink-3">{emergencyFund.targetMonths}m goal</span>}
-              value={`${emergencyFundRunwayMonths.toFixed(1)} mos`}
+              value={safeRunwayMonths}
               sub={<><Money value={emergencyFund.currentSaved} size="xs" /> saved</>}
             />
           </Card>

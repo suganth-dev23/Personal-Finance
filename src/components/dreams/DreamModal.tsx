@@ -5,6 +5,7 @@ import { DreamGoal } from '../../types/finance';
 import { numberToWordsINR } from '../../utils/currency';
 import { IconRenderer } from '../common/IconRenderer';
 import { AVAILABLE_CATEGORY_ICONS, CATEGORY_COLORS } from '../../constants/categoryTheme';
+import { sanitizeDateString } from '../../utils/date';
 
 interface DreamModalProps {
  isOpen: boolean;
@@ -27,6 +28,7 @@ export const DreamModal: React.FC<DreamModalProps> = ({
  const [icon, setIcon] = useState('Compass');
  const [color, setColor] = useState('#3b82f6');
  const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
+ const [formError, setFormError] = useState<string | null>(null);
 
  useEffect(() => {
  if (initialDream) {
@@ -38,6 +40,7 @@ export const DreamModal: React.FC<DreamModalProps> = ({
  setIcon(initialDream.icon);
  setColor(initialDream.color);
  setPriority(initialDream.priority);
+ setFormError(null);
  } else {
  setName('');
  setTargetAmount('');
@@ -47,28 +50,46 @@ export const DreamModal: React.FC<DreamModalProps> = ({
  setIcon('Compass');
  setColor('#3b82f6');
  setPriority('medium');
+ setFormError(null);
  }
  }, [initialDream, isOpen]);
 
  const handleSubmit = (e: React.FormEvent) => {
  e.preventDefault();
- const target = parseFloat(targetAmount);
- const saved = initialSaved ? parseFloat(initialSaved) : 0;
+ setFormError(null);
 
  if (!name.trim()) {
- alert('Please enter a goal name');
+ setFormError('Please enter a goal name');
  return;
  }
- if (isNaN(target) || target <= 0) {
- alert('Please enter a valid target amount');
+
+ const target = parseFloat(targetAmount);
+ if (!targetAmount.trim() || isNaN(target) || target <= 0) {
+ setFormError('Target amount must be greater than 0');
  return;
+ }
+
+ const saved = initialSaved.trim() ? parseFloat(initialSaved) : 0;
+ if (isNaN(saved) || saved < 0) {
+ setFormError('Initial saved amount must be 0 or greater');
+ return;
+ }
+
+ let validTargetDate: string | undefined = undefined;
+ if (targetDate.trim()) {
+ const sanitized = sanitizeDateString(targetDate);
+ if (!sanitized) {
+ setFormError('Please enter a valid target deadline date (YYYY-MM-DD)');
+ return;
+ }
+ validTargetDate = sanitized;
  }
 
  if (initialDream) {
  updateDream(initialDream.id, {
  name: name.trim(),
  targetAmount: target,
- targetDate: targetDate || undefined,
+ targetDate: validTargetDate,
  category,
  icon,
  color,
@@ -79,7 +100,7 @@ export const DreamModal: React.FC<DreamModalProps> = ({
  name: name.trim(),
  targetAmount: target,
  initialSaved: saved,
- targetDate: targetDate || undefined,
+ targetDate: validTargetDate,
  category,
  icon,
  color,
@@ -100,6 +121,12 @@ export const DreamModal: React.FC<DreamModalProps> = ({
  maxWidth="xl"
  >
  <form onSubmit={handleSubmit} className="space-y-4">
+ {formError && (
+ <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs font-semibold text-rose-600 dark:text-rose-400">
+ {formError}
+ </div>
+ )}
+
  {/* Name & Target Amount */}
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
  <div>

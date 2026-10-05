@@ -40,6 +40,13 @@ export const InvestmentModal: React.FC<InvestmentModalProps> = ({
  const [platform, setPlatform] = useState('');
  const [notes, setNotes] = useState('');
 
+ // Unit calculator (Stocks, Mutual Funds, Gold)
+ const [useUnitCalc, setUseUnitCalc] = useState(false);
+ const [quantity, setQuantity] = useState('');
+ const [buyPrice, setBuyPrice] = useState('');
+ const [currentPrice, setCurrentPrice] = useState('');
+ const [formError, setFormError] = useState<string | null>(null);
+
  useEffect(() => {
  if (initialInvestment) {
  setName(initialInvestment.name);
@@ -50,6 +57,11 @@ export const InvestmentModal: React.FC<InvestmentModalProps> = ({
  setSipDay(initialInvestment.sipDay ? initialInvestment.sipDay.toString() : '');
  setPlatform(initialInvestment.platform || '');
  setNotes(initialInvestment.notes || '');
+ setUseUnitCalc(false);
+ setQuantity('');
+ setBuyPrice('');
+ setCurrentPrice('');
+ setFormError(null);
  } else {
  setName('');
  setType('Mutual Funds');
@@ -59,29 +71,114 @@ export const InvestmentModal: React.FC<InvestmentModalProps> = ({
  setSipDay('');
  setPlatform('Zerodha');
  setNotes('');
+ setUseUnitCalc(false);
+ setQuantity('');
+ setBuyPrice('');
+ setCurrentPrice('');
+ setFormError(null);
  }
  }, [initialInvestment, isOpen]);
 
+ const handleQuantityChange = (val: string) => {
+ setQuantity(val);
+ setFormError(null);
+ const q = parseFloat(val);
+ const bp = parseFloat(buyPrice);
+ const cp = parseFloat(currentPrice);
+ if (!isNaN(q) && q > 0) {
+ if (!isNaN(bp) && bp > 0) {
+ setInvestedAmount((q * bp).toFixed(2));
+ }
+ if (!isNaN(cp) && cp >= 0) {
+ setCurrentValue((q * cp).toFixed(2));
+ }
+ }
+ };
+
+ const handleBuyPriceChange = (val: string) => {
+ setBuyPrice(val);
+ setFormError(null);
+ const bp = parseFloat(val);
+ const q = parseFloat(quantity);
+ if (!isNaN(bp) && bp > 0 && !isNaN(q) && q > 0) {
+ setInvestedAmount((q * bp).toFixed(2));
+ }
+ };
+
+ const handleCurrentPriceChange = (val: string) => {
+ setCurrentPrice(val);
+ setFormError(null);
+ const cp = parseFloat(val);
+ const q = parseFloat(quantity);
+ if (!isNaN(cp) && cp >= 0 && !isNaN(q) && q > 0) {
+ setCurrentValue((q * cp).toFixed(2));
+ }
+ };
+
  const handleSubmit = (e: React.FormEvent) => {
  e.preventDefault();
+ setFormError(null);
+
+ if (!name.trim()) {
+ setFormError('Please enter an investment name');
+ return;
+ }
+
+ if (useUnitCalc) {
+ if (quantity.trim() !== '') {
+ const q = parseFloat(quantity);
+ if (isNaN(q) || q <= 0) {
+ setFormError('Quantity must be greater than 0');
+ return;
+ }
+ }
+ if (buyPrice.trim() !== '') {
+ const bp = parseFloat(buyPrice);
+ if (isNaN(bp) || bp <= 0) {
+ setFormError('Buy price per unit must be greater than 0');
+ return;
+ }
+ }
+ if (currentPrice.trim() !== '') {
+ const cp = parseFloat(currentPrice);
+ if (isNaN(cp) || cp < 0) {
+ setFormError('Current price per unit must be 0 or greater');
+ return;
+ }
+ }
+ }
+
  const inv = parseFloat(investedAmount);
  const curr = parseFloat(currentValue);
 
- if (!name.trim()) {
- alert('Please enter an investment name');
+ if (!investedAmount.trim() || isNaN(inv) || inv <= 0) {
+ setFormError('Total invested amount must be greater than 0');
  return;
  }
- if (isNaN(inv) || inv < 0) {
- alert('Please enter a valid invested amount');
- return;
- }
- if (isNaN(curr) || curr < 0) {
- alert('Please enter a valid current valuation');
+ if (!currentValue.trim() || isNaN(curr) || curr < 0) {
+ setFormError('Current market valuation must be 0 or greater');
  return;
  }
 
- const sip = sipAmount ? parseFloat(sipAmount) : undefined;
- const day = sipDay ? parseInt(sipDay) : undefined;
+ let sip: number | undefined = undefined;
+ if (sipAmount.trim() !== '') {
+ const parsedSip = parseFloat(sipAmount);
+ if (isNaN(parsedSip) || parsedSip < 0) {
+ setFormError('Monthly SIP amount must be a valid positive number');
+ return;
+ }
+ sip = parsedSip;
+ }
+
+ let day: number | undefined = undefined;
+ if (sipDay.trim() !== '') {
+ const parsedDay = parseInt(sipDay, 10);
+ if (isNaN(parsedDay) || parsedDay < 1 || parsedDay > 28) {
+ setFormError('SIP debit day must be between 1 and 28');
+ return;
+ }
+ day = parsedDay;
+ }
 
  if (initialInvestment) {
  updateInvestment(initialInvestment.id, {
@@ -152,6 +249,75 @@ export const InvestmentModal: React.FC<InvestmentModalProps> = ({
  ))}
  </select>
  </div>
+ </div>
+
+ {/* Form Error Alert */}
+ {formError && (
+ <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs font-semibold text-rose-600 dark:text-rose-400">
+ {formError}
+ </div>
+ )}
+
+ {/* Optional Unit / Quantity Calculator */}
+ <div className="p-3.5 bg-sunken rounded-xl border border-line space-y-2.5">
+ <div className="flex items-center justify-between">
+ <span className="text-xs font-semibold text-ink-2">
+ Per-Unit Calculator (Optional — Stocks, MF units, Gold)
+ </span>
+ <button
+ type="button"
+ onClick={() => setUseUnitCalc(!useUnitCalc)}
+ className="text-xs text-primary font-semibold hover:underline"
+ >
+ {useUnitCalc ? 'Hide Units' : 'Calculate from Units'}
+ </button>
+ </div>
+ {useUnitCalc && (
+ <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+ <div>
+ <label className="block text-xs font-medium text-ink-3 mb-1">
+ Quantity (Units &gt; 0)
+ </label>
+ <input
+ type="number"
+ step="any"
+ min="0.0001"
+ value={quantity}
+ onChange={e => handleQuantityChange(e.target.value)}
+ placeholder="e.g. 100"
+ className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-xs font-numeric font-bold text-ink-1 focus:border-primary focus:outline-none"
+ />
+ </div>
+ <div>
+ <label className="block text-xs font-medium text-ink-3 mb-1">
+ Buy Price / Unit (₹ &gt; 0)
+ </label>
+ <input
+ type="number"
+ step="any"
+ min="0.01"
+ value={buyPrice}
+ onChange={e => handleBuyPriceChange(e.target.value)}
+ placeholder="e.g. 250"
+ className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-xs font-numeric font-bold text-ink-1 focus:border-primary focus:outline-none"
+ />
+ </div>
+ <div>
+ <label className="block text-xs font-medium text-ink-3 mb-1">
+ Current Price / Unit (₹ &ge; 0)
+ </label>
+ <input
+ type="number"
+ step="any"
+ min="0"
+ value={currentPrice}
+ onChange={e => handleCurrentPriceChange(e.target.value)}
+ placeholder="e.g. 280"
+ className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-xs font-numeric font-bold text-ink-1 focus:border-primary focus:outline-none"
+ />
+ </div>
+ </div>
+ )}
  </div>
 
  {/* Invested Amount & Current Valuation */}

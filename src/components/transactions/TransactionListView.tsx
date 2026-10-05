@@ -299,14 +299,22 @@ export const TransactionListView: React.FC<TransactionListViewProps> = React.mem
     const searchLower = deferredSearch.trim().toLowerCase();
 
     return transactions.filter(tx => {
-      // 1. Search filter (includes description, person, category, referenceId, amount)
+      // 1. Search filter (includes description, person, category, referenceId, amount, splits, tags)
       if (searchLower) {
         const matchesDesc = tx.description.toLowerCase().includes(searchLower);
         const matchesPerson = tx.person?.toLowerCase().includes(searchLower);
         const matchesCat = tx.category.toLowerCase().includes(searchLower);
         const matchesRef = tx.referenceId?.toLowerCase().includes(searchLower);
         const matchesAmount = tx.amount.toString().includes(searchLower);
-        if (!matchesDesc && !matchesPerson && !matchesCat && !matchesRef && !matchesAmount) {
+        const matchesSplits = tx.splitWith?.some(s => {
+          const contactName = s.contactId ? contactMap.get(s.contactId)?.name : s.label;
+          return (
+            contactName?.toLowerCase().includes(searchLower) ||
+            s.label?.toLowerCase().includes(searchLower)
+          );
+        });
+        const matchesTags = tx.tags?.some(tag => tag.toLowerCase().includes(searchLower));
+        if (!matchesDesc && !matchesPerson && !matchesCat && !matchesRef && !matchesAmount && !matchesSplits && !matchesTags) {
           return false;
         }
       }
@@ -329,7 +337,11 @@ export const TransactionListView: React.FC<TransactionListViewProps> = React.mem
       }
 
       // 5. Payment Method filter
-      if (selectedMethod !== 'all' && tx.paymentMethod !== selectedMethod) {
+      if (selectedMethod === 'cards') {
+        if (tx.paymentMethod !== 'Credit Card' && tx.paymentMethod !== 'Debit Card') {
+          return false;
+        }
+      } else if (selectedMethod !== 'all' && tx.paymentMethod !== selectedMethod) {
         return false;
       }
 
@@ -368,6 +380,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = React.mem
     dateRange,
     customStartDate,
     customEndDate,
+    contactMap,
   ]);
 
   // Quick stats on filtered result
@@ -473,26 +486,34 @@ export const TransactionListView: React.FC<TransactionListViewProps> = React.mem
       return;
     }
     const headers = ['Date', 'Type', 'Amount (INR)', 'Description', 'Person', 'Category', 'Payment Method', 'Reference ID', 'Source'];
+    const escapeField = (val: string | number | undefined | null) => {
+      if (val === undefined || val === null) return '""';
+      const str = String(val);
+      return `"${str.replace(/"/g, '""')}"`;
+    };
+
     const rows = filteredTransactions.map(t => [
-      t.date,
-      t.type,
-      t.amount.toString(),
-      `"${t.description.replace(/"/g, '""')}"`,
-      `"${(t.person || '—').replace(/"/g, '""')}"`,
-      `"${t.category.replace(/"/g, '""')}"`,
-      `"${t.paymentMethod}"`,
-      `"${t.referenceId || '—'}"`,
-      t.source,
+      escapeField(t.date),
+      escapeField(t.type),
+      escapeField(t.amount.toFixed(2)),
+      escapeField(t.description),
+      escapeField(t.person || '—'),
+      escapeField(t.category),
+      escapeField(t.paymentMethod),
+      escapeField(t.referenceId || '—'),
+      escapeField(t.source),
     ]);
 
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
+    const csvContent = [headers.join(','), ...rows.map(e => e.join(','))].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
+    link.setAttribute('href', url);
     link.setAttribute('download', `dhanveda_transactions_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   }, [filteredTransactions]);
 
   // Grouping structure
@@ -686,7 +707,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = React.mem
           </button>
           <button
             type="button"
-            onClick={() => setSelectedType('debit')}
+            onClick={() => setSelectedType(selectedType === 'debit' ? 'all' : 'debit')}
             className={`px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-colors press ${
               selectedType === 'debit'
                 ? 'bg-negative text-white shadow-xs'
@@ -697,7 +718,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = React.mem
           </button>
           <button
             type="button"
-            onClick={() => setSelectedType('credit')}
+            onClick={() => setSelectedType(selectedType === 'credit' ? 'all' : 'credit')}
             className={`px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-colors press ${
               selectedType === 'credit'
                 ? 'bg-emerald-600 text-white shadow-xs'
@@ -719,9 +740,9 @@ export const TransactionListView: React.FC<TransactionListViewProps> = React.mem
           </button>
           <button
             type="button"
-            onClick={() => setSelectedMethod(selectedMethod.includes('Card') ? 'all' : 'Credit Card')}
+            onClick={() => setSelectedMethod(selectedMethod === 'cards' ? 'all' : 'cards')}
             className={`px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-colors press ${
-              selectedMethod.includes('Card')
+              selectedMethod === 'cards'
                 ? 'bg-slate-900 text-white dark:bg-sunken dark:text-reward dark:border dark:border-reward/40 shadow-xs'
                 : 'bg-sunken text-ink-2 hover:bg-line'
             }`}

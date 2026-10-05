@@ -56,8 +56,8 @@ export function useRecurringTransactions(
 ): RecurringTransactionsResult {
   return useMemo(() => {
     // Filter out transactions explicitly marked by the user as "not recurring"
-    const validTransactions = transactions.filter(
-      t => !notRecurringTxIds || !notRecurringTxIds.has(t.id)
+    const validTransactions = (transactions || []).filter(
+      t => t && (!notRecurringTxIds || !notRecurringTxIds.has(t.id))
     );
 
     // Group into potential clusters by fuzzy description + category + type

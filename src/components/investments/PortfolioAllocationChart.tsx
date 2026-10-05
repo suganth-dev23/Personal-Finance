@@ -18,11 +18,13 @@ export const PortfolioAllocationChart: React.FC<PortfolioAllocationChartProps> =
  if (!map[i.type]) {
  map[i.type] = { value: 0, invested: 0 };
  }
- map[i.type].value += i.currentValue;
- map[i.type].invested += i.investedAmount;
+ const val = Number.isFinite(i.currentValue) ? i.currentValue : 0;
+ const inv = Number.isFinite(i.investedAmount) ? i.investedAmount : 0;
+ map[i.type].value += val;
+ map[i.type].invested += inv;
  });
 
- const totalVal = investments.reduce((a, b) => a + b.currentValue, 0);
+ const totalVal = investments.reduce((a, b) => a + (Number.isFinite(b.currentValue) ? b.currentValue : 0), 0);
 
  return Object.entries(map).map(([type, stats]) => ({
  name: type,
@@ -34,7 +36,7 @@ export const PortfolioAllocationChart: React.FC<PortfolioAllocationChartProps> =
  }, [investments]);
 
  const totalPortfolioValue = useMemo(() => {
- return investments.reduce((acc, i) => acc + i.currentValue, 0);
+ return investments.reduce((acc, i) => acc + (Number.isFinite(i.currentValue) ? i.currentValue : 0), 0);
  }, [investments]);
 
  const CustomTooltip = ({ active, payload }: any) => {
@@ -69,8 +71,10 @@ export const PortfolioAllocationChart: React.FC<PortfolioAllocationChartProps> =
  </div>
  </div>
 
- {allocationData.length === 0 ? (
- <div className="py-12 text-center text-ink-3 text-xs">No investment holdings logged.</div>
+ {allocationData.length === 0 || totalPortfolioValue <= 0 ? (
+ <div className="py-12 text-center text-ink-3 text-xs">
+ {allocationData.length === 0 ? 'No investment holdings logged.' : 'Holdings currently valued at ₹0.'}
+ </div>
  ) : (
  <div className="flex flex-col sm:flex-row items-center gap-6 mt-4">
  <div className="w-full sm:w-1/2 h-[210px] relative flex items-center justify-center">

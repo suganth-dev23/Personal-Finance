@@ -58,11 +58,12 @@ export const EditSplitModal: React.FC<EditSplitModalProps> = ({
  }
  const parsedAmount = roundCurrency(rawAmount);
 
- if (otherSplitsTotal + parsedAmount > transaction.amount + 0.01) {
- alert(
- `Total splits (₹${(otherSplitsTotal + parsedAmount).toFixed(2)}) cannot exceed total transaction amount of ${formatINR(transaction.amount)}`
- );
- return;
+ const totalSplits = roundCurrency(otherSplitsTotal + parsedAmount);
+ if (totalSplits > roundCurrency(transaction.amount) + 0.01) {
+  alert(
+   `Total splits (${formatINR(totalSplits)}) cannot exceed total transaction amount of ${formatINR(transaction.amount)}`
+  );
+  return;
  }
 
  if (!transaction.splitWith) return;

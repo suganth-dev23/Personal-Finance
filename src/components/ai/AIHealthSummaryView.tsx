@@ -13,6 +13,7 @@ import {
  RefreshCw,
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
+import { useToast } from '../../context/ToastContext';
 import { AIProvider } from '../../types/finance';
 import { DEFAULT_AI_MODELS, generateFinancialSummary } from '../../services/aiService';
 import { formatDateTime } from '../../utils/date';
@@ -57,6 +58,7 @@ export const AIHealthSummaryView: React.FC = () => {
  totalInvestmentValue,
  emergencyFundRunwayMonths,
  } = useFinance();
+ const { showToast } = useToast();
 
  const [provider, setProvider] = useState<AIProvider>(aiSettings.provider || 'gemini');
  const [apiKey, setApiKey] = useState(aiSettings.apiKey || '');
@@ -67,77 +69,99 @@ export const AIHealthSummaryView: React.FC = () => {
 
  const selectedProviderInfo = PROVIDER_INFO[provider];
 
+ const safeRunwayDisplay = emergencyFundRunwayMonths === Infinity
+   ? '∞ mos'
+   : `${(Number.isFinite(emergencyFundRunwayMonths) ? emergencyFundRunwayMonths : 0).toFixed(1)} mos`;
+
+ const safeSavingsRateDisplay = `${(Number.isFinite(currentMonthSavingsRate) ? currentMonthSavingsRate : 0).toFixed(1)}%`;
+
  const handleSaveKey = () => {
- updateAISettings({
- provider,
- apiKey: apiKey.trim(),
- model: PROVIDER_INFO[provider].defaultModel,
- });
- alert('API Key stored securely in your browser local storage!');
+   if (!apiKey.trim()) {
+     showToast('warning', 'API Key Required', 'Please enter a valid API key.');
+     return;
+   }
+   updateAISettings({
+     provider,
+     apiKey: apiKey.trim(),
+     model: PROVIDER_INFO[provider].defaultModel,
+   });
+   showToast('success', 'API Key Stored', 'Key stored securely in browser local storage.');
  };
 
  const handleGenerate = async () => {
- if (!apiKey.trim()) {
- setErrorMsg(`Please enter and save your ${selectedProviderInfo.name} API key first.`);
- return;
- }
+   if (!apiKey.trim()) {
+     const msg = `Please enter and save your ${selectedProviderInfo.name} API key first.`;
+     setErrorMsg(msg);
+     showToast('warning', 'API Key Missing', msg);
+     return;
+   }
 
- setLoading(true);
- setErrorMsg(null);
+   setLoading(true);
+   setErrorMsg(null);
 
- try {
- const defaultModel = PROVIDER_INFO[provider].defaultModel;
- updateAISettings({
- provider,
- apiKey: apiKey.trim(),
- model: defaultModel,
- });
+   try {
+     const defaultModel = PROVIDER_INFO[provider].defaultModel;
+     updateAISettings({
+       provider,
+       apiKey: apiKey.trim(),
+       model: defaultModel,
+     });
 
- const aggregates = getAggregatesForAI();
- const summaryText = await generateFinancialSummary(
- { provider, apiKey: apiKey.trim(), model: defaultModel },
- aggregates
- );
+     const aggregates = getAggregatesForAI();
+     const summaryText = await generateFinancialSummary(
+       { provider, apiKey: apiKey.trim(), model: defaultModel },
+       aggregates
+     );
 
- saveAIReport({
- provider,
- model: defaultModel,
- summaryText,
- financialSnapshot: {
- monthlyIncome: currentMonthIncome,
- monthlyExpense: currentMonthExpense,
- savingsRate: currentMonthSavingsRate,
- topExpenseCategory: aggregates.categorySpending[0]?.category || 'N/A',
- emergencyFundMonths: emergencyFundRunwayMonths,
- totalInvestments: totalInvestmentValue,
- activeGoalsCount: aggregates.goals.length,
- },
- });
- } catch (err: any) {
- setErrorMsg(err.message || `Couldn't reach ${selectedProviderInfo.name}. Please check your API key in Settings.`);
- } finally {
- setLoading(false);
- }
+     saveAIReport({
+       provider,
+       model: defaultModel,
+       summaryText,
+       financialSnapshot: {
+         monthlyIncome: currentMonthIncome,
+         monthlyExpense: currentMonthExpense,
+         savingsRate: currentMonthSavingsRate,
+         topExpenseCategory: aggregates.categorySpending[0]?.category || 'N/A',
+         emergencyFundMonths: emergencyFundRunwayMonths,
+         totalInvestments: totalInvestmentValue,
+         activeGoalsCount: aggregates.goals.length,
+       },
+     });
+     showToast('success', 'Health Assessment Generated', 'Your private financial analysis is ready.');
+   } catch (err: any) {
+     const msg = err.message || `Couldn't reach ${selectedProviderInfo.name}. Please check your API key in Settings.`;
+     setErrorMsg(msg);
+     showToast('danger', 'AI Generation Failed', msg);
+   } finally {
+     setLoading(false);
+   }
  };
 
  const activeReport = aiReports[0];
 
  const handleCopy = async (text: string) => {
- const success = await copyToClipboard(text);
- if (success) {
- setCopied(true);
- setTimeout(() => setCopied(false), 2000);
- }
+   const success = await copyToClipboard(text);
+   if (success) {
+     setCopied(true);
+     showToast('success', 'Copied to Clipboard', 'Report content copied.');
+     setTimeout(() => setCopied(false), 2000);
+   }
  };
 
  const handleDownload = (text: string) => {
- const blob = new Blob([text], { type: 'text/markdown' });
- const url = URL.createObjectURL(blob);
- const a = document.createElement('a');
- a.href = url;
- a.download = `dhanveda_ai_financial_summary_${new Date().toISOString().split('T')[0]}.md`;
- a.click();
- URL.revokeObjectURL(url);
+   const blob = new Blob([text], { type: 'text/markdown' });
+   const url = URL.createObjectURL(blob);
+   const a = document.createElement('a');
+   a.href = url;
+   a.download = `dhanveda_ai_financial_summary_${new Date().toISOString().split('T')[0]}.md`;
+   a.click();
+   URL.revokeObjectURL(url);
+   showToast('info', 'Report Exported', 'Downloaded markdown report file.');
+ };
+
+ const handleDeleteReport = (id: string) => {
+   deleteAIReport(id);
+   showToast('info', 'Report Removed', 'Historical assessment report deleted.');
  };
 
  return (
@@ -211,14 +235,14 @@ export const AIHealthSummaryView: React.FC = () => {
  <div className="rounded-2xl bg-sunken p-3.5 border border-line">
  <span className="text-xs text-ink-3">Savings Rate</span>
  <p className="text-lg font-bold font-numeric text-ink-1 mt-0.5">
- {currentMonthSavingsRate.toFixed(1)}%
+ {safeSavingsRateDisplay}
  </p>
  </div>
 
  <div className="rounded-2xl bg-sunken p-3.5 border border-line">
  <span className="text-xs text-ink-3">Liquid Runway</span>
  <p className="text-lg font-bold font-numeric text-teal-600 dark:text-teal-400 mt-0.5">
- {emergencyFundRunwayMonths.toFixed(1)} mos
+ {safeRunwayDisplay}
  </p>
  </div>
  </div>
@@ -339,7 +363,7 @@ export const AIHealthSummaryView: React.FC = () => {
  <span>•</span>
  <span className="font-semibold text-ink-1 font-numeric">Expenses: {formatINR(currentMonthExpense)}</span>
  <span>•</span>
- <span className="font-semibold text-emerald-600 dark:text-emerald-400 font-numeric">Savings: {currentMonthSavingsRate.toFixed(1)}%</span>
+ <span className="font-semibold text-emerald-600 dark:text-emerald-400 font-numeric">Savings: {safeSavingsRateDisplay}</span>
  </div>
 
  <button
@@ -454,7 +478,7 @@ export const AIHealthSummaryView: React.FC = () => {
  <Copy className="w-3.5 h-3.5" />
  </button>
  <button
- onClick={() => deleteAIReport(rep.id)}
+ onClick={() => handleDeleteReport(rep.id)}
  className="p-2 rounded-xl text-ink-3 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
  title="Delete"
  >
