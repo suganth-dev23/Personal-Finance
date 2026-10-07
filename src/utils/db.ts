@@ -753,6 +753,36 @@ export async function addTombstone(store: SyncableStoreName, id: string): Promis
 }
 
 /**
+ * Remove tombstones from IndexedDB when a deletion is undone.
+ */
+export async function removeTombstones(
+  keys: Array<{ store: SyncableStoreName; id: string } | string>
+): Promise<void> {
+  try {
+    const db = await getDB();
+    const tx = db.transaction('tombstones', 'readwrite');
+    for (const item of keys) {
+      if (typeof item === 'string') {
+        if (item.includes(':')) {
+          await tx.store.delete(item);
+        } else {
+          const candidateStores: SyncableStoreName[] = ['transactions', 'settlements'];
+          for (const s of candidateStores) {
+            await tx.store.delete(`${s}:${item}`);
+          }
+        }
+      } else if (item && item.store && item.id) {
+        await tx.store.delete(`${item.store}:${item.id}`);
+      }
+    }
+    await tx.done;
+  } catch (err) {
+    console.error('[DB] Error removing tombstones:', err);
+  }
+}
+
+
+/**
  * Get all active tombstones from IndexedDB.
  */
 export async function getTombstones(): Promise<TombstoneRecord[]> {

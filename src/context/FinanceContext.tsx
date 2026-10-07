@@ -16,6 +16,7 @@ import {
  RecurringPaymentLog,
  OwedDirection,
  SplitEntry,
+ SyncableStoreName,
 } from '../types/finance';
 import {
  DEFAULT_CATEGORIES,
@@ -56,6 +57,7 @@ import {
  saveSingleRecord,
  clearAllStores,
  addTombstone,
+ removeTombstones,
  UserPreferences,
 } from '../utils/db';
 import { PERSIST_MODE } from '../constants/uiFlags';
@@ -109,6 +111,13 @@ export interface FinanceUiContextType {
  clearSaveError: () => void;
 }
 
+export interface DeleteTransactionSnapshot {
+ transaction: Transaction;
+ settlements: SettlementRecord[];
+ tombstoneIds: Array<{ store: SyncableStoreName; id: string }>;
+ tombstones?: Array<{ store: SyncableStoreName; id: string }>;
+}
+
 export interface FinanceActionsContextType {
  // Event Pub/Sub
  subscribeFinanceEvent: (listener: FinanceEventListener) => () => void;
@@ -126,6 +135,8 @@ export interface FinanceActionsContextType {
  updateTransaction: (id: string, tx: Partial<Transaction>) => void;
  deleteTransaction: (id: string) => void;
  deleteMultipleTransactions: (ids: string[]) => void;
+ captureDeleteSnapshot: (id: string) => DeleteTransactionSnapshot | null;
+ restoreTransactions: (snapshots: DeleteTransactionSnapshot[]) => void;
 
  // Contacts & Splits CRUD
  addContact: (contact: Omit<Contact, 'id' | 'createdAt'>) => Contact;
@@ -1188,6 +1199,110 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
  setSettlements(updatedSettlements);
  emitFinanceEvent({ type: 'transaction_deleted', count: ids.length });
  };
+
+  const captureDeleteSnapshot = useCallback((id: string): DeleteTransactionSnapshot | null => {
+    const tx = transactionsRef.current.find(t => t.id === id);
+    if (!tx) return null;
+
+    const affectedSettlements: SettlementRecord[] = [];
+    const tombstoneIds: Array<{ store: SyncableStoreName; id: string }> = [
+      { store: 'transactions', id },
+    ];
+
+    settlementsRef.current.forEach(s => {
+      const isLinked = s.linkedTransactionId === id;
+      const isSource = s.sourceTransactionId === id;
+      const hasReconciled = Boolean(s.reconciledSplits && s.reconciledSplits.some(r => r.transactionId === id));
+
+      if (isLinked || isSource || hasReconciled) {
+        affectedSettlements.push(JSON.parse(JSON.stringify(s)));
+        if (s.reconciledSplits && s.reconciledSplits.length > 0) {
+          const remainingSplits = s.reconciledSplits.filter(r => r.transactionId !== id);
+          if (remainingSplits.length === 0 && (s.sourceTransactionId === id || !s.sourceTransactionId)) {
+            tombstoneIds.push({ store: 'settlements', id: s.id });
+          }
+        } else if (isSource) {
+          tombstoneIds.push({ store: 'settlements', id: s.id });
+        }
+      }
+    });
+
+    const snapshot: DeleteTransactionSnapshot = {
+      transaction: JSON.parse(JSON.stringify(tx)),
+      settlements: affectedSettlements,
+      tombstoneIds,
+      tombstones: tombstoneIds,
+    };
+    return snapshot;
+  }, []);
+
+  const restoreTransactions = useCallback((snapshots: DeleteTransactionSnapshot[]) => {
+    if (!snapshots || snapshots.length === 0) return;
+
+    // 1. Transactions restoration (original id, createdAt, updatedAt)
+    const currentTxMap = new Map(transactionsRef.current.map(t => [t.id, t]));
+    const txsToRestore: Transaction[] = [];
+
+    snapshots.forEach(s => {
+      if (s && s.transaction && s.transaction.id && !currentTxMap.has(s.transaction.id)) {
+        txsToRestore.push(s.transaction);
+        currentTxMap.set(s.transaction.id, s.transaction);
+      }
+    });
+
+    if (txsToRestore.length > 0) {
+      const nextTransactions = [...txsToRestore, ...transactionsRef.current];
+      transactionsRef.current = nextTransactions;
+      setTransactions(nextTransactions);
+    }
+
+    // 2. Settlements restoration
+    const settlementMap = new Map<string, SettlementRecord>();
+    settlementsRef.current.forEach(s => settlementMap.set(s.id, s));
+
+    let settlementsChanged = false;
+    snapshots.forEach(s => {
+      if (Array.isArray(s.settlements)) {
+        s.settlements.forEach(setRecord => {
+          if (setRecord && setRecord.id) {
+            settlementMap.set(setRecord.id, setRecord);
+            settlementsChanged = true;
+          }
+        });
+      }
+    });
+
+    if (settlementsChanged) {
+      const nextSettlements = Array.from(settlementMap.values());
+      settlementsRef.current = nextSettlements;
+      setSettlements(nextSettlements);
+    }
+
+    // 3. Tombstone removal from IndexedDB
+    const allTombstones: Array<{ store: SyncableStoreName; id: string }> = [];
+    const seenTombstoneKeys = new Set<string>();
+
+    snapshots.forEach(s => {
+      const list = s.tombstoneIds || s.tombstones;
+      if (Array.isArray(list)) {
+        list.forEach(t => {
+          const key = typeof t === 'string' ? t : `${t.store}:${t.id}`;
+          if (!seenTombstoneKeys.has(key)) {
+            seenTombstoneKeys.add(key);
+            allTombstones.push(typeof t === 'string' ? { store: 'transactions', id: t } : t);
+          }
+        });
+      }
+    });
+
+    if (allTombstones.length > 0) {
+      removeTombstones(allTombstones).catch(err => {
+        console.error('[FinanceContext] Error removing tombstones during undo:', err);
+      });
+    }
+
+    // Explicitly NO transaction_added / gamification events emitted!
+  }, []);
 
  // Contact CRUD operations
  const addContact = (contactData: Omit<Contact, 'id' | 'createdAt'>): Contact => {
@@ -2812,6 +2927,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     updateTransaction,
     deleteTransaction,
     deleteMultipleTransactions,
+    captureDeleteSnapshot,
+    restoreTransactions,
     addContact,
     updateContact,
     deleteContact,
@@ -2869,6 +2986,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     updateTransaction: (...args) => actionsRef.current.updateTransaction(...args),
     deleteTransaction: (...args) => actionsRef.current.deleteTransaction(...args),
     deleteMultipleTransactions: (...args) => actionsRef.current.deleteMultipleTransactions(...args),
+    captureDeleteSnapshot: (...args) => actionsRef.current.captureDeleteSnapshot(...args),
+    restoreTransactions: (...args) => actionsRef.current.restoreTransactions(...args),
     addContact: (...args) => actionsRef.current.addContact(...args),
     updateContact: (...args) => actionsRef.current.updateContact(...args),
     deleteContact: (...args) => actionsRef.current.deleteContact(...args),

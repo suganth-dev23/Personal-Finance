@@ -201,10 +201,10 @@ export const TransactionListView: React.FC<TransactionListViewProps> = React.mem
     transactions,
     categories,
     contacts,
-    addTransaction,
-    addMultipleTransactions,
     deleteTransaction,
     deleteMultipleTransactions,
+    captureDeleteSnapshot,
+    restoreTransactions,
     subscribeFinanceEvent,
   } = useFinance();
   const { showToast } = useToast();
@@ -218,6 +218,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = React.mem
     const txToDelete = transactions.find(t => t.id === txId);
     if (!txToDelete) return;
     if (window.confirm(`Delete transaction "${desc}"?`)) {
+      const snapshot = captureDeleteSnapshot(txId);
       deleteTransaction(txId);
       setSelectedTxIds(prev => {
         if (!prev.has(txId)) return prev;
@@ -228,11 +229,13 @@ export const TransactionListView: React.FC<TransactionListViewProps> = React.mem
       showToast('info', 'Transaction Removed', desc, 5000, {
         label: 'Undo',
         onClick: () => {
-          addTransaction(txToDelete);
+          if (snapshot) {
+            restoreTransactions([snapshot]);
+          }
         },
       });
     }
-  }, [transactions, deleteTransaction, addTransaction, showToast]);
+  }, [transactions, deleteTransaction, captureDeleteSnapshot, restoreTransactions, showToast]);
 
   useEffect(() => {
     if (!subscribeFinanceEvent) return;
@@ -437,6 +440,10 @@ export const TransactionListView: React.FC<TransactionListViewProps> = React.mem
     const targetIds = targetTxs.map(t => t.id);
 
     if (window.confirm(`Are you sure you want to delete ${targetIds.length} transaction${targetIds.length > 1 ? 's' : ''}?`)) {
+      const snapshots = targetIds
+        .map(id => captureDeleteSnapshot(id))
+        .filter((s): s is NonNullable<typeof s> => s !== null);
+
       deleteMultipleTransactions(targetIds);
       setSelectedTxIds(prev => {
         const next = new Set(prev);
@@ -452,12 +459,14 @@ export const TransactionListView: React.FC<TransactionListViewProps> = React.mem
         {
           label: 'Undo',
           onClick: () => {
-            addMultipleTransactions(targetTxs);
+            if (snapshots.length > 0) {
+              restoreTransactions(snapshots);
+            }
           },
         }
       );
     }
-  }, [filteredTransactions, transactions, selectedTxIds, deleteMultipleTransactions, addMultipleTransactions, showToast, setSelectedTxIds]);
+  }, [filteredTransactions, transactions, selectedTxIds, captureDeleteSnapshot, deleteMultipleTransactions, restoreTransactions, showToast, setSelectedTxIds]);
 
   const exportToCSV = useCallback(() => {
     if (filteredTransactions.length === 0) {
