@@ -119,6 +119,11 @@ const DB_NAME = 'dhanveda_db';
 const DB_VERSION = 6;
 
 let dbPromise: Promise<IDBPDatabase<DhanVedaDBSchema>> | null = null;
+let cachedDB: IDBPDatabase<DhanVedaDBSchema> | null = null;
+
+export function getCachedDB(): IDBPDatabase<DhanVedaDBSchema> | null {
+  return cachedDB;
+}
 
 export function getDB(): Promise<IDBPDatabase<DhanVedaDBSchema>> {
   if (!dbPromise) {
@@ -126,6 +131,7 @@ export function getDB(): Promise<IDBPDatabase<DhanVedaDBSchema>> {
       terminated() {
         console.error('[DB] IndexedDB connection terminated abnormally');
         dbPromise = null;
+        cachedDB = null;
       },
       upgrade(db, oldVersion) {
         // Transactions store
@@ -215,10 +221,16 @@ export function getDB(): Promise<IDBPDatabase<DhanVedaDBSchema>> {
           db.createObjectStore('gamification', { keyPath: 'id' });
         }
       },
-    }).catch(err => {
-      dbPromise = null;
-      throw err;
-    });
+    })
+      .then(db => {
+        cachedDB = db;
+        return db;
+      })
+      .catch(err => {
+        dbPromise = null;
+        cachedDB = null;
+        throw err;
+      });
   }
   return dbPromise;
 }
@@ -597,6 +609,63 @@ export async function persistDiff<T extends { id: string }>(
       console.error(`[DB] Error persisting diff to "${storeName}":`, err);
     }
     throw err;
+  }
+}
+
+export function persistDiffSync<T extends { id: string }>(
+  db: IDBPDatabase<DhanVedaDBSchema>,
+  storeName: ArrayStoreName,
+  prevItems: T[],
+  nextItems: T[]
+): void {
+  const prev = Array.isArray(prevItems) ? prevItems : [];
+  const next = Array.isArray(nextItems) ? nextItems : [];
+
+  const prevMap = new Map<string, T>();
+  for (const item of prev) {
+    if (item && typeof item.id === 'string' && item.id.length > 0) {
+      prevMap.set(item.id, item);
+    }
+  }
+
+  const nextMap = new Map<string, T>();
+  for (const item of next) {
+    if (item && typeof item.id === 'string' && item.id.length > 0) {
+      nextMap.set(item.id, item);
+    }
+  }
+
+  const toDelete: string[] = [];
+  for (const [id] of prevMap) {
+    if (!nextMap.has(id)) {
+      toDelete.push(id);
+    }
+  }
+
+  const toPut: T[] = [];
+  for (const [id, nextItem] of nextMap) {
+    const prevItem = prevMap.get(id);
+    if (!prevItem) {
+      toPut.push(nextItem);
+    } else if (prevItem !== nextItem && hasItemChanged(prevItem, nextItem)) {
+      toPut.push(nextItem);
+    }
+  }
+
+  if (toDelete.length === 0 && toPut.length === 0) {
+    return;
+  }
+
+  try {
+    const tx = db.transaction(storeName, 'readwrite');
+    for (const id of toDelete) {
+      tx.store.delete(id);
+    }
+    for (const item of toPut) {
+      tx.store.put(item as any);
+    }
+  } catch (err) {
+    console.error(`[DB] Error in persistDiffSync for "${storeName}":`, err);
   }
 }
 

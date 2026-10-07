@@ -218,27 +218,19 @@ export const TransactionListView: React.FC<TransactionListViewProps> = React.mem
     const txToDelete = transactions.find(t => t.id === txId);
     if (!txToDelete) return;
     if (window.confirm(`Delete transaction "${desc}"?`)) {
-      setDeletingTxIds(prev => new Set(prev).add(txId));
-      window.setTimeout(() => {
-        deleteTransaction(txId);
-        setDeletingTxIds(prev => {
-          const next = new Set(prev);
-          next.delete(txId);
-          return next;
-        });
-        setSelectedTxIds(prev => {
-          if (!prev.has(txId)) return prev;
-          const next = new Set(prev);
-          next.delete(txId);
-          return next;
-        });
-        showToast('info', 'Transaction Removed', desc, 5000, {
-          label: 'Undo',
-          onClick: () => {
-            addTransaction(txToDelete);
-          },
-        });
-      }, 200);
+      deleteTransaction(txId);
+      setSelectedTxIds(prev => {
+        if (!prev.has(txId)) return prev;
+        const next = new Set(prev);
+        next.delete(txId);
+        return next;
+      });
+      showToast('info', 'Transaction Removed', desc, 5000, {
+        label: 'Undo',
+        onClick: () => {
+          addTransaction(txToDelete);
+        },
+      });
     }
   }, [transactions, deleteTransaction, addTransaction, showToast]);
 
@@ -445,38 +437,25 @@ export const TransactionListView: React.FC<TransactionListViewProps> = React.mem
     const targetIds = targetTxs.map(t => t.id);
 
     if (window.confirm(`Are you sure you want to delete ${targetIds.length} transaction${targetIds.length > 1 ? 's' : ''}?`)) {
-      setDeletingTxIds(prev => {
+      deleteMultipleTransactions(targetIds);
+      setSelectedTxIds(prev => {
         const next = new Set(prev);
-        targetIds.forEach(id => next.add(id));
+        targetIds.forEach(id => next.delete(id));
         return next;
       });
 
-      window.setTimeout(() => {
-        deleteMultipleTransactions(targetIds);
-        setDeletingTxIds(prev => {
-          const next = new Set(prev);
-          targetIds.forEach(id => next.delete(id));
-          return next;
-        });
-        setSelectedTxIds(prev => {
-          const next = new Set(prev);
-          targetIds.forEach(id => next.delete(id));
-          return next;
-        });
-
-        showToast(
-          'info',
-          'Transactions Removed',
-          `${targetIds.length} transaction${targetIds.length > 1 ? 's' : ''} deleted`,
-          5000,
-          {
-            label: 'Undo',
-            onClick: () => {
-              addMultipleTransactions(targetTxs);
-            },
-          }
-        );
-      }, 200);
+      showToast(
+        'info',
+        'Transactions Removed',
+        `${targetIds.length} transaction${targetIds.length > 1 ? 's' : ''} deleted`,
+        5000,
+        {
+          label: 'Undo',
+          onClick: () => {
+            addMultipleTransactions(targetTxs);
+          },
+        }
+      );
     }
   }, [filteredTransactions, transactions, selectedTxIds, deleteMultipleTransactions, addMultipleTransactions, showToast, setSelectedTxIds]);
 

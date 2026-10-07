@@ -49,6 +49,8 @@ import {
  getAllFromStore,
  saveAllToStore,
  persistDiff,
+ persistDiffSync,
+ getCachedDB,
  ArrayStoreName,
  getSingleRecord,
  saveSingleRecord,
@@ -102,6 +104,9 @@ export interface FinanceUiContextType {
  unreadableRecordCount: number;
  dismissUnreadableBanner: () => void;
  isUnreadableBannerDismissed: boolean;
+ saveError: string | null;
+ retrySave: () => void;
+ clearSaveError: () => void;
 }
 
 export interface FinanceActionsContextType {
@@ -365,22 +370,160 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const pendingWritesRef = useRef<Map<string, () => Promise<void>>>(new Map());
   const debounceTimersRef = useRef<Map<string, any>>(new Map());
+  const dirtyStoresRef = useRef<Set<string>>(new Set());
+  const retryTimerRef = useRef<any>(null);
+  const retryBackoffMsRef = useRef<number>(1000);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
-  const flushPendingPersistence = useCallback(async () => {
+  const clearSaveError = useCallback(() => {
+    setSaveError(null);
+  }, []);
+
+  const retryAllDirtyRef = useRef<() => Promise<void>>(null as any);
+
+  const scheduleRetry = useCallback(() => {
+    if (retryTimerRef.current) return;
+    const delay = retryBackoffMsRef.current;
+    if (delay < 3000) {
+      retryBackoffMsRef.current = 3000;
+    } else if (delay < 10000) {
+      retryBackoffMsRef.current = 10000;
+    } else {
+      retryBackoffMsRef.current = 30000;
+    }
+
+    retryTimerRef.current = setTimeout(() => {
+      retryTimerRef.current = null;
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+        return;
+      }
+      retryAllDirtyRef.current?.();
+    }, delay);
+  }, []);
+
+  const retryAllDirty = useCallback(async () => {
+    if (retryTimerRef.current) {
+      clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = null;
+    }
+
+    const storeMap: Record<string, { current: any[]; prevRef: React.MutableRefObject<any[]> }> = {
+      transactions: { current: transactionsRef.current, prevRef: prevTransactionsRef },
+      categories: { current: categoriesRef.current, prevRef: prevCategoriesRef },
+      budgets: { current: budgetsRef.current, prevRef: prevBudgetsRef },
+      investments: { current: investmentsRef.current, prevRef: prevInvestmentsRef },
+      dreams: { current: dreamsRef.current, prevRef: prevDreamsRef },
+      contacts: { current: contactsRef.current, prevRef: prevContactsRef },
+      settlements: { current: settlementsRef.current, prevRef: prevSettlementsRef },
+      recurringPayments: { current: recurringPaymentsRef.current, prevRef: prevRecurringPaymentsRef },
+      recurringPaymentLogs: { current: recurringPaymentLogsRef.current, prevRef: prevRecurringPaymentLogsRef },
+      aiReports: { current: aiReports, prevRef: prevAiReportsRef },
+    };
+
+    const dirtyStores = Array.from(dirtyStoresRef.current);
+    let anyFailed = false;
+
+    for (const sName of dirtyStores) {
+      const cfg = storeMap[sName];
+      if (cfg) {
+        try {
+          if (PERSIST_MODE === 'diff') {
+            await persistDiff(sName as ArrayStoreName, cfg.prevRef.current, cfg.current);
+          } else {
+            await saveAllToStore(sName as ArrayStoreName, cfg.current);
+          }
+          cfg.prevRef.current = cfg.current;
+          dirtyStoresRef.current.delete(sName);
+        } catch (err) {
+          anyFailed = true;
+          console.error(`[DB] Retry failed for ${sName}:`, err);
+        }
+      } else if (sName === 'emergencyFund') {
+        try {
+          await saveSingleRecord('emergencyFund', { ...emergencyFundRef.current, id: 'current' });
+          dirtyStoresRef.current.delete(sName);
+        } catch (err) {
+          anyFailed = true;
+        }
+      } else if (sName === 'aiSettings') {
+        try {
+          await saveSingleRecord('aiSettings', { ...aiSettings, id: 'current' });
+          dirtyStoresRef.current.delete(sName);
+        } catch (err) {
+          anyFailed = true;
+        }
+      }
+    }
+
+    if (!anyFailed && dirtyStoresRef.current.size === 0) {
+      setSaveError(null);
+      retryBackoffMsRef.current = 1000;
+    } else {
+      scheduleRetry();
+    }
+  }, [aiReports, aiSettings, scheduleRetry]);
+
+  useEffect(() => {
+    retryAllDirtyRef.current = retryAllDirty;
+  }, [retryAllDirty]);
+
+  const retrySave = useCallback(() => {
+    retryBackoffMsRef.current = 1000;
+    retryAllDirty();
+  }, [retryAllDirty]);
+
+  const flushPendingSync = useCallback(() => {
     for (const timer of debounceTimersRef.current.values()) {
       clearTimeout(timer);
     }
     debounceTimersRef.current.clear();
 
+    const cached = getCachedDB();
+    if (cached) {
+      const storeConfigs: Array<{
+        name: ArrayStoreName;
+        current: any[];
+        prevRef: React.MutableRefObject<any[]>;
+      }> = [
+        { name: 'transactions', current: transactionsRef.current, prevRef: prevTransactionsRef },
+        { name: 'categories', current: categoriesRef.current, prevRef: prevCategoriesRef },
+        { name: 'budgets', current: budgetsRef.current, prevRef: prevBudgetsRef },
+        { name: 'investments', current: investmentsRef.current, prevRef: prevInvestmentsRef },
+        { name: 'dreams', current: dreamsRef.current, prevRef: prevDreamsRef },
+        { name: 'contacts', current: contactsRef.current, prevRef: prevContactsRef },
+        { name: 'settlements', current: settlementsRef.current, prevRef: prevSettlementsRef },
+        { name: 'recurringPayments', current: recurringPaymentsRef.current, prevRef: prevRecurringPaymentsRef },
+        { name: 'recurringPaymentLogs', current: recurringPaymentLogsRef.current, prevRef: prevRecurringPaymentLogsRef },
+        { name: 'aiReports', current: aiReports, prevRef: prevAiReportsRef },
+      ];
+
+      for (const config of storeConfigs) {
+        if (pendingWritesRef.current.has(config.name) || dirtyStoresRef.current.has(config.name)) {
+          try {
+            persistDiffSync(cached, config.name, config.prevRef.current, config.current);
+            config.prevRef.current = config.current;
+            pendingWritesRef.current.delete(config.name);
+            dirtyStoresRef.current.delete(config.name);
+          } catch (e) {
+            console.error(`[DB] Sync flush failed for ${config.name}:`, e);
+          }
+        }
+      }
+    }
+  }, [aiReports]);
+
+  const flushPendingPersistence = useCallback(async () => {
+    flushPendingSync();
     const tasks = Array.from(pendingWritesRef.current.values());
     pendingWritesRef.current.clear();
     await Promise.all(tasks.map(fn => fn()));
-  }, []);
+  }, [flushPendingSync]);
 
   const scheduleArrayPersist = useCallback(<T extends { id: string }>(
     storeName: ArrayStoreName,
     currentItems: T[],
-    prevRef: React.MutableRefObject<T[]>
+    prevRef: React.MutableRefObject<T[]>,
+    debounceMs: number = 50
   ) => {
     const existingTimer = debounceTimersRef.current.get(storeName);
     if (existingTimer) {
@@ -393,23 +536,35 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       try {
         if (PERSIST_MODE === 'diff') {
           const prev = prevRef.current;
-          prevRef.current = currentItems;
           await persistDiff(storeName, prev, currentItems);
-        } else {
           prevRef.current = currentItems;
+        } else {
           await saveAllToStore(storeName, currentItems);
+          prevRef.current = currentItems;
+        }
+        dirtyStoresRef.current.delete(storeName);
+        if (dirtyStoresRef.current.size === 0) {
+          setSaveError(null);
+          retryBackoffMsRef.current = 1000;
+          if (retryTimerRef.current) {
+            clearTimeout(retryTimerRef.current);
+            retryTimerRef.current = null;
+          }
         }
       } catch (e) {
         console.error(`Error saving ${storeName}:`, e);
+        dirtyStoresRef.current.add(storeName);
+        setSaveError("Some changes could not be saved (storage full or blocked). Your data is still in memory; don't close this tab until storage is free.");
+        scheduleRetry();
       }
     };
 
     pendingWritesRef.current.set(storeName, persistTask);
     const timer = setTimeout(() => {
       persistTask();
-    }, 200);
+    }, debounceMs);
     debounceTimersRef.current.set(storeName, timer);
-  }, []);
+  }, [scheduleRetry]);
 
   const scheduleSinglePersist = useCallback(<T extends { id: string }>(
     storeName: 'emergencyFund' | 'aiSettings',
@@ -425,17 +580,29 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       debounceTimersRef.current.delete(storeName);
       try {
         await saveSingleRecord(storeName, data);
+        dirtyStoresRef.current.delete(storeName);
+        if (dirtyStoresRef.current.size === 0) {
+          setSaveError(null);
+          retryBackoffMsRef.current = 1000;
+          if (retryTimerRef.current) {
+            clearTimeout(retryTimerRef.current);
+            retryTimerRef.current = null;
+          }
+        }
       } catch (e) {
         console.error(`Error saving ${storeName}:`, e);
+        dirtyStoresRef.current.add(storeName);
+        setSaveError("Some changes could not be saved (storage full or blocked). Your data is still in memory; don't close this tab until storage is free.");
+        scheduleRetry();
       }
     };
 
     pendingWritesRef.current.set(storeName, persistTask);
     const timer = setTimeout(() => {
       persistTask();
-    }, 200);
+    }, 50);
     debounceTimersRef.current.set(storeName, timer);
-  }, []);
+  }, [scheduleRetry]);
 
  useEffect(() => {
  transactionsRef.current = transactions;
@@ -813,11 +980,13 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
-        flushPendingPersistence();
+        flushPendingSync();
+      } else if (document.visibilityState === 'visible' && dirtyStoresRef.current.size > 0) {
+        retryAllDirtyRef.current?.();
       }
     };
     const handlePageHide = () => {
-      flushPendingPersistence();
+      flushPendingSync();
     };
 
     window.addEventListener('visibilitychange', handleVisibilityChange);
@@ -826,9 +995,9 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return () => {
       window.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('pagehide', handlePageHide);
-      flushPendingPersistence();
+      flushPendingSync();
     };
-  }, [flushPendingPersistence]);
+  }, [flushPendingSync]);
 
  useEffect(() => {
  // Apply temporary .theme-anim class for smooth transition only during toggle (E.4)
@@ -2616,7 +2785,20 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     unreadableRecordCount,
     dismissUnreadableBanner,
     isUnreadableBannerDismissed,
-  }), [currentView, darkMode, isInitialized, unreadableRecordCount, dismissUnreadableBanner, isUnreadableBannerDismissed]);
+    saveError,
+    retrySave,
+    clearSaveError,
+  }), [
+    currentView,
+    darkMode,
+    isInitialized,
+    unreadableRecordCount,
+    dismissUnreadableBanner,
+    isUnreadableBannerDismissed,
+    saveError,
+    retrySave,
+    clearSaveError,
+  ]);
 
   const actionsCurrent: FinanceActionsContextType = {
     subscribeFinanceEvent,

@@ -12,7 +12,7 @@ import { ViewSkeleton } from './components/common/ViewSkeleton';
 import { ViewTransition } from './components/common/ViewTransition';
 import { AppErrorBoundary } from './components/common/AppErrorBoundary';
 import { exportRawIndexedDBData } from './utils/recordValidation';
-import { AlertTriangle, Download, X } from 'lucide-react';
+import { AlertTriangle, Download, RefreshCw, X } from 'lucide-react';
 import type { Transaction } from './types/finance';
 
 // Lazy-loaded route views
@@ -59,7 +59,15 @@ const BadgeShowcase = lazy(() =>
 import { BadgePopup } from './components/gamification/BadgePopup';
 
 const MainContent: React.FC = () => {
-  const { currentView, unreadableRecordCount, isUnreadableBannerDismissed, dismissUnreadableBanner } = useFinance();
+  const {
+    currentView,
+    unreadableRecordCount,
+    isUnreadableBannerDismissed,
+    dismissUnreadableBanner,
+    saveError,
+    retrySave,
+    clearSaveError,
+  } = useFinance();
   const [isAddTxOpen, setIsAddTxOpen] = useState(false);
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
   const [isMoreDrawerOpen, setIsMoreDrawerOpen] = useState(false);
@@ -123,6 +131,45 @@ const MainContent: React.FC = () => {
                   onClick={dismissUnreadableBanner}
                   className="p-1.5 rounded-lg text-ink-3 hover:text-ink-1 hover:bg-sunken transition-colors cursor-pointer"
                   aria-label="Dismiss unreadable records warning"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {saveError && (
+            <div
+              role="alert"
+              className="mb-6 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-ink-1 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-slide-up"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="p-2 rounded-xl bg-rose-500/20 text-rose-600 dark:text-rose-400 shrink-0">
+                  <AlertTriangle className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-ink-1">
+                    Some changes could not be saved (storage full or blocked)
+                  </p>
+                  <p className="text-xs text-ink-3">
+                    Your data is still in memory; don't close this tab until storage is free.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                <button
+                  type="button"
+                  onClick={retrySave}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  Retry
+                </button>
+                <button
+                  type="button"
+                  onClick={clearSaveError}
+                  className="p-1.5 rounded-lg text-ink-3 hover:text-ink-1 hover:bg-sunken transition-colors cursor-pointer"
+                  aria-label="Dismiss save error warning"
                 >
                   <X className="w-4 h-4" />
                 </button>
