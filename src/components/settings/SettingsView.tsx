@@ -211,15 +211,15 @@ export const SettingsView: React.FC = () => {
  URL.revokeObjectURL(url);
  };
 
- const MAX_BACKUP_SIZE_BYTES = 15 * 1024 * 1024; // 15MB limit
+ const MAX_BACKUP_SIZE_BYTES = 25 * 1024 * 1024; // 25MB limit
 
  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
  const file = e.target.files?.[0];
  if (!file) return;
 
  if (file.size > MAX_BACKUP_SIZE_BYTES) {
- showToast('danger', 'File Too Large', 'Backup file exceeds 15MB limit to prevent browser memory exhaustion.');
- setImportStatus('Backup file exceeds 15MB limit.');
+ showToast('danger', 'File Too Large', 'Backup file exceeds 25MB limit.');
+ setImportStatus('Backup file exceeds 25MB limit.');
  if (fileInputRef.current) fileInputRef.current.value = '';
  return;
  }
@@ -234,13 +234,11 @@ export const SettingsView: React.FC = () => {
  return;
  }
 
- const ok = importBackupJSON(content);
+ const ok = importBackupJSON(content, { onToast: showToast });
  if (ok) {
  setImportStatus('Backup restored successfully!');
- showToast('success', 'Backup Restored', 'All transactions, categories, and settings were restored.');
  } else {
- setImportStatus('Failed to parse backup JSON file. Format not recognized.');
- showToast('danger', 'Restore Failed', 'Corrupt or incompatible DhanVeda backup format.');
+ setImportStatus('Restore was cancelled or rejected.');
  }
  } catch (err) {
  console.error('Restore error:', err);

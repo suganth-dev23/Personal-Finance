@@ -9,8 +9,11 @@ import {
   RecurringPayment,
   RecurringPaymentLog,
   SplitEntry,
+  EmergencyFund,
+  AIHealthReport,
 } from '../types/finance';
 import { getTodayString } from './date';
+import { MAX_AMOUNT, isValidAmount, roundMoney } from './validation';
 
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -25,9 +28,9 @@ export function normalizeTransaction(raw: any): Transaction | null {
   const id = typeof raw.id === 'string' && raw.id.trim() ? raw.id.trim() : null;
   if (!id) return null;
 
-  // Amount must be a finite number
+  // Amount must be a valid positive number up to MAX_AMOUNT
   const amount = typeof raw.amount === 'number' ? raw.amount : parseFloat(raw.amount);
-  if (!Number.isFinite(amount)) return null;
+  if (!isValidAmount(amount)) return null;
 
   // Type must be credit or debit (mapping income->credit, expense->debit for backward-compatibility)
   let type: 'credit' | 'debit';
@@ -39,14 +42,14 @@ export function normalizeTransaction(raw: any): Transaction | null {
     return null;
   }
 
-  // Date validation: must match YYYY-MM-DD or fall back to createdAt date or today
+  // Date validation: must match YYYY-MM-DD or fall back to createdAt date
   let date: string;
   if (typeof raw.date === 'string' && DATE_REGEX.test(raw.date)) {
     date = raw.date;
   } else if (typeof raw.createdAt === 'string' && /^\d{4}-\d{2}-\d{2}/.test(raw.createdAt)) {
     date = raw.createdAt.slice(0, 10);
   } else {
-    date = getTodayString();
+    return null;
   }
 
   const createdAt =
@@ -142,7 +145,7 @@ export function normalizeSettlement(raw: any): SettlementRecord | null {
   if (!id || !contactId) return null;
 
   const amount = typeof raw.amount === 'number' ? raw.amount : parseFloat(raw.amount);
-  if (!Number.isFinite(amount)) return null;
+  if (!isValidAmount(amount)) return null;
 
   let date: string;
   if (typeof raw.date === 'string' && DATE_REGEX.test(raw.date)) {
@@ -179,7 +182,7 @@ export function normalizeBudget(raw: any): Budget | null {
   if (!id || !category) return null;
 
   const monthlyLimit = typeof raw.monthlyLimit === 'number' ? raw.monthlyLimit : parseFloat(raw.monthlyLimit);
-  if (!Number.isFinite(monthlyLimit) || monthlyLimit < 0) return null;
+  if (!Number.isFinite(monthlyLimit) || monthlyLimit < 0 || monthlyLimit > MAX_AMOUNT) return null;
 
   return {
     id,
@@ -200,7 +203,7 @@ export function normalizeInvestment(raw: any): Investment | null {
 
   const currentValue = typeof raw.currentValue === 'number' ? raw.currentValue : parseFloat(raw.currentValue);
   const investedAmount = typeof raw.investedAmount === 'number' ? raw.investedAmount : parseFloat(raw.investedAmount);
-  if (!Number.isFinite(currentValue) || !Number.isFinite(investedAmount)) return null;
+  if (!Number.isFinite(currentValue) || currentValue < 0 || currentValue > MAX_AMOUNT || !Number.isFinite(investedAmount) || investedAmount < 0 || investedAmount > MAX_AMOUNT) return null;
 
   return {
     id,
@@ -230,7 +233,7 @@ export function normalizeDream(raw: any): DreamGoal | null {
   if (!id || !name) return null;
 
   const targetAmount = typeof raw.targetAmount === 'number' ? raw.targetAmount : parseFloat(raw.targetAmount);
-  if (!Number.isFinite(targetAmount) || targetAmount <= 0) return null;
+  if (!Number.isFinite(targetAmount) || targetAmount <= 0 || targetAmount > MAX_AMOUNT) return null;
 
   const currentSaved = typeof raw.currentSaved === 'number'
     ? raw.currentSaved
@@ -285,7 +288,7 @@ export function normalizeRecurringPayment(raw: any): RecurringPayment | null {
   if (!id || !name) return null;
 
   const amount = typeof raw.amount === 'number' ? raw.amount : parseFloat(raw.amount);
-  if (!Number.isFinite(amount)) return null;
+  if (!isValidAmount(amount)) return null;
 
   return {
     id,
@@ -318,7 +321,7 @@ export function normalizeRecurringPaymentLog(raw: any): RecurringPaymentLog | nu
   if (!id || !recurringPaymentId) return null;
 
   const amount = typeof raw.amount === 'number' ? raw.amount : parseFloat(raw.amount);
-  if (!Number.isFinite(amount)) return null;
+  if (!Number.isFinite(amount) || amount < 0 || amount > MAX_AMOUNT) return null;
 
   return {
     id,
@@ -329,6 +332,52 @@ export function normalizeRecurringPaymentLog(raw: any): RecurringPaymentLog | nu
     linkedTransactionId: typeof raw.linkedTransactionId === 'string' ? raw.linkedTransactionId : undefined,
     createdAt: typeof raw.createdAt === 'string' ? raw.createdAt : new Date().toISOString(),
     updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : new Date().toISOString(),
+  };
+}
+
+/**
+ * Normalizes and validates an EmergencyFund object.
+ */
+export function normalizeEmergencyFund(raw: any): EmergencyFund | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const targetMonths = typeof raw.targetMonths === 'number' && Number.isFinite(raw.targetMonths) && raw.targetMonths > 0 ? raw.targetMonths : 6;
+  const monthlyExpenseBaseline = typeof raw.monthlyExpenseBaseline === 'number' && Number.isFinite(raw.monthlyExpenseBaseline) && raw.monthlyExpenseBaseline >= 0 ? raw.monthlyExpenseBaseline : 50000;
+  const currentSaved = typeof raw.currentSaved === 'number' && Number.isFinite(raw.currentSaved) && raw.currentSaved >= 0 ? raw.currentSaved : 0;
+  const contributions = Array.isArray(raw.contributions) ? raw.contributions : [];
+  return {
+    targetMonths,
+    monthlyExpenseBaseline,
+    currentSaved,
+    manualTargetAmount: typeof raw.manualTargetAmount === 'number' && Number.isFinite(raw.manualTargetAmount) ? raw.manualTargetAmount : undefined,
+    contributions,
+  };
+}
+
+/**
+ * Normalizes and validates an AIHealthReport object.
+ */
+export function normalizeAIHealthReport(raw: any): AIHealthReport | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const id = typeof raw.id === 'string' && raw.id.trim() ? raw.id.trim() : null;
+  if (!id) return null;
+  const snapshot = raw.financialSnapshot && typeof raw.financialSnapshot === 'object' ? raw.financialSnapshot : {};
+  return {
+    id,
+    createdAt: typeof raw.createdAt === 'string' ? raw.createdAt : new Date().toISOString(),
+    updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : undefined,
+    provider: raw.provider === 'openai' || raw.provider === 'claude' ? raw.provider : 'gemini',
+    model: typeof raw.model === 'string' ? raw.model : 'default',
+    summaryText: typeof raw.summaryText === 'string' ? raw.summaryText : (typeof raw.summary === 'string' ? raw.summary : ''),
+    healthScore: typeof raw.healthScore === 'number' ? raw.healthScore : undefined,
+    financialSnapshot: {
+      monthlyIncome: typeof snapshot.monthlyIncome === 'number' ? snapshot.monthlyIncome : 0,
+      monthlyExpense: typeof snapshot.monthlyExpense === 'number' ? snapshot.monthlyExpense : 0,
+      savingsRate: typeof snapshot.savingsRate === 'number' ? snapshot.savingsRate : 0,
+      topExpenseCategory: typeof snapshot.topExpenseCategory === 'string' ? snapshot.topExpenseCategory : 'General',
+      emergencyFundMonths: typeof snapshot.emergencyFundMonths === 'number' ? snapshot.emergencyFundMonths : 0,
+      totalInvestments: typeof snapshot.totalInvestments === 'number' ? snapshot.totalInvestments : 0,
+      activeGoalsCount: typeof snapshot.activeGoalsCount === 'number' ? snapshot.activeGoalsCount : 0,
+    },
   };
 }
 

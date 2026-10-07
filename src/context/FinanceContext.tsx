@@ -15,7 +15,6 @@ import {
  RecurringPayment,
  RecurringPaymentLog,
  OwedDirection,
- SplitEntry,
  SyncableStoreName,
 } from '../types/finance';
 import {
@@ -39,6 +38,8 @@ import {
   normalizeCategory,
   normalizeRecurringPayment,
   normalizeRecurringPaymentLog,
+  normalizeEmergencyFund,
+  normalizeAIHealthReport,
   validateStoreRecords,
 } from '../utils/recordValidation';
 import { roundCurrency } from '../utils/currency';
@@ -219,7 +220,12 @@ export interface FinanceActionsContextType {
  resetToDemoData: () => void;
  clearAllData: () => void;
  exportBackupJSON: () => string;
- importBackupJSON: (jsonStr: string) => boolean;
+ importBackupJSON: (
+   jsonStr: string,
+   options?: {
+     onToast?: (variant: 'success' | 'danger' | 'warning' | 'info', title: string, message?: string, duration?: number, action?: { label: string; onClick: () => void }) => void;
+   }
+ ) => boolean;
 }
 
 export interface FinanceDataContextType {
@@ -2282,9 +2288,28 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return JSON.stringify(backupData, null, 2);
   };
 
-  const importBackupJSON = (jsonStr: string): boolean => {
+  const importBackupJSON = (
+    jsonStr: string,
+    options?: {
+      onToast?: (variant: 'success' | 'danger' | 'warning' | 'info', title: string, message?: string, duration?: number, action?: { label: string; onClick: () => void }) => void;
+    }
+  ): boolean => {
+    const notify = (variant: 'success' | 'danger' | 'warning' | 'info', title: string, message?: string, duration?: number, action?: { label: string; onClick: () => void }) => {
+      if (options?.onToast) {
+        options.onToast(variant, title, message, duration, action);
+      } else {
+        console.warn(`[Restore] ${title}: ${message || ''}`);
+      }
+    };
+
     try {
       if (!jsonStr || typeof jsonStr !== 'string' || !jsonStr.trim()) {
+        notify('danger', 'Invalid Backup', 'The selected backup file is empty.');
+        return false;
+      }
+
+      if (jsonStr.length > 25 * 1024 * 1024) {
+        notify('danger', 'File Too Large', 'Backup file exceeds 25MB limit.');
         return false;
       }
 
@@ -2297,7 +2322,17 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       });
 
       if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        notify('danger', 'Invalid Format', 'Backup file is not a valid DhanVeda backup object.');
         return false;
+      }
+
+      // Check version: refuse files from a newer major version with clear message
+      if (parsed.version) {
+        const major = parseInt(String(parsed.version).split('.')[0], 10);
+        if (Number.isFinite(major) && major > 2) {
+          notify('danger', 'Incompatible Version', `This backup is from a newer version of DhanVeda (version ${parsed.version}). Please update DhanVeda to restore this file.`);
+          return false;
+        }
       }
 
       // Recursive sanitizer to ensure absolutely no dangerous keys slip through
@@ -2330,11 +2365,11 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       let recognizedDataFound = false;
 
-      // Validate each array store
+      // Validate each array store structure
       for (const key of arrayStoreKeys) {
         if (key in data) {
           if (!Array.isArray(data[key])) {
-            console.warn(`[FinanceContext] Invalid backup store: "${key}" is not an array`);
+            notify('danger', 'Corrupt Backup', `Invalid backup: store "${key}" is not an array.`);
             return false;
           }
           recognizedDataFound = true;
@@ -2343,7 +2378,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       if ('emergencyFund' in data && data.emergencyFund) {
         if (typeof data.emergencyFund !== 'object' || Array.isArray(data.emergencyFund)) {
-          console.warn('[FinanceContext] Invalid backup: emergencyFund is not an object');
+          notify('danger', 'Corrupt Backup', 'Invalid backup: emergencyFund is not an object.');
           return false;
         }
         recognizedDataFound = true;
@@ -2351,91 +2386,196 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       if ('userPreferences' in data && data.userPreferences) {
         if (typeof data.userPreferences !== 'object' || Array.isArray(data.userPreferences)) {
-          console.warn('[FinanceContext] Invalid backup: userPreferences is not an object');
+          notify('danger', 'Corrupt Backup', 'Invalid backup: userPreferences is not an object.');
           return false;
         }
         recognizedDataFound = true;
       }
 
       if (!recognizedDataFound) {
-        console.warn('[FinanceContext] Invalid backup: No recognized DhanVeda store structures found.');
+        notify('danger', 'Invalid Backup', 'No recognized DhanVeda store structures found in the file.');
         return false;
       }
 
-      // Helper to validate and sanitize an array of items requiring string id
-      const filterValidItems = <T extends { id: string }>(items: any[]): T[] => {
-        return items.filter(
-          item => item && typeof item === 'object' && !Array.isArray(item) && typeof item.id === 'string' && item.id.trim().length > 0
-        );
+      // Record validation with B-02 validators & 5% rejection rule
+      const storeValidators: Array<{
+        name: string;
+        key: string;
+        items: any[];
+        normalizer: (item: any) => any;
+      }> = [];
+
+      if (Array.isArray(data.transactions)) storeValidators.push({ name: 'transactions', key: 'transactions', items: data.transactions, normalizer: normalizeTransaction });
+      if (Array.isArray(data.categories)) storeValidators.push({ name: 'categories', key: 'categories', items: data.categories, normalizer: normalizeCategory });
+      if (Array.isArray(data.budgets)) storeValidators.push({ name: 'budgets', key: 'budgets', items: data.budgets, normalizer: normalizeBudget });
+      if (Array.isArray(data.investments)) storeValidators.push({ name: 'investments', key: 'investments', items: data.investments, normalizer: normalizeInvestment });
+      if (Array.isArray(data.dreams)) storeValidators.push({ name: 'goals', key: 'dreams', items: data.dreams, normalizer: normalizeDream });
+      if (Array.isArray(data.contacts)) storeValidators.push({ name: 'contacts', key: 'contacts', items: data.contacts, normalizer: normalizeContact });
+      if (Array.isArray(data.settlements)) storeValidators.push({ name: 'settlements', key: 'settlements', items: data.settlements, normalizer: normalizeSettlement });
+      if (Array.isArray(data.recurringPayments)) storeValidators.push({ name: 'recurring payments', key: 'recurringPayments', items: data.recurringPayments, normalizer: normalizeRecurringPayment });
+      if (Array.isArray(data.recurringPaymentLogs)) storeValidators.push({ name: 'recurring payment logs', key: 'recurringPaymentLogs', items: data.recurringPaymentLogs, normalizer: normalizeRecurringPaymentLog });
+      if (Array.isArray(data.aiReports)) storeValidators.push({ name: 'AI reports', key: 'aiReports', items: data.aiReports, normalizer: normalizeAIHealthReport });
+
+      const validatedStores = new Map<string, any[]>();
+      let totalImported = 0;
+      let totalSkipped = 0;
+      const skippedDetails: string[] = [];
+
+      for (const sv of storeValidators) {
+        const { valid, invalidCount } = validateStoreRecords(sv.items, sv.normalizer);
+        if (sv.items.length > 0) {
+          const failRate = invalidCount / sv.items.length;
+          if (failRate > 0.05) {
+            notify('danger', 'Restore Rejected', `Backup rejected: ${Math.round(failRate * 100)}% of ${sv.name} records are invalid (${invalidCount} of ${sv.items.length} failed). No changes were made.`);
+            return false;
+          }
+        }
+        validatedStores.set(sv.key, valid);
+        totalImported += valid.length;
+        totalSkipped += invalidCount;
+        if (invalidCount > 0) {
+          skippedDetails.push(`${sv.name}: ${invalidCount} invalid record(s) skipped`);
+        }
+      }
+
+      // Validate emergency fund if present
+      let validEmergencyFund: EmergencyFund | undefined = undefined;
+      if (data.emergencyFund && typeof data.emergencyFund === 'object') {
+        const normEF = normalizeEmergencyFund(data.emergencyFund);
+        if (!normEF) {
+          notify('danger', 'Restore Rejected', 'Backup rejected: emergency fund data is corrupt.');
+          return false;
+        }
+        validEmergencyFund = normEF;
+      }
+
+      // Confirmation modal with counts before replacing anything
+      const getCurrentCountsSummary = () => {
+        const parts: string[] = [];
+        if (transactionsRef.current.length > 0) parts.push(`${transactionsRef.current.length} transaction${transactionsRef.current.length === 1 ? '' : 's'}`);
+        if (budgetsRef.current.length > 0) parts.push(`${budgetsRef.current.length} budget${budgetsRef.current.length === 1 ? '' : 's'}`);
+        if (categoriesRef.current.length > 0) parts.push(`${categoriesRef.current.length} categor${categoriesRef.current.length === 1 ? 'y' : 'ies'}`);
+        if (investmentsRef.current.length > 0) parts.push(`${investmentsRef.current.length} investment${investmentsRef.current.length === 1 ? '' : 's'}`);
+        if (dreamsRef.current.length > 0) parts.push(`${dreamsRef.current.length} goal${dreamsRef.current.length === 1 ? '' : 's'}`);
+        if (contactsRef.current.length > 0) parts.push(`${contactsRef.current.length} contact${contactsRef.current.length === 1 ? '' : 's'}`);
+        if (settlementsRef.current.length > 0) parts.push(`${settlementsRef.current.length} settlement${settlementsRef.current.length === 1 ? '' : 's'}`);
+        if (recurringPaymentsRef.current.length > 0) parts.push(`${recurringPaymentsRef.current.length} recurring payment${recurringPaymentsRef.current.length === 1 ? '' : 's'}`);
+        return parts.length > 0 ? parts.join(', ') : 'no data';
       };
 
-      // Only emit bulk_data_loaded after validation succeeded
+      const getBackupCountsSummary = () => {
+        const parts: string[] = [];
+        for (const sv of storeValidators) {
+          const count = sv.items.length;
+          if (count > 0) {
+            parts.push(`${count} ${sv.name}`);
+          }
+        }
+        return parts.length > 0 ? parts.join(', ') : '1 record';
+      };
+
+      const confirmMsg = `Replace your current data (${getCurrentCountsSummary()}) with this backup (${getBackupCountsSummary()})? This cannot be undone.`;
+      const confirmed = typeof window !== 'undefined' ? window.confirm(confirmMsg) : true;
+      if (!confirmed) {
+        notify('info', 'Restore Cancelled', 'No changes were made to your data.');
+        return false;
+      }
+
+      // Automatically download a safety backup of the current data first (Blob download, no storage)
+      try {
+        const currentBackupJSON = exportBackupJSON();
+        const blob = new Blob([currentBackupJSON], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `dhanveda-safety-backup-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 100);
+      } catch (backupErr) {
+        console.error('Safety backup download error:', backupErr);
+      }
+
+      // Write valid records to IDB and update in-memory state
       emitFinanceEvent({ type: 'bulk_data_loaded' });
 
-      if (Array.isArray(data.transactions)) {
-        const validTransactions = filterValidItems<Transaction>(data.transactions);
-        saveAllToStore('transactions', validTransactions).catch(console.error);
-        prevTransactionsRef.current = validTransactions;
-        setTransactions(validTransactions);
+      if (validatedStores.has('transactions')) {
+        const validTxs = validatedStores.get('transactions')!;
+        saveAllToStore('transactions', validTxs).catch(console.error);
+        prevTransactionsRef.current = validTxs;
+        transactionsRef.current = validTxs;
+        setTransactions(validTxs);
       }
-      if (Array.isArray(data.categories)) {
-        const validCategories = filterValidItems<Category>(data.categories);
-        saveAllToStore('categories', validCategories).catch(console.error);
-        prevCategoriesRef.current = validCategories;
-        setCategories(validCategories);
+      if (validatedStores.has('categories')) {
+        const validCats = validatedStores.get('categories')!;
+        saveAllToStore('categories', validCats).catch(console.error);
+        prevCategoriesRef.current = validCats;
+        categoriesRef.current = validCats;
+        setCategories(validCats);
       }
-      if (Array.isArray(data.budgets)) {
-        const validBudgets = filterValidItems<Budget>(data.budgets);
+      if (validatedStores.has('budgets')) {
+        const validBudgets = validatedStores.get('budgets')!;
         saveAllToStore('budgets', validBudgets).catch(console.error);
         prevBudgetsRef.current = validBudgets;
+        budgetsRef.current = validBudgets;
         setBudgets(validBudgets);
       }
-      if (data.emergencyFund && typeof data.emergencyFund === 'object' && !Array.isArray(data.emergencyFund)) {
-        const em = { ...data.emergencyFund, id: 'current' };
+      if (validEmergencyFund) {
+        const em = { ...validEmergencyFund, id: 'current' };
         saveSingleRecord('emergencyFund', em).catch(console.error);
+        emergencyFundRef.current = em;
         setEmergencyFund(em);
       }
-      if (Array.isArray(data.investments)) {
-        const validInvestments = filterValidItems<Investment>(data.investments);
-        saveAllToStore('investments', validInvestments).catch(console.error);
-        prevInvestmentsRef.current = validInvestments;
-        setInvestments(validInvestments);
+      if (validatedStores.has('investments')) {
+        const validInvs = validatedStores.get('investments')!;
+        saveAllToStore('investments', validInvs).catch(console.error);
+        prevInvestmentsRef.current = validInvs;
+        investmentsRef.current = validInvs;
+        setInvestments(validInvs);
       }
-      if (Array.isArray(data.dreams)) {
-        const validDreams = filterValidItems<DreamGoal>(data.dreams);
+      if (validatedStores.has('dreams')) {
+        const validDreams = validatedStores.get('dreams')!;
         saveAllToStore('dreams', validDreams).catch(console.error);
         prevDreamsRef.current = validDreams;
+        dreamsRef.current = validDreams;
         setDreams(validDreams);
       }
-      if (Array.isArray(data.contacts)) {
-        const validContacts = filterValidItems<Contact>(data.contacts);
+      if (validatedStores.has('contacts')) {
+        const validContacts = validatedStores.get('contacts')!;
         saveAllToStore('contacts', validContacts).catch(console.error);
         prevContactsRef.current = validContacts;
+        contactsRef.current = validContacts;
         setContacts(validContacts);
       }
-      if (Array.isArray(data.settlements)) {
-        const validSettlements = filterValidItems<SettlementRecord>(data.settlements);
-        saveAllToStore('settlements', validSettlements).catch(console.error);
-        prevSettlementsRef.current = validSettlements;
-        setSettlements(validSettlements);
+      if (validatedStores.has('settlements')) {
+        const validSets = validatedStores.get('settlements')!;
+        saveAllToStore('settlements', validSets).catch(console.error);
+        prevSettlementsRef.current = validSets;
+        settlementsRef.current = validSets;
+        setSettlements(validSets);
       }
-      if (Array.isArray(data.recurringPayments)) {
-        const validRecurring = filterValidItems<RecurringPayment>(data.recurringPayments);
-        saveAllToStore('recurringPayments', validRecurring).catch(console.error);
-        prevRecurringPaymentsRef.current = validRecurring;
-        setRecurringPayments(validRecurring);
+      if (validatedStores.has('recurringPayments')) {
+        const validRec = validatedStores.get('recurringPayments')!;
+        saveAllToStore('recurringPayments', validRec).catch(console.error);
+        prevRecurringPaymentsRef.current = validRec;
+        recurringPaymentsRef.current = validRec;
+        setRecurringPayments(validRec);
       }
-      if (Array.isArray(data.recurringPaymentLogs)) {
-        const validLogs = filterValidItems<RecurringPaymentLog>(data.recurringPaymentLogs);
+      if (validatedStores.has('recurringPaymentLogs')) {
+        const validLogs = validatedStores.get('recurringPaymentLogs')!;
         saveAllToStore('recurringPaymentLogs', validLogs).catch(console.error);
         prevRecurringPaymentLogsRef.current = validLogs;
+        recurringPaymentLogsRef.current = validLogs;
         setRecurringPaymentLogs(validLogs);
       }
-      if (Array.isArray(data.aiReports)) {
-        const validAiReports = filterValidItems<AIHealthReport>(data.aiReports);
-        saveAllToStore('aiReports', validAiReports).catch(console.error);
-        prevAiReportsRef.current = validAiReports;
-        setAIReports(validAiReports);
+      if (validatedStores.has('aiReports')) {
+        const validAi = validatedStores.get('aiReports')!;
+        saveAllToStore('aiReports', validAi).catch(console.error);
+        prevAiReportsRef.current = validAi;
+        setAIReports(validAi);
       }
       if (data.userPreferences && typeof data.userPreferences === 'object') {
         if (data.userPreferences.darkMode !== undefined) setDarkMode(Boolean(data.userPreferences.darkMode));
@@ -2444,9 +2584,38 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
           setNotRecurringTxIds(new Set(validIds));
         }
       }
+
+      // Show summary
+      if (totalSkipped > 0) {
+        const downloadList = () => {
+          const blob = new Blob([skippedDetails.join('\n')], { type: 'text/plain' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `dhanveda-skipped-records-${new Date().toISOString().slice(0, 10)}.txt`;
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          }, 100);
+        };
+
+        notify(
+          'info',
+          'Restore Complete',
+          `Imported ${totalImported}, skipped ${totalSkipped}`,
+          6000,
+          { label: 'download list', onClick: downloadList }
+        );
+      } else {
+        notify('success', 'Backup Restored', `All ${totalImported} records were restored successfully.`, 5000);
+      }
+
       return true;
     } catch (e) {
       console.error('Failed to import backup JSON:', e);
+      notify('danger', 'Restore Error', 'An unexpected error occurred while reading the backup file.');
       return false;
     }
   };
