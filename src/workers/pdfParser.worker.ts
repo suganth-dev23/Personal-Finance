@@ -3,6 +3,7 @@ import { StagedTransaction, TransactionType, PaymentMethod } from '../types/fina
 import { suggestCategory, detectPaymentMethod } from '../utils/categoryMatcher';
 import { parseINR } from '../utils/currency';
 import { normalizeDate } from '../utils/csvParser';
+import { isValidAmount, isValidDate, roundMoney } from '../utils/validation';
 
 // Set worker source using Vite URL import
 try {
@@ -113,8 +114,10 @@ export function extractTransactionsFromPDFLines(lines: string[]): StagedTransact
       descCandidate = 'Bank Transaction';
     }
 
+    if (!isValidAmount(amount)) return;
+
     const normalizedDate = normalizeDate(rawDate);
-    if (!normalizedDate || normalizedDate === 'NaN-NaN-NaN') return;
+    if (!normalizedDate || normalizedDate === 'NaN-NaN-NaN' || !isValidDate(normalizedDate)) return;
 
     const categoryMatch = suggestCategory(descCandidate);
     const paymentMethod: PaymentMethod = detectPaymentMethod(descCandidate);
@@ -131,7 +134,7 @@ export function extractTransactionsFromPDFLines(lines: string[]): StagedTransact
     transactions.push({
       tempId: `staged-pdf-${Date.now()}-${rowIndex}`,
       date: normalizedDate,
-      amount: Number(amount.toFixed(2)),
+      amount: roundMoney(amount),
       type: resolvedType,
       category: categoryMatch.category,
       paymentMethod,

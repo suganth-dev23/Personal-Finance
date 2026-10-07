@@ -2,6 +2,7 @@ import Papa from 'papaparse';
 import { StagedTransaction, TransactionType, PaymentMethod } from '../types/finance';
 import { suggestCategory, detectPaymentMethod } from './categoryMatcher';
 import { parseINR } from './currency';
+import { isValidAmount, isValidDate, roundMoney } from './validation';
 
 /**
  * Normalize date strings into YYYY-MM-DD
@@ -328,9 +329,17 @@ export async function parseCSVStatement(file: File): Promise<CSVParseResult> {
       // Skip non-transaction rows (e.g. headers repeated, zero amounts)
       if (amount <= 0) continue;
 
+      if (!isValidAmount(amount)) {
+        errors.push(`Row ${r + 1}: Skipped row with out-of-bounds amount ₹${amount}`);
+        continue;
+      }
+
       // Validate date loosely
       const normalizedDate = normalizeDate(rawDate);
-      if (!normalizedDate || normalizedDate === 'NaN-NaN-NaN') continue;
+      if (!normalizedDate || normalizedDate === 'NaN-NaN-NaN' || !isValidDate(normalizedDate)) {
+        errors.push(`Row ${r + 1}: Skipped row with invalid date "${rawDate}"`);
+        continue;
+      }
 
       const cleanDescription = (rawDesc || 'Bank Transaction')
         .replace(/\s+/g, ' ')
@@ -347,7 +356,7 @@ export async function parseCSVStatement(file: File): Promise<CSVParseResult> {
       transactions.push({
         tempId: `staged-csv-${Date.now()}-${r}`,
         date: normalizedDate,
-        amount: Number(amount.toFixed(2)),
+        amount: roundMoney(amount),
         type: finalType,
         category: categoryMatch.category,
         paymentMethod,

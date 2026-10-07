@@ -13,7 +13,7 @@ import {
   AIHealthReport,
 } from '../types/finance';
 import { getTodayString } from './date';
-import { MAX_AMOUNT, isValidAmount, roundMoney } from './validation';
+import { MAX_AMOUNT, isValidAmount, isValidDate, roundMoney } from './validation';
 
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -42,11 +42,11 @@ export function normalizeTransaction(raw: any): Transaction | null {
     return null;
   }
 
-  // Date validation: must match YYYY-MM-DD or fall back to createdAt date
+  // Date validation: must match valid ISO date range or fall back to createdAt date
   let date: string;
-  if (typeof raw.date === 'string' && DATE_REGEX.test(raw.date)) {
+  if (typeof raw.date === 'string' && isValidDate(raw.date)) {
     date = raw.date;
-  } else if (typeof raw.createdAt === 'string' && /^\d{4}-\d{2}-\d{2}/.test(raw.createdAt)) {
+  } else if (typeof raw.createdAt === 'string' && isValidDate(raw.createdAt.slice(0, 10))) {
     date = raw.createdAt.slice(0, 10);
   } else {
     return null;
@@ -74,10 +74,10 @@ export function normalizeTransaction(raw: any): Transaction | null {
         id: single.id || `split-${id}-1`,
         contactId: single.contactId ? String(single.contactId).trim() : undefined,
         label: single.label || (!single.contactId ? 'Unnamed Person' : undefined),
-        amount: splitAmount,
+        amount: roundMoney(splitAmount),
         direction: single.direction === 'i_owe_them' ? 'i_owe_them' : 'they_owe_me',
         settled: Boolean(single.settled),
-        settledAmount: typeof single.settledAmount === 'number' ? single.settledAmount : undefined,
+        settledAmount: typeof single.settledAmount === 'number' ? roundMoney(single.settledAmount) : undefined,
         linkedTransactionId: single.linkedTransactionId || undefined,
       },
     ];
@@ -88,10 +88,10 @@ export function normalizeTransaction(raw: any): Transaction | null {
         id: entry.id || `split-${id}-${idx + 1}`,
         contactId: entry.contactId ? String(entry.contactId).trim() : undefined,
         label: entry.label || (!entry.contactId ? `Person ${idx + 1}` : undefined),
-        amount: splitAmount,
+        amount: roundMoney(splitAmount),
         direction: entry.direction === 'i_owe_them' ? 'i_owe_them' : 'they_owe_me',
         settled: Boolean(entry.settled),
-        settledAmount: typeof entry.settledAmount === 'number' ? entry.settledAmount : undefined,
+        settledAmount: typeof entry.settledAmount === 'number' ? roundMoney(entry.settledAmount) : undefined,
         linkedTransactionId: entry.linkedTransactionId || undefined,
       };
     });
@@ -100,7 +100,7 @@ export function normalizeTransaction(raw: any): Transaction | null {
   return {
     id,
     date,
-    amount,
+    amount: roundMoney(amount),
     type,
     category,
     paymentMethod,
@@ -148,9 +148,9 @@ export function normalizeSettlement(raw: any): SettlementRecord | null {
   if (!isValidAmount(amount)) return null;
 
   let date: string;
-  if (typeof raw.date === 'string' && DATE_REGEX.test(raw.date)) {
+  if (typeof raw.date === 'string' && isValidDate(raw.date)) {
     date = raw.date;
-  } else if (typeof raw.createdAt === 'string' && /^\d{4}-\d{2}-\d{2}/.test(raw.createdAt)) {
+  } else if (typeof raw.createdAt === 'string' && isValidDate(raw.createdAt.slice(0, 10))) {
     date = raw.createdAt.slice(0, 10);
   } else {
     date = getTodayString();
@@ -160,7 +160,7 @@ export function normalizeSettlement(raw: any): SettlementRecord | null {
     id,
     contactId,
     date,
-    amount,
+    amount: roundMoney(amount),
     note: typeof raw.note === 'string' ? raw.note : undefined,
     createdAt: typeof raw.createdAt === 'string' ? raw.createdAt : new Date().toISOString(),
     updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : undefined,
@@ -182,12 +182,12 @@ export function normalizeBudget(raw: any): Budget | null {
   if (!id || !category) return null;
 
   const monthlyLimit = typeof raw.monthlyLimit === 'number' ? raw.monthlyLimit : parseFloat(raw.monthlyLimit);
-  if (!Number.isFinite(monthlyLimit) || monthlyLimit < 0 || monthlyLimit > MAX_AMOUNT) return null;
+  if (!isValidAmount(monthlyLimit)) return null;
 
   return {
     id,
     category,
-    monthlyLimit,
+    monthlyLimit: roundMoney(monthlyLimit),
     updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : undefined,
   };
 }
@@ -203,15 +203,15 @@ export function normalizeInvestment(raw: any): Investment | null {
 
   const currentValue = typeof raw.currentValue === 'number' ? raw.currentValue : parseFloat(raw.currentValue);
   const investedAmount = typeof raw.investedAmount === 'number' ? raw.investedAmount : parseFloat(raw.investedAmount);
-  if (!Number.isFinite(currentValue) || currentValue < 0 || currentValue > MAX_AMOUNT || !Number.isFinite(investedAmount) || investedAmount < 0 || investedAmount > MAX_AMOUNT) return null;
+  if (!Number.isFinite(currentValue) || currentValue < 0 || currentValue > MAX_AMOUNT || !isValidAmount(investedAmount)) return null;
 
   return {
     id,
     name,
     type: typeof raw.type === 'string' ? raw.type : 'Other',
-    currentValue,
-    investedAmount,
-    sipAmount: typeof raw.sipAmount === 'number' ? raw.sipAmount : undefined,
+    currentValue: roundMoney(currentValue),
+    investedAmount: roundMoney(investedAmount),
+    sipAmount: typeof raw.sipAmount === 'number' && isValidAmount(raw.sipAmount) ? roundMoney(raw.sipAmount) : undefined,
     sipDay: typeof raw.sipDay === 'number' ? raw.sipDay : undefined,
     platform: typeof raw.platform === 'string' ? raw.platform : undefined,
     notes: typeof raw.notes === 'string' ? raw.notes : undefined,
@@ -233,7 +233,7 @@ export function normalizeDream(raw: any): DreamGoal | null {
   if (!id || !name) return null;
 
   const targetAmount = typeof raw.targetAmount === 'number' ? raw.targetAmount : parseFloat(raw.targetAmount);
-  if (!Number.isFinite(targetAmount) || targetAmount <= 0 || targetAmount > MAX_AMOUNT) return null;
+  if (!isValidAmount(targetAmount)) return null;
 
   const currentSaved = typeof raw.currentSaved === 'number'
     ? raw.currentSaved
@@ -242,9 +242,9 @@ export function normalizeDream(raw: any): DreamGoal | null {
   return {
     id,
     name,
-    targetAmount,
-    currentSaved: Number.isFinite(currentSaved) ? currentSaved : 0,
-    targetDate: typeof raw.targetDate === 'string' ? raw.targetDate : undefined,
+    targetAmount: roundMoney(targetAmount),
+    currentSaved: Number.isFinite(currentSaved) ? roundMoney(Math.max(0, currentSaved)) : 0,
+    targetDate: typeof raw.targetDate === 'string' && isValidDate(raw.targetDate) ? raw.targetDate : undefined,
     category: typeof raw.category === 'string' ? raw.category : 'General',
     icon: typeof raw.icon === 'string' ? raw.icon : 'Target',
     color: typeof raw.color === 'string' ? raw.color : '#10B981',
@@ -293,12 +293,12 @@ export function normalizeRecurringPayment(raw: any): RecurringPayment | null {
   return {
     id,
     name,
-    amount,
+    amount: roundMoney(amount),
     category: typeof raw.category === 'string' ? raw.category : 'General',
     frequency: raw.frequency || 'monthly',
     dayOfMonth: typeof raw.dayOfMonth === 'number' ? raw.dayOfMonth : undefined,
-    startDate: typeof raw.startDate === 'string' ? raw.startDate : getTodayString(),
-    endDate: typeof raw.endDate === 'string' ? raw.endDate : undefined,
+    startDate: typeof raw.startDate === 'string' && isValidDate(raw.startDate) ? raw.startDate : getTodayString(),
+    endDate: typeof raw.endDate === 'string' && isValidDate(raw.endDate) ? raw.endDate : undefined,
     isActive: raw.isActive !== false,
     paymentMethod: raw.paymentMethod || undefined,
     notes: typeof raw.notes === 'string' ? raw.notes : undefined,

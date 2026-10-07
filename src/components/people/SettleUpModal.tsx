@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Modal } from '../common/Modal';
 import { useFinance } from '../../context/FinanceContext';
 import { Contact, SettlementRecord, Transaction, TransactionType, OwedDirection } from '../../types/finance';
@@ -6,6 +6,8 @@ import { Money } from '../ui';
 import { formatDate, getTodayString, sanitizeDateString } from '../../utils/date';
 import { roundCurrency } from '../../utils/currency';
 import { HandCoins, Link as LinkIcon, Unlink, Search, Check, ChevronDown, ChevronUp } from 'lucide-react';
+import { useSubmitOnce } from '../../hooks/useSubmitOnce';
+import { MAX_AMOUNT, MIN_AMOUNT, MIN_DATE_STRING, getMaxDateString, isValidAmount, isValidDate, roundMoney } from '../../utils/validation';
 
 interface SettleUpModalProps {
   isOpen: boolean;
@@ -37,6 +39,8 @@ export const SettleUpModal: React.FC<SettleUpModalProps> = ({
   const [selectedTxId, setSelectedTxId] = useState<string | null>(null);
   const [isLinkingExpanded, setIsLinkingExpanded] = useState<boolean>(false);
   const [txSearchQuery, setTxSearchQuery] = useState<string>('');
+  const { isSubmitting, startSubmit, reset } = useSubmitOnce();
+  const prevIsOpenRef = useRef(false);
 
   const balanceMap = useMemo(() => {
     return new Map(contactBalances.map(b => [b.contactId, b.netAmount]));
@@ -45,6 +49,14 @@ export const SettleUpModal: React.FC<SettleUpModalProps> = ({
   const contactNet = contact ? balanceMap.get(contact.id) || 0 : 0;
 
   useEffect(() => {
+    if (!isOpen) {
+      prevIsOpenRef.current = false;
+      return;
+    }
+    const isOpening = isOpen && !prevIsOpenRef.current;
+    if (isOpening) {
+      reset();
+    }
     if (initialSettlement && isOpen) {
       setAmount(initialSettlement.amount.toString());
       setDate(initialSettlement.date);
@@ -62,7 +74,8 @@ export const SettleUpModal: React.FC<SettleUpModalProps> = ({
       setIsLinkingExpanded(false);
       setTxSearchQuery('');
     }
-  }, [contact, suggestedAmount, initialSettlement, isOpen, contactNet]);
+    prevIsOpenRef.current = isOpen;
+  }, [contact, suggestedAmount, initialSettlement, isOpen, contactNet, reset]);
 
   // Expected transaction type in bank account:
   // If they owe me and repay me -> money enters account -> CREDIT
@@ -132,13 +145,21 @@ export const SettleUpModal: React.FC<SettleUpModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!startSubmit()) return;
+
     const rawParsed = parseFloat(amount);
-    if (isNaN(rawParsed) || rawParsed <= 0) {
-      alert('Please enter a valid settlement amount greater than ₹0');
+    if (isNaN(rawParsed) || !isValidAmount(rawParsed)) {
+      alert(`Please enter a valid settlement amount between ₹${MIN_AMOUNT} and ₹${MAX_AMOUNT.toLocaleString('en-IN')}`);
+      reset();
       return;
     }
-    const parsed = roundCurrency(rawParsed);
+    const parsed = roundMoney(rawParsed);
     const sanitizedDate = sanitizeDateString(date) || getTodayString();
+    if (!isValidDate(sanitizedDate)) {
+      alert(`Please enter a valid date between ${MIN_DATE_STRING} and ${getMaxDateString()}`);
+      reset();
+      return;
+    }
 
     if (initialSettlement) {
       updateSettlement(initialSettlement.id, {
@@ -230,7 +251,8 @@ export const SettleUpModal: React.FC<SettleUpModalProps> = ({
             <input
               type="number"
               step="0.01"
-              min="0.01"
+              min={MIN_AMOUNT}
+              max={MAX_AMOUNT}
               inputMode="decimal"
               required
               value={amount}
@@ -259,6 +281,8 @@ export const SettleUpModal: React.FC<SettleUpModalProps> = ({
           </div>
           <input
             type="date"
+            min={MIN_DATE_STRING}
+            max={getMaxDateString()}
             required
             value={date}
             onChange={e => setDate(e.target.value)}
@@ -412,7 +436,10 @@ export const SettleUpModal: React.FC<SettleUpModalProps> = ({
           </button>
           <button
             type="submit"
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-slate-950 bg-primary hover:opacity-95 text-on-primary shadow-md shadow-xs transition-colors active:scale-95"
+            disabled={isSubmitting}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-on-primary shadow-md shadow-xs transition-colors active:scale-95 ${
+              isSubmitting ? 'bg-ink-3/40 cursor-not-allowed opacity-50' : 'bg-primary hover:opacity-95'
+            }`}
           >
             {initialSettlement ? <Check className="w-4 h-4" /> : <HandCoins className="w-4 h-4" />}
             <span>{initialSettlement ? 'Save Changes' : 'Record Settlement'}</span>

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Modal } from '../common/Modal';
 import { useFinance } from '../../context/FinanceContext';
 import { UserPlus, AlertCircle } from 'lucide-react';
+import { useSubmitOnce } from '../../hooks/useSubmitOnce';
 
 interface AddContactModalProps {
   isOpen: boolean;
@@ -15,14 +16,35 @@ export const AddContactModal: React.FC<AddContactModalProps> = ({ isOpen, onClos
   const [email, setEmail] = useState('');
   const [notes, setNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const { isSubmitting, startSubmit, reset } = useSubmitOnce();
+  const prevIsOpenRef = useRef(false);
+
+  useEffect(() => {
+    if (!isOpen) {
+      prevIsOpenRef.current = false;
+      return;
+    }
+    const isOpening = isOpen && !prevIsOpenRef.current;
+    if (isOpening) {
+      reset();
+      setName('');
+      setPhone('');
+      setEmail('');
+      setNotes('');
+      setError(null);
+    }
+    prevIsOpenRef.current = isOpen;
+  }, [isOpen, reset]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    if (!startSubmit()) return;
 
     const trimmedName = name.trim();
     if (!trimmedName) {
       setError('Please enter a valid person name.');
+      reset();
       return;
     }
 
@@ -32,6 +54,7 @@ export const AddContactModal: React.FC<AddContactModalProps> = ({ isOpen, onClos
     );
     if (isDuplicate) {
       setError(`A contact named "${trimmedName}" already exists.`);
+      reset();
       return;
     }
 
@@ -43,6 +66,7 @@ export const AddContactModal: React.FC<AddContactModalProps> = ({ isOpen, onClos
       const digitsOnly = cleaned.replace(/\D/g, '');
       if (digitsOnly.length < 7 || digitsOnly.length > 15) {
         setError('Please enter a valid phone number (7 to 15 digits).');
+        reset();
         return;
       }
       sanitizedPhone = cleaned;
@@ -55,6 +79,7 @@ export const AddContactModal: React.FC<AddContactModalProps> = ({ isOpen, onClos
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(trimmedEmail)) {
         setError('Please enter a valid email address (e.g. name@example.com).');
+        reset();
         return;
       }
       sanitizedEmail = trimmedEmail.toLowerCase();
@@ -174,7 +199,10 @@ export const AddContactModal: React.FC<AddContactModalProps> = ({ isOpen, onClos
           </button>
           <button
             type="submit"
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-primary hover:opacity-95 text-on-primary shadow-xs transition-colors active:scale-95"
+            disabled={isSubmitting}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-on-primary shadow-xs transition-colors active:scale-95 ${
+              isSubmitting ? 'bg-ink-3/40 cursor-not-allowed opacity-50' : 'bg-primary hover:opacity-95'
+            }`}
           >
             <UserPlus className="w-4 h-4" />
             <span>Add Person</span>

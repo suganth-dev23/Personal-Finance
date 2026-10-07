@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CheckCircle2, Receipt } from 'lucide-react';
 import { Modal } from '../common/Modal';
 import { RecurringPayment, PaymentMethod } from '../../types/finance';
 import { numberToWordsINR } from '../../utils/currency';
 import { Money } from '../ui';
-import { formatDate, getTodayString } from '../../utils/date';
+import { formatDate, getTodayString, sanitizeDateString } from '../../utils/date';
+import { useSubmitOnce } from '../../hooks/useSubmitOnce';
+import { MAX_AMOUNT, MIN_AMOUNT, MIN_DATE_STRING, getMaxDateString, isValidAmount, isValidDate, roundMoney } from '../../utils/validation';
 
 interface MarkPaidModalProps {
   isOpen: boolean;
@@ -44,15 +46,26 @@ export const MarkPaidModal: React.FC<MarkPaidModalProps> = ({
   const [recordInLedger, setRecordInLedger] = useState<boolean>(true);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('UPI');
   const [paidDate, setPaidDate] = useState<string>(getTodayString());
+  const { isSubmitting, startSubmit, reset } = useSubmitOnce();
+  const prevIsOpenRef = useRef(false);
 
   useEffect(() => {
+    if (!isOpen) {
+      prevIsOpenRef.current = false;
+      return;
+    }
+    const isOpening = isOpen && !prevIsOpenRef.current;
+    if (isOpening) {
+      reset();
+    }
     if (payment) {
       setAmountStr(payment.amount.toString());
       setRecordInLedger(Boolean(payment.autoLogTransaction));
       setPaymentMethod(payment.paymentMethod || 'UPI');
       setPaidDate(getTodayString());
     }
-  }, [payment, targetDueDate, isOpen]);
+    prevIsOpenRef.current = isOpen;
+  }, [payment, targetDueDate, isOpen, reset]);
 
   if (!payment) return null;
 
@@ -60,12 +73,22 @@ export const MarkPaidModal: React.FC<MarkPaidModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (parsedAmount <= 0) {
-      alert('Please enter a valid payment amount');
+    if (!startSubmit()) return;
+
+    if (parsedAmount <= 0 || !isValidAmount(parsedAmount)) {
+      alert(`Please enter a valid payment amount between ₹${MIN_AMOUNT} and ₹${MAX_AMOUNT.toLocaleString('en-IN')}`);
+      reset();
       return;
     }
 
-    onConfirm(payment.id, targetDueDate, parsedAmount, recordInLedger, paymentMethod, paidDate);
+    const sanitizedPaidDate = sanitizeDateString(paidDate) || getTodayString();
+    if (!isValidDate(sanitizedPaidDate)) {
+      alert(`Please enter a valid payment date between ${MIN_DATE_STRING} and ${getMaxDateString()}`);
+      reset();
+      return;
+    }
+
+    onConfirm(payment.id, targetDueDate, roundMoney(parsedAmount), recordInLedger, paymentMethod, sanitizedPaidDate);
     onClose();
   };
 
@@ -122,8 +145,9 @@ export const MarkPaidModal: React.FC<MarkPaidModalProps> = ({
             </div>
             <input
               type="number"
-              step="any"
-              min="0.01"
+              step="0.01"
+              min={MIN_AMOUNT}
+              max={MAX_AMOUNT}
               inputMode="decimal"
               required
               value={amountStr}
@@ -147,6 +171,8 @@ export const MarkPaidModal: React.FC<MarkPaidModalProps> = ({
             </label>
             <input
               type="date"
+              min={MIN_DATE_STRING}
+              max={getMaxDateString()}
               required
               value={paidDate}
               onChange={e => setPaidDate(e.target.value)}
@@ -205,7 +231,10 @@ export const MarkPaidModal: React.FC<MarkPaidModalProps> = ({
           </button>
           <button
             type="submit"
-            className="inline-flex items-center gap-2 rounded-xl bg-primary hover:opacity-95 text-on-primary px-5 py-2.5 text-sm font-bold text-slate-950 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-slate-900 transition-colors active:scale-95"
+            disabled={isSubmitting}
+            className={`inline-flex items-center gap-2 rounded-xl text-on-primary px-5 py-2.5 text-sm font-bold text-slate-950 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-slate-900 transition-colors active:scale-95 ${
+              isSubmitting ? 'bg-ink-3/40 cursor-not-allowed opacity-50' : 'bg-primary hover:opacity-95'
+            }`}
           >
             <CheckCircle2 className="h-4 w-4" />
             <span>Confirm Payment</span>

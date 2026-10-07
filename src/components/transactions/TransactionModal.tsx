@@ -6,6 +6,8 @@ import { numberToWordsINR, formatINR, roundCurrency, splitAmountEqually } from '
 import { getTodayString, sanitizeDateString } from '../../utils/date';
 import { suggestCategory } from '../../utils/categoryMatcher';
 import { Sparkles, Users, Check, X, Lock, Unlock, Plus, Trash2, CheckCircle2, Circle } from 'lucide-react';
+import { useSubmitOnce } from '../../hooks/useSubmitOnce';
+import { MAX_AMOUNT, MIN_AMOUNT, MIN_DATE_STRING, getMaxDateString, isValidAmount, isValidDate, roundMoney } from '../../utils/validation';
 
 export type TransactionTab = 'expense' | 'income' | 'transfer';
 
@@ -54,6 +56,8 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
  updateTransaction,
  recordSettlement,
  } = useFinance();
+
+ const { isSubmitting, startSubmit, reset } = useSubmitOnce();
 
  const [date, setDate] = useState<string>(getTodayString());
  const [amount, setAmount] = useState<string>('');
@@ -144,31 +148,36 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
  const handleSaveAsSettlement = (e: React.MouseEvent) => {
  e.preventDefault();
  if (!matchingRepaymentContact) return;
+ if (!startSubmit()) return;
 
  const parsedAmount = parseFloat(amount);
- if (isNaN(parsedAmount) || parsedAmount <= 0) {
- alert('Please enter a valid amount greater than ₹0');
+ if (isNaN(parsedAmount) || !isValidAmount(parsedAmount)) {
+ alert(`Please enter a valid amount between ₹${MIN_AMOUNT} and ₹${MAX_AMOUNT.toLocaleString('en-IN')}`);
+ reset();
  return;
  }
 
  const sanitizedDate = sanitizeDateString(date);
- if (!sanitizedDate) {
- alert('Please enter a valid date in YYYY-MM-DD format');
+ if (!sanitizedDate || !isValidDate(sanitizedDate)) {
+ alert(`Please enter a valid date between ${MIN_DATE_STRING} and ${getMaxDateString()}`);
+ reset();
  return;
  }
 
  if (!category || !category.trim()) {
  alert('Please select a valid category');
+ reset();
  return;
  }
 
+ const finalAmount = roundMoney(parsedAmount);
  const trimmedDesc = description.trim() || `Repayment with ${matchingRepaymentContact.contact.name}`;
  const trimmedPerson = person.trim() || matchingRepaymentContact.contact.name;
 
  // 1. Add ledger transaction
  const newTx = addTransaction({
  date: sanitizedDate,
- amount: parsedAmount,
+ amount: finalAmount,
  type,
  category: category.trim(),
  paymentMethod,
@@ -181,7 +190,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
  // 2. Record linked settlement (with correct direction so balance is properly deducted)
  recordSettlement(
  matchingRepaymentContact.contact.id,
- parsedAmount,
+ finalAmount,
  `Repayment: ${trimmedDesc}`,
  sanitizedDate,
  undefined,
@@ -229,14 +238,19 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
  const prevInitialContactIdRef = useRef<string | undefined>(undefined);
 
  useEffect(() => {
- const isOpening = isOpen && !prevIsOpenRef.current;
- const isDifferentTx = isOpen && initialTransaction?.id !== prevInitialTxIdRef.current;
- const isDifferentContact = isOpen && initialContactId !== prevInitialContactIdRef.current;
+  if (!isOpen) {
+   prevIsOpenRef.current = false;
+   return;
+  }
+  const isOpening = isOpen && !prevIsOpenRef.current;
+  const isDifferentTx = initialTransaction?.id !== prevInitialTxIdRef.current;
+  const isDifferentContact = initialContactId !== prevInitialContactIdRef.current;
 
  // Only re-initialize form state when modal transitions from closed to open,
  // or when the targeted transaction/contact genuinely changes.
  // NEVER wipe user inputs or split rows simply because `contacts` state updated!
  if (isOpening || isDifferentTx || isDifferentContact) {
+ reset();
  if (initialTransaction) {
  setDate(initialTransaction.date);
  setAmount(initialTransaction.amount.toString());
@@ -319,7 +333,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
  prevIsOpenRef.current = isOpen;
  prevInitialTxIdRef.current = initialTransaction?.id;
  prevInitialContactIdRef.current = initialContactId;
- }, [initialTransaction, initialContactId, isOpen, contacts]);
+ }, [initialTransaction, initialContactId, isOpen, contacts, reset]);
 
  // Recalculate auto-split when total amount changes and auto-split is on
  const handleAmountChange = (newAmountStr: string) => {
@@ -505,32 +519,41 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 
  const handleSubmit = (e: React.FormEvent) => {
  e.preventDefault();
+ if (!startSubmit()) return;
+
  const parsedAmount = parseFloat(amount);
- if (isNaN(parsedAmount) || parsedAmount <= 0) {
- alert('Please enter a valid amount greater than ₹0');
+ if (isNaN(parsedAmount) || !isValidAmount(parsedAmount)) {
+ alert(`Please enter a valid amount between ₹${MIN_AMOUNT} and ₹${MAX_AMOUNT.toLocaleString('en-IN')}`);
+ reset();
  return;
  }
 
  if (!description.trim()) {
  alert('Please enter a description / merchant name');
+ reset();
  return;
  }
 
  if (!category || !category.trim()) {
  alert('Please select a valid category');
+ reset();
  return;
  }
 
  const sanitizedDate = sanitizeDateString(date);
- if (!sanitizedDate) {
- alert('Please enter a valid date in YYYY-MM-DD format');
+ if (!sanitizedDate || !isValidDate(sanitizedDate)) {
+ alert(`Please enter a valid date between ${MIN_DATE_STRING} and ${getMaxDateString()}`);
+ reset();
  return;
  }
+
+ const finalAmount = roundMoney(parsedAmount);
 
  let splitPayload: SplitEntry[] | undefined = undefined;
  if (isSplitEnabled) {
  if (splitRows.length === 0) {
  alert('Please add at least one person to split this transaction with, or disable the split option.');
+ reset();
  return;
  }
 
@@ -540,16 +563,18 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
  return sum + (isNaN(val) ? 0 : val);
  }, 0);
 
- if (totalSplitSum > parsedAmount + 0.01) {
- alert(`Total split amounts (₹${totalSplitSum.toFixed(2)}) cannot exceed the transaction amount (₹${parsedAmount.toFixed(2)}).`);
+ if (totalSplitSum > finalAmount + 0.01) {
+ alert(`Total split amounts (₹${totalSplitSum.toFixed(2)}) cannot exceed the transaction amount (₹${finalAmount.toFixed(2)}).`);
+ reset();
  return;
  }
 
  // Check for any split row with invalid or zero amount
  for (const row of splitRows) {
  const rowAmt = typeof row.amount === 'number' ? row.amount : parseFloat(row.amount as any) || 0;
- if (isNaN(rowAmt) || rowAmt <= 0) {
- alert('Each split participant must have an owed amount greater than ₹0.');
+ if (isNaN(rowAmt) || !isValidAmount(rowAmt)) {
+ alert('Each split participant must have a valid owed amount greater than ₹0.');
+ reset();
  return;
  }
  }
@@ -560,7 +585,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
  id: r.id,
  contactId: r.contactId ? String(r.contactId).trim() : undefined,
  label: r.label || (!r.contactId ? 'Unnamed Person' : undefined),
- amount: Number(val.toFixed(2)),
+ amount: roundMoney(val),
  direction: r.direction,
  settled: Boolean(r.settled),
  };
@@ -572,7 +597,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
  if (initialTransaction) {
  updateTransaction(initialTransaction.id, {
  date: sanitizedDate,
- amount: parsedAmount,
+ amount: finalAmount,
  type,
  category: category.trim(),
  paymentMethod,
@@ -584,7 +609,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
  } else {
  addTransaction({
  date: sanitizedDate,
- amount: parsedAmount,
+ amount: finalAmount,
  type,
  category: category.trim(),
  paymentMethod,
@@ -668,6 +693,8 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
  <input
  type="number"
  step="0.01"
+ min={MIN_AMOUNT}
+ max={MAX_AMOUNT}
  inputMode="decimal"
  required
  value={amount}
@@ -764,6 +791,8 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
  <input
  type="date"
  required
+ min={MIN_DATE_STRING}
+ max={getMaxDateString()}
  value={date}
  onChange={e => setDate(e.target.value)}
  onBlur={() => {
@@ -1128,9 +1157,9 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
  </button>
  <button
  type="submit"
- disabled={isSubmitDisabled}
+ disabled={isSubmitDisabled || isSubmitting}
  className={`px-6 py-2.5 rounded-xl text-sm font-bold text-on-primary shadow-xs transition-colors duration-150 ${
- isSubmitDisabled
+ isSubmitDisabled || isSubmitting
  ? 'bg-ink-3/40 cursor-not-allowed opacity-50'
  : 'bg-primary hover:opacity-95 active:scale-95'
  }`}

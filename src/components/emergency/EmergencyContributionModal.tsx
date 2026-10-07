@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Modal } from '../common/Modal';
 import { useFinance } from '../../context/FinanceContext';
-import { getTodayString } from '../../utils/date';
+import { getTodayString, sanitizeDateString } from '../../utils/date';
 import { numberToWordsINR } from '../../utils/currency';
 import { Money } from '../ui';
+import { useSubmitOnce } from '../../hooks/useSubmitOnce';
+import { MAX_AMOUNT, MIN_AMOUNT, MIN_DATE_STRING, getMaxDateString, isValidAmount, isValidDate, roundMoney } from '../../utils/validation';
 
 interface EmergencyContributionModalProps {
   isOpen: boolean;
@@ -20,14 +22,42 @@ export const EmergencyContributionModal: React.FC<EmergencyContributionModalProp
   const [date, setDate] = useState(getTodayString());
   const [note, setNote] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const { isSubmitting, startSubmit, reset } = useSubmitOnce();
+  const prevIsOpenRef = useRef(false);
+
+  useEffect(() => {
+    if (!isOpen) {
+      prevIsOpenRef.current = false;
+      return;
+    }
+    const isOpening = isOpen && !prevIsOpenRef.current;
+    if (isOpening) {
+      reset();
+      setAmount('');
+      setType('deposit');
+      setDate(getTodayString());
+      setNote('');
+      setErrorMessage(null);
+    }
+    prevIsOpenRef.current = isOpen;
+  }, [isOpen, reset]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+    if (!startSubmit()) return;
 
     const num = parseFloat(amount);
-    if (isNaN(num) || num <= 0) {
-      setErrorMessage('Please enter a valid amount greater than ₹0');
+    if (isNaN(num) || !isValidAmount(num)) {
+      setErrorMessage(`Please enter a valid amount between ₹${MIN_AMOUNT} and ₹${MAX_AMOUNT.toLocaleString('en-IN')}`);
+      reset();
+      return;
+    }
+
+    const sanitizedDate = sanitizeDateString(date);
+    if (!sanitizedDate || !isValidDate(sanitizedDate)) {
+      setErrorMessage(`Please enter a valid date between ${MIN_DATE_STRING} and ${getMaxDateString()}`);
+      reset();
       return;
     }
 
@@ -35,10 +65,11 @@ export const EmergencyContributionModal: React.FC<EmergencyContributionModalProp
       setErrorMessage(
         `Withdrawal amount (₹${num.toLocaleString('en-IN')}) cannot exceed current emergency reserve balance (₹${emergencyFund.currentSaved.toLocaleString('en-IN')})`
       );
+      reset();
       return;
     }
 
-    addEmergencyContribution(num, type, note.trim() || undefined, date);
+    addEmergencyContribution(roundMoney(num), type, note.trim() || undefined, sanitizedDate);
     setAmount('');
     setNote('');
     setErrorMessage(null);
@@ -119,7 +150,8 @@ export const EmergencyContributionModal: React.FC<EmergencyContributionModalProp
             <input
               type="number"
               step="0.01"
-              min="0.01"
+              min={MIN_AMOUNT}
+              max={MAX_AMOUNT}
               inputMode="decimal"
               required
               value={amount}
@@ -145,6 +177,8 @@ export const EmergencyContributionModal: React.FC<EmergencyContributionModalProp
           </label>
           <input
             type="date"
+            min={MIN_DATE_STRING}
+            max={getMaxDateString()}
             required
             value={date}
             onChange={e => setDate(e.target.value)}
@@ -177,7 +211,12 @@ export const EmergencyContributionModal: React.FC<EmergencyContributionModalProp
           </button>
           <button
             type="submit"
-            className="px-6 py-2.5 rounded-xl text-sm font-bold text-slate-950 bg-primary hover:opacity-95 text-on-primary shadow-sm transition-colors duration-150 active:scale-95"
+            disabled={isSubmitting}
+            className={`px-6 py-2.5 rounded-xl text-sm font-bold text-on-primary transition-colors duration-150 ${
+              isSubmitting
+                ? 'bg-ink-3/40 cursor-not-allowed opacity-50'
+                : 'bg-primary hover:opacity-95 shadow-sm active:scale-95'
+            }`}
           >
             Save Record
           </button>

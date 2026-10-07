@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Modal } from '../common/Modal';
 import { useFinance } from '../../context/FinanceContext';
 import { Budget } from '../../types/finance';
 import { formatINR, numberToWordsINR } from '../../utils/currency';
+import { useSubmitOnce } from '../../hooks/useSubmitOnce';
+import { MAX_AMOUNT, MIN_AMOUNT, isValidAmount, roundMoney } from '../../utils/validation';
 
 interface BudgetModalProps {
   isOpen: boolean;
@@ -21,6 +23,8 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<string>('Food & Dining');
   const [limitAmount, setLimitAmount] = useState<string>('10000');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const { isSubmitting, startSubmit, reset } = useSubmitOnce();
+  const prevIsOpenRef = useRef(false);
 
   // Set of category names that already have an active budget
   const existingBudgetCategories = useMemo(() => {
@@ -28,6 +32,14 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
   }, [budgets]);
 
   useEffect(() => {
+    if (!isOpen) {
+      prevIsOpenRef.current = false;
+      return;
+    }
+    const isOpening = isOpen && !prevIsOpenRef.current;
+    if (isOpening) {
+      reset();
+    }
     setErrorMessage(null);
     if (initialBudget) {
       setSelectedCategory(initialBudget.category);
@@ -37,14 +49,18 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
       setSelectedCategory(unbudgeted ? unbudgeted.name : (categories[0]?.name || 'Food & Dining'));
       setLimitAmount('10000');
     }
-  }, [initialBudget, isOpen, categories, existingBudgetCategories]);
+    prevIsOpenRef.current = isOpen;
+  }, [initialBudget, isOpen, categories, existingBudgetCategories, reset]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+    if (!startSubmit()) return;
+
     const num = parseFloat(limitAmount);
-    if (isNaN(num) || num <= 0) {
-      setErrorMessage('Please enter a positive monthly budget limit greater than ₹0');
+    if (isNaN(num) || !isValidAmount(num)) {
+      setErrorMessage(`Please enter a positive monthly budget limit between ₹${MIN_AMOUNT} and ₹${MAX_AMOUNT.toLocaleString('en-IN')}`);
+      reset();
       return;
     }
 
@@ -55,11 +71,12 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
       );
       if (isDuplicate) {
         setErrorMessage(`A budget for "${selectedCategory}" already exists. Please choose a different category or edit the existing budget.`);
+        reset();
         return;
       }
     }
 
-    setBudgetForCategory(selectedCategory, num);
+    setBudgetForCategory(selectedCategory, roundMoney(num));
     onClose();
   };
 
@@ -116,8 +133,9 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
             </div>
             <input
               type="number"
-              step="100"
-              min="1"
+              step="0.01"
+              min={MIN_AMOUNT}
+              max={MAX_AMOUNT}
               inputMode="decimal"
               required
               value={limitAmount}
@@ -169,7 +187,10 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
           </button>
           <button
             type="submit"
-            className="px-6 py-2.5 rounded-xl text-sm font-bold text-on-primary bg-primary hover:opacity-95 shadow-xs transition-colors duration-150 active:scale-95"
+            disabled={isSubmitting}
+            className={`px-6 py-2.5 rounded-xl text-sm font-bold text-on-primary transition-colors duration-150 ${
+              isSubmitting ? 'bg-ink-3/40 cursor-not-allowed opacity-50' : 'bg-primary hover:opacity-95 shadow-xs active:scale-95'
+            }`}
           >
             Save Budget
           </button>
