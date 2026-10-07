@@ -61,6 +61,7 @@ export const ViewTransition: React.FC<ViewTransitionProps> = ({ viewKey, childre
   const rafRef = useRef<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const isFirstMount = useRef(true);
+  const lastViewKeyRef = useRef(viewKey);
 
  const clearAllTimers = () => {
  if (transitionTimerRef.current !== null) {
@@ -84,13 +85,19 @@ export const ViewTransition: React.FC<ViewTransitionProps> = ({ viewKey, childre
  }, []);
 
   useEffect(() => {
-    if (!ENABLE_VIEW_TRANSITION || reducedMotion) {
-      clearAllTimers();
+    if (isFirstMount.current) {
+      isFirstMount.current = false;
       return;
     }
 
-    if (isFirstMount.current) {
-      isFirstMount.current = false;
+    if (!ENABLE_VIEW_TRANSITION || reducedMotion) {
+      clearAllTimers();
+      if (typeof window !== 'undefined' && viewKey !== lastViewKeyRef.current) {
+        scrollMapRef.current[lastViewKeyRef.current] = window.scrollY;
+        const savedScroll = scrollMapRef.current[viewKey] ?? 0;
+        window.scrollTo({ top: savedScroll, behavior: 'instant' });
+      }
+      lastViewKeyRef.current = viewKey;
       return;
     }
 
@@ -107,6 +114,10 @@ export const ViewTransition: React.FC<ViewTransitionProps> = ({ viewKey, childre
    clearAllTimers();
    setActiveKey(viewKey);
    setPhase('idle');
+   if (typeof window !== 'undefined') {
+     const savedScroll = scrollMapRef.current[viewKey] ?? 0;
+     window.scrollTo({ top: savedScroll, behavior: 'instant' });
+   }
    return;
   }
 

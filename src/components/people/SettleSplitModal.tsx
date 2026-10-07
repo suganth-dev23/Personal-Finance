@@ -101,10 +101,10 @@ export const SettleSplitModal: React.FC<SettleSplitModalProps> = ({
  // Search query filter
  if (searchQuery.trim()) {
  const q = searchQuery.toLowerCase();
- const matchesDesc = t.description.toLowerCase().includes(q);
+ const matchesDesc = (t.description || '').toLowerCase().includes(q);
  const matchesRef = t.referenceId && t.referenceId.toLowerCase().includes(q);
- const matchesAmount = t.amount.toString().includes(q);
- const matchesDate = t.date.includes(q);
+ const matchesAmount = t.amount !== undefined && t.amount.toString().includes(q);
+ const matchesDate = (t.date || '').includes(q);
  if (!matchesDesc && !matchesRef && !matchesAmount && !matchesDate) return false;
  }
 

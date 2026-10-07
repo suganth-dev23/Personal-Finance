@@ -27,7 +27,19 @@ import {
  INITIAL_RECURRING_PAYMENTS,
  INITIAL_RECURRING_PAYMENT_LOGS,
 } from '../utils/sampleData';
-import { getCurrentMonthYear, getTodayString } from '../utils/date';
+import { getCurrentMonthYear, getTodayString, getMonthKey } from '../utils/date';
+import {
+  normalizeTransaction,
+  normalizeContact,
+  normalizeSettlement,
+  normalizeBudget,
+  normalizeInvestment,
+  normalizeDream,
+  normalizeCategory,
+  normalizeRecurringPayment,
+  normalizeRecurringPaymentLog,
+  validateStoreRecords,
+} from '../utils/recordValidation';
 import { roundCurrency } from '../utils/currency';
 import { rebaseDemoData } from '../utils/rebaseDemoDates';
 import { getPaymentSchedule, calculateMonthlyEquivalent } from '../utils/recurringDates';
@@ -87,6 +99,9 @@ export interface FinanceUiContextType {
  darkMode: boolean;
  setDarkMode: (val: boolean | ((prev: boolean) => boolean)) => void;
  isInitialized: boolean;
+ unreadableRecordCount: number;
+ dismissUnreadableBanner: () => void;
+ isUnreadableBannerDismissed: boolean;
 }
 
 export interface FinanceActionsContextType {
@@ -284,6 +299,11 @@ const EMPTY_EMERGENCY_FUND: EmergencyFund = {
 export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
  const [currentView, setCurrentView] = useState<AppView>('dashboard');
  const [isInitialized, setIsInitialized] = useState(false);
+ const [unreadableRecordCount, setUnreadableRecordCount] = useState<number>(0);
+ const [isUnreadableBannerDismissed, setIsUnreadableBannerDismissed] = useState<boolean>(false);
+ const dismissUnreadableBanner = useCallback(() => {
+   setIsUnreadableBannerDismissed(true);
+ }, []);
  const [darkMode, setDarkMode] = useState<boolean>(() => {
  const saved = typeof window !== 'undefined' ? localStorage.getItem('dhanveda_dark_mode') : null;
  if (saved !== null) {
@@ -494,78 +514,70 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
  getAllFromStore<RecurringPaymentLog>('recurringPaymentLogs'),
  ]);
 
- if (dbTx && Array.isArray(dbTx)) {
- const normalized = dbTx.map(t => {
- let splitWith: SplitEntry[] | undefined = undefined;
- if (t.splitWith && !Array.isArray(t.splitWith) && typeof t.splitWith === 'object') {
- const single = t.splitWith as any;
- splitWith = [{
- id: single.id || `split-${t.id}-1`,
- contactId: single.contactId ? String(single.contactId).trim() : undefined,
- label: single.label || (!single.contactId ? 'Unnamed Person' : undefined),
- amount: Number(single.amount) || 0,
- direction: single.direction === 'i_owe_them' ? 'i_owe_them' : 'they_owe_me',
- settled: Boolean(single.settled),
- settledAmount: typeof single.settledAmount === 'number' ? single.settledAmount : undefined,
- linkedTransactionId: single.linkedTransactionId || undefined,
- }];
- } else if (Array.isArray(t.splitWith)) {
- splitWith = t.splitWith.map((entry, idx) => ({
- id: entry.id || `split-${t.id}-${idx + 1}`,
- contactId: entry.contactId ? String(entry.contactId).trim() : undefined,
- label: entry.label || (!entry.contactId ? `Person ${idx + 1}` : undefined),
- amount: Number(entry.amount) || 0,
- direction: entry.direction === 'i_owe_them' ? 'i_owe_them' : 'they_owe_me',
- settled: Boolean(entry.settled),
- settledAmount: typeof entry.settledAmount === 'number' ? entry.settledAmount : undefined,
- linkedTransactionId: entry.linkedTransactionId || undefined,
- }));
- }
- return {
- ...t,
- amount: Number(t.amount) || 0,
- splitWith: splitWith && splitWith.length > 0 ? splitWith : undefined,
- };
- });
-    setTransactions(normalized);
-    prevTransactionsRef.current = normalized;
-  }
-  if (dbCat && Array.isArray(dbCat) && dbCat.length > 0) {
-    setCategories(dbCat);
-    prevCategoriesRef.current = dbCat;
-  }
-  if (dbBudgets && Array.isArray(dbBudgets)) {
-    setBudgets(dbBudgets);
-    prevBudgetsRef.current = dbBudgets;
-  }
-  if (dbEm) {
-    const { id: _id, ...cleanEm } = dbEm;
-    setEmergencyFund(cleanEm);
-  }
-  if (dbInv && Array.isArray(dbInv)) {
-    setInvestments(dbInv);
-    prevInvestmentsRef.current = dbInv;
-  }
-  if (dbDreams && Array.isArray(dbDreams)) {
-    setDreams(dbDreams);
-    prevDreamsRef.current = dbDreams;
-  }
-  if (dbContacts && Array.isArray(dbContacts)) {
-    setContacts(dbContacts);
-    prevContactsRef.current = dbContacts;
-  }
-  if (dbSettlements && Array.isArray(dbSettlements)) {
-    setSettlements(dbSettlements);
-    prevSettlementsRef.current = dbSettlements;
-  }
-  if (dbRecPay && Array.isArray(dbRecPay)) {
-    setRecurringPayments(dbRecPay);
-    prevRecurringPaymentsRef.current = dbRecPay;
-  }
-  if (dbRecLogs && Array.isArray(dbRecLogs)) {
-    setRecurringPaymentLogs(dbRecLogs);
-    prevRecurringPaymentLogsRef.current = dbRecLogs;
-  }
+    let totalInvalid = 0;
+
+    if (dbTx && Array.isArray(dbTx)) {
+      const { valid: validTx, invalidCount } = validateStoreRecords(dbTx, normalizeTransaction);
+      totalInvalid += invalidCount;
+      setTransactions(validTx);
+      prevTransactionsRef.current = validTx;
+    }
+    if (dbCat && Array.isArray(dbCat)) {
+      const { valid: validCat, invalidCount } = validateStoreRecords(dbCat, normalizeCategory);
+      totalInvalid += invalidCount;
+      if (validCat.length > 0) {
+        setCategories(validCat);
+        prevCategoriesRef.current = validCat;
+      }
+    }
+    if (dbBudgets && Array.isArray(dbBudgets)) {
+      const { valid: validBudgets, invalidCount } = validateStoreRecords(dbBudgets, normalizeBudget);
+      totalInvalid += invalidCount;
+      setBudgets(validBudgets);
+      prevBudgetsRef.current = validBudgets;
+    }
+    if (dbEm) {
+      const { id: _id, ...cleanEm } = dbEm;
+      setEmergencyFund(cleanEm);
+    }
+    if (dbInv && Array.isArray(dbInv)) {
+      const { valid: validInv, invalidCount } = validateStoreRecords(dbInv, normalizeInvestment);
+      totalInvalid += invalidCount;
+      setInvestments(validInv);
+      prevInvestmentsRef.current = validInv;
+    }
+    if (dbDreams && Array.isArray(dbDreams)) {
+      const { valid: validDreams, invalidCount } = validateStoreRecords(dbDreams, normalizeDream);
+      totalInvalid += invalidCount;
+      setDreams(validDreams);
+      prevDreamsRef.current = validDreams;
+    }
+    if (dbContacts && Array.isArray(dbContacts)) {
+      const { valid: validContacts, invalidCount } = validateStoreRecords(dbContacts, normalizeContact);
+      totalInvalid += invalidCount;
+      setContacts(validContacts);
+      prevContactsRef.current = validContacts;
+    }
+    if (dbSettlements && Array.isArray(dbSettlements)) {
+      const { valid: validSettlements, invalidCount } = validateStoreRecords(dbSettlements, normalizeSettlement);
+      totalInvalid += invalidCount;
+      setSettlements(validSettlements);
+      prevSettlementsRef.current = validSettlements;
+    }
+    if (dbRecPay && Array.isArray(dbRecPay)) {
+      const { valid: validRecPay, invalidCount } = validateStoreRecords(dbRecPay, normalizeRecurringPayment);
+      totalInvalid += invalidCount;
+      setRecurringPayments(validRecPay);
+      prevRecurringPaymentsRef.current = validRecPay;
+    }
+    if (dbRecLogs && Array.isArray(dbRecLogs)) {
+      const { valid: validRecLogs, invalidCount } = validateStoreRecords(dbRecLogs, normalizeRecurringPaymentLog);
+      totalInvalid += invalidCount;
+      setRecurringPaymentLogs(validRecLogs);
+      prevRecurringPaymentLogsRef.current = validRecLogs;
+    }
+
+    setUnreadableRecordCount(totalInvalid);
   if (dbAiSet) {
     const { id: _id, ...cleanAi } = dbAiSet;
     setAISettings({
@@ -2165,7 +2177,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
  const { key: currentMonthKey, monthName: currentMonthName } = getCurrentMonthYear();
 
  const currentMonthTransactions = useMemo(() => {
- return transactions.filter(t => t.date.startsWith(currentMonthKey));
+ return transactions.filter(t => t.date && t.date.startsWith(currentMonthKey));
  }, [transactions, currentMonthKey]);
 
  const currentMonthIncome = useMemo(() => {
@@ -2198,8 +2210,10 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
  const monthExpensesMap: Record<string, number> = {};
  transactions.forEach(t => {
  if (t.type === 'debit') {
- const ym = t.date.substring(0, 7);
- monthExpensesMap[ym] = (monthExpensesMap[ym] || 0) + t.amount;
+ const ym = getMonthKey(t.date);
+ if (ym) {
+ monthExpensesMap[ym] = (monthExpensesMap[ym] || 0) + (Number.isFinite(t.amount) ? t.amount : 0);
+ }
  }
  });
 
@@ -2410,12 +2424,12 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
  }
  });
 
- const budgetMap = new Map(budgets.map(b => [b.category.toLowerCase(), b.monthlyLimit]));
- const categoryInfoMap = new Map(categories.map(c => [c.name.toLowerCase(), c]));
+ const budgetMap = new Map(budgets.map(b => [(b.category || '').toLowerCase(), b.monthlyLimit]));
+ const categoryInfoMap = new Map(categories.map(c => [(c.name || '').toLowerCase(), c]));
 
  const result = Object.entries(spendMap).map(([categoryName, spent]) => {
- const budget = budgetMap.get(categoryName.toLowerCase()) || 0;
- const catInfo = categoryInfoMap.get(categoryName.toLowerCase());
+ const budget = budgetMap.get((categoryName || '').toLowerCase()) || 0;
+ const catInfo = categoryInfoMap.get((categoryName || '').toLowerCase());
  const percentUsed = budget > 0 ? (spent / budget) * 100 : 0;
 
  return {
@@ -2429,9 +2443,9 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
  });
 
  budgets.forEach(b => {
- const alreadyIncluded = result.some(r => r.category.toLowerCase() === b.category.toLowerCase());
+ const alreadyIncluded = result.some(r => (r.category || '').toLowerCase() === (b.category || '').toLowerCase());
  if (!alreadyIncluded) {
- const catInfo = categoryInfoMap.get(b.category.toLowerCase());
+ const catInfo = categoryInfoMap.get((b.category || '').toLowerCase());
  result.push({
  category: b.category,
  spent: 0,
@@ -2456,7 +2470,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       isBudgetDetectorInitializedRef.current = true;
       const initMap = new Map<string, number>();
       categorySpendingThisMonth.forEach(cat => {
-        initMap.set(cat.category.toLowerCase(), cat.percentUsed);
+        initMap.set((cat.category || '').toLowerCase(), cat.percentUsed);
       });
       prevSpendingRef.current = initMap;
       return;
@@ -2464,7 +2478,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     categorySpendingThisMonth.forEach(cat => {
       if (cat.budget > 0) {
-        const prevPercent = prevSpendingRef.current.get(cat.category.toLowerCase()) ?? 0;
+        const prevPercent = prevSpendingRef.current.get((cat.category || '').toLowerCase()) ?? 0;
         if (prevPercent <= 100 && cat.percentUsed > 100) {
           emitFinanceEvent({
             type: 'budget_exceeded',
@@ -2478,7 +2492,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     const newMap = new Map<string, number>();
     categorySpendingThisMonth.forEach(cat => {
-      newMap.set(cat.category.toLowerCase(), cat.percentUsed);
+      newMap.set((cat.category || '').toLowerCase(), cat.percentUsed);
     });
     prevSpendingRef.current = newMap;
   }, [categorySpendingThisMonth, isInitialized, emitFinanceEvent]);
@@ -2599,7 +2613,10 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     darkMode,
     setDarkMode,
     isInitialized,
-  }), [currentView, darkMode, isInitialized]);
+    unreadableRecordCount,
+    dismissUnreadableBanner,
+    isUnreadableBannerDismissed,
+  }), [currentView, darkMode, isInitialized, unreadableRecordCount, dismissUnreadableBanner, isUnreadableBannerDismissed]);
 
   const actionsCurrent: FinanceActionsContextType = {
     subscribeFinanceEvent,

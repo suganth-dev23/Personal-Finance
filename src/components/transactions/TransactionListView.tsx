@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { Transaction, TransactionType, Category, Contact } from '../../types/finance';
-import { getMonthName } from '../../utils/date';
+import { getMonthName, getMonthKey } from '../../utils/date';
 import { useStaggerChildren } from '../../hooks/useStaggerChildren';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { useWindowVirtualizer } from '../../hooks/useWindowVirtualizer';
@@ -353,18 +353,18 @@ export const TransactionListView: React.FC<TransactionListViewProps> = React.mem
       // 7. Date Range filter
       if (dateRange === 'this_month') {
         const currentMonthKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
-        if (!tx.date.startsWith(currentMonthKey)) return false;
+        if (!tx.date || !tx.date.startsWith(currentMonthKey)) return false;
       } else if (dateRange === 'last_month') {
         const lastMonthDate = new Date(currentYear, currentMonth - 1, 1);
         const lastMonthKey = `${lastMonthDate.getFullYear()}-${String(lastMonthDate.getMonth() + 1).padStart(2, '0')}`;
-        if (!tx.date.startsWith(lastMonthKey)) return false;
+        if (!tx.date || !tx.date.startsWith(lastMonthKey)) return false;
       } else if (dateRange === 'last_3_months') {
         const threeMonthsAgo = new Date(currentYear, currentMonth - 2, 1);
-        const txDate = new Date(tx.date);
-        if (txDate < threeMonthsAgo) return false;
+        const txDate = new Date(tx.date || '');
+        if (isNaN(txDate.getTime()) || txDate < threeMonthsAgo) return false;
       } else if (dateRange === 'custom') {
-        if (customStartDate && tx.date < customStartDate) return false;
-        if (customEndDate && tx.date > customEndDate) return false;
+        if (customStartDate && (!tx.date || tx.date < customStartDate)) return false;
+        if (customEndDate && (!tx.date || tx.date > customEndDate)) return false;
       }
 
       return true;
@@ -531,7 +531,7 @@ export const TransactionListView: React.FC<TransactionListViewProps> = React.mem
 
     const map: Record<string, Transaction[]> = {};
     filteredTransactions.forEach(t => {
-      const key = groupBy === 'month' ? t.date.substring(0, 7) : t.date.substring(0, 4);
+      const key = groupBy === 'month' ? (getMonthKey(t.date) || 'Unknown') : (t.date ? t.date.substring(0, 4) : 'Unknown');
       if (!map[key]) map[key] = [];
       map[key].push(t);
     });

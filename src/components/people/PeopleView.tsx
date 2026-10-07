@@ -161,7 +161,7 @@ export const PeopleView: React.FC = () => {
  }
  });
  // Sort descending by transaction date
- list.sort((a, b) => b.tx.date.localeCompare(a.tx.date));
+ list.sort((a, b) => (b.tx.date || '').localeCompare(a.tx.date || ''));
  return list;
  }, [transactions, contactIdsSet]);
 

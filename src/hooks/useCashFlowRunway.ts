@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Transaction } from '../types/finance';
+import { getMonthKey } from '../utils/date';
 
 export type RunwayStatus = 'sustainable' | 'abundant' | 'healthy' | 'moderate' | 'critical';
 
@@ -27,8 +28,9 @@ export function useCashFlowRunway(
     const monthlyData: Record<string, { income: number; expense: number }> = {};
 
     (transactions || []).forEach(tx => {
-      if (!tx || !tx.date) return;
-      const ym = tx.date.substring(0, 7);
+      if (!tx) return;
+      const ym = getMonthKey(tx.date);
+      if (!ym) return;
       if (!monthlyData[ym]) {
         monthlyData[ym] = { income: 0, expense: 0 };
       }

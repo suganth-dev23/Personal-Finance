@@ -93,9 +93,9 @@ export const SettleUpModal: React.FC<SettleUpModalProps> = ({
       // Filter by search query if present
       if (txSearchQuery.trim()) {
         const q = txSearchQuery.toLowerCase();
-        const matchesDesc = t.description.toLowerCase().includes(q);
+        const matchesDesc = (t.description || '').toLowerCase().includes(q);
         const matchesRef = t.referenceId && t.referenceId.toLowerCase().includes(q);
-        const matchesDate = t.date.includes(q);
+        const matchesDate = (t.date || '').includes(q);
         if (!matchesDesc && !matchesRef && !matchesDate) return false;
       }
 

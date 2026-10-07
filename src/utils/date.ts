@@ -86,6 +86,14 @@ export function getCurrentMonthYear(): { month: number; year: number; monthName:
   return { month, year, monthName, key };
 }
 
+export function getMonthKey(date: string | null | undefined): string {
+  if (!date || typeof date !== 'string') return '';
+  if (/^\d{4}-\d{2}/.test(date)) {
+    return date.substring(0, 7);
+  }
+  return '';
+}
+
 export function getMonthName(yearMonth: string): string {
   // expects YYYY-MM
   return formatMonth(yearMonth);

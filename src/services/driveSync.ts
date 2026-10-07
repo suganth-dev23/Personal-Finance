@@ -537,7 +537,7 @@ export class DriveSyncService {
             }
           }
           const mergedContributions = Array.from(contribMap.values())
-            .sort((a, b) => b.date.localeCompare(a.date));
+            .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
           const totalSaved = mergedContributions.reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
           return {
             ...goal,
@@ -594,7 +594,7 @@ export class DriveSyncService {
           }
         }
         const mergedContributions = Array.from(contribMap.values())
-          .sort((a, b) => b.date.localeCompare(a.date));
+          .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 
         // Recompute currentSaved from merged contributions
         let calculatedSaved = 0;

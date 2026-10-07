@@ -51,8 +51,8 @@ export const SettlementHistoryView: React.FC<SettlementHistoryViewProps> = () =>
  // Sort settlements reverse chronologically
  const sortedSettlements = useMemo(() => {
  return [...settlements].sort((a, b) => {
- if (b.date !== a.date) return b.date.localeCompare(a.date);
- return b.createdAt.localeCompare(a.createdAt);
+ if (b.date !== a.date) return (b.date || '').localeCompare(a.date || '');
+ return (b.createdAt || '').localeCompare(a.createdAt || '');
  });
  }, [settlements]);
 
@@ -80,7 +80,7 @@ export const SettlementHistoryView: React.FC<SettlementHistoryViewProps> = () =>
  note.includes(q) ||
  linkedDesc.includes(q) ||
  sourceDesc.includes(q) ||
- s.date.includes(q);
+ (s.date || '').includes(q);
 
  if (!matches) return false;
  }

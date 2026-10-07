@@ -61,7 +61,7 @@ export const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEditTr
           <div ref={containerRef} className="divide-y divide-line">
             {recentList.map((tx, idx) => {
               const isCredit = tx.type === 'credit';
-              const catInfo = categoryMap.get(tx.category.toLowerCase());
+              const catInfo = categoryMap.get((tx.category || '').toLowerCase());
               const hasSplits = Array.isArray(tx.splitWith) && tx.splitWith.length > 0;
               let splitBadgeText = '';
               let isSplitSettled = false;

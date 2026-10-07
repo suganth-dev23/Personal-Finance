@@ -10,6 +10,9 @@ import { MobileMoreDrawer } from './components/layout/MobileMoreDrawer';
 import { TransactionModal } from './components/transactions/TransactionModal';
 import { ViewSkeleton } from './components/common/ViewSkeleton';
 import { ViewTransition } from './components/common/ViewTransition';
+import { AppErrorBoundary } from './components/common/AppErrorBoundary';
+import { exportRawIndexedDBData } from './utils/recordValidation';
+import { AlertTriangle, Download, X } from 'lucide-react';
 import type { Transaction } from './types/finance';
 
 // Lazy-loaded route views
@@ -56,7 +59,7 @@ const BadgeShowcase = lazy(() =>
 import { BadgePopup } from './components/gamification/BadgePopup';
 
 const MainContent: React.FC = () => {
-  const { currentView } = useFinance();
+  const { currentView, unreadableRecordCount, isUnreadableBannerDismissed, dismissUnreadableBanner } = useFinance();
   const [isAddTxOpen, setIsAddTxOpen] = useState(false);
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
   const [isMoreDrawerOpen, setIsMoreDrawerOpen] = useState(false);
@@ -88,32 +91,76 @@ const MainContent: React.FC = () => {
 
         {/* Dynamic Lazy-Loaded View Router */}
         <main className="flex-1 px-4 sm:px-8 py-6 w-full max-w-full overflow-x-clip">
+          {unreadableRecordCount > 0 && !isUnreadableBannerDismissed && (
+            <div
+              role="alert"
+              className="mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-ink-1 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-slide-up"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="p-2 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 shrink-0">
+                  <AlertTriangle className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-ink-1">
+                    {unreadableRecordCount} {unreadableRecordCount === 1 ? 'record' : 'records'} could not be read
+                  </p>
+                  <p className="text-xs text-ink-3">
+                    Malformed records are safely kept in storage and omitted from views. You can export raw data anytime.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                <button
+                  type="button"
+                  onClick={() => exportRawIndexedDBData()}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  Export raw data
+                </button>
+                <button
+                  type="button"
+                  onClick={dismissUnreadableBanner}
+                  className="p-1.5 rounded-lg text-ink-3 hover:text-ink-1 hover:bg-sunken transition-colors cursor-pointer"
+                  aria-label="Dismiss unreadable records warning"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
+
           <ViewTransition viewKey={currentView}>
-            <Suspense fallback={<ViewSkeleton view={currentView} />}>
-              {currentView === 'dashboard' && (
-                <DashboardView
-                  onOpenAddTx={handleOpenAddTx}
-                  onEditTransaction={handleEditTx}
-                />
-              )}
-              {currentView === 'transactions' && (
-                <TransactionListView
-                  onOpenAddModal={handleOpenAddTx}
-                  onEditTransaction={handleEditTx}
-                />
-              )}
-              {currentView === 'people' && <PeopleView />}
-              {currentView === 'budgets' && <BudgetsView />}
-              {currentView === 'recurring' && <RecurringPaymentsView />}
-              {currentView === 'categories' && <CategoriesView />}
-              {currentView === 'emergency' && <EmergencyFundView />}
-              {currentView === 'investments' && <InvestmentsView />}
-              {currentView === 'dreams' && <DreamsView />}
-              {currentView === 'ai' && <AIHealthSummaryView />}
-              {currentView === 'import' && <StatementImportView />}
-              {currentView === 'settings' && <SettingsView />}
-              {currentView === 'badges' && <BadgeShowcase />}
-            </Suspense>
+            <AppErrorBoundary
+              key={currentView}
+              fallbackTitle={`${VIEW_TITLES[currentView]?.title || 'View'} encountered an error`}
+            >
+              <Suspense fallback={<ViewSkeleton view={currentView} />}>
+                {currentView === 'dashboard' && (
+                  <DashboardView
+                    onOpenAddTx={handleOpenAddTx}
+                    onEditTransaction={handleEditTx}
+                  />
+                )}
+                {currentView === 'transactions' && (
+                  <TransactionListView
+                    onOpenAddModal={handleOpenAddTx}
+                    onEditTransaction={handleEditTx}
+                  />
+                )}
+                {currentView === 'people' && <PeopleView />}
+                {currentView === 'budgets' && <BudgetsView />}
+                {currentView === 'recurring' && <RecurringPaymentsView />}
+                {currentView === 'categories' && <CategoriesView />}
+                {currentView === 'emergency' && <EmergencyFundView />}
+                {currentView === 'investments' && <InvestmentsView />}
+                {currentView === 'dreams' && <DreamsView />}
+                {currentView === 'ai' && <AIHealthSummaryView />}
+                {currentView === 'import' && <StatementImportView />}
+                {currentView === 'settings' && <SettingsView />}
+                {currentView === 'badges' && <BadgeShowcase />}
+              </Suspense>
+            </AppErrorBoundary>
           </ViewTransition>
         </main>
       </div>
