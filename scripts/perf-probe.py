@@ -26,7 +26,7 @@ SEED = """async (N)=>{ const db=await new Promise((ok,err)=>{const r=indexedDB.o
   const base=await new Promise(ok=>{const q=db.transaction('transactions').objectStore('transactions').getAll(); q.onsuccess=()=>ok(q.result)});
   const out=[], day=86400000, end=Date.now();
   for(let i=0;i<N;i++){ const b=base[i%base.length], d=new Date(end-(i*(3*365*day/N)));
-    out.push({...b,id:'perf-'+i,date:d.toISOString().slice(0,10),createdAt:d.toISOString(),updatedAt:d.toISOString()}) }
+    out.push({...b,id:'perf-'+i,description:'ROW-'+String(i).padStart(4,'0'),date:d.toISOString().slice(0,10),createdAt:d.toISOString(),updatedAt:d.toISOString()}) }
   await new Promise((ok,err)=>{const tx=db.transaction('transactions','readwrite'),s=tx.objectStore('transactions'); s.clear(); out.forEach(o=>s.put(o)); tx.oncomplete=ok; tx.onerror=()=>err(tx.error)});
   db.close(); return out.length }"""
 CLICK = "(l)=>{const b=[...document.querySelectorAll('button')].find(x=>{const t=x.textContent.trim(); return t.startsWith(l) || (l==='History' && t.startsWith('Ledger'))}); if(b) b.click(); return !!b}"
@@ -78,8 +78,26 @@ def main(a):
             pg.wait_for_timeout(700)
         res["open_transactions"] = go(pg, NAV_TX)
         res["transactions_dom"] = pg.evaluate("()=>({nodes:document.getElementsByTagName('*').length,rowsLike:document.querySelectorAll('main li,main [role=row],main tr').length})")
-        res["scroll"] = pg.evaluate("""()=>new Promise(res=>{const g=[];let last=performance.now(),i=0;const step=()=>{const n=performance.now();g.push(n-last);last=n;window.scrollBy(0,90);
-          if(++i<80)requestAnimationFrame(step);else{g.shift();g.sort((a,b)=>a-b);res({p50:Math.round(g[g.length>>1]),p95:Math.round(g[Math.floor(g.length*.95)]),worst:Math.round(g[g.length-1]),over33:g.filter(x=>x>33).length,over100:g.filter(x=>x>100).length})}};requestAnimationFrame(step)})""")
+        pg.mouse.move(195, 420); seen = set()
+        scroll_frames = []
+        for _ in range(80):
+            t_frame = time.time()
+            pg.mouse.wheel(0, 300)
+            pg.wait_for_timeout(30)
+            scroll_frames.append(round((time.time() - t_frame) * 1000))
+            seen.update(pg.evaluate("()=>(document.body.innerText.match(/ROW-\\d{4}/g)||[])"))
+        if not seen:
+            seen.update(pg.evaluate("()=>[...document.querySelectorAll('main tr, main li, main [role=row]')].map(r=>(r.textContent||'').slice(0,40)).filter(Boolean)"))
+        scroll_frames.sort()
+        res["rows_reached"] = len(seen)
+        res["scroll"] = {
+            "p50": scroll_frames[len(scroll_frames) >> 1] if scroll_frames else 0,
+            "p95": scroll_frames[int(len(scroll_frames) * 0.95)] if scroll_frames else 0,
+            "worst": scroll_frames[-1] if scroll_frames else 0,
+            "over33": len([x for x in scroll_frames if x > 33]),
+            "over100": len([x for x in scroll_frames if x > 100]),
+            "rows_reached": len(seen),
+        }
         pg.evaluate("()=>window.scrollTo(0,0)"); pg.wait_for_timeout(500)
         inp = pg.query_selector("main input[placeholder*='Search']")
         if inp:

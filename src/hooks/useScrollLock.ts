@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 
 let lockCount = 0;
 let originalOverflow = '';
+let savedScrollY = 0;
 
 /**
  * Ref-counted scroll lock for modal and drawer overlays.
@@ -10,6 +11,7 @@ let originalOverflow = '';
 export function lockScroll(): void {
   if (typeof document === 'undefined') return;
   if (lockCount === 0) {
+    savedScrollY = window.scrollY;
     originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
   }
@@ -22,6 +24,8 @@ export function unlockScroll(): void {
   if (lockCount === 0) {
     document.body.style.overflow = originalOverflow || '';
     originalOverflow = '';
+    // Body overflow:hidden makes the viewport drop its scroll offset when the document (not body) scrolls; restore it.
+    window.scrollTo(0, savedScrollY);
   }
 }
 
@@ -34,6 +38,7 @@ export function forceResetScrollLock(): void {
   lockCount = 0;
   document.body.style.overflow = originalOverflow || '';
   originalOverflow = '';
+  window.scrollTo(0, savedScrollY);
 }
 
 /**

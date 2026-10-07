@@ -18,6 +18,25 @@ export interface WindowVirtualizerResult {
   virtualItems: Array<{ index: number }>;
 }
 
+function getScrollContainer(element: HTMLElement | null): HTMLElement | Window {
+  if (typeof window === 'undefined') return undefined as unknown as Window;
+  let current: HTMLElement | null = element?.parentElement ?? null;
+  while (current && current !== document.body && current !== document.documentElement) {
+    const style = window.getComputedStyle(current);
+    if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
+      return current;
+    }
+    current = current.parentElement;
+  }
+  if (typeof document !== 'undefined' && document.body) {
+    const bodyStyle = window.getComputedStyle(document.body);
+    if (bodyStyle.overflowY === 'auto' || bodyStyle.overflowY === 'scroll') {
+      return document.body;
+    }
+  }
+  return window;
+}
+
 /**
  * Windowed virtualizer hook for large lists and tables.
  * Calculates visible range [startIndex, endIndex] and spacer heights
@@ -75,13 +94,28 @@ export function useWindowVirtualizer({
       };
     }
 
-    const scrollY = window.scrollY || window.pageYOffset || 0;
-    const viewportHeight = window.innerHeight || 800;
+    const scroller = getScrollContainer(containerRef?.current ?? null);
 
+    let scrollY = 0;
+    let viewportHeight = 800;
     let offsetTop = 0;
-    if (containerRef?.current) {
-      const rect = containerRef.current.getBoundingClientRect();
-      offsetTop = rect.top + scrollY;
+
+    if (scroller === window) {
+      scrollY = window.scrollY || window.pageYOffset || 0;
+      viewportHeight = window.innerHeight || 800;
+      if (containerRef?.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        offsetTop = rect.top + scrollY;
+      }
+    } else if (scroller) {
+      const el = scroller as HTMLElement;
+      scrollY = el.scrollTop;
+      viewportHeight = el.clientHeight || 800;
+      if (containerRef?.current) {
+        const containerRect = containerRef.current.getBoundingClientRect();
+        const scrollerRect = el.getBoundingClientRect();
+        offsetTop = (containerRect.top - scrollerRect.top) + scrollY;
+      }
     }
 
     const visibleTop = Math.max(0, scrollY - offsetTop);
@@ -107,6 +141,14 @@ export function useWindowVirtualizer({
   useEffect(() => {
     if (total <= threshold) return;
 
+    const scroller = getScrollContainer(containerRef?.current ?? null);
+    if (import.meta.env.DEV && scroller !== window) {
+      console.warn(
+        '[useWindowVirtualizer] Scroll container is not window; falling back to nearest scroll container:',
+        scroller
+      );
+    }
+
     let rafId: number | null = null;
     const onScrollOrResize = () => {
       if (rafId !== null) return;
@@ -129,7 +171,8 @@ export function useWindowVirtualizer({
 
     onScrollOrResize();
 
-    window.addEventListener('scroll', onScrollOrResize, { passive: true });
+    const scrollTarget: EventTarget = scroller ?? window;
+    scrollTarget.addEventListener('scroll', onScrollOrResize, { passive: true });
     window.addEventListener('resize', onScrollOrResize);
 
     let resizeObserver: ResizeObserver | null = null;
@@ -142,7 +185,7 @@ export function useWindowVirtualizer({
 
     return () => {
       if (rafId !== null) window.cancelAnimationFrame(rafId);
-      window.removeEventListener('scroll', onScrollOrResize);
+      scrollTarget.removeEventListener('scroll', onScrollOrResize);
       window.removeEventListener('resize', onScrollOrResize);
       resizeObserver?.disconnect();
     };
