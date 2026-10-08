@@ -128,9 +128,9 @@ export const CashFlowChart: React.FC = () => {
  </div>
  ) : (
  <div key={chartMode} className="w-full h-[260px] sm:h-[300px] animate-fade-in">
- <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={100}>
+ <ResponsiveContainer width="100%" height="100%" minWidth={120} minHeight={120}>
  {chartMode === 'wave' ? (
- <AreaChart data={chartData} margin={{ top: 15, right: 10, left: 0, bottom: 0 }}>
+ <AreaChart id="cashflow-area-chart" data={chartData} margin={{ top: 15, right: 10, left: 0, bottom: 0 }}>
  <defs>
  <linearGradient id="emeraldCashFlow" x1="0" y1="0" x2="0" y2="1">
  <stop offset="5%" stopColor="#10b981" stopOpacity={0.35} />
@@ -199,7 +199,7 @@ export const CashFlowChart: React.FC = () => {
  />
  </AreaChart>
  ) : (
- <ComposedChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+ <ComposedChart id="cashflow-bar-chart" data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(156, 163, 175, 0.12)" />
  <XAxis
  dataKey="name"

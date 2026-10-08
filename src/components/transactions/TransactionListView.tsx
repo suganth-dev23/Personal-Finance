@@ -364,7 +364,11 @@ export const TransactionListView: React.FC<TransactionListViewProps> = React.mem
       }
 
       return true;
-    }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    }).sort((a, b) => {
+      const diff = new Date(b.date).getTime() - new Date(a.date).getTime();
+      if (diff !== 0) return diff;
+      return (b.createdAt || '').localeCompare(a.createdAt || '');
+    });
   }, [
     transactions,
     deferredSearch,

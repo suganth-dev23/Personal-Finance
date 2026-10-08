@@ -174,32 +174,39 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
  const trimmedDesc = description.trim() || `Repayment with ${matchingRepaymentContact.contact.name}`;
  const trimmedPerson = person.trim() || matchingRepaymentContact.contact.name;
 
- // 1. Add ledger transaction
- const newTx = addTransaction({
- date: sanitizedDate,
- amount: finalAmount,
- type,
- category: category.trim(),
- paymentMethod,
- description: trimmedDesc,
- person: trimmedPerson,
- source: 'manual',
- referenceId: referenceId.trim() || undefined,
- });
+  try {
+   // 1. Add ledger transaction
+   const newTx = addTransaction({
+   date: sanitizedDate,
+   amount: finalAmount,
+   type,
+   category: category.trim(),
+   paymentMethod,
+   description: trimmedDesc,
+   person: trimmedPerson,
+   source: 'manual',
+   referenceId: referenceId.trim() || undefined,
+   });
 
- // 2. Record linked settlement (with correct direction so balance is properly deducted)
- recordSettlement(
- matchingRepaymentContact.contact.id,
- finalAmount,
- `Repayment: ${trimmedDesc}`,
- sanitizedDate,
- undefined,
- undefined,
- newTx.id,
- matchingRepaymentContact.isOwedToMe ? 'they_owe_me' : 'i_owe_them'
- );
+   // 2. Record linked settlement (with correct direction so balance is properly deducted)
+   recordSettlement(
+   matchingRepaymentContact.contact.id,
+   finalAmount,
+   `Repayment: ${trimmedDesc}`,
+   sanitizedDate,
+   undefined,
+   undefined,
+   newTx.id,
+   matchingRepaymentContact.isOwedToMe ? 'they_owe_me' : 'i_owe_them'
+   );
 
- onClose();
+   reset();
+   onClose();
+  } catch (err) {
+   console.error('Failed to save settlement:', err);
+   reset();
+   alert('Failed to record settlement. Please try again.');
+  }
  };
 
  // Re-calculate auto splits helper with exact cent distribution
@@ -237,9 +244,26 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
  const prevInitialTxIdRef = useRef<string | undefined>(undefined);
  const prevInitialContactIdRef = useRef<string | undefined>(undefined);
 
+ const availableCategories = useMemo(() => {
+  let filtered = categories;
+  if (activeTab === 'income') {
+   filtered = categories.filter(c => c.type === 'income' || c.type === 'both');
+  } else if (activeTab === 'expense') {
+   filtered = categories.filter(c => c.type === 'expense' || c.type === 'both');
+  }
+  if (category && !filtered.some(c => c.name.toLowerCase() === category.toLowerCase())) {
+   const match = categories.find(c => c.name.toLowerCase() === category.toLowerCase());
+   if (match) {
+    return [match, ...filtered];
+   }
+  }
+  return filtered;
+ }, [categories, activeTab, category]);
+
  useEffect(() => {
   if (!isOpen) {
    prevIsOpenRef.current = false;
+   reset();
    return;
   }
   const isOpening = isOpen && !prevIsOpenRef.current;
@@ -353,6 +377,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
  setCategory(found.name);
  if (match.suggestedType) {
  setType(match.suggestedType);
+ setActiveTab(match.suggestedType === 'credit' ? 'income' : 'expense');
  }
  }
  }
@@ -367,6 +392,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
  setCategory(found.name);
  if (match.suggestedType) {
  setType(match.suggestedType);
+ setActiveTab(match.suggestedType === 'credit' ? 'income' : 'expense');
  }
  }
  };
@@ -594,34 +620,40 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 
  const trimmedPerson = person.trim() || undefined;
 
- if (initialTransaction) {
- updateTransaction(initialTransaction.id, {
- date: sanitizedDate,
- amount: finalAmount,
- type,
- category: category.trim(),
- paymentMethod,
- description: description.trim(),
- person: trimmedPerson,
- referenceId: referenceId.trim() || undefined,
- splitWith: splitPayload,
- });
- } else {
- addTransaction({
- date: sanitizedDate,
- amount: finalAmount,
- type,
- category: category.trim(),
- paymentMethod,
- description: description.trim(),
- person: trimmedPerson,
- source: 'manual',
- referenceId: referenceId.trim() || undefined,
- splitWith: splitPayload,
- });
- }
-
- onClose();
+  try {
+   if (initialTransaction) {
+   updateTransaction(initialTransaction.id, {
+   date: sanitizedDate,
+   amount: finalAmount,
+   type,
+   category: category.trim(),
+   paymentMethod,
+   description: description.trim(),
+   person: trimmedPerson,
+   referenceId: referenceId.trim() || undefined,
+   splitWith: splitPayload,
+   });
+   } else {
+   addTransaction({
+   date: sanitizedDate,
+   amount: finalAmount,
+   type,
+   category: category.trim(),
+   paymentMethod,
+   description: description.trim(),
+   person: trimmedPerson,
+   source: 'manual',
+   referenceId: referenceId.trim() || undefined,
+   splitWith: splitPayload,
+   });
+   }
+   reset();
+   onClose();
+  } catch (err) {
+   console.error('Failed to save transaction:', err);
+   reset();
+   alert('Failed to save transaction. Please try again.');
+  }
  };
 
  const sumOfSplits = roundCurrency(splitRows.reduce((acc, r) => acc + (r.amount || 0), 0));
@@ -697,6 +729,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
  max={MAX_AMOUNT}
  inputMode="decimal"
  required
+ autoFocus
  value={amount}
  onChange={e => handleAmountChange(e.target.value)}
  placeholder="0.00"
@@ -776,7 +809,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
  onChange={e => setCategory(e.target.value)}
  className="w-full rounded-xl border border-line bg-sunken px-3.5 py-2.5 text-sm text-ink-1 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
  >
- {categories.map(c => (
+ {availableCategories.map(c => (
  <option key={c.id} value={c.name}>
  {c.name}
  </option>
@@ -791,6 +824,8 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
  <input
  type="date"
  required
+ min={MIN_DATE_STRING}
+ max={getMaxDateString()}
  value={date}
  onChange={e => setDate(e.target.value)}
  className="font-numeric tabular-nums w-full rounded-xl border border-line bg-sunken px-3.5 py-2.5 text-sm text-ink-1 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"

@@ -22,6 +22,7 @@ import { AnimatedNumber } from '../common/AnimatedNumber';
 import { HealthGauge } from '../gamification/HealthGauge';
 import { HealthGaugeCompact } from '../gamification/HealthGaugeCompact';
 import { useStaggerChildren } from '../../hooks/useStaggerChildren';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 
 interface DashboardViewProps {
   onOpenAddTx: () => void;
@@ -29,6 +30,7 @@ interface DashboardViewProps {
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx, onEditTransaction }) => {
+  const isDesktop = useMediaQuery('(min-width: 640px)');
   const { containerRef: summaryStripRef, getChildStyle: getSummaryStyle } = useStaggerChildren(50);
   const [mobileTab, setMobileTab] = useState<'overview' | 'commitments'>('overview');
 
@@ -123,7 +125,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx, onEdi
         variant="hero"
         padding="none"
         className={`rounded-2xl p-4 sm:p-8 ${
-          mobileTab !== 'overview' ? 'hidden sm:block' : ''
+          !isDesktop && mobileTab !== 'overview' ? 'hidden' : ''
         }`}
       >
         {/* Suvarna gold accent hairline at top edge */}
@@ -257,102 +259,108 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTx, onEdi
         </div>
       </Card>
 
-      {/* MOBILE SEGMENTED VIEW SWITCHER (sm:hidden) - Sticky beneath top navbar */}
-      <div className="sm:hidden sticky top-14 z-20 -mx-4 px-4 py-2 bg-app transition-colors">
-        <div className="flex items-center p-1 rounded-2xl bg-sunken border border-line text-xs font-bold shadow-xs">
-          <button
-            type="button"
-            onClick={() => handleTabChange('overview')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl transition-colors ${
-              mobileTab === 'overview'
-                ? 'bg-surface dark:bg-line text-ink-1 dark:text-reward shadow-xs'
-                : 'text-ink-3 hover:text-slate-800 dark:hover:text-slate-200'
-            }`}
-          >
-            <Wallet className="w-3.5 h-3.5" />
-            <span>Overview</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => handleTabChange('commitments')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl transition-colors ${
-              mobileTab === 'commitments'
-                ? 'bg-surface dark:bg-line text-ink-1 dark:text-reward shadow-xs'
-                : 'text-ink-3 hover:text-slate-800 dark:hover:text-slate-200'
-            }`}
-          >
-            <CalendarClock className="w-3.5 h-3.5" />
-            <span>Commitments</span>
-          </button>
+      {/* MOBILE SEGMENTED VIEW SWITCHER - Sticky beneath top navbar */}
+      {!isDesktop && (
+        <div className="sticky top-14 z-20 -mx-4 px-4 py-2 bg-app transition-colors">
+          <div className="flex items-center p-1 rounded-2xl bg-sunken border border-line text-xs font-bold shadow-xs">
+            <button
+              type="button"
+              onClick={() => handleTabChange('overview')}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl transition-colors ${
+                mobileTab === 'overview'
+                  ? 'bg-surface dark:bg-line text-ink-1 dark:text-reward shadow-xs'
+                  : 'text-ink-3 hover:text-slate-800 dark:hover:text-slate-200'
+              }`}
+            >
+              <Wallet className="w-3.5 h-3.5" />
+              <span>Overview</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTabChange('commitments')}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl transition-colors ${
+                mobileTab === 'commitments'
+                  ? 'bg-surface dark:bg-line text-ink-1 dark:text-reward shadow-xs'
+                  : 'text-ink-3 hover:text-slate-800 dark:hover:text-slate-200'
+              }`}
+            >
+              <CalendarClock className="w-3.5 h-3.5" />
+              <span>Commitments</span>
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* MOBILE CONTENT ACCORDING TO ACTIVE SEGMENT */}
-      <div className="sm:hidden space-y-4">
-        {mobileTab === 'overview' && (
-          <>
-            <React.Suspense fallback={null}>
-              <CashFlowChart />
-              <CategoryExpenseChart />
-            </React.Suspense>
-            <HealthGaugeCompact />
-            <BudgetHealthWidget />
-            <RecentTransactions onEditTransaction={onEditTransaction} />
-          </>
-        )}
-        {mobileTab === 'commitments' && (
-          <>
+      {!isDesktop && (
+        <div className="space-y-4">
+          {mobileTab === 'overview' && (
+            <>
+              <React.Suspense fallback={null}>
+                <CashFlowChart />
+                <CategoryExpenseChart />
+              </React.Suspense>
+              <HealthGaugeCompact />
+              <BudgetHealthWidget />
+              <RecentTransactions onEditTransaction={onEditTransaction} />
+            </>
+          )}
+          {mobileTab === 'commitments' && (
+            <>
+              <CashFlowRunwayCard />
+              <RecurringBillsCard />
+              <OwedSummaryWidget />
+              <AIInsightsWidget />
+            </>
+          )}
+        </div>
+      )}
+
+      {/* DESKTOP CONTENT (ALL LEVELS IN COMPREHENSIVE GRID) */}
+      {isDesktop && (
+        <div className="space-y-6">
+          {/* LEVEL 2: CASH FLOW VELOCITY & CATEGORY ALLOCATION */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="lg:col-span-7">
+              <React.Suspense fallback={null}>
+                <CashFlowChart />
+              </React.Suspense>
+            </div>
+            <div className="lg:col-span-5">
+              <React.Suspense fallback={null}>
+                <CategoryExpenseChart />
+              </React.Suspense>
+            </div>
+          </div>
+
+          {/* FINANCIAL HEALTH INDEX & 5 PILLARS GAUGE */}
+          <div>
+            <HealthGauge />
+          </div>
+
+          {/* LEVEL 3: OPERATIONAL ACTIVITY & BUDGET HEALTH */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+            <div className="lg:col-span-7">
+              <RecentTransactions onEditTransaction={onEditTransaction} />
+            </div>
+            <div className="lg:col-span-5">
+              <BudgetHealthWidget />
+            </div>
+          </div>
+
+          {/* LEVEL 4: FINANCIAL COMMITMENTS & OBLIGATIONS */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
             <CashFlowRunwayCard />
             <RecurringBillsCard />
             <OwedSummaryWidget />
+          </div>
+
+          {/* LEVEL 5: AI FINANCIAL HEALTH ASSISTANT */}
+          <div>
             <AIInsightsWidget />
-          </>
-        )}
-      </div>
-
-      {/* DESKTOP CONTENT (ALL LEVELS IN COMPREHENSIVE GRID) */}
-      <div className="hidden sm:block space-y-6">
-        {/* LEVEL 2: CASH FLOW VELOCITY & CATEGORY ALLOCATION */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-7">
-            <React.Suspense fallback={null}>
-              <CashFlowChart />
-            </React.Suspense>
-          </div>
-          <div className="lg:col-span-5">
-            <React.Suspense fallback={null}>
-              <CategoryExpenseChart />
-            </React.Suspense>
           </div>
         </div>
-
-        {/* FINANCIAL HEALTH INDEX & 5 PILLARS GAUGE */}
-        <div>
-          <HealthGauge />
-        </div>
-
-        {/* LEVEL 3: OPERATIONAL ACTIVITY & BUDGET HEALTH */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-          <div className="lg:col-span-7">
-            <RecentTransactions onEditTransaction={onEditTransaction} />
-          </div>
-          <div className="lg:col-span-5">
-            <BudgetHealthWidget />
-          </div>
-        </div>
-
-        {/* LEVEL 4: FINANCIAL COMMITMENTS & OBLIGATIONS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
-          <CashFlowRunwayCard />
-          <RecurringBillsCard />
-          <OwedSummaryWidget />
-        </div>
-
-        {/* LEVEL 5: AI FINANCIAL HEALTH ASSISTANT */}
-        <div>
-          <AIInsightsWidget />
-        </div>
-      </div>
+      )}
     </div>
   );
 };

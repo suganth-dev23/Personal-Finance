@@ -289,16 +289,16 @@ export const CategoryExpenseChart: React.FC = () => {
         <div className="flex flex-col sm:flex-row items-center gap-4 flex-1">
           {/* Donut Chart */}
           <div className="w-full sm:w-1/2 h-[200px] relative flex items-center justify-center">
-            <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={100}>
-              <PieChart>
+            <ResponsiveContainer width="100%" height="100%" minWidth={120} minHeight={120}>
+              <PieChart id="category-expense-pie">
                 <Pie
                   data={expenseCategories}
                   dataKey="spent"
                   nameKey="category"
                   cx="50%"
                   cy="50%"
-                  innerRadius={55}
-                  outerRadius={80}
+                  innerRadius={50}
+                  outerRadius={75}
                   paddingAngle={3}
                   stroke="none"
                   isAnimationActive={!reducedMotion}
