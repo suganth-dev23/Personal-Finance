@@ -15,6 +15,7 @@ import {
   Plus,
   Users,
   Trophy,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { useFinance, AppView } from '../../context/FinanceContext';
 import { useGamification } from '../../context/GamificationContext';
@@ -45,6 +46,7 @@ const NAV_SECTIONS: NavSection[] = [
       { id: 'budgets', label: 'Budgets', icon: PieChart },
       { id: 'recurring', label: 'Recurring Payments', icon: CalendarClock },
       { id: 'categories', label: 'Categories', icon: Tags },
+      { id: 'import', label: 'Import Statement', icon: FileSpreadsheet },
     ],
   },
   {
@@ -203,7 +205,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTx }) => {
                   title={item.label}
                   aria-label={item.label}
                   aria-current={isActive ? 'page' : undefined}
-                  className={`w-full flex items-center justify-center xl:justify-between px-2 xl:px-3.5 py-2 rounded-xl text-sm font-semibold transition-colors duration-150 press min-h-[38px] ${
+                  className={`w-full flex items-center justify-center xl:justify-between px-2 xl:px-3.5 py-2 rounded-xl text-sm font-semibold transition-colors duration-150 press min-h-[44px] ${
                     isActive
                       ? 'bg-primary-tint text-primary shadow-xs'
                       : 'text-ink-2 hover:bg-sunken hover:text-ink-1'
@@ -239,7 +241,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTx }) => {
             title="Settings"
             aria-label="Settings"
             aria-current={currentView === 'settings' ? 'page' : undefined}
-            className={`w-full flex items-center justify-center xl:justify-between px-2 xl:px-3.5 py-2 rounded-xl text-sm font-semibold transition-colors duration-150 press min-h-[38px] ${
+            className={`w-full flex items-center justify-center xl:justify-between px-2 xl:px-3.5 py-2 rounded-xl text-sm font-semibold transition-colors duration-150 press min-h-[44px] ${
               currentView === 'settings'
                 ? 'bg-primary-tint text-primary shadow-xs'
                 : 'text-ink-2 hover:bg-sunken hover:text-ink-1'
@@ -261,7 +263,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTx }) => {
         </div>
         <button
           onClick={() => setDarkMode(prev => !prev)}
-          className="p-2 rounded-xl text-ink-3 hover:text-ink-1 hover:bg-sunken transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center press"
+          className="p-2 rounded-xl text-ink-3 hover:text-ink-1 hover:bg-sunken transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center press"
           title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
           aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
         >

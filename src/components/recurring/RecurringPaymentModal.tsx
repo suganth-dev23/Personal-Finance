@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { CalendarClock } from 'lucide-react';
 import { Modal } from '../common/Modal';
 import { useFinance } from '../../context/FinanceContext';
 import { RecurringPayment, RecurrenceFrequency, PaymentMethod } from '../../types/finance';
 import { numberToWordsINR } from '../../utils/currency';
-import { getTodayString, sanitizeDateString } from '../../utils/date';
+import { formatDate, getTodayString, sanitizeDateString } from '../../utils/date';
+import { getPaymentSchedule } from '../../utils/recurringDates';
 import { useSubmitOnce } from '../../hooks/useSubmitOnce';
 import { MAX_AMOUNT, MIN_AMOUNT, MIN_DATE_STRING, getMaxDateString, isValidAmount, isValidDate, roundMoney } from '../../utils/validation';
 
@@ -15,9 +17,10 @@ interface RecurringPaymentModalProps {
 }
 
 const FREQUENCIES: { label: string; value: RecurrenceFrequency }[] = [
-  { label: 'Monthly', value: 'monthly' },
+  { label: 'Daily', value: 'daily' },
   { label: 'Weekly', value: 'weekly' },
   { label: 'Bi-weekly (Fortnightly)', value: 'bi-weekly' },
+  { label: 'Monthly', value: 'monthly' },
   { label: 'Quarterly', value: 'quarterly' },
   { label: 'Yearly', value: 'yearly' },
 ];
@@ -41,6 +44,12 @@ export const RecurringPaymentModal: React.FC<RecurringPaymentModalProps> = ({
   onSave,
 }) => {
   const { categories } = useFinance();
+
+  const defaultCategory = useMemo(() => {
+    return categories.find(c => c.name.toLowerCase().includes('bill'))?.name
+      || categories[0]?.name
+      || 'Bills & Utilities';
+  }, [categories]);
 
   const [name, setName] = useState<string>('');
   const [amountStr, setAmountStr] = useState<string>('');
@@ -72,15 +81,17 @@ export const RecurringPaymentModal: React.FC<RecurringPaymentModalProps> = ({
       setDayOfMonth(initialPayment.dayOfMonth || 1);
       setStartDate(initialPayment.startDate);
       setEndDate(initialPayment.endDate || '');
-      setPaymentMethod(initialPayment.paymentMethod || 'UPI');
+      const validMethod = initialPayment.paymentMethod && PAYMENT_METHODS.includes(initialPayment.paymentMethod)
+        ? initialPayment.paymentMethod
+        : 'UPI';
+      setPaymentMethod(validMethod);
       setAutoLogTransaction(initialPayment.autoLogTransaction);
       setNotes(initialPayment.notes || '');
     } else {
       setName('');
       setAmountStr('');
-      setCategory(categories[0]?.name || 'Bills & Utilities');
+      setCategory(defaultCategory);
       setFrequency('monthly');
-      // Default dayOfMonth to today's day of month
       const todayDay = new Date().getDate();
       setDayOfMonth(todayDay);
       setStartDate(getTodayString());
@@ -90,9 +101,33 @@ export const RecurringPaymentModal: React.FC<RecurringPaymentModalProps> = ({
       setNotes('');
     }
     prevIsOpenRef.current = isOpen;
-  }, [initialPayment, isOpen, categories, reset]);
+  }, [initialPayment, isOpen, defaultCategory, reset]);
 
-  const parsedAmount = parseFloat(amountStr) || 0;
+  const parsedAmount = parseFloat(amountStr);
+  const isAmountValid = Number.isFinite(parsedAmount) && parsedAmount > 0 && isValidAmount(parsedAmount);
+
+  // Compute live candidate schedule to validate and display the next due date
+  const candidateSchedule = useMemo(() => {
+    const sanitizedStart = sanitizeDateString(startDate) || getTodayString();
+    const sanitizedEnd = endDate && endDate.trim() ? sanitizeDateString(endDate) : undefined;
+    const isDayOfMonthApplicable = frequency !== 'daily' && frequency !== 'weekly' && frequency !== 'bi-weekly';
+
+    const tempPayment: RecurringPayment = {
+      id: initialPayment?.id || 'temp',
+      name: name.trim() || 'Preview',
+      amount: isAmountValid ? parsedAmount : 100,
+      category: category || defaultCategory,
+      frequency,
+      dayOfMonth: isDayOfMonthApplicable ? dayOfMonth : undefined,
+      startDate: sanitizedStart,
+      endDate: sanitizedEnd || undefined,
+      isActive: true,
+      autoLogTransaction,
+      createdAt: '',
+      updatedAt: '',
+    };
+    return getPaymentSchedule(tempPayment, []);
+  }, [name, parsedAmount, category, defaultCategory, frequency, dayOfMonth, startDate, endDate, initialPayment, autoLogTransaction, isAmountValid]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,7 +138,7 @@ export const RecurringPaymentModal: React.FC<RecurringPaymentModalProps> = ({
       reset();
       return;
     }
-    if (parsedAmount <= 0 || !isValidAmount(parsedAmount)) {
+    if (!isAmountValid) {
       alert(`Please enter a valid amount between ₹${MIN_AMOUNT} and ₹${MAX_AMOUNT.toLocaleString('en-IN')}`);
       reset();
       return;
@@ -124,19 +159,35 @@ export const RecurringPaymentModal: React.FC<RecurringPaymentModalProps> = ({
         reset();
         return;
       }
+      if (sanitized < sanitizedStart) {
+        alert('End date cannot be earlier than start date.');
+        reset();
+        return;
+      }
       sanitizedEnd = sanitized;
     }
+
+    // Next due date validation
+    if (!candidateSchedule.activeDueDate || !isValidDate(candidateSchedule.activeDueDate)) {
+      alert('The selected start date, frequency, or end date does not produce a valid next due date. Please check your dates.');
+      reset();
+      return;
+    }
+
+    const isDayOfMonthApplicable = frequency !== 'daily' && frequency !== 'weekly' && frequency !== 'bi-weekly';
+    const safeMethod: PaymentMethod = PAYMENT_METHODS.includes(paymentMethod) ? paymentMethod : 'UPI';
+    const safeCategory = category || defaultCategory;
 
     onSave({
       name: name.trim(),
       amount: roundMoney(parsedAmount),
-      category: category || categories[0]?.name || 'Bills & Utilities',
+      category: safeCategory,
       frequency,
-      dayOfMonth: (frequency !== 'weekly' && frequency !== 'bi-weekly') ? dayOfMonth : undefined,
+      dayOfMonth: isDayOfMonthApplicable ? dayOfMonth : undefined,
       startDate: sanitizedStart,
       endDate: sanitizedEnd,
       isActive: initialPayment ? initialPayment.isActive : true,
-      paymentMethod,
+      paymentMethod: safeMethod,
       autoLogTransaction,
       notes: notes.trim() ? notes.trim() : undefined,
     });
@@ -191,7 +242,7 @@ export const RecurringPaymentModal: React.FC<RecurringPaymentModalProps> = ({
                 className="w-full rounded-xl border border-line bg-sunken pl-8 pr-4 py-2.5 text-ink-1 font-bold text-lg font-numeric focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
               />
             </div>
-            {parsedAmount > 0 && (
+            {isAmountValid && (
               <p className="mt-1 text-xs text-ink-3 font-medium italic">
                 {numberToWordsINR(parsedAmount)}
               </p>
@@ -218,7 +269,7 @@ export const RecurringPaymentModal: React.FC<RecurringPaymentModalProps> = ({
 
         {/* Due Day of Month & Category */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {frequency !== 'weekly' && frequency !== 'bi-weekly' ? (
+          {frequency !== 'daily' && frequency !== 'weekly' && frequency !== 'bi-weekly' ? (
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-ink-3 mb-1.5">
                 Due Day of Month (1 - 31) *
@@ -234,7 +285,7 @@ export const RecurringPaymentModal: React.FC<RecurringPaymentModalProps> = ({
                   className="w-24 rounded-xl border border-line bg-sunken px-3.5 py-2.5 text-sm text-ink-1 font-numeric font-bold focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
                 />
                 <span className="text-xs text-ink-3">
-                  {dayOfMonth >= 29 ? 'Auto short-month protected' : 'e.g. 5th of every month'}
+                  {dayOfMonth >= 29 ? 'Auto short-month protected (28/29th in Feb, 30th in 30d months)' : `Day ${dayOfMonth} of cycle`}
                 </span>
               </div>
             </div>
@@ -244,7 +295,11 @@ export const RecurringPaymentModal: React.FC<RecurringPaymentModalProps> = ({
                 Recurrence Cycle
               </label>
               <p className="text-xs text-ink-3 py-2.5">
-                {frequency === 'weekly' ? 'Calculated weekly from start date' : 'Calculated every 14 days from start date'}
+                {frequency === 'daily'
+                  ? 'Calculated daily from start date'
+                  : frequency === 'weekly'
+                  ? 'Calculated weekly from start date'
+                  : 'Calculated every 14 days from start date'}
               </p>
             </div>
           )}
@@ -254,7 +309,7 @@ export const RecurringPaymentModal: React.FC<RecurringPaymentModalProps> = ({
               Category *
             </label>
             <select
-              value={category}
+              value={category || defaultCategory}
               onChange={e => setCategory(e.target.value)}
               className="w-full rounded-xl border border-line bg-sunken px-3.5 py-2.5 text-sm text-ink-1 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
             >
@@ -279,7 +334,19 @@ export const RecurringPaymentModal: React.FC<RecurringPaymentModalProps> = ({
               max={getMaxDateString()}
               required
               value={startDate}
-              onChange={e => setStartDate(e.target.value)}
+              onChange={e => {
+                const newStart = e.target.value;
+                setStartDate(newStart);
+                if (!initialPayment && newStart) {
+                  const parts = newStart.split('-');
+                  if (parts[2]) {
+                    const parsedDay = parseInt(parts[2], 10);
+                    if (parsedDay >= 1 && parsedDay <= 31) {
+                      setDayOfMonth(parsedDay);
+                    }
+                  }
+                }
+              }}
               className="w-full rounded-xl border border-line bg-sunken px-3.5 py-2.5 text-sm text-ink-1 font-numeric focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
             />
           </div>
@@ -299,6 +366,18 @@ export const RecurringPaymentModal: React.FC<RecurringPaymentModalProps> = ({
             />
           </div>
         </div>
+
+        {/* Live Next Due Date Preview Pill */}
+        {candidateSchedule.activeDueDate && (
+          <div className="flex items-center justify-between rounded-xl bg-primary-tint px-3.5 py-2 text-xs text-primary border border-primary/20">
+            <span className="font-medium flex items-center gap-1.5">
+              <CalendarClock className="h-3.5 w-3.5" /> Next Scheduled Due Date:
+            </span>
+            <span className="font-bold font-numeric">
+              {formatDate(candidateSchedule.activeDueDate)}
+            </span>
+          </div>
+        )}
 
         {/* Payment Method & Auto-Log Toggle */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

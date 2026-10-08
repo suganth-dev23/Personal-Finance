@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Modal } from '../common/Modal';
 import { Category, PaymentMethod } from '../../types/finance';
 import {
@@ -57,8 +57,9 @@ export const AutoRuleManagerModal: React.FC<AutoRuleManagerModalProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [testDescription, setTestDescription] = useState('');
 
-  // Load rules on open
-  useEffect(() => {
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen);
     if (isOpen) {
       const stored = getCustomAutoRules();
       setRules(stored);
@@ -66,11 +67,11 @@ export const AutoRuleManagerModal: React.FC<AutoRuleManagerModalProps> = ({
       setPattern('');
       setRuleName('');
       setTestDescription('');
-      if (categories.length > 0) {
-        setCategory(prev => (!categories.some(c => c.name === prev) ? categories[0].name : prev));
+      if (categories.length > 0 && !categories.some(c => c.name === category)) {
+        setCategory(categories[0].name);
       }
     }
-  }, [isOpen, categories]);
+  }
 
   // Validate pattern (ReDoS prevention and regex syntax validation)
   const validatePattern = (

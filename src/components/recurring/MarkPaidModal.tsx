@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { CheckCircle2, Receipt } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { CheckCircle2, Receipt, CalendarClock } from 'lucide-react';
 import { Modal } from '../common/Modal';
 import { RecurringPayment, PaymentMethod } from '../../types/finance';
 import { numberToWordsINR } from '../../utils/currency';
 import { Money } from '../ui';
 import { formatDate, getTodayString, sanitizeDateString } from '../../utils/date';
+import { getPaymentSchedule } from '../../utils/recurringDates';
 import { useSubmitOnce } from '../../hooks/useSubmitOnce';
 import { MAX_AMOUNT, MIN_AMOUNT, MIN_DATE_STRING, getMaxDateString, isValidAmount, isValidDate, roundMoney } from '../../utils/validation';
 
@@ -61,21 +62,41 @@ export const MarkPaidModal: React.FC<MarkPaidModalProps> = ({
     if (payment) {
       setAmountStr(payment.amount.toString());
       setRecordInLedger(Boolean(payment.autoLogTransaction));
-      setPaymentMethod(payment.paymentMethod || 'UPI');
+      const initMethod = payment.paymentMethod && PAYMENT_METHODS.includes(payment.paymentMethod)
+        ? payment.paymentMethod
+        : 'UPI';
+      setPaymentMethod(initMethod);
       setPaidDate(getTodayString());
     }
     prevIsOpenRef.current = isOpen;
   }, [payment, targetDueDate, isOpen, reset]);
 
-  if (!payment) return null;
+  const parsedAmount = parseFloat(amountStr);
+  const isAmountValid = Number.isFinite(parsedAmount) && parsedAmount > 0 && isValidAmount(parsedAmount);
 
-  const parsedAmount = parseFloat(amountStr) || 0;
+  // Compute next due date preview when this payment is marked as paid
+  const nextDuePreview = useMemo(() => {
+    if (!payment || !targetDueDate) return null;
+    const simLog = {
+      id: 'sim',
+      recurringPaymentId: payment.id,
+      dueDate: targetDueDate,
+      paidDate: paidDate || getTodayString(),
+      amount: isAmountValid ? parsedAmount : payment.amount,
+      createdAt: '',
+      updatedAt: '',
+    };
+    const nextSched = getPaymentSchedule(payment, [simLog]);
+    return nextSched.activeDueDate;
+  }, [payment, targetDueDate, paidDate, parsedAmount, isAmountValid]);
+
+  if (!payment) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!startSubmit()) return;
 
-    if (parsedAmount <= 0 || !isValidAmount(parsedAmount)) {
+    if (!isAmountValid) {
       alert(`Please enter a valid payment amount between ₹${MIN_AMOUNT} and ₹${MAX_AMOUNT.toLocaleString('en-IN')}`);
       reset();
       return;
@@ -88,7 +109,25 @@ export const MarkPaidModal: React.FC<MarkPaidModalProps> = ({
       return;
     }
 
-    onConfirm(payment.id, targetDueDate, roundMoney(parsedAmount), recordInLedger, paymentMethod, sanitizedPaidDate);
+    const sanitizedTargetDueDate = sanitizeDateString(targetDueDate) || targetDueDate;
+    if (!isValidDate(sanitizedTargetDueDate)) {
+      alert('Invalid cycle due date.');
+      reset();
+      return;
+    }
+
+    const safeMethod: PaymentMethod = PAYMENT_METHODS.includes(paymentMethod)
+      ? paymentMethod
+      : (payment.paymentMethod || 'UPI');
+
+    onConfirm(
+      payment.id,
+      sanitizedTargetDueDate,
+      roundMoney(parsedAmount),
+      recordInLedger,
+      safeMethod,
+      sanitizedPaidDate
+    );
     onClose();
   };
 
@@ -126,12 +165,25 @@ export const MarkPaidModal: React.FC<MarkPaidModalProps> = ({
           </div>
         </div>
 
-        {/* Due Date Indicator */}
-        <div className="flex items-center justify-between rounded-xl bg-sunken px-3.5 py-2.5 text-xs text-ink-2 border border-line">
-          <span className="font-medium">Cycle Due Date</span>
-          <span className="font-bold text-ink-1 font-numeric">
-            {formatDate(targetDueDate)}
-          </span>
+        {/* Cycle Due Date & Next Cycle Preview */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between rounded-xl bg-sunken px-3.5 py-2.5 text-xs text-ink-2 border border-line">
+            <span className="font-medium">Cycle Due Date</span>
+            <span className="font-bold text-ink-1 font-numeric">
+              {formatDate(targetDueDate)}
+            </span>
+          </div>
+
+          {nextDuePreview && (
+            <div className="flex items-center justify-between rounded-xl bg-emerald-500/5 px-3.5 py-2 text-xs text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+              <span className="font-medium flex items-center gap-1.5">
+                <CalendarClock className="h-3.5 w-3.5" /> Next Cycle Will Be
+              </span>
+              <span className="font-bold font-numeric">
+                {formatDate(nextDuePreview)}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Actual Amount Paid */}
@@ -156,7 +208,7 @@ export const MarkPaidModal: React.FC<MarkPaidModalProps> = ({
               className="w-full rounded-xl border border-line bg-sunken pl-8 pr-4 py-2.5 text-ink-1 font-bold text-lg font-numeric focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
             />
           </div>
-          {parsedAmount > 0 && (
+          {isAmountValid && (
             <p className="mt-1 text-xs text-emerald-600 dark:text-emerald-400 font-medium italic">
               {numberToWordsINR(parsedAmount)}
             </p>
@@ -212,7 +264,7 @@ export const MarkPaidModal: React.FC<MarkPaidModalProps> = ({
                 Record as Debit in Transactions ledger
               </span>
               <p className="text-xs text-ink-3 mt-0.5">
-                Automatically logs a ₹{parsedAmount.toLocaleString('en-IN')} debit dated {paidDate} under category{' '}
+                Automatically logs a ₹{(isAmountValid ? parsedAmount : payment.amount).toLocaleString('en-IN')} debit dated {paidDate} under category{' '}
                 <span className="font-semibold text-ink-2">{payment.category}</span> via{' '}
                 <span className="font-semibold text-ink-2">{paymentMethod}</span>.
               </p>

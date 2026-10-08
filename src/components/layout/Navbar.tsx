@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Sparkles, Sun, Moon, RefreshCw, Eye, EyeOff } from 'lucide-react';
+import { Plus, Sparkles, Sun, Moon, RefreshCw, Eye, EyeOff, Search } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { Money } from '../ui/Money';
 import { getCurrentMonthYear } from '../../utils/date';
@@ -7,12 +7,13 @@ import { StreakBanner } from '../common/StreakBanner';
 
 interface NavbarProps {
   onOpenAddTx: () => void;
+  onOpenCommandPalette?: () => void;
 }
 
 import { VIEW_TITLES } from '../../constants/viewTitles';
 export { VIEW_TITLES };
 
-export const Navbar: React.FC<NavbarProps> = ({ onOpenAddTx }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onOpenAddTx, onOpenCommandPalette }) => {
   const {
     currentView,
     setCurrentView,
@@ -89,14 +90,31 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAddTx }) => {
       </div>
 
       {/* Quick Actions */}
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-2 sm:gap-2.5">
+        {/* Command Palette Trigger Button */}
+        {onOpenCommandPalette && (
+          <button
+            type="button"
+            onClick={onOpenCommandPalette}
+            aria-label="Open Command Palette (Ctrl+K)"
+            title="Open Command Palette (Ctrl+K)"
+            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-sunken hover:bg-line text-xs font-semibold text-ink-2 hover:text-ink-1 border border-line transition-colors press min-h-[44px]"
+          >
+            <Search className="w-3.5 h-3.5 text-ink-3" />
+            <span className="hidden md:inline">Search &amp; Commands</span>
+            <kbd className="hidden md:inline-flex items-center px-1.5 py-0.5 text-xs font-mono font-semibold text-ink-3 bg-surface rounded border border-line">
+              ⌘K
+            </kbd>
+          </button>
+        )}
+
         {/* Google Drive Sync Status Button */}
         {isDriveConnected ? (
           <button
             onClick={() => triggerSync(true)}
             title={syncStatus === 'syncing' ? 'Syncing with Google Drive...' : 'Google Drive Synced. Click to sync now.'}
             aria-label={syncStatus === 'syncing' ? 'Syncing with Google Drive' : 'Google Drive sync status'}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-sunken hover:bg-line text-xs font-medium transition-colors press"
+            className="flex items-center gap-1.5 px-2.5 py-2 rounded-xl bg-sunken hover:bg-line text-xs font-medium transition-colors press min-h-[44px]"
           >
             {syncStatus === 'syncing' ? (
               <RefreshCw className="w-3.5 h-3.5 text-primary animate-spin" />
@@ -112,7 +130,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAddTx }) => {
         ) : null}
 
         {/* Month flow pill */}
-        <div className="hidden xl:flex items-center gap-3 px-3 py-1.5 rounded-xl bg-sunken border border-line text-xs">
+        <div className="hidden xl:flex items-center gap-3 px-3 py-2 rounded-xl bg-sunken border border-line text-xs min-h-[44px]">
           <div className="flex items-center gap-1">
             <span className="text-ink-3">In:</span>
             <Money value={currentMonthIncome} tone="positive" size="xs" sign="always" />
@@ -131,7 +149,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAddTx }) => {
         <button
           type="button"
           onClick={togglePrivacy}
-          className="p-2 rounded-xl text-ink-3 hover:text-ink-1 hover:bg-sunken transition-colors press"
+          className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-ink-3 hover:text-ink-1 hover:bg-sunken transition-colors press"
           title={isPrivacy ? 'Disable privacy mode' : 'Enable privacy mode (blur amounts)'}
           aria-label={isPrivacy ? 'Disable privacy mode' : 'Enable privacy mode (blur amounts)'}
         >
@@ -143,7 +161,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAddTx }) => {
           <button
             onClick={() => setCurrentView('ai')}
             aria-label="AI Health Summary"
-            className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-reward bg-reward-tint hover:bg-reward-fill/20 border border-reward/30 transition-colors press"
+            className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-reward bg-reward-tint hover:bg-reward-fill/20 border border-reward/30 transition-colors press min-h-[44px]"
           >
             <Sparkles className="w-3.5 h-3.5 text-reward" />
             <span>AI Health</span>
@@ -154,7 +172,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAddTx }) => {
         <button
           onClick={onOpenAddTx}
           aria-label="Add Transaction"
-          className="hidden sm:flex lg:hidden items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary hover:opacity-95 text-on-primary font-bold text-xs sm:text-sm shadow-xs transition-colors press"
+          className="hidden sm:flex lg:hidden items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary hover:opacity-95 text-on-primary font-bold text-xs sm:text-sm shadow-xs transition-colors press min-h-[44px]"
         >
           <Plus className="w-4 h-4" />
           <span>Add</span>
@@ -163,7 +181,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAddTx }) => {
         {/* Mobile Theme Toggle */}
         <button
           onClick={() => setDarkMode(prev => !prev)}
-          className="lg:hidden p-2 rounded-xl text-ink-3 hover:bg-sunken transition-colors press"
+          className="lg:hidden p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-ink-3 hover:bg-sunken transition-colors press"
           title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
           aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
         >

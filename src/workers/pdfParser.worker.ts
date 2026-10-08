@@ -17,6 +17,7 @@ try {
 
 export interface WorkerPDFMessage {
   arrayBuffer: ArrayBuffer;
+  password?: string;
 }
 
 export type WorkerPDFResponse =
@@ -160,6 +161,7 @@ self.onmessage = async (e: MessageEvent<WorkerPDFMessage>) => {
   try {
     const pdf = await pdfjsLib.getDocument({
       data: arrayBuffer,
+      password: e.data.password,
       useWorkerFetch: false,
     }).promise;
 
@@ -224,10 +226,22 @@ self.onmessage = async (e: MessageEvent<WorkerPDFMessage>) => {
       rawExtractedText: lines.slice(0, 100).join('\n'),
     } as WorkerPDFResponse);
   } catch (err: any) {
-    const isPassword = err?.name === 'PasswordException' || /password/i.test(err?.message || '');
-    const errorMessage = isPassword
-      ? 'This PDF statement is password-protected or encrypted. Please decrypt or unlock the file before uploading.'
-      : (err?.message || 'Failed to parse PDF document.');
+    const isPassword =
+      err?.name === 'PasswordException' ||
+      err?.code === 1 ||
+      /password/i.test(err?.message || '');
+
+    let errorMessage: string;
+    if (isPassword) {
+      if (e.data.password) {
+        errorMessage = 'Incorrect password for this protected PDF statement. Please verify and try again.';
+      } else {
+        errorMessage = 'This PDF statement is password-protected. Please enter the password to open and extract transactions.';
+      }
+    } else {
+      errorMessage = err?.message || 'Failed to parse PDF document.';
+    }
+
     self.postMessage({
       type: 'error',
       error: errorMessage,

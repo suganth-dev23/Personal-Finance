@@ -6,6 +6,7 @@ import { AnimatedNumber } from '../common/AnimatedNumber';
 import { useStaggerChildren } from '../../hooks/useStaggerChildren';
 import { EmergencyContributionModal } from './EmergencyContributionModal';
 import { Button, Card, Money, Stat, Progress } from '../ui';
+import { MIN_AMOUNT, MAX_AMOUNT, isValidAmount, roundMoney } from '../../utils/validation';
 
 export const EmergencyFundView: React.FC = () => {
   const { containerRef: metricPillarsRef, getChildStyle } = useStaggerChildren(40);
@@ -13,19 +14,32 @@ export const EmergencyFundView: React.FC = () => {
     emergencyFund,
     emergencyFundRunwayMonths,
     updateEmergencySettings,
+    averageMonthlyExpenses,
   } = useFinance();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [targetMonths, setTargetMonths] = useState(emergencyFund.targetMonths || 6);
-  const [manualTarget, setManualTarget] = useState(emergencyFund.manualTargetAmount ? emergencyFund.manualTargetAmount.toString() : '');
+  const [manualTarget, setManualTarget] = useState(
+    emergencyFund.manualTargetAmount ? emergencyFund.manualTargetAmount.toString() : ''
+  );
+  const [settingsError, setSettingsError] = useState<string | null>(null);
 
-  const effectiveTarget = emergencyFund.manualTargetAmount || 360000;
-  const percentFunded = effectiveTarget > 0 ? Math.min(100, Math.round((emergencyFund.currentSaved / effectiveTarget) * 100)) : 0;
-  const deficit = Math.max(0, effectiveTarget - emergencyFund.currentSaved);
+  const safeTargetMonths = Math.min(12, Math.max(1, Number.isFinite(emergencyFund.targetMonths) ? emergencyFund.targetMonths : 6));
+  const safeMonthlyExpenses = Number.isFinite(averageMonthlyExpenses) && averageMonthlyExpenses > 0 ? averageMonthlyExpenses : 50000;
+  const computedBaselineTarget = roundMoney(safeTargetMonths * safeMonthlyExpenses);
+  const effectiveTarget = Number.isFinite(emergencyFund.manualTargetAmount) && (emergencyFund.manualTargetAmount ?? 0) > 0
+    ? roundMoney(emergencyFund.manualTargetAmount as number)
+    : computedBaselineTarget;
+
+  const percentFunded = effectiveTarget > 0
+    ? Math.round((emergencyFund.currentSaved / effectiveTarget) * 100)
+    : (emergencyFund.currentSaved > 0 ? 100 : 0);
+
+  const surplusOrDeficit = effectiveTarget - emergencyFund.currentSaved;
 
   const formatRunwayMonths = (months: number, saved: number): string => {
-    if (!Number.isFinite(months) || isNaN(months)) {
+    if (!Number.isFinite(months) || isNaN(months) || months < 0) {
       return saved > 0 ? '> 24' : '0.0';
     }
     if (months > 24) {
@@ -36,10 +50,28 @@ export const EmergencyFundView: React.FC = () => {
 
   const handleSaveSettings = (e: React.FormEvent) => {
     e.preventDefault();
-    const parsedTarget = manualTarget ? parseFloat(manualTarget) : undefined;
-    updateEmergencySettings(targetMonths, parsedTarget);
+    setSettingsError(null);
+
+    const sanitizedMonths = Math.min(12, Math.max(1, Math.round(Number(targetMonths)) || 6));
+    let parsedTarget: number | undefined = undefined;
+
+    const trimmedTarget = manualTarget.trim();
+    if (trimmedTarget) {
+      const num = Number(trimmedTarget);
+      if (isNaN(num) || !Number.isFinite(num) || num <= 0 || !isValidAmount(num)) {
+        setSettingsError(
+          `Please enter a valid target amount between ₹${MIN_AMOUNT} and ₹${MAX_AMOUNT.toLocaleString('en-IN')}, or clear the field to calculate automatically based on duration.`
+        );
+        return;
+      }
+      parsedTarget = roundMoney(num);
+    }
+
+    updateEmergencySettings(sanitizedMonths, parsedTarget);
     setIsSettingsOpen(false);
   };
+
+  const progressTone = percentFunded >= 100 ? 'positive' : percentFunded >= 50 ? 'primary' : 'warning';
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
@@ -51,8 +83,8 @@ export const EmergencyFundView: React.FC = () => {
             <Progress
               type="ring"
               value={emergencyFund.currentSaved}
-              max={effectiveTarget}
-              tone="auto"
+              max={effectiveTarget > 0 ? effectiveTarget : 1}
+              tone={progressTone}
               size="lg"
             />
             <div>
@@ -75,7 +107,7 @@ export const EmergencyFundView: React.FC = () => {
                   percentFunded >= 100
                     ? 'text-positive'
                     : percentFunded >= 50
-                    ? 'text-ink-3'
+                    ? 'text-ink-2'
                     : 'text-negative'
                 }`}>
                   {percentFunded}% funded
@@ -84,7 +116,7 @@ export const EmergencyFundView: React.FC = () => {
               <p className="mt-2 text-xs text-ink-3 flex items-center gap-1 flex-wrap">
                 <span>Secures</span>
                 <span className="font-numeric font-bold">{formatRunwayMonths(emergencyFundRunwayMonths, emergencyFund.currentSaved)}</span>
-                <span>months of baseline expenses • Goal: {emergencyFund.targetMonths} months (</span>
+                <span>months of baseline expenses • Goal: {safeTargetMonths} months (</span>
                 <Money value={effectiveTarget} size="xs" />
                 <span>)</span>
               </p>
@@ -96,7 +128,12 @@ export const EmergencyFundView: React.FC = () => {
               variant="secondary"
               size="md"
               leftIcon={<Sliders className="w-4 h-4 text-ink-3" />}
-              onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+              onClick={() => {
+                setSettingsError(null);
+                setTargetMonths(emergencyFund.targetMonths || 6);
+                setManualTarget(emergencyFund.manualTargetAmount ? emergencyFund.manualTargetAmount.toString() : '');
+                setIsSettingsOpen(!isSettingsOpen);
+              }}
             >
               Adjust Target
             </Button>
@@ -118,39 +155,95 @@ export const EmergencyFundView: React.FC = () => {
               <h4 className="text-xs font-bold uppercase tracking-wider text-ink-3 flex items-center gap-1.5">
                 <Sliders className="w-3.5 h-3.5" /> Customize Emergency Target
               </h4>
+
+              {settingsError && (
+                <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/40 rounded-xl text-xs text-rose-700 dark:text-rose-300 font-medium flex items-center gap-2">
+                  <span>⚠️</span>
+                  <span>{settingsError}</span>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Target Months: Slider + Quick Presets */}
                 <div>
-                  <label className="block text-xs font-semibold text-ink-2 mb-1.5">
-                    Target Duration (Months of Expenses)
-                  </label>
-                  <select
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-semibold text-ink-2">
+                      Target Duration: <span className="font-bold text-ink-1 font-numeric">{targetMonths} Month{targetMonths === 1 ? '' : 's'}</span>
+                    </label>
+                    <span className="text-xs text-ink-3 font-medium">1 - 12 months</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="12"
+                    step="1"
                     value={targetMonths}
-                    onChange={e => setTargetMonths(parseInt(e.target.value))}
-                    className="w-full py-2.5 px-3.5 bg-surface border border-line rounded-xl text-sm text-ink-1 focus:outline-none focus:border-primary"
-                  >
-                    <option value={3}>3 Months (Aggressive / High Job Security)</option>
-                    <option value={6}>6 Months (Standard Recommended)</option>
-                    <option value={9}>9 Months (Conservative / Single Earner)</option>
-                    <option value={12}>12 Months (Freelancer / Business Owner)</option>
-                  </select>
+                    onChange={e => {
+                      setTargetMonths(Math.min(12, Math.max(1, parseInt(e.target.value, 10) || 6)));
+                      setSettingsError(null);
+                    }}
+                    className="w-full accent-primary cursor-pointer mb-2"
+                  />
+                  <div className="flex flex-wrap gap-1.5">
+                    {[3, 6, 9, 12].map(m => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => {
+                          setTargetMonths(m);
+                          setSettingsError(null);
+                        }}
+                        className={`px-2.5 py-1 rounded-xl text-xs font-semibold transition-colors border ${
+                          targetMonths === m
+                            ? 'bg-primary text-white border-primary'
+                            : 'bg-surface text-ink-2 hover:bg-sunken border-line'
+                        }`}
+                      >
+                        {m} Months
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
+                {/* Custom Target Amount */}
                 <div>
-                  <label className="block text-xs font-semibold text-ink-2 mb-1.5">
-                    Custom Target Amount (INR ₹)
-                  </label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-semibold text-ink-2">
+                      Custom Target Amount (INR ₹)
+                    </label>
+                    {manualTarget && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setManualTarget('');
+                          setSettingsError(null);
+                        }}
+                        className="text-xs text-primary hover:underline"
+                      >
+                        Auto-calc
+                      </button>
+                    )}
+                  </div>
                   <input
                     type="number"
                     inputMode="decimal"
+                    min={MIN_AMOUNT}
+                    max={MAX_AMOUNT}
                     value={manualTarget}
-                    onChange={e => setManualTarget(e.target.value)}
-                    placeholder="e.g. 360000"
+                    onChange={e => {
+                      setManualTarget(e.target.value);
+                      setSettingsError(null);
+                    }}
+                    placeholder={`Auto: ₹${computedBaselineTarget.toLocaleString('en-IN')}`}
                     className="w-full py-2.5 px-3.5 bg-surface border border-line rounded-xl text-sm text-ink-1 font-numeric focus:outline-none focus:border-primary"
                   />
+                  <p className="mt-1 text-xs text-ink-3">
+                    Leave blank to calculate from baseline expenses (₹{safeMonthlyExpenses.toLocaleString('en-IN')}/mo)
+                  </p>
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 pt-2">
+              <div className="flex justify-end gap-2 pt-2 border-t border-line">
                 <Button
                   type="button"
                   variant="ghost"
@@ -176,10 +269,16 @@ export const EmergencyFundView: React.FC = () => {
           <div className="flex justify-between items-center text-xs text-ink-3 mb-2 font-medium">
             <span className="font-numeric">{percentFunded}% Funded</span>
             <span>
-              {deficit > 0 ? (
+              {surplusOrDeficit > 0 ? (
                 <span className="inline-flex items-center gap-1 font-numeric">
-                  <Money value={deficit} size="xs" />
+                  <Money value={surplusOrDeficit} size="xs" />
                   <span>to reach goal</span>
+                </span>
+              ) : surplusOrDeficit < 0 ? (
+                <span className="inline-flex items-center gap-1 font-numeric text-positive">
+                  <span>Fully Funded (+</span>
+                  <Money value={Math.abs(surplusOrDeficit)} size="xs" />
+                  <span>surplus) 🎉</span>
                 </span>
               ) : (
                 '100% Fully Funded 🎉'
@@ -188,8 +287,8 @@ export const EmergencyFundView: React.FC = () => {
           </div>
           <Progress
             value={emergencyFund.currentSaved}
-            max={effectiveTarget}
-            tone="auto"
+            max={effectiveTarget > 0 ? effectiveTarget : 1}
+            tone={progressTone}
             size="md"
           />
         </div>

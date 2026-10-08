@@ -34,6 +34,9 @@ export function isValidDate(dateStr: any): boolean {
 
   const d = new Date(dateStr + 'T00:00:00Z');
   if (isNaN(d.getTime())) return false;
+  if (d.getUTCFullYear() !== year || d.getUTCMonth() !== month - 1 || d.getUTCDate() !== day) {
+    return false;
+  }
 
   const minDate = new Date(`${MIN_DATE_STRING}T00:00:00Z`);
   const maxDate = new Date(`${getMaxDateString()}T23:59:59Z`);

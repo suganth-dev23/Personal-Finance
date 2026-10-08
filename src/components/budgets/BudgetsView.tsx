@@ -22,35 +22,41 @@ export const BudgetsView: React.FC = () => {
   const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null);
 
   const totalBudgeted = useMemo(() => {
-    return budgets.reduce((acc, b) => acc + b.monthlyLimit, 0);
+    return budgets.reduce((acc, b) => acc + (Number.isFinite(b.monthlyLimit) && b.monthlyLimit > 0 ? b.monthlyLimit : 0), 0);
   }, [budgets]);
 
   const totalSpentInBudgeted = useMemo(() => {
-    const budgetNames = new Set(budgets.map(b => b.category.toLowerCase()));
+    if (budgets.length === 0) return 0;
+    const budgetNames = new Set(budgets.map(b => b.category.trim().toLowerCase()));
     return categorySpendingThisMonth
-      .filter(c => budgetNames.has(c.category.toLowerCase()))
-      .reduce((acc, c) => acc + c.spent, 0);
+      .filter(c => budgetNames.has(c.category.trim().toLowerCase()))
+      .reduce((acc, c) => acc + (Number.isFinite(c.spent) && c.spent > 0 ? c.spent : 0), 0);
   }, [budgets, categorySpendingThisMonth]);
 
   const remainingBudget = totalBudgeted - totalSpentInBudgeted;
   const overallPercent = totalBudgeted > 0 ? Math.min(100, Math.round((totalSpentInBudgeted / totalBudgeted) * 100)) : 0;
-  const isOverTotal = remainingBudget < 0;
+  const isOverTotal = totalBudgeted > 0 && remainingBudget < 0;
 
-  // Spending velocity and pacing calculations with strict Day 1 division-by-zero protection
-  const now = useMemo(() => new Date(), []);
+  // Spending velocity and pacing calculations with strict Day 1 division-by-zero protection, month rollover, and leap years
+  const now = new Date();
   const currentDay = now.getDate();
-  const totalDays = useMemo(() => new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate(), [now]);
-  // Strictly guard daysPassed so it never equals 0 (e.g. Day 1 of month, or time boundary edge cases)
-  const daysPassed = Math.max(1, currentDay);
-  const projectedTotalSpend = Math.round((totalSpentInBudgeted / daysPassed) * totalDays);
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+  // Day 0 of next month accurately gives the total days in current month (28/29 for Feb leap years, 30, or 31)
+  const totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
+  // Guard daysPassed strictly between 1 and totalDays
+  const daysPassed = Math.min(totalDays, Math.max(1, currentDay));
+  const projectedTotalSpend = daysPassed > 0
+    ? Math.round((totalSpentInBudgeted / daysPassed) * totalDays)
+    : 0;
   const isPacingFast = !isOverTotal && totalBudgeted > 0 && projectedTotalSpend > totalBudgeted && daysPassed >= 3;
 
   const categoryMap = useMemo(() => {
-    return new Map(categories.map(c => [c.name.toLowerCase(), c]));
+    return new Map(categories.map(c => [c.name.trim().toLowerCase(), c]));
   }, [categories]);
 
   const spendingMap = useMemo(() => {
-    return new Map(categorySpendingThisMonth.map(c => [c.category.toLowerCase(), c.spent]));
+    return new Map(categorySpendingThisMonth.map(c => [c.category.trim().toLowerCase(), c.spent]));
   }, [categorySpendingThisMonth]);
 
   const handleEdit = (budget: Budget) => {
@@ -87,10 +93,14 @@ export const BudgetsView: React.FC = () => {
               </h2>
               <span
                 className={`text-sm font-semibold ${
-                  isOverTotal ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'
+                  totalBudgeted === 0
+                    ? 'text-ink-3'
+                    : isOverTotal
+                    ? 'text-rose-600 dark:text-rose-400'
+                    : 'text-emerald-600 dark:text-emerald-400'
                 }`}
               >
-                {isOverTotal ? 'over budget' : 'remaining'}
+                {totalBudgeted === 0 ? 'no limits set' : isOverTotal ? 'over budget' : 'remaining'}
               </span>
             </div>
             <p className="mt-2 text-xs text-ink-3">
@@ -116,7 +126,7 @@ export const BudgetsView: React.FC = () => {
           </div>
           <Progress
             value={totalSpentInBudgeted}
-            max={totalBudgeted}
+            max={totalBudgeted > 0 ? totalBudgeted : 1}
             tone="auto"
             size="md"
           />
@@ -147,7 +157,9 @@ export const BudgetsView: React.FC = () => {
               label="Velocity Status"
               value={
                 <span className={`text-sm sm:text-lg font-bold font-numeric ${
-                  isOverTotal
+                  budgets.length === 0 || totalBudgeted === 0
+                    ? 'text-ink-3'
+                    : isOverTotal
                     ? 'text-rose-600 dark:text-rose-400'
                     : isPacingFast
                     ? 'text-ink-1'
@@ -155,7 +167,9 @@ export const BudgetsView: React.FC = () => {
                     ? 'text-ink-1'
                     : 'text-emerald-600 dark:text-emerald-400'
                 }`}>
-                  {isOverTotal
+                  {budgets.length === 0 || totalBudgeted === 0
+                    ? 'No Limits Set'
+                    : isOverTotal
                     ? 'Over Budget'
                     : isPacingFast
                     ? 'Pacing Over'
@@ -166,7 +180,7 @@ export const BudgetsView: React.FC = () => {
               }
               sub={
                 <span className="text-xs text-ink-3">
-                  Day {currentDay}/{totalDays} • Proj: <Money value={projectedTotalSpend} size="xs" />
+                  Day {currentDay}/{totalDays} • Proj: {totalBudgeted > 0 ? <Money value={projectedTotalSpend} size="xs" /> : '₹0'}
                 </span>
               }
             />
@@ -201,14 +215,16 @@ export const BudgetsView: React.FC = () => {
       ) : (
         <div ref={budgetGridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {budgets.map((b, idx) => {
-            const catInfo = categoryMap.get(b.category.toLowerCase());
-            const spent = spendingMap.get(b.category.toLowerCase()) || 0;
-            const remaining = b.monthlyLimit - spent;
-            const percentUsed = b.monthlyLimit > 0 ? (spent / b.monthlyLimit) * 100 : 0;
-            const isOver = spent > b.monthlyLimit;
+            const trimmedCat = b.category.trim().toLowerCase();
+            const catInfo = categoryMap.get(trimmedCat);
+            const spent = spendingMap.get(trimmedCat) || 0;
+            const monthlyLimit = Number.isFinite(b.monthlyLimit) && b.monthlyLimit > 0 ? b.monthlyLimit : 0;
+            const remaining = monthlyLimit - spent;
+            const percentUsed = monthlyLimit > 0 ? (spent / monthlyLimit) * 100 : 0;
+            const isOver = monthlyLimit > 0 && spent > monthlyLimit;
             const isNear = !isOver && percentUsed >= 80;
-            const catProjectedSpend = Math.round((spent / daysPassed) * totalDays);
-            const isCategoryPacingFast = !isOver && b.monthlyLimit > 0 && catProjectedSpend > b.monthlyLimit && daysPassed >= 3;
+            const catProjectedSpend = daysPassed > 0 ? Math.round((spent / daysPassed) * totalDays) : 0;
+            const isCategoryPacingFast = !isOver && monthlyLimit > 0 && catProjectedSpend > monthlyLimit && daysPassed >= 3;
 
             return (
               <div
@@ -219,7 +235,7 @@ export const BudgetsView: React.FC = () => {
                 <Card
                   variant="surface"
                   padding="none"
-                  className={`group lift rounded-2xl p-4 sm:p-5 transition-[transform,box-shadow,background-color] duration-200 ${
+                  className={`group lift rounded-2xl p-4 sm:p-5 transition-[transform,box-shadow,border-color] duration-200 ${
                     isOver
                       ? 'border-rose-400 dark:border-rose-600/70 ring-2 ring-rose-500/30 animate-shake-then-flash'
                       : isNear
@@ -243,7 +259,7 @@ export const BudgetsView: React.FC = () => {
                           {b.category}
                         </h3>
                         <p className="text-xs text-ink-3 font-medium">
-                          Limit: <Money value={b.monthlyLimit} size="xs" className="font-bold text-ink-2" />
+                          Limit: <Money value={monthlyLimit} size="xs" className="font-bold text-ink-2" />
                         </p>
                       </div>
                     </div>
@@ -253,17 +269,19 @@ export const BudgetsView: React.FC = () => {
                         onClick={() => handleEdit(b)}
                         className="press flex h-8 w-8 items-center justify-center rounded-xl border border-line text-ink-3 hover:bg-sunken hover:text-ink-1 transition-colors"
                         title="Edit Limit"
+                        aria-label={`Edit ${b.category} budget`}
                       >
                         <Edit3 className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => {
-                          if (window.confirm(`Remove budget for ${b.category}?`)) {
+                          if (window.confirm(`Are you sure you want to remove the budget for ${b.category}?`)) {
                             deleteBudget(b.id);
                           }
                         }}
                         className="press flex h-8 w-8 items-center justify-center rounded-xl border border-line text-ink-3 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
                         title="Delete Budget"
+                        aria-label={`Delete ${b.category} budget`}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -290,7 +308,7 @@ export const BudgetsView: React.FC = () => {
 
                     <Progress
                       value={spent}
-                      max={b.monthlyLimit}
+                      max={monthlyLimit > 0 ? monthlyLimit : 1}
                       tone="auto"
                       size="sm"
                     />
@@ -300,7 +318,7 @@ export const BudgetsView: React.FC = () => {
                       {isOver ? (
                         <span className="font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1 font-numeric">
                           <ShieldAlert className="w-3.5 h-3.5" />
-                          Exceeded by <Money value={spent - b.monthlyLimit} size="xs" className="text-inherit" />
+                          Exceeded by <Money value={spent - monthlyLimit} size="xs" className="text-inherit" />
                         </span>
                       ) : isNear ? (
                         <span className="font-bold text-ink-2 flex items-center gap-1">
@@ -329,7 +347,10 @@ export const BudgetsView: React.FC = () => {
 
       <BudgetModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedBudget(null);
+        }}
         initialBudget={selectedBudget}
       />
     </div>

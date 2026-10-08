@@ -2,12 +2,8 @@ import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { FinanceProvider, useFinance } from './context/FinanceContext';
 import { GamificationProvider } from './context/GamificationContext';
 import { ToastProvider } from './components/common/ToastProvider';
-import { Sidebar } from './components/layout/Sidebar';
-import { Navbar } from './components/layout/Navbar';
+import { AppLayout } from './components/layout/AppLayout';
 import { VIEW_TITLES } from './constants/viewTitles';
-import { MobileNav } from './components/layout/MobileNav';
-import { MobileMoreDrawer } from './components/layout/MobileMoreDrawer';
-import { TransactionModal } from './components/transactions/TransactionModal';
 import { ViewSkeleton } from './components/common/ViewSkeleton';
 import { ViewTransition } from './components/common/ViewTransition';
 import { AppErrorBoundary } from './components/common/AppErrorBoundary';
@@ -56,7 +52,12 @@ const SettingsView = lazy(() =>
 const BadgeShowcase = lazy(() =>
   import('./components/gamification/BadgeShowcase').then(m => ({ default: m.BadgeShowcase }))
 );
-import { BadgePopup } from './components/gamification/BadgePopup';
+const BadgePopup = lazy(() =>
+  import('./components/gamification/BadgePopup').then(m => ({ default: m.BadgePopup }))
+);
+const TransactionModal = lazy(() =>
+  import('./components/transactions/TransactionModal').then(m => ({ default: m.TransactionModal }))
+);
 
 const MainContent: React.FC = () => {
   const {
@@ -70,7 +71,6 @@ const MainContent: React.FC = () => {
   } = useFinance();
   const [isAddTxOpen, setIsAddTxOpen] = useState(false);
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
-  const [isMoreDrawerOpen, setIsMoreDrawerOpen] = useState(false);
 
   useEffect(() => {
     const title = VIEW_TITLES[currentView]?.title || 'DhanVeda';
@@ -88,55 +88,47 @@ const MainContent: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-app dark:bg-app text-ink-1 transition-colors">
-      {/* Desktop Sidebar */}
-      <Sidebar onOpenAddTx={handleOpenAddTx} />
-
-      {/* Main Workspace Area */}
-      <div className="flex-1 flex flex-col min-w-0 max-w-full pb-20 lg:pb-8 overflow-x-clip">
-        {/* Top Navbar */}
-        <Navbar onOpenAddTx={handleOpenAddTx} />
-
-        {/* Dynamic Lazy-Loaded View Router */}
-        <main className="flex-1 px-4 sm:px-8 py-6 w-full max-w-full overflow-x-clip">
-          {unreadableRecordCount > 0 && !isUnreadableBannerDismissed && (
-            <div
-              role="alert"
-              className="mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-ink-1 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-slide-up"
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="p-2 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 shrink-0">
-                  <AlertTriangle className="w-5 h-5" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-bold text-ink-1">
-                    {unreadableRecordCount} {unreadableRecordCount === 1 ? 'record' : 'records'} could not be read
-                  </p>
-                  <p className="text-xs text-ink-3">
-                    Malformed records are safely kept in storage and omitted from views. You can export raw data anytime.
-                  </p>
-                </div>
+    <AppLayout onOpenAddTx={handleOpenAddTx}>
+      {/* Dynamic Lazy-Loaded View Router */}
+      <main className="flex-1 px-4 sm:px-8 py-6 w-full max-w-full overflow-x-clip">
+        {unreadableRecordCount > 0 && !isUnreadableBannerDismissed && (
+          <div
+            role="alert"
+            className="mb-6 p-4 rounded-2xl bg-warning-tint border border-warning/20 text-ink-1 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-slide-up"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="p-2 rounded-xl bg-warning/10 text-warning shrink-0">
+                <AlertTriangle className="w-5 h-5" />
               </div>
-              <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
-                <button
-                  type="button"
-                  onClick={() => exportRawIndexedDBData()}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  Export raw data
-                </button>
-                <button
-                  type="button"
-                  onClick={dismissUnreadableBanner}
-                  className="p-1.5 rounded-lg text-ink-3 hover:text-ink-1 hover:bg-sunken transition-colors cursor-pointer"
-                  aria-label="Dismiss unreadable records warning"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-ink-1">
+                  {unreadableRecordCount} {unreadableRecordCount === 1 ? 'record' : 'records'} could not be read
+                </p>
+                <p className="text-xs text-ink-3">
+                  Malformed records are safely kept in storage and omitted from views. You can export raw data anytime.
+                </p>
               </div>
             </div>
-          )}
+            <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+              <button
+                type="button"
+                onClick={() => exportRawIndexedDBData()}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-warning hover:opacity-95 text-on-primary text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5" />
+                Export raw data
+              </button>
+              <button
+                type="button"
+                onClick={dismissUnreadableBanner}
+                className="p-1.5 rounded-lg text-ink-3 hover:text-ink-1 hover:bg-sunken transition-colors cursor-pointer"
+                aria-label="Dismiss unreadable records warning"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
 
           {saveError && (
             <div
@@ -210,29 +202,20 @@ const MainContent: React.FC = () => {
             </AppErrorBoundary>
           </ViewTransition>
         </main>
-      </div>
 
-      {/* Mobile Bottom Navigation */}
-      <MobileNav
-        onOpenMore={() => setIsMoreDrawerOpen(true)}
-        onOpenAddTx={handleOpenAddTx}
-      />
-
-      {/* Mobile More Drawer */}
-      <MobileMoreDrawer
-        isOpen={isMoreDrawerOpen}
-        onClose={() => setIsMoreDrawerOpen(false)}
-      />
-
-      {/* Global Add/Edit Transaction Modal */}
-      <TransactionModal
-        isOpen={isAddTxOpen}
-        onClose={() => setIsAddTxOpen(false)}
-        initialTransaction={editingTx}
-      />
-    </div>
-  );
-};
+        {/* Global Add/Edit Transaction Modal */}
+        {isAddTxOpen && (
+          <Suspense fallback={null}>
+            <TransactionModal
+              isOpen={isAddTxOpen}
+              onClose={() => setIsAddTxOpen(false)}
+              initialTransaction={editingTx}
+            />
+          </Suspense>
+        )}
+      </AppLayout>
+    );
+  };
 
 export default function App() {
   return (
@@ -240,7 +223,9 @@ export default function App() {
       <GamificationProvider>
         <ToastProvider>
           <MainContent />
-          <BadgePopup />
+          <Suspense fallback={null}>
+            <BadgePopup />
+          </Suspense>
         </ToastProvider>
       </GamificationProvider>
     </FinanceProvider>

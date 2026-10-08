@@ -34,25 +34,66 @@ export function formatDateISO(year: number, month: number, day: number): string 
 }
 
 /**
- * Parse YYYY-MM-DD into [year, month, day]
+ * Parse YYYY-MM-DD into [year, month, day].
+ * Safely handles invalid strings and non-finite numbers.
  */
 export function parseDateISO(dateStr: string): [number, number, number] {
+  if (!dateStr || typeof dateStr !== 'string') {
+    const now = new Date();
+    return [now.getFullYear(), now.getMonth() + 1, now.getDate()];
+  }
   const parts = dateStr.split('-');
-  return [parseInt(parts[0], 10), parseInt(parts[1], 10), parseInt(parts[2], 10)];
+  const y = parseInt(parts[0], 10);
+  const m = parseInt(parts[1], 10);
+  const d = parseInt(parts[2], 10);
+  if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) {
+    const now = new Date();
+    return [now.getFullYear(), now.getMonth() + 1, now.getDate()];
+  }
+  return [y, m, d];
+}
+
+/**
+ * Calculates deterministic day difference between two YYYY-MM-DD dates using UTC midnight.
+ * Positive = dateA is after dateB.
+ * Negative = dateA is before dateB.
+ */
+export function dateDiffInDays(dateA: string, dateB: string): number {
+  const [yA, mA, dA] = parseDateISO(dateA);
+  const [yB, mB, dB] = parseDateISO(dateB);
+  const utcA = Date.UTC(yA, mA - 1, dA);
+  const utcB = Date.UTC(yB, mB - 1, dB);
+  return Math.round((utcA - utcB) / (1000 * 60 * 60 * 24));
+}
+
+/**
+ * Adds N days to a YYYY-MM-DD date using UTC arithmetic to avoid timezone shifts.
+ */
+export function addDaysISO(dateStr: string, days: number): string {
+  const [y, m, d] = parseDateISO(dateStr);
+  const nextMs = Date.UTC(y, m - 1, d) + days * 86400000;
+  const nextDate = new Date(nextMs);
+  return formatDateISO(
+    nextDate.getUTCFullYear(),
+    nextDate.getUTCMonth() + 1,
+    nextDate.getUTCDate()
+  );
 }
 
 /**
  * Normalizes payment amount to a monthly financial commitment figure.
- * Supports weekly, bi-weekly, monthly, quarterly, semi-annually, yearly, daily.
+ * Supports daily, weekly, bi-weekly, monthly, quarterly, semi-annually, yearly.
  */
 export function calculateMonthlyEquivalent(amount: number, frequency: RecurrenceFrequency | string): number {
-  if (amount <= 0 || isNaN(amount)) return 0;
+  if (!Number.isFinite(amount) || amount <= 0) return 0;
   switch (frequency) {
+    case 'daily':
+      return Math.round(amount * 30);
     case 'weekly':
-      return Math.round((amount * 52) / 12);
+      return Math.round(amount * (52 / 12));
     case 'bi-weekly':
     case 'biweekly':
-      return Math.round((amount * 26) / 12);
+      return Math.round(amount * (26 / 12));
     case 'monthly':
       return Math.round(amount);
     case 'quarterly':
@@ -62,8 +103,6 @@ export function calculateMonthlyEquivalent(amount: number, frequency: Recurrence
       return Math.round(amount / 6);
     case 'yearly':
       return Math.round(amount / 12);
-    case 'daily':
-      return Math.round((amount * 365) / 12);
     default:
       return Math.round(amount);
   }
@@ -108,9 +147,7 @@ export function getPaymentSchedule(
     const candidate = payment.startDate;
     const isPaid = isOccurrencePaid(payment.id, candidate, logs);
     if (!isPaid) {
-      const daysDiff = Math.round(
-        (new Date(candidate).getTime() - new Date(todayStr).getTime()) / (1000 * 60 * 60 * 24)
-      );
+      const daysDiff = dateDiffInDays(candidate, todayStr);
       return {
         activeDueDate: candidate,
         isOverdue: false,
@@ -120,7 +157,79 @@ export function getPaymentSchedule(
     }
   }
 
-  // Monthly frequency handling (most common for bills, rent, SIP, subscriptions)
+  // 1. Daily frequency
+  if (payment.frequency === 'daily') {
+    const daysSinceStart = dateDiffInDays(todayStr, payment.startDate);
+
+    if (daysSinceStart < 0) {
+      // startDate is in future
+      let cand = payment.startDate;
+      while (isOccurrencePaid(payment.id, cand, logs)) {
+        cand = addDaysISO(cand, 1);
+        if (payment.endDate && cand > payment.endDate) {
+          return { activeDueDate: null, isOverdue: false, daysDiff: 0, nextCycleDueDate: null };
+        }
+      }
+      return {
+        activeDueDate: cand,
+        isOverdue: false,
+        daysDiff: dateDiffInDays(cand, todayStr),
+        nextCycleDueDate: cand,
+      };
+    }
+
+    // Check if yesterday is unpaid and within start bounds
+    const yesterdayStr = addDaysISO(todayStr, -1);
+    if (yesterdayStr >= payment.startDate && !isOccurrencePaid(payment.id, yesterdayStr, logs)) {
+      if (!payment.endDate || yesterdayStr <= payment.endDate) {
+        const nextCycle = !payment.endDate || todayStr <= payment.endDate ? todayStr : null;
+        return {
+          activeDueDate: yesterdayStr,
+          isOverdue: true,
+          daysDiff: -1,
+          nextCycleDueDate: nextCycle,
+        };
+      }
+    }
+
+    // Check today
+    if (!isOccurrencePaid(payment.id, todayStr, logs)) {
+      if (!payment.endDate || todayStr <= payment.endDate) {
+        const tomorrowStr = addDaysISO(todayStr, 1);
+        const nextCycle = !payment.endDate || tomorrowStr <= payment.endDate ? tomorrowStr : null;
+        return {
+          activeDueDate: todayStr,
+          isOverdue: false,
+          daysDiff: 0,
+          nextCycleDueDate: nextCycle,
+        };
+      }
+    }
+
+    // Today is paid, advance forward to next unpaid day
+    let cand = addDaysISO(todayStr, 1);
+    while (isOccurrencePaid(payment.id, cand, logs)) {
+      cand = addDaysISO(cand, 1);
+      if (payment.endDate && cand > payment.endDate) {
+        return { activeDueDate: null, isOverdue: false, daysDiff: 0, nextCycleDueDate: null };
+      }
+      if (dateDiffInDays(cand, todayStr) > 365) break;
+    }
+
+    if (payment.endDate && cand > payment.endDate) {
+      return { activeDueDate: null, isOverdue: false, daysDiff: 0, nextCycleDueDate: null };
+    }
+
+    const diff = dateDiffInDays(cand, todayStr);
+    return {
+      activeDueDate: cand,
+      isOverdue: false,
+      daysDiff: diff,
+      nextCycleDueDate: cand,
+    };
+  }
+
+  // 2. Monthly frequency handling (most common for bills, rent, SIP, subscriptions)
   if (payment.frequency === 'monthly') {
     const targetDay = payment.dayOfMonth || startDay || 1;
 
@@ -135,11 +244,9 @@ export function getPaymentSchedule(
     const prevMonthDueDate = formatDateISO(prevY, prevM, prevMonthDay);
     const isPrevMonthPaid = isOccurrencePaid(payment.id, prevMonthDueDate, logs);
 
-    // If previous month's due date is after startDate, and is UNPAID, it is OVERDUE!
+    // If previous month's due date is on/after startDate and is UNPAID, it is OVERDUE!
     if (prevMonthDueDate >= payment.startDate && !isPrevMonthPaid) {
-      const daysDiff = Math.round(
-        (new Date(prevMonthDueDate).getTime() - new Date(todayStr).getTime()) / (1000 * 60 * 60 * 24)
-      );
+      const daysDiff = dateDiffInDays(prevMonthDueDate, todayStr);
       if (!payment.endDate || prevMonthDueDate <= payment.endDate) {
         const thisMonthDay = clampDayOfMonth(refYear, refMonth, targetDay);
         const thisMonthDueDate = formatDateISO(refYear, refMonth, thisMonthDay);
@@ -155,18 +262,13 @@ export function getPaymentSchedule(
     // Check candidate for current month
     const thisMonthDay = clampDayOfMonth(refYear, refMonth, targetDay);
     const thisMonthDueDate = formatDateISO(refYear, refMonth, thisMonthDay);
-
     const isThisMonthPaid = isOccurrencePaid(payment.id, thisMonthDueDate, logs);
 
     // If today is past this month's due date and it's NOT paid -> It is OVERDUE
     if (todayStr > thisMonthDueDate && !isThisMonthPaid && thisMonthDueDate >= payment.startDate) {
-      const daysDiff = Math.round(
-        (new Date(thisMonthDueDate).getTime() - new Date(todayStr).getTime()) / (1000 * 60 * 60 * 24)
-      );
+      const daysDiff = dateDiffInDays(thisMonthDueDate, todayStr);
 
-      // Check if end date has passed
       if (!payment.endDate || thisMonthDueDate <= payment.endDate) {
-        // Calculate next month's cycle
         let nextM = refMonth + 1;
         let nextY = refYear;
         if (nextM > 12) {
@@ -185,11 +287,9 @@ export function getPaymentSchedule(
       }
     }
 
-    // If this month's due date is still upcoming (today <= thisMonthDueDate) and unpaid
+    // If this month's due date is upcoming/today (today <= thisMonthDueDate) and unpaid
     if (!isThisMonthPaid && thisMonthDueDate >= payment.startDate) {
-      const daysDiff = Math.round(
-        (new Date(thisMonthDueDate).getTime() - new Date(todayStr).getTime()) / (1000 * 60 * 60 * 24)
-      );
+      const daysDiff = dateDiffInDays(thisMonthDueDate, todayStr);
 
       if (!payment.endDate || thisMonthDueDate <= payment.endDate) {
         return {
@@ -201,23 +301,35 @@ export function getPaymentSchedule(
       }
     }
 
-    // Otherwise, this month is already paid! Roll over to next month
+    // Otherwise, this month is already paid! Roll over to next unpaid month
     let nextMonth = refMonth + 1;
     let nextYear = refYear;
     if (nextMonth > 12) {
       nextMonth = 1;
       nextYear += 1;
     }
-    const nextMonthDay = clampDayOfMonth(nextYear, nextMonth, targetDay);
-    const nextMonthDueDate = formatDateISO(nextYear, nextMonth, nextMonthDay);
+    let nextMonthDay = clampDayOfMonth(nextYear, nextMonth, targetDay);
+    let nextMonthDueDate = formatDateISO(nextYear, nextMonth, nextMonthDay);
+
+    while (isOccurrencePaid(payment.id, nextMonthDueDate, logs)) {
+      nextMonth += 1;
+      if (nextMonth > 12) {
+        nextMonth = 1;
+        nextYear += 1;
+      }
+      nextMonthDay = clampDayOfMonth(nextYear, nextMonth, targetDay);
+      nextMonthDueDate = formatDateISO(nextYear, nextMonth, nextMonthDay);
+      if (payment.endDate && nextMonthDueDate > payment.endDate) {
+        return { activeDueDate: null, isOverdue: false, daysDiff: 0, nextCycleDueDate: null };
+      }
+      if (nextYear > refYear + 5) break;
+    }
 
     if (payment.endDate && nextMonthDueDate > payment.endDate) {
       return { activeDueDate: null, isOverdue: false, daysDiff: 0, nextCycleDueDate: null };
     }
 
-    const daysDiff = Math.round(
-      (new Date(nextMonthDueDate).getTime() - new Date(todayStr).getTime()) / (1000 * 60 * 60 * 24)
-    );
+    const daysDiff = dateDiffInDays(nextMonthDueDate, todayStr);
 
     return {
       activeDueDate: nextMonthDueDate,
@@ -227,10 +339,9 @@ export function getPaymentSchedule(
     };
   }
 
-  // Quarterly frequency (every 3 months from startDate)
+  // 3. Quarterly frequency (every 3 months from startDate)
   if (payment.frequency === 'quarterly') {
     const targetDay = payment.dayOfMonth || startDay || 1;
-    // Iterate quarters forward from startDate until we find current or upcoming cycle
     let curY = startYear;
     let curM = startMonth;
 
@@ -243,16 +354,26 @@ export function getPaymentSchedule(
       }
 
       const isPaid = isOccurrencePaid(payment.id, dueDate, logs);
-      const daysDiff = Math.round(
-        (new Date(dueDate).getTime() - new Date(todayStr).getTime()) / (1000 * 60 * 60 * 24)
-      );
+      const daysDiff = dateDiffInDays(dueDate, todayStr);
 
-      if (!isPaid && daysDiff < 0) {
-        return { activeDueDate: dueDate, isOverdue: true, daysDiff, nextCycleDueDate: dueDate };
-      }
+      if (!isPaid) {
+        // Next quarter cycle
+        let nxtM = curM + 3;
+        let nxtY = curY;
+        if (nxtM > 12) {
+          nxtY += Math.floor((nxtM - 1) / 12);
+          nxtM = ((nxtM - 1) % 12) + 1;
+        }
+        const nxtDay = clampDayOfMonth(nxtY, nxtM, targetDay);
+        const nextCycleDate = formatDateISO(nxtY, nxtM, nxtDay);
+        const nextCycleDueDate = (!payment.endDate || nextCycleDate <= payment.endDate) ? nextCycleDate : null;
 
-      if (!isPaid && daysDiff >= 0) {
-        return { activeDueDate: dueDate, isOverdue: false, daysDiff, nextCycleDueDate: dueDate };
+        return {
+          activeDueDate: dueDate,
+          isOverdue: daysDiff < 0,
+          daysDiff,
+          nextCycleDueDate: daysDiff < 0 ? nextCycleDueDate : dueDate,
+        };
       }
 
       // advance 3 months
@@ -262,72 +383,87 @@ export function getPaymentSchedule(
         curM = ((curM - 1) % 12) + 1;
       }
 
-      // Safety escape if too far in the future
       if (curY > refYear + 5) break;
     }
   }
 
-  // Yearly frequency (once a year on startMonth / targetDay)
+  // 4. Yearly frequency (once a year on startMonth / targetDay)
   if (payment.frequency === 'yearly') {
     const targetDay = payment.dayOfMonth || startDay || 1;
     let yearCandidate = refYear;
     const day = clampDayOfMonth(yearCandidate, startMonth, targetDay);
     let dueDate = formatDateISO(yearCandidate, startMonth, day);
 
-    let isPaid = isOccurrencePaid(payment.id, dueDate, logs);
-    if (isPaid || (todayStr > dueDate && dueDate < payment.startDate)) {
+    // If dueDate has passed and was before startDate, advance to next year
+    if (todayStr > dueDate && dueDate < payment.startDate) {
       yearCandidate += 1;
       const nextDay = clampDayOfMonth(yearCandidate, startMonth, targetDay);
       dueDate = formatDateISO(yearCandidate, startMonth, nextDay);
-      isPaid = isOccurrencePaid(payment.id, dueDate, logs);
+    }
+
+    // Step forward if this occurrence is already paid
+    while (isOccurrencePaid(payment.id, dueDate, logs)) {
+      yearCandidate += 1;
+      const nextDay = clampDayOfMonth(yearCandidate, startMonth, targetDay);
+      dueDate = formatDateISO(yearCandidate, startMonth, nextDay);
+      if (payment.endDate && dueDate > payment.endDate) {
+        return { activeDueDate: null, isOverdue: false, daysDiff: 0, nextCycleDueDate: null };
+      }
+      if (yearCandidate > refYear + 5) break;
     }
 
     if (payment.endDate && dueDate > payment.endDate) {
       return { activeDueDate: null, isOverdue: false, daysDiff: 0, nextCycleDueDate: null };
     }
 
-    const daysDiff = Math.round(
-      (new Date(dueDate).getTime() - new Date(todayStr).getTime()) / (1000 * 60 * 60 * 24)
-    );
+    const daysDiff = dateDiffInDays(dueDate, todayStr);
+    const nextYearDay = clampDayOfMonth(yearCandidate + 1, startMonth, targetDay);
+    const nextYearDueDate = formatDateISO(yearCandidate + 1, startMonth, nextYearDay);
+    const nextCycle = (!payment.endDate || nextYearDueDate <= payment.endDate) ? nextYearDueDate : null;
 
     return {
       activeDueDate: dueDate,
-      isOverdue: !isPaid && daysDiff < 0,
+      isOverdue: daysDiff < 0,
       daysDiff,
-      nextCycleDueDate: dueDate,
+      nextCycleDueDate: daysDiff < 0 ? nextCycle : dueDate,
     };
   }
 
-  // Weekly or Bi-weekly frequency (every 7 or 14 days from startDate)
-  if (payment.frequency === 'weekly' || (payment.frequency as string) === 'bi-weekly' || (payment.frequency as string) === 'biweekly') {
+  // 5. Weekly or Bi-weekly frequency (every 7 or 14 days from startDate)
+  if (
+    payment.frequency === 'weekly' ||
+    (payment.frequency as string) === 'bi-weekly' ||
+    (payment.frequency as string) === 'biweekly'
+  ) {
     const intervalDays = payment.frequency === 'weekly' ? 7 : 14;
-    const msPerDay = 1000 * 60 * 60 * 24;
-    const daysSinceStart = Math.round((new Date(todayStr).getTime() - new Date(payment.startDate).getTime()) / msPerDay);
+    const daysSinceStart = dateDiffInDays(todayStr, payment.startDate);
+
+    if (daysSinceStart < 0) {
+      // Future start date
+      let cand = payment.startDate;
+      while (isOccurrencePaid(payment.id, cand, logs)) {
+        cand = addDaysISO(cand, intervalDays);
+        if (payment.endDate && cand > payment.endDate) {
+          return { activeDueDate: null, isOverdue: false, daysDiff: 0, nextCycleDueDate: null };
+        }
+      }
+      return {
+        activeDueDate: cand,
+        isOverdue: false,
+        daysDiff: dateDiffInDays(cand, todayStr),
+        nextCycleDueDate: cand,
+      };
+    }
 
     const periodsElapsed = Math.floor(daysSinceStart / intervalDays);
-    const prevOccurrenceObj = new Date(payment.startDate);
-    prevOccurrenceObj.setDate(prevOccurrenceObj.getDate() + periodsElapsed * intervalDays);
-    const prevOccurrenceStr = formatDateISO(
-      prevOccurrenceObj.getFullYear(),
-      prevOccurrenceObj.getMonth() + 1,
-      prevOccurrenceObj.getDate()
-    );
-
-    const nextOccurrenceObj = new Date(payment.startDate);
-    nextOccurrenceObj.setDate(nextOccurrenceObj.getDate() + (periodsElapsed + 1) * intervalDays);
-    const nextOccurrenceStr = formatDateISO(
-      nextOccurrenceObj.getFullYear(),
-      nextOccurrenceObj.getMonth() + 1,
-      nextOccurrenceObj.getDate()
-    );
+    const prevOccurrenceStr = addDaysISO(payment.startDate, periodsElapsed * intervalDays);
+    const nextOccurrenceStr = addDaysISO(payment.startDate, (periodsElapsed + 1) * intervalDays);
 
     const isPrevPaid = isOccurrencePaid(payment.id, prevOccurrenceStr, logs);
 
     // If previous occurrence is on or after startDate and is unpaid
     if (prevOccurrenceStr >= payment.startDate && !isPrevPaid) {
-      const daysDiff = Math.round(
-        (new Date(prevOccurrenceStr).getTime() - new Date(todayStr).getTime()) / msPerDay
-      );
+      const daysDiff = dateDiffInDays(prevOccurrenceStr, todayStr);
       if (!payment.endDate || prevOccurrenceStr <= payment.endDate) {
         return {
           activeDueDate: prevOccurrenceStr,
@@ -338,21 +474,27 @@ export function getPaymentSchedule(
       }
     }
 
-    // Otherwise, previous occurrence is paid (or before startDate), candidate is next occurrence
-    if (payment.endDate && nextOccurrenceStr > payment.endDate) {
+    // Previous occurrence is paid, check nextOccurrence and advance if next is also paid
+    let candidate = nextOccurrenceStr;
+    while (isOccurrencePaid(payment.id, candidate, logs)) {
+      candidate = addDaysISO(candidate, intervalDays);
+      if (payment.endDate && candidate > payment.endDate) {
+        return { activeDueDate: null, isOverdue: false, daysDiff: 0, nextCycleDueDate: null };
+      }
+      if (dateDiffInDays(candidate, todayStr) > 365) break;
+    }
+
+    if (payment.endDate && candidate > payment.endDate) {
       return { activeDueDate: null, isOverdue: false, daysDiff: 0, nextCycleDueDate: null };
     }
 
-    const isNextPaid = isOccurrencePaid(payment.id, nextOccurrenceStr, logs);
-    const daysDiff = Math.round(
-      (new Date(nextOccurrenceStr).getTime() - new Date(todayStr).getTime()) / msPerDay
-    );
+    const daysDiff = dateDiffInDays(candidate, todayStr);
 
     return {
-      activeDueDate: nextOccurrenceStr,
-      isOverdue: !isNextPaid && daysDiff < 0,
+      activeDueDate: candidate,
+      isOverdue: false,
       daysDiff,
-      nextCycleDueDate: nextOccurrenceStr,
+      nextCycleDueDate: candidate,
     };
   }
 

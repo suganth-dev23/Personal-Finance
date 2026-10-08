@@ -16,6 +16,7 @@ import {
  RecurringPaymentLog,
  OwedDirection,
  SyncableStoreName,
+ PaymentMethod,
 } from '../types/finance';
 import {
  DEFAULT_CATEGORIES,
@@ -27,7 +28,8 @@ import {
  INITIAL_RECURRING_PAYMENTS,
  INITIAL_RECURRING_PAYMENT_LOGS,
 } from '../utils/sampleData';
-import { getCurrentMonthYear, getTodayString, getMonthKey } from '../utils/date';
+import { getCurrentMonthYear, getTodayString, getMonthKey, sanitizeDateString } from '../utils/date';
+import { roundMoney } from '../utils/validation';
 import {
   normalizeTransaction,
   normalizeContact,
@@ -204,7 +206,9 @@ export interface FinanceActionsContextType {
   dueDate: string,
   actualAmount?: number,
   linkedTransactionId?: string,
-  createTransaction?: boolean
+  createTransaction?: boolean,
+  paymentMethod?: PaymentMethod,
+  paidDate?: string
  ) => void;
 
  // Preferences
@@ -269,6 +273,7 @@ export interface FinanceDataContextType {
  totalInvestmentGainLoss: number;
  totalInvestmentGainLossPct: number;
  emergencyFundRunwayMonths: number;
+ averageMonthlyExpenses: number;
  totalGoalsTarget: number;
  totalGoalsSaved: number;
  contactBalances: ContactBalance[];
@@ -459,14 +464,14 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         try {
           await saveSingleRecord('emergencyFund', { ...emergencyFundRef.current, id: 'current' });
           dirtyStoresRef.current.delete(sName);
-        } catch (err) {
+        } catch {
           anyFailed = true;
         }
       } else if (sName === 'aiSettings') {
         try {
           await saveSingleRecord('aiSettings', { ...aiSettings, id: 'current' });
           dirtyStoresRef.current.delete(sName);
-        } catch (err) {
+        } catch {
           anyFailed = true;
         }
       }
@@ -1103,51 +1108,69 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
  transactionsRef.current = transactionsRef.current.filter(t => t.id !== id);
  setTransactions(prev => prev.filter(t => t.id !== id));
 
- // Clean up or detach settlements tied to this transaction
- const now = new Date().toISOString();
- const updatedSettlements: SettlementRecord[] = [];
+    // Clean up or detach settlements tied to this transaction
+    // B-10: Only create a new settlement object when a field actually changes (and bump updatedAt).
+    // Untouched settlements keep their existing object references so scheduleArrayPersist skips IDB puts.
+    const now = new Date().toISOString();
+    const updatedSettlements: SettlementRecord[] = [];
 
- settlementsRef.current.forEach(s => {
- const linkedTxId = s.linkedTransactionId === id ? undefined : s.linkedTransactionId;
+    settlementsRef.current.forEach(s => {
+      // Check multi-split reconciliation
+      if (s.reconciledSplits && s.reconciledSplits.length > 0) {
+        const remainingSplits = s.reconciledSplits.filter(r => r.transactionId !== id);
+        if (remainingSplits.length === 0 && (s.sourceTransactionId === id || !s.sourceTransactionId)) {
+          // All reconciled splits belonged to this deleted transaction -> delete settlement
+          addTombstone('settlements', s.id);
+          return;
+        }
 
- // Check multi-split reconciliation
- if (s.reconciledSplits && s.reconciledSplits.length > 0) {
- const remainingSplits = s.reconciledSplits.filter(r => r.transactionId !== id);
- if (remainingSplits.length === 0 && (s.sourceTransactionId === id || !s.sourceTransactionId)) {
- // All reconciled splits belonged to this deleted transaction -> delete settlement
- addTombstone('settlements', s.id);
- return;
- }
- // Partial removal: some splits remain on other transactions!
- const nextSourceTx = s.sourceTransactionId === id
- ? (remainingSplits[0]?.transactionId || undefined)
- : s.sourceTransactionId;
- const nextSourceSplit = s.sourceTransactionId === id
- ? (remainingSplits[0]?.splitEntryId || undefined)
- : s.sourceSplitEntryId;
+        const hasSplitChanged = remainingSplits.length !== s.reconciledSplits.length;
+        const hasLinkedChanged = s.linkedTransactionId === id;
+        const hasSourceChanged = s.sourceTransactionId === id;
 
- updatedSettlements.push({
- ...s,
- sourceTransactionId: nextSourceTx,
- sourceSplitEntryId: nextSourceSplit,
- linkedTransactionId: linkedTxId,
- reconciledSplits: remainingSplits.length > 0 ? remainingSplits : undefined,
- updatedAt: now,
- });
- return;
- }
+        if (hasSplitChanged || hasLinkedChanged || hasSourceChanged) {
+          // Partial removal: some splits remain on other transactions or links changed
+          const nextSourceTx = hasSourceChanged
+            ? (remainingSplits[0]?.transactionId || undefined)
+            : s.sourceTransactionId;
+          const nextSourceSplit = hasSourceChanged
+            ? (remainingSplits[0]?.splitEntryId || undefined)
+            : s.sourceSplitEntryId;
 
- // Legacy single-split settlement
- if (s.sourceTransactionId === id) {
- addTombstone('settlements', s.id);
- return;
- }
+          updatedSettlements.push({
+            ...s,
+            sourceTransactionId: nextSourceTx,
+            sourceSplitEntryId: nextSourceSplit,
+            linkedTransactionId: hasLinkedChanged ? undefined : s.linkedTransactionId,
+            reconciledSplits: remainingSplits.length > 0 ? remainingSplits : undefined,
+            updatedAt: now,
+          });
+          return;
+        }
 
- updatedSettlements.push({
- ...s,
- linkedTransactionId: linkedTxId,
- });
- });
+        // Untouched multi-split settlement: retain existing object reference
+        updatedSettlements.push(s);
+        return;
+      }
+
+      // Legacy single-split settlement
+      if (s.sourceTransactionId === id) {
+        addTombstone('settlements', s.id);
+        return;
+      }
+
+      if (s.linkedTransactionId === id) {
+        updatedSettlements.push({
+          ...s,
+          linkedTransactionId: undefined,
+          updatedAt: now,
+        });
+        return;
+      }
+
+      // Untouched settlement: retain existing object reference
+      updatedSettlements.push(s);
+    });
 
  settlementsRef.current = updatedSettlements;
  setSettlements(updatedSettlements);
@@ -1160,46 +1183,63 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
  transactionsRef.current = transactionsRef.current.filter(t => !set.has(t.id));
  setTransactions(prev => prev.filter(t => !set.has(t.id)));
 
- const now = new Date().toISOString();
- const updatedSettlements: SettlementRecord[] = [];
+    // B-10: Only create a new settlement object when a field actually changes (and bump updatedAt)
+    const now = new Date().toISOString();
+    const updatedSettlements: SettlementRecord[] = [];
 
- settlementsRef.current.forEach(s => {
- const linkedTxId = s.linkedTransactionId && set.has(s.linkedTransactionId) ? undefined : s.linkedTransactionId;
+    settlementsRef.current.forEach(s => {
+      if (s.reconciledSplits && s.reconciledSplits.length > 0) {
+        const remainingSplits = s.reconciledSplits.filter(r => !set.has(r.transactionId));
+        if (remainingSplits.length === 0 && (s.sourceTransactionId ? set.has(s.sourceTransactionId) : true)) {
+          addTombstone('settlements', s.id);
+          return;
+        }
 
- if (s.reconciledSplits && s.reconciledSplits.length > 0) {
- const remainingSplits = s.reconciledSplits.filter(r => !set.has(r.transactionId));
- if (remainingSplits.length === 0 && (s.sourceTransactionId ? set.has(s.sourceTransactionId) : true)) {
- addTombstone('settlements', s.id);
- return;
- }
- const nextSourceTx = s.sourceTransactionId && set.has(s.sourceTransactionId)
- ? (remainingSplits[0]?.transactionId || undefined)
- : s.sourceTransactionId;
- const nextSourceSplit = s.sourceTransactionId && set.has(s.sourceTransactionId)
- ? (remainingSplits[0]?.splitEntryId || undefined)
- : s.sourceSplitEntryId;
+        const hasSplitChanged = remainingSplits.length !== s.reconciledSplits.length;
+        const hasLinkedChanged = Boolean(s.linkedTransactionId && set.has(s.linkedTransactionId));
+        const hasSourceChanged = Boolean(s.sourceTransactionId && set.has(s.sourceTransactionId));
 
- updatedSettlements.push({
- ...s,
- sourceTransactionId: nextSourceTx,
- sourceSplitEntryId: nextSourceSplit,
- linkedTransactionId: linkedTxId,
- reconciledSplits: remainingSplits.length > 0 ? remainingSplits : undefined,
- updatedAt: now,
- });
- return;
- }
+        if (hasSplitChanged || hasLinkedChanged || hasSourceChanged) {
+          const nextSourceTx = hasSourceChanged
+            ? (remainingSplits[0]?.transactionId || undefined)
+            : s.sourceTransactionId;
+          const nextSourceSplit = hasSourceChanged
+            ? (remainingSplits[0]?.splitEntryId || undefined)
+            : s.sourceSplitEntryId;
 
- if (s.sourceTransactionId && set.has(s.sourceTransactionId)) {
- addTombstone('settlements', s.id);
- return;
- }
+          updatedSettlements.push({
+            ...s,
+            sourceTransactionId: nextSourceTx,
+            sourceSplitEntryId: nextSourceSplit,
+            linkedTransactionId: hasLinkedChanged ? undefined : s.linkedTransactionId,
+            reconciledSplits: remainingSplits.length > 0 ? remainingSplits : undefined,
+            updatedAt: now,
+          });
+          return;
+        }
 
- updatedSettlements.push({
- ...s,
- linkedTransactionId: linkedTxId,
- });
- });
+        // Untouched multi-split settlement: retain existing object reference
+        updatedSettlements.push(s);
+        return;
+      }
+
+      if (s.sourceTransactionId && set.has(s.sourceTransactionId)) {
+        addTombstone('settlements', s.id);
+        return;
+      }
+
+      if (s.linkedTransactionId && set.has(s.linkedTransactionId)) {
+        updatedSettlements.push({
+          ...s,
+          linkedTransactionId: undefined,
+          updatedAt: now,
+        });
+        return;
+      }
+
+      // Untouched settlement: retain existing object reference
+      updatedSettlements.push(s);
+    });
 
  settlementsRef.current = updatedSettlements;
  setSettlements(updatedSettlements);
@@ -1810,15 +1850,19 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
  // Budget operations
  const setBudgetForCategory = (category: string, monthlyLimit: number) => {
+ const trimmedCategory = (category || '').trim();
+ if (!trimmedCategory) return;
+ if (!Number.isFinite(monthlyLimit) || monthlyLimit <= 0) return;
+ const safeLimit = roundMoney(monthlyLimit);
  const now = new Date().toISOString();
  const updater = (prev: Budget[]) => {
- const existingIdx = prev.findIndex(b => b.category.toLowerCase() === category.toLowerCase());
+ const existingIdx = prev.findIndex(b => b.category.trim().toLowerCase() === trimmedCategory.toLowerCase());
  if (existingIdx >= 0) {
  const next = [...prev];
- next[existingIdx] = { ...next[existingIdx], monthlyLimit, updatedAt: now };
+ next[existingIdx] = { ...next[existingIdx], category: trimmedCategory, monthlyLimit: safeLimit, updatedAt: now };
  return next;
  } else {
- return [...prev, { id: `b-${Date.now()}`, category, monthlyLimit, updatedAt: now }];
+ return [...prev, { id: `b-${Date.now()}`, category: trimmedCategory, monthlyLimit: safeLimit, updatedAt: now }];
  }
  };
  budgetsRef.current = updater(budgetsRef.current);
@@ -1826,6 +1870,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
  };
 
  const deleteBudget = (id: string) => {
+ if (!id || typeof id !== 'string') return;
  addTombstone('budgets', id);
  budgetsRef.current = budgetsRef.current.filter(b => b.id !== id);
  setBudgets(prev => prev.filter(b => b.id !== id));
@@ -1833,17 +1878,21 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
  // Emergency Fund operations
  const updateEmergencySettings = (targetMonths: number, manualTargetAmount?: number) => {
+ const safeTargetMonths = Math.min(12, Math.max(1, Math.round(Number(targetMonths)) || 6));
+ const safeManualTarget = Number.isFinite(manualTargetAmount) && (manualTargetAmount as number) > 0
+ ? roundMoney(manualTargetAmount as number)
+ : undefined;
  const now = new Date().toISOString();
  emergencyFundRef.current = {
  ...emergencyFundRef.current,
- targetMonths,
- manualTargetAmount,
+ targetMonths: safeTargetMonths,
+ manualTargetAmount: safeManualTarget,
  updatedAt: now,
  };
  setEmergencyFund(prev => ({
  ...prev,
- targetMonths,
- manualTargetAmount,
+ targetMonths: safeTargetMonths,
+ manualTargetAmount: safeManualTarget,
  updatedAt: now,
  }));
  };
@@ -1854,21 +1903,35 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
  note?: string,
  date?: string
  ) => {
+ if (!Number.isFinite(amount) || amount <= 0) return;
+ const roundedAmount = roundMoney(amount);
+ if (roundedAmount <= 0) return;
+
+ if (type === 'withdrawal' && emergencyFundRef.current.currentSaved < roundedAmount) {
+ return;
+ }
+
  const now = new Date().toISOString();
  const today = date || now.split('T')[0];
+ const sanitizedNote = note && typeof note === 'string'
+ ? note.trim().slice(0, 200)
+ : (type === 'deposit' ? 'Emergency Fund Deposit' : 'Emergency Fund Withdrawal');
+
  const newContribution = {
  id: `em-${Date.now()}`,
  date: today,
- amount,
+ amount: roundedAmount,
  type,
- note: note || (type === 'deposit' ? 'Emergency Fund Deposit' : 'Emergency Fund Withdrawal'),
+ note: sanitizedNote,
  createdAt: now,
  updatedAt: now,
  };
 
- const newSaved = type === 'deposit'
- ? emergencyFundRef.current.currentSaved + amount
- : Math.max(0, emergencyFundRef.current.currentSaved - amount);
+ const newSaved = roundMoney(
+ type === 'deposit'
+ ? emergencyFundRef.current.currentSaved + roundedAmount
+ : Math.max(0, emergencyFundRef.current.currentSaved - roundedAmount)
+ );
 
  emergencyFundRef.current = {
  ...emergencyFundRef.current,
@@ -1878,7 +1941,11 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
  };
 
  setEmergencyFund(prev => {
- const saved = type === 'deposit' ? prev.currentSaved + amount : Math.max(0, prev.currentSaved - amount);
+ const saved = roundMoney(
+ type === 'deposit'
+ ? prev.currentSaved + roundedAmount
+ : Math.max(0, prev.currentSaved - roundedAmount)
+ );
  return {
  ...prev,
  currentSaved: saved,
@@ -1887,12 +1954,13 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
  };
  });
 
- const target = emergencyFund.manualTargetAmount || (emergencyFund.targetMonths * (emergencyFund.monthlyExpenseBaseline || 50000));
+ const safeTargetMonths = emergencyFundRef.current.targetMonths || 6;
+ const target = emergencyFundRef.current.manualTargetAmount || (safeTargetMonths * (emergencyFundRef.current.monthlyExpenseBaseline || 50000));
  const finalSaved = newSaved;
  const isFullyFunded = finalSaved >= target;
  emitFinanceEvent({
  type: 'emergency_contributed',
- amount,
+ amount: roundedAmount,
  fundType: type,
  isFullyFunded,
  });
@@ -2107,13 +2175,18 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
  dueDate: string,
  actualAmount?: number,
  linkedTransactionId?: string,
- createTransaction?: boolean
+ createTransaction?: boolean,
+ paymentMethod?: PaymentMethod,
+ paidDate?: string
  ) => {
  const payment = recurringPayments.find(p => p.id === recurringPaymentId);
  if (!payment) return;
 
- const paidAmount = actualAmount !== undefined ? actualAmount : payment.amount;
- const paidDate = getTodayString();
+ const rawAmount = actualAmount !== undefined ? actualAmount : payment.amount;
+ const paidAmount = Number.isFinite(rawAmount) && rawAmount > 0 ? roundMoney(rawAmount) : roundMoney(payment.amount);
+ const finalPaidDate = (paidDate && sanitizeDateString(paidDate)) || getTodayString();
+ const finalPaymentMethod = paymentMethod || payment.paymentMethod || 'UPI';
+ const sanitizedDueDate = sanitizeDateString(dueDate) || dueDate;
  const now = new Date().toISOString();
 
  let txId = linkedTransactionId;
@@ -2121,12 +2194,12 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
  if (shouldCreateTx && !txId) {
  const newTx = addTransaction({
- date: paidDate,
+ date: finalPaidDate,
  amount: paidAmount,
  type: 'debit',
  category: payment.category,
- description: `${payment.name} (Recurring: ${dueDate})`,
- paymentMethod: payment.paymentMethod || 'Other',
+ description: `${payment.name} (Recurring: ${sanitizedDueDate})`,
+ paymentMethod: finalPaymentMethod,
  source: 'manual',
  }, { silent: true });
  txId = newTx.id;
@@ -2135,8 +2208,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
  const newLog: RecurringPaymentLog = {
  id: `reclog-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
  recurringPaymentId,
- dueDate,
- paidDate,
+ dueDate: sanitizedDueDate,
+ paidDate: finalPaidDate,
  amount: paidAmount,
  linkedTransactionId: txId,
  createdAt: now,
@@ -2665,7 +2738,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
  if (t.type === 'debit') {
  const ym = getMonthKey(t.date);
  if (ym) {
- monthExpensesMap[ym] = (monthExpensesMap[ym] || 0) + (Number.isFinite(t.amount) ? t.amount : 0);
+ const amt = Number.isFinite(t.amount) && t.amount > 0 ? t.amount : 0;
+ monthExpensesMap[ym] = (monthExpensesMap[ym] || 0) + amt;
  }
  }
  });
@@ -2673,16 +2747,21 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
  const expenseValues = Object.values(monthExpensesMap);
  if (expenseValues.length === 0) return 50000;
  const sum = expenseValues.reduce((a, b) => a + b, 0);
- return sum / expenseValues.length;
+ const avg = expenseValues.length > 0 ? sum / expenseValues.length : 50000;
+ return Number.isFinite(avg) && avg > 0 ? roundMoney(avg) : 50000;
  }, [transactions]);
 
- const effectiveMonthlyBaseline = emergencyFund.manualTargetAmount
- ? emergencyFund.manualTargetAmount / emergencyFund.targetMonths
- : averageMonthlyExpenses;
+ const safeTargetMonths = Number.isFinite(emergencyFund.targetMonths) && emergencyFund.targetMonths > 0
+ ? emergencyFund.targetMonths
+ : 6;
+
+ const effectiveMonthlyBaseline = Number.isFinite(emergencyFund.manualTargetAmount) && (emergencyFund.manualTargetAmount ?? 0) > 0
+ ? (emergencyFund.manualTargetAmount as number) / safeTargetMonths
+ : (Number.isFinite(averageMonthlyExpenses) && averageMonthlyExpenses > 0 ? averageMonthlyExpenses : 50000);
 
  const emergencyFundRunwayMonths = effectiveMonthlyBaseline > 0
  ? emergencyFund.currentSaved / effectiveMonthlyBaseline
- : 0;
+ : (emergencyFund.currentSaved > 0 ? Infinity : 0);
 
  const totalGoalsTarget = useMemo(() => {
  return dreams.reduce((acc, d) => acc + d.targetAmount, 0);
@@ -3229,6 +3308,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     totalInvestmentGainLoss,
     totalInvestmentGainLossPct,
     emergencyFundRunwayMonths,
+    averageMonthlyExpenses,
     totalGoalsTarget,
     totalGoalsSaved,
     contactBalances,
@@ -3270,6 +3350,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     totalInvestmentGainLoss,
     totalInvestmentGainLossPct,
     emergencyFundRunwayMonths,
+    averageMonthlyExpenses,
     totalGoalsTarget,
     totalGoalsSaved,
     contactBalances,

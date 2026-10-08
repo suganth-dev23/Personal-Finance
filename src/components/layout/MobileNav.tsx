@@ -8,12 +8,13 @@ import {
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 
-interface MobileNavProps {
+export interface MobileNavProps {
   onOpenMore: () => void;
   onOpenAddTx: () => void;
+  isMoreOpen?: boolean;
 }
 
-export const MobileNav: React.FC<MobileNavProps> = ({ onOpenMore, onOpenAddTx }) => {
+export const MobileNav: React.FC<MobileNavProps> = ({ onOpenMore, onOpenAddTx, isMoreOpen }) => {
   const { currentView, setCurrentView } = useFinance();
 
   return (
@@ -100,6 +101,8 @@ export const MobileNav: React.FC<MobileNavProps> = ({ onOpenMore, onOpenAddTx })
         onClick={onOpenMore}
         aria-label="Open more tools and views"
         aria-haspopup="dialog"
+        aria-expanded={Boolean(isMoreOpen)}
+        aria-controls="mobile-more-drawer"
         className="flex-1 flex flex-col items-center justify-center py-1 min-h-[48px] rounded-2xl text-ink-3 font-medium hover:text-ink-1 press transition-colors duration-150"
       >
         <MoreHorizontal className="w-5 h-5" />

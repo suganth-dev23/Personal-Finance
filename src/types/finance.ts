@@ -87,7 +87,7 @@ export interface Transaction {
   splitWith?: SplitEntry[]; // array of split entries, 0 or more
 }
 
-export type RecurrenceFrequency = 'weekly' | 'bi-weekly' | 'monthly' | 'quarterly' | 'yearly';
+export type RecurrenceFrequency = 'daily' | 'weekly' | 'bi-weekly' | 'monthly' | 'quarterly' | 'yearly';
 
 export interface RecurringPayment {
   id: string;

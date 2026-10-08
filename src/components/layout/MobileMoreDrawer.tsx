@@ -120,6 +120,7 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ isOpen, onCl
       {/* Drawer with slide-up transition */}
       <div
         ref={focusTrapRef}
+        id="mobile-more-drawer"
         role="dialog"
         aria-modal="true"
         aria-labelledby="drawer-title"

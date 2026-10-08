@@ -36,7 +36,7 @@ export const ALL_BADGES: BadgeDefinition[] = [
     icon: 'PieChart',
     xp: 100,
     evaluate: ctx => {
-      const count = ctx.budgets.length;
+      const count = Array.isArray(ctx?.budgets) ? ctx.budgets.length : 0;
       return {
         isUnlocked: count >= 1,
         progress: count >= 1 ? 100 : 0,
@@ -54,7 +54,7 @@ export const ALL_BADGES: BadgeDefinition[] = [
     icon: 'ShieldCheck',
     xp: 250,
     evaluate: ctx => {
-      const count = ctx.budgets.length;
+      const count = Array.isArray(ctx?.budgets) ? ctx.budgets.length : 0;
       return {
         isUnlocked: count >= 3,
         progress: Math.min(100, Math.round((count / 3) * 100)),
@@ -72,13 +72,14 @@ export const ALL_BADGES: BadgeDefinition[] = [
     icon: 'Zap',
     xp: 500,
     evaluate: ctx => {
-      const budgeted = ctx.categorySpendingThisMonth.filter(c => c.budget > 0);
+      const categories = Array.isArray(ctx?.categorySpendingThisMonth) ? ctx.categorySpendingThisMonth : [];
+      const budgeted = categories.filter(c => c && Number.isFinite(c.budget) && c.budget > 0);
       const dayOfMonth = new Date().getDate();
-      const hasActivity = budgeted.some(c => c.spent > 0);
+      const hasActivity = budgeted.some(c => Number.isFinite(c.spent) && c.spent > 0);
       if (budgeted.length < 2 || !hasActivity || dayOfMonth < 15) {
         return { isUnlocked: false, progress: budgeted.length >= 2 ? 50 : 0 };
       }
-      const allUnder80 = budgeted.every(c => c.percentUsed <= 80);
+      const allUnder80 = budgeted.every(c => Number.isFinite(c.percentUsed) && c.percentUsed <= 80);
       return {
         isUnlocked: allUnder80,
         progress: allUnder80 ? 100 : 50,
@@ -94,13 +95,15 @@ export const ALL_BADGES: BadgeDefinition[] = [
     icon: 'Award',
     xp: 1000,
     evaluate: ctx => {
-      const budgeted = ctx.categorySpendingThisMonth.filter(c => c.budget > 0);
+      const categories = Array.isArray(ctx?.categorySpendingThisMonth) ? ctx.categorySpendingThisMonth : [];
+      const budgeted = categories.filter(c => c && Number.isFinite(c.budget) && c.budget > 0);
       const dayOfMonth = new Date().getDate();
-      const totalDebits = ctx.transactions.filter(t => t.type === 'debit').length;
+      const transactions = Array.isArray(ctx?.transactions) ? ctx.transactions : [];
+      const totalDebits = transactions.filter(t => t && t.type === 'debit').length;
       if (budgeted.length < 2 || dayOfMonth < 25 || totalDebits < 5) {
         return { isUnlocked: false, progress: budgeted.length >= 2 ? 75 : 0 };
       }
-      const allUnder = budgeted.every(c => c.percentUsed <= 100);
+      const allUnder = budgeted.every(c => Number.isFinite(c.percentUsed) && c.percentUsed <= 100);
       return {
         isUnlocked: allUnder,
         progress: allUnder ? 100 : 75,
@@ -118,7 +121,7 @@ export const ALL_BADGES: BadgeDefinition[] = [
     icon: 'Target',
     xp: 100,
     evaluate: ctx => {
-      const count = ctx.dreams.length;
+      const count = Array.isArray(ctx?.dreams) ? ctx.dreams.length : 0;
       return {
         isUnlocked: count >= 1,
         progress: count >= 1 ? 100 : 0,
@@ -136,7 +139,8 @@ export const ALL_BADGES: BadgeDefinition[] = [
     icon: 'Compass',
     xp: 300,
     evaluate: ctx => {
-      const activeFunded = ctx.dreams.filter(d => (d.currentSaved || 0) > 0);
+      const dreams = Array.isArray(ctx?.dreams) ? ctx.dreams : [];
+      const activeFunded = dreams.filter(d => d && Number.isFinite(d.currentSaved) && d.currentSaved > 0);
       const count = activeFunded.length;
       return {
         isUnlocked: count >= 3,
@@ -155,7 +159,10 @@ export const ALL_BADGES: BadgeDefinition[] = [
     icon: 'Trophy',
     xp: 500,
     evaluate: ctx => {
-      const completed = ctx.dreams.some(d => d.currentSaved >= d.targetAmount && d.targetAmount > 0);
+      const dreams = Array.isArray(ctx?.dreams) ? ctx.dreams : [];
+      const completed = dreams.some(
+        d => d && Number.isFinite(d.currentSaved) && Number.isFinite(d.targetAmount) && d.targetAmount > 0 && d.currentSaved >= d.targetAmount
+      );
       return {
         isUnlocked: completed,
         progress: completed ? 100 : 0,
@@ -171,7 +178,7 @@ export const ALL_BADGES: BadgeDefinition[] = [
     icon: 'Shield',
     xp: 100,
     evaluate: ctx => {
-      const hasSaved = ctx.emergencyFund.currentSaved > 0;
+      const hasSaved = Number.isFinite(ctx?.emergencyFund?.currentSaved) && ctx.emergencyFund.currentSaved > 0;
       return {
         isUnlocked: hasSaved,
         progress: hasSaved ? 100 : 0,
@@ -187,7 +194,7 @@ export const ALL_BADGES: BadgeDefinition[] = [
     icon: 'ShieldCheck',
     xp: 350,
     evaluate: ctx => {
-      const runway = ctx.emergencyFundRunwayMonths;
+      const runway = Number.isFinite(ctx?.emergencyFundRunwayMonths) ? Math.max(0, ctx.emergencyFundRunwayMonths) : 0;
       return {
         isUnlocked: runway >= 3,
         progress: Math.min(100, Math.round((runway / 3) * 100)),
@@ -205,12 +212,15 @@ export const ALL_BADGES: BadgeDefinition[] = [
     icon: 'Crown',
     xp: 1000,
     evaluate: ctx => {
-      const runway = ctx.emergencyFundRunwayMonths;
-      const target = ctx.emergencyFund.manualTargetAmount || 360000;
-      const isFunded = ctx.emergencyFund.currentSaved >= target || runway >= 6;
+      const runway = Number.isFinite(ctx?.emergencyFundRunwayMonths) ? Math.max(0, ctx.emergencyFundRunwayMonths) : 0;
+      const currentSaved = Number.isFinite(ctx?.emergencyFund?.currentSaved) ? Math.max(0, ctx.emergencyFund.currentSaved) : 0;
+      const target = (ctx?.emergencyFund?.manualTargetAmount && ctx.emergencyFund.manualTargetAmount > 0)
+        ? ctx.emergencyFund.manualTargetAmount
+        : 360000;
+      const isFunded = currentSaved >= target || runway >= 6;
       return {
         isUnlocked: isFunded,
-        progress: isFunded ? 100 : Math.min(99, Math.round((ctx.emergencyFund.currentSaved / target) * 100)),
+        progress: isFunded ? 100 : Math.min(99, Math.max(0, Math.round((currentSaved / target) * 100))),
       };
     },
   },
@@ -225,7 +235,7 @@ export const ALL_BADGES: BadgeDefinition[] = [
     icon: 'TrendingUp',
     xp: 100,
     evaluate: ctx => {
-      const count = ctx.investments.length;
+      const count = Array.isArray(ctx?.investments) ? ctx.investments.length : 0;
       return {
         isUnlocked: count >= 1,
         progress: count >= 1 ? 100 : 0,
@@ -243,10 +253,11 @@ export const ALL_BADGES: BadgeDefinition[] = [
     icon: 'Layers',
     xp: 300,
     evaluate: ctx => {
-      const activeInvestments = ctx.investments.filter(
-        i => (i.currentValue || 0) > 0 || (i.investedAmount || 0) > 0
+      const investments = Array.isArray(ctx?.investments) ? ctx.investments : [];
+      const activeInvestments = investments.filter(
+        i => i && ((Number.isFinite(i.currentValue) && i.currentValue > 0) || (Number.isFinite(i.investedAmount) && i.investedAmount > 0))
       );
-      const types = new Set(activeInvestments.map(i => i.type));
+      const types = new Set(activeInvestments.map(i => i.type).filter(Boolean));
       const count = types.size;
       return {
         isUnlocked: count >= 3,
@@ -265,7 +276,10 @@ export const ALL_BADGES: BadgeDefinition[] = [
     icon: 'Activity',
     xp: 250,
     evaluate: ctx => {
-      const isPositive = ctx.totalInvestmentGainLoss > 0;
+      const investments = Array.isArray(ctx?.investments) ? ctx.investments : [];
+      const hasInvestments = investments.length > 0;
+      const gainLoss = Number.isFinite(ctx?.totalInvestmentGainLoss) ? ctx.totalInvestmentGainLoss : 0;
+      const isPositive = hasInvestments && gainLoss > 0;
       return {
         isUnlocked: isPositive,
         progress: isPositive ? 100 : 0,
@@ -281,7 +295,7 @@ export const ALL_BADGES: BadgeDefinition[] = [
     icon: 'Gem',
     xp: 1200,
     evaluate: ctx => {
-      const val = ctx.totalInvestmentValue;
+      const val = Number.isFinite(ctx?.totalInvestmentValue) ? Math.max(0, ctx.totalInvestmentValue) : 0;
       return {
         isUnlocked: val >= 500000,
         progress: Math.min(100, Math.round((val / 500000) * 100)),
@@ -301,7 +315,9 @@ export const ALL_BADGES: BadgeDefinition[] = [
     icon: 'Flame',
     xp: 150,
     evaluate: ctx => {
-      const streak = Math.max(ctx.streak.currentStreak, ctx.streak.longestStreak);
+      const cur = Number.isFinite(ctx?.streak?.currentStreak) ? ctx.streak.currentStreak : 0;
+      const longest = Number.isFinite(ctx?.streak?.longestStreak) ? ctx.streak.longestStreak : 0;
+      const streak = Math.max(0, cur, longest);
       return {
         isUnlocked: streak >= 3,
         progress: Math.min(100, Math.round((streak / 3) * 100)),
@@ -319,7 +335,9 @@ export const ALL_BADGES: BadgeDefinition[] = [
     icon: 'Flame',
     xp: 350,
     evaluate: ctx => {
-      const streak = Math.max(ctx.streak.currentStreak, ctx.streak.longestStreak);
+      const cur = Number.isFinite(ctx?.streak?.currentStreak) ? ctx.streak.currentStreak : 0;
+      const longest = Number.isFinite(ctx?.streak?.longestStreak) ? ctx.streak.longestStreak : 0;
+      const streak = Math.max(0, cur, longest);
       return {
         isUnlocked: streak >= 7,
         progress: Math.min(100, Math.round((streak / 7) * 100)),
@@ -337,7 +355,9 @@ export const ALL_BADGES: BadgeDefinition[] = [
     icon: 'Flame',
     xp: 800,
     evaluate: ctx => {
-      const streak = Math.max(ctx.streak.currentStreak, ctx.streak.longestStreak);
+      const cur = Number.isFinite(ctx?.streak?.currentStreak) ? ctx.streak.currentStreak : 0;
+      const longest = Number.isFinite(ctx?.streak?.longestStreak) ? ctx.streak.longestStreak : 0;
+      const streak = Math.max(0, cur, longest);
       return {
         isUnlocked: streak >= 30,
         progress: Math.min(100, Math.round((streak / 30) * 100)),
@@ -357,7 +377,7 @@ export const ALL_BADGES: BadgeDefinition[] = [
     icon: 'Sparkles',
     xp: 50,
     evaluate: ctx => {
-      const count = ctx.transactions.length;
+      const count = Array.isArray(ctx?.transactions) ? ctx.transactions.length : 0;
       return {
         isUnlocked: count >= 1,
         progress: count >= 1 ? 100 : 0,
@@ -375,7 +395,7 @@ export const ALL_BADGES: BadgeDefinition[] = [
     icon: 'Receipt',
     xp: 250,
     evaluate: ctx => {
-      const count = ctx.transactions.length;
+      const count = Array.isArray(ctx?.transactions) ? ctx.transactions.length : 0;
       return {
         isUnlocked: count >= 50,
         progress: Math.min(100, Math.round((count / 50) * 100)),
@@ -393,10 +413,13 @@ export const ALL_BADGES: BadgeDefinition[] = [
     icon: 'CheckCircle2',
     xp: 100,
     evaluate: ctx => {
-      const count = ctx.recurringPaymentLogs.length;
+      const logs = Array.isArray(ctx?.recurringPaymentLogs) ? ctx.recurringPaymentLogs : [];
+      const count = logs.filter(l => l && Boolean(l.paidDate)).length;
       return {
         isUnlocked: count >= 1,
         progress: count >= 1 ? 100 : 0,
+        currentCount: count,
+        targetCount: 1,
       };
     },
   },
@@ -409,10 +432,13 @@ export const ALL_BADGES: BadgeDefinition[] = [
     icon: 'Users',
     xp: 100,
     evaluate: ctx => {
-      const count = ctx.settlements.length;
+      const settlements = Array.isArray(ctx?.settlements) ? ctx.settlements : [];
+      const count = settlements.length;
       return {
         isUnlocked: count >= 1,
         progress: count >= 1 ? 100 : 0,
+        currentCount: count,
+        targetCount: 1,
       };
     },
   },
@@ -425,9 +451,10 @@ export const ALL_BADGES: BadgeDefinition[] = [
     icon: 'CloudUpload',
     xp: 250,
     evaluate: ctx => {
+      const isConnected = Boolean(ctx?.isDriveConnected);
       return {
-        isUnlocked: ctx.isDriveConnected,
-        progress: ctx.isDriveConnected ? 100 : 0,
+        isUnlocked: isConnected,
+        progress: isConnected ? 100 : 0,
       };
     },
   },

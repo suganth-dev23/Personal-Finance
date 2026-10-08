@@ -33,6 +33,7 @@ export const RecurringPaymentsView: React.FC = () => {
  overdueRecurringPayments,
  totalMonthlyRecurringCommitment,
  categories,
+ emergencyFund,
  addRecurringPayment,
  updateRecurringPayment,
  deleteRecurringPayment,
@@ -69,6 +70,18 @@ export const RecurringPaymentsView: React.FC = () => {
  .filter(log => log.paidDate && log.paidDate.startsWith(currentMonthKey))
  .reduce((sum, log) => sum + log.amount, 0);
  }, [recurringPaymentLogs, currentMonthKey]);
+
+ const activeCommitments = useMemo(() => {
+ return recurringPayments.filter(p => p.isActive);
+ }, [recurringPayments]);
+
+ const recurringRunwayMonths = useMemo(() => {
+ if (totalMonthlyRecurringCommitment <= 0) {
+ return (emergencyFund?.currentSaved || 0) > 0 ? Infinity : 0;
+ }
+ const saved = Number.isFinite(emergencyFund?.currentSaved) ? Math.max(0, emergencyFund.currentSaved) : 0;
+ return Number((saved / totalMonthlyRecurringCommitment).toFixed(1));
+ }, [emergencyFund, totalMonthlyRecurringCommitment]);
 
  // Filtered payments list
  const filteredPayments = useMemo(() => {
@@ -160,7 +173,17 @@ export const RecurringPaymentsView: React.FC = () => {
  </span>
  </div>
  <p className="mt-2 text-xs text-ink-3">
- {recurringPayments.filter(p => p.isActive).length} active commitments • <Money value={paidThisMonthTotal} size="xs" /> paid so far in {monthName}
+ {activeCommitments.length === 0
+ ? '0 active commitments • No monthly recurring obligations declared'
+ : `${activeCommitments.length} active commitment${activeCommitments.length === 1 ? '' : 's'} • `}
+ {activeCommitments.length > 0 && (
+ <>
+ <Money value={paidThisMonthTotal} size="xs" /> paid so far in {monthName}
+ {emergencyFund && emergencyFund.currentSaved > 0 && (
+ <> • Reserve covers {recurringRunwayMonths === Infinity ? 'all' : `~${recurringRunwayMonths}mo`} of fixed bills</>
+ )}
+ </>
+ )}
  </p>
  </div>
 
@@ -693,13 +716,15 @@ export const RecurringPaymentsView: React.FC = () => {
  onClose={() => setIsMarkPaidModalOpen(false)}
  payment={paymentForMarkPaid}
  targetDueDate={targetDueDateForMarkPaid}
-		onConfirm={(paymentId, dueDate, actualAmount, createTransaction) => {
+		onConfirm={(paymentId, dueDate, actualAmount, createTransaction, paymentMethod, paidDate) => {
 			markRecurringPaymentPaid(
 				paymentId,
 				dueDate,
 				actualAmount,
 				undefined,
-				createTransaction
+				createTransaction,
+				paymentMethod,
+				paidDate
 			);
 		}}
  />

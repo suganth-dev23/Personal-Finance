@@ -24,6 +24,7 @@ export interface PDFParseResult {
   extractedLinesCount: number;
   errors: string[];
   rawExtractedText?: string;
+  isPasswordProtected?: boolean;
 }
 
 /**
@@ -31,13 +32,15 @@ export interface PDFParseResult {
  */
 export async function parsePDFInThread(
   arrayBuffer: ArrayBuffer,
-  onProgress?: (progress: PDFParseProgress) => void
+  onProgress?: (progress: PDFParseProgress) => void,
+  password?: string
 ): Promise<PDFParseResult> {
   const errors: string[] = [];
 
   try {
     const pdf = await pdfjsLib.getDocument({
       data: arrayBuffer,
+      password,
       useWorkerFetch: false,
     }).promise;
 
@@ -96,15 +99,26 @@ export async function parsePDFInThread(
       rawExtractedText: lines.slice(0, 100).join('\n'),
     };
   } catch (err: any) {
-    const isPassword = err?.name === 'PasswordException' || /password/i.test(err?.message || '');
-    const errorMsg = isPassword
-      ? 'This PDF statement is password-protected or encrypted. Please decrypt or unlock the file before uploading.'
-      : (err?.message || 'Failed to parse PDF document.');
+    const isPassword =
+      err?.name === 'PasswordException' ||
+      err?.code === 1 ||
+      /password/i.test(err?.message || '');
+
+    let errorMsg: string;
+    if (isPassword) {
+      errorMsg = password
+        ? 'Incorrect password for this protected PDF statement. Please verify and try again.'
+        : 'This PDF statement is password-protected. Please enter the password to open and extract transactions.';
+    } else {
+      errorMsg = err?.message || 'Failed to parse PDF document.';
+    }
+
     return {
       transactions: [],
       totalPages: 0,
       extractedLinesCount: 0,
       errors: [errorMsg],
+      isPasswordProtected: isPassword,
     };
   }
 }
@@ -114,33 +128,82 @@ export async function parsePDFInThread(
  */
 export async function parsePDFStatement(
   file: File,
-  onProgress?: (progress: PDFParseProgress) => void
+  onProgress?: (progress: PDFParseProgress) => void,
+  password?: string
 ): Promise<PDFParseResult> {
-  const arrayBuffer = await file.arrayBuffer();
+  // File size guard: 20MB limit
+  const MAX_FILE_SIZE = 20 * 1024 * 1024;
+  if (file.size > MAX_FILE_SIZE) {
+    return {
+      transactions: [],
+      totalPages: 0,
+      extractedLinesCount: 0,
+      errors: ['File size exceeds the 20MB limit. Please upload a smaller statement PDF.'],
+    };
+  }
+
+  // Empty file guard
+  if (file.size === 0) {
+    return {
+      transactions: [],
+      totalPages: 0,
+      extractedLinesCount: 0,
+      errors: ['The selected PDF file is empty (0 bytes).'],
+    };
+  }
+
+  let arrayBuffer: ArrayBuffer;
+  try {
+    arrayBuffer = await file.arrayBuffer();
+  } catch (readErr: any) {
+    return {
+      transactions: [],
+      totalPages: 0,
+      extractedLinesCount: 0,
+      errors: [`Failed to read PDF file: ${readErr?.message || 'I/O Error'}`],
+    };
+  }
 
   return new Promise((resolve) => {
     let worker: Worker | null = null;
     let hasResolved = false;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
-    const runFallback = async () => {
-      if (hasResolved) return;
-      hasResolved = true;
+    const cleanup = () => {
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
       if (worker) {
         try {
           worker.terminate();
         } catch {
-          // ignore
+          // Ignore termination errors
         }
+        worker = null;
       }
+    };
+
+    const runFallback = async () => {
+      if (hasResolved) return;
+      hasResolved = true;
+      cleanup();
+
       try {
-        const result = await parsePDFInThread(arrayBuffer.slice(0), onProgress);
+        const result = await parsePDFInThread(arrayBuffer.slice(0), onProgress, password);
         resolve(result);
       } catch (err: any) {
+        const isPassword =
+          err?.name === 'PasswordException' ||
+          err?.code === 1 ||
+          /password/i.test(err?.message || '');
+
         resolve({
           transactions: [],
           totalPages: 0,
           extractedLinesCount: 0,
           errors: [err?.message || 'Failed to parse PDF document.'],
+          isPasswordProtected: isPassword,
         });
       }
     };
@@ -160,7 +223,7 @@ export async function parsePDFStatement(
           }
         } else if (data.type === 'success') {
           hasResolved = true;
-          worker?.terminate();
+          cleanup();
           resolve({
             transactions: data.transactions,
             totalPages: data.totalPages,
@@ -171,12 +234,13 @@ export async function parsePDFStatement(
         } else if (data.type === 'error') {
           if (data.isPasswordProtected) {
             hasResolved = true;
-            worker?.terminate();
+            cleanup();
             resolve({
               transactions: [],
               totalPages: 0,
               extractedLinesCount: 0,
               errors: [data.error],
+              isPasswordProtected: true,
             });
             return;
           }
@@ -193,12 +257,12 @@ export async function parsePDFStatement(
 
       // Clone buffer before posting in case fallback is needed
       const bufferForWorker = arrayBuffer.slice(0);
-      worker.postMessage({ arrayBuffer: bufferForWorker }, [bufferForWorker]);
+      worker.postMessage({ arrayBuffer: bufferForWorker, password }, [bufferForWorker]);
 
       // Safety timeout for worker (15 seconds)
-      setTimeout(() => {
+      timeoutId = setTimeout(() => {
         if (!hasResolved) {
-          console.warn('PDF Worker timed out, triggering fallback.');
+          console.warn('PDF Worker timed out after 15 seconds, triggering in-thread fallback.');
           runFallback();
         }
       }, 15000);

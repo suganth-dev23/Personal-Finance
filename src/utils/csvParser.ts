@@ -86,7 +86,37 @@ export interface CSVParseResult {
  * Intelligent multi-pass CSV statement parser with automatic header row detection
  */
 export async function parseCSVStatement(file: File): Promise<CSVParseResult> {
-  const fileText = await file.text();
+  const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+  if (file.size > MAX_FILE_SIZE) {
+    return {
+      transactions: [],
+      totalRows: 0,
+      parsedRows: 0,
+      errors: ['File size exceeds the 20MB limit. Please upload a smaller CSV statement.'],
+    };
+  }
+
+  if (file.size === 0) {
+    return {
+      transactions: [],
+      totalRows: 0,
+      parsedRows: 0,
+      errors: ['The selected CSV file is empty (0 bytes).'],
+    };
+  }
+
+  let fileText = '';
+  try {
+    fileText = await file.text();
+  } catch (readErr: any) {
+    return {
+      transactions: [],
+      totalRows: 0,
+      parsedRows: 0,
+      errors: [`Failed to read CSV file: ${readErr?.message || 'Corrupt or unreadable file'}`],
+    };
+  }
+
   const errors: string[] = [];
   const transactions: StagedTransaction[] = [];
 
@@ -97,15 +127,25 @@ export async function parseCSVStatement(file: File): Promise<CSVParseResult> {
       transactions: [],
       totalRows: 0,
       parsedRows: 0,
-      errors: ['The selected CSV file is empty.'],
+      errors: ['The selected CSV file contains no readable text.'],
     };
   }
 
   // Parse raw 2D array without expecting row 0 to be the header
-  const parseResult = Papa.parse<string[]>(cleanText, {
-    skipEmptyLines: 'greedy',
-    dynamicTyping: false,
-  });
+  let parseResult: Papa.ParseResult<string[]>;
+  try {
+    parseResult = Papa.parse<string[]>(cleanText, {
+      skipEmptyLines: 'greedy',
+      dynamicTyping: false,
+    });
+  } catch (csvErr: any) {
+    return {
+      transactions: [],
+      totalRows: 0,
+      parsedRows: 0,
+      errors: [`Corrupt CSV file format: ${csvErr?.message || 'Failed to parse tabular data'}`],
+    };
+  }
 
   const rawRows = parseResult.data;
   if (!rawRows || rawRows.length === 0) {

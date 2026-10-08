@@ -10,12 +10,13 @@ import {
   RecurringPaymentLog,
   SplitEntry,
   EmergencyFund,
+  EmergencyContribution,
   AIHealthReport,
 } from '../types/finance';
 import { getTodayString } from './date';
 import { MAX_AMOUNT, isValidAmount, isValidDate, roundMoney } from './validation';
 
-const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+const _DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
  * Normalizes and validates a transaction record.
@@ -340,15 +341,35 @@ export function normalizeRecurringPaymentLog(raw: any): RecurringPaymentLog | nu
  */
 export function normalizeEmergencyFund(raw: any): EmergencyFund | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
-  const targetMonths = typeof raw.targetMonths === 'number' && Number.isFinite(raw.targetMonths) && raw.targetMonths > 0 ? raw.targetMonths : 6;
-  const monthlyExpenseBaseline = typeof raw.monthlyExpenseBaseline === 'number' && Number.isFinite(raw.monthlyExpenseBaseline) && raw.monthlyExpenseBaseline >= 0 ? raw.monthlyExpenseBaseline : 50000;
-  const currentSaved = typeof raw.currentSaved === 'number' && Number.isFinite(raw.currentSaved) && raw.currentSaved >= 0 ? raw.currentSaved : 0;
-  const contributions = Array.isArray(raw.contributions) ? raw.contributions : [];
+  const targetMonths = typeof raw.targetMonths === 'number' && Number.isFinite(raw.targetMonths) && raw.targetMonths > 0
+    ? Math.min(12, Math.max(1, Math.round(raw.targetMonths)))
+    : 6;
+  const monthlyExpenseBaseline = typeof raw.monthlyExpenseBaseline === 'number' && Number.isFinite(raw.monthlyExpenseBaseline) && raw.monthlyExpenseBaseline >= 0
+    ? roundMoney(raw.monthlyExpenseBaseline)
+    : 50000;
+  const currentSaved = typeof raw.currentSaved === 'number' && Number.isFinite(raw.currentSaved) && raw.currentSaved >= 0
+    ? roundMoney(raw.currentSaved)
+    : 0;
+  const contributions: EmergencyContribution[] = Array.isArray(raw.contributions)
+    ? raw.contributions
+        .filter((c: any) => c && typeof c === 'object' && Number.isFinite(c.amount) && c.amount > 0)
+        .map((c: any) => ({
+          id: typeof c.id === 'string' && c.id.trim() ? c.id.trim() : `em-${Date.now()}-${Math.random()}`,
+          date: typeof c.date === 'string' && c.date.trim() ? c.date.trim() : new Date().toISOString().split('T')[0],
+          amount: roundMoney(Number(c.amount)),
+          type: c.type === 'withdrawal' ? ('withdrawal' as const) : ('deposit' as const),
+          note: typeof c.note === 'string' ? c.note.trim().slice(0, 200) : undefined,
+          createdAt: typeof c.createdAt === 'string' ? c.createdAt : new Date().toISOString(),
+          updatedAt: typeof c.updatedAt === 'string' ? c.updatedAt : undefined,
+        }))
+    : [];
   return {
     targetMonths,
     monthlyExpenseBaseline,
     currentSaved,
-    manualTargetAmount: typeof raw.manualTargetAmount === 'number' && Number.isFinite(raw.manualTargetAmount) ? raw.manualTargetAmount : undefined,
+    manualTargetAmount: typeof raw.manualTargetAmount === 'number' && Number.isFinite(raw.manualTargetAmount) && raw.manualTargetAmount > 0
+      ? roundMoney(raw.manualTargetAmount)
+      : undefined,
     contributions,
   };
 }
